@@ -1,0 +1,14 @@
+name = "OrderPreservingBijection"
+version = "0.1.0"
+defaultTargets = ["orderpreservingbijection"]
+
+[[require]]
+name = "mathlib"
+path = "./mathlib4-master"
+
+[[lean_lib]]
+name = "OrderPreservingBijection"
+
+[[lean_exe]]
+name = "orderpreservingbijection"
+root = "Main"
