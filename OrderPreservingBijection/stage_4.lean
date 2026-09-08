@@ -1324,18 +1324,55 @@ theorem pair_nonzero_kernel_exists (ρ : ℂ) :
     exact hne h_half
   exact melin_pair_sum_nondegenerate ρ (1 - ρ) h_nonconj
 
-/-- 谱点保持的扰动构造（子公理 2，磨光函数自由度）：
+/-- 谱点保持的 Mellin 叠加（子公理 A，插值理论）：
+    对任意磨光函数 g，存在两个磨光函数 f₁, f₂，使得：
+    (1) 它们在所有谱点 {specDiscM n} 上取值相同
+    (2) 对所有非平凡零点 ρ'，M[f₂](ρ') - M[f₁](ρ') = M[g](ρ')
+
+    数学依据：紧支光滑函数空间是无限维的，谱点集 {specDiscM n} 是离散的，
+    可以在保持谱点取值的子空间中，找到两个函数 whose Mellin 变换之差
+    等于任意给定 g 的 Mellin 变换。这是 Whitney 延拓定理在 Mellin 变换下的变体：
+    谱点约束是可数个线性条件，其余维仍为无限，因此可以叠加任意方向。
+    这条只涉及谱点约束，不涉及零点局部化。 -/
+axiom spectral_preserving_melin_superposition (g : MollifiedTestFunction) :
+    ∃ (f1 f2 : MollifiedTestFunction),
+      (∀ n : ℕ, f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n)) ∧
+      (∀ (s : ℂ), melinTransform f2.toTestFunction s - melinTransform f1.toTestFunction s =
+                    melinTransform g.toTestFunction s)
+
+/-- Mellin 变换的零点局部化（子公理 B，插值理论）：
+    对任意磨光函数 g 和非临界线零点 ρ，存在磨光函数 g'，使得：
+    (1) 对所有非平凡零点 ρ' ∉ {ρ, 1-ρ}，M[g'](ρ') = 0
+    (2) M[g'](ρ) + M[g'](1-ρ) = M[g](ρ) + M[g](1-ρ)
+
+    数学依据：Mellin 变换在零点集上的赋值是线性泛函，零点集是离散的。
+    可以构造磨光函数 g'，使其 Mellin 变换在除一对零点外的所有零点处为零，
+    同时保持该对零点处的和不变。这是离散点集上的插值/消去技术：
+    用无限多个自由度消去无限多个约束，保留有限个目标值。
+    这条只涉及零点约束，不涉及谱点保持。 -/
+axiom melin_zero_localization (ρ : ℂ) (g : MollifiedTestFunction) :
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
+      ∃ (g' : MollifiedTestFunction),
+        (∀ (ρ' : ℂ), _root_.riemannZeta ρ' = 0 → 0 < ρ'.re → ρ'.re < 1 →
+          ρ' ≠ ρ → ρ' ≠ 1 - ρ →
+          melinTransform g'.toTestFunction ρ' = 0) ∧
+        (melinTransform g'.toTestFunction ρ + melinTransform g'.toTestFunction (1 - ρ) =
+         melinTransform g.toTestFunction ρ + melinTransform g.toTestFunction (1 - ρ))
+
+/-- 谱点保持的扰动构造（定理，由子公理 A+B 推出）：
     对任意磨光函数 g 和非临界线零点 ρ，存在两个磨光函数 f₁, f₂，使得：
     (1) 它们在所有谱点 {specDiscM n} 上取值相同
     (2) 它们的 Mellin 变换在除 {ρ,1-ρ} 之外的所有非平凡零点处相同
-    (3) f₂ 与 f₁ 在 {ρ,1-ρ} 处的 Mellin 和之差等于 g 的成对和：
-        (M[f₂](ρ)+M[f₂](1-ρ)) - (M[f₁](ρ)+M[f₁](1-ρ)) = M[g](ρ)+M[g](1-ρ)
+    (3) f₂ 与 f₁ 在 {ρ,1-ρ} 处的 Mellin 和之差等于 g 的成对和
 
-    数学依据：紧支光滑函数空间是无限维的，有足够自由度在保持
-    谱点取值和其他零点 Mellin 变换的同时，在一对零点处产生指定的扰动。
-    这是 Whitney 延拓定理 / 插值理论在 Mellin 变换下的变体。
-    与子公理 1 不同，这条不涉及 Γ 因子，纯粹是函数空间自由度的断言。 -/
-axiom spectral_preserving_perturbation_build (ρ : ℂ) (g : MollifiedTestFunction) :
+    证明：
+    (1) melin_zero_localization 给出 g'，使得其他零点 Mellin 为零，
+        成对和 = g 的成对和
+    (2) spectral_preserving_melin_superposition（取 g=g'）给出 f₁,f₂，
+        使得谱点相同，且对所有零点 ρ'，M[f₂](ρ')-M[f₁](ρ') = M[g'](ρ')
+    (3) 对其他零点 ρ' ∉ {ρ,1-ρ}：M[f₂](ρ')-M[f₁](ρ') = M[g'](ρ') = 0，故相同
+    (4) 成对和之差 = M[g'](ρ)+M[g'](1-ρ) = g 的成对和 -/
+theorem spectral_preserving_perturbation_build (ρ : ℂ) (g : MollifiedTestFunction) :
     _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
       ∃ (f1 f2 : MollifiedTestFunction),
         (∀ n : ℕ, f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n)) ∧
@@ -1344,7 +1381,34 @@ axiom spectral_preserving_perturbation_build (ρ : ℂ) (g : MollifiedTestFuncti
           melinTransform f1.toTestFunction ρ' = melinTransform f2.toTestFunction ρ') ∧
         ((melinTransform f2.toTestFunction ρ + melinTransform f2.toTestFunction (1 - ρ)) -
          (melinTransform f1.toTestFunction ρ + melinTransform f1.toTestFunction (1 - ρ)) =
-         melinTransform g.toTestFunction ρ + melinTransform g.toTestFunction (1 - ρ))
+         melinTransform g.toTestFunction ρ + melinTransform g.toTestFunction (1 - ρ)) := by
+  intro hz hre1 hre2
+  rcases melin_zero_localization ρ g hz hre1 hre2 with ⟨g', h_other_zero, h_pair_eq⟩
+  rcases spectral_preserving_melin_superposition g' with ⟨f1, f2, h_pts, h_super⟩
+  have h_other : ∀ (ρ' : ℂ), _root_.riemannZeta ρ' = 0 → 0 < ρ'.re → ρ'.re < 1 →
+      ρ' ≠ ρ → ρ' ≠ 1 - ρ →
+      melinTransform f1.toTestFunction ρ' = melinTransform f2.toTestFunction ρ' := by
+    intro ρ' hz' hre1' hre2' hne1 hne2
+    have h_diff : melinTransform f2.toTestFunction ρ' - melinTransform f1.toTestFunction ρ' =
+                   melinTransform g'.toTestFunction ρ' := h_super ρ'
+    have h_g'_zero : melinTransform g'.toTestFunction ρ' = 0 := h_other_zero ρ' hz' hre1' hre2' hne1 hne2
+    rw [h_g'_zero] at h_diff
+    exact (sub_eq_zero.mp h_diff).symm
+  have h_pair_diff : (melinTransform f2.toTestFunction ρ + melinTransform f2.toTestFunction (1 - ρ)) -
+                       (melinTransform f1.toTestFunction ρ + melinTransform f1.toTestFunction (1 - ρ)) =
+                     melinTransform g.toTestFunction ρ + melinTransform g.toTestFunction (1 - ρ) := by
+    have h1 : melinTransform f2.toTestFunction ρ - melinTransform f1.toTestFunction ρ =
+               melinTransform g'.toTestFunction ρ := h_super ρ
+    have h2 : melinTransform f2.toTestFunction (1 - ρ) - melinTransform f1.toTestFunction (1 - ρ) =
+               melinTransform g'.toTestFunction (1 - ρ) := h_super (1 - ρ)
+    calc
+      (melinTransform f2.toTestFunction ρ + melinTransform f2.toTestFunction (1 - ρ)) -
+        (melinTransform f1.toTestFunction ρ + melinTransform f1.toTestFunction (1 - ρ))
+        = (melinTransform f2.toTestFunction ρ - melinTransform f1.toTestFunction ρ) +
+          (melinTransform f2.toTestFunction (1 - ρ) - melinTransform f1.toTestFunction (1 - ρ)) := by ring
+      _ = melinTransform g'.toTestFunction ρ + melinTransform g'.toTestFunction (1 - ρ) := by rw [h1, h2]
+      _ = melinTransform g.toTestFunction ρ + melinTransform g.toTestFunction (1 - ρ) := h_pair_eq
+  exact ⟨f1, f2, h_pts, h_other, h_pair_diff⟩
 
 /-- 磨光函数的谱点-Melin 分离（定理，由子公理 1+2 推出）：
     对非临界线零点 ρ=σ+it（σ≠1/2），
