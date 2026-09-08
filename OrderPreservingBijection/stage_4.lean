@@ -1285,22 +1285,80 @@ axiom zero_side_melin_localization (ρ : ℂ) :
         melinTransform f1 ρ + melinTransform f1 (1 - ρ) =
         melinTransform f2 ρ + melinTransform f2 (1 - ρ))
 
-/-- 磨光函数的谱点-Melin 分离（公理，RH 核心分析）：
+/-- 非共轭点对的 Mellin 和非退化（子公理，Mellin 变换基本性质）：
+    对任意两个复数 s₁, s₂，如果 s₂ ≠ conjugate(s₁)，
+    则存在磨光函数 g，使得 M[g](s₁) + M[g](s₂) ≠ 0。
+
+    数学依据：Mellin 变换 M: C_c^∞(ℝ_{>0}) → O(ℂ) 是线性映射，
+    其在点 s 处的赋值 ev_s: g ↦ M[g](s) 是线性泛函。
+    当 s₂ ≠ conjugate(s₁) 时，ev_{s₁} + ev_{s₂} 不是零泛函：
+    - 若 s₂ = conjugate(s₁)，则对实值 g，M[g](s₂) = conjugate(M[g](s₁))，
+      故 M[g](s₁)+M[g](s₂) = 2 Re(M[g](s₁))，可以恒为零（取纯虚值）
+    - 若 s₂ ≠ conjugate(s₁)，两个赋值泛函线性无关，其和非零
+    这是 Mellin 变换的基本非退化性，不涉及 ζ 函数或 Γ 因子。 -/
+axiom melin_pair_sum_nondegenerate (s1 s2 : ℂ) :
+    s2 ≠ star s1 →
+      ∃ (g : MollifiedTestFunction),
+        melinTransform g.toTestFunction s1 + melinTransform g.toTestFunction s2 ≠ 0
+
+/-- 成对非零核存在（定理，由非共轭性 + Mellin 非退化推出）：
+    对非临界线零点 ρ=σ+it（σ≠1/2），存在磨光函数 g，使得
+      M[g](ρ) + M[g](1-ρ) ≠ 0。
+
+    证明：
+    (1) σ ≠ 1/2 ⟹ 1-ρ ≠ conjugate(ρ)（纯代数）
+    (2) 由 melin_pair_sum_nondegenerate（取 s₁=ρ, s₂=1-ρ），
+        存在 g 使得 M[g](ρ) + M[g](1-ρ) ≠ 0
+    这把 Γ 因子非对称性替换为更基本的 Mellin 变换非退化性。 -/
+theorem pair_nonzero_kernel_exists (ρ : ℂ) :
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
+      ∃ (g : MollifiedTestFunction),
+        melinTransform g.toTestFunction ρ + melinTransform g.toTestFunction (1 - ρ) ≠ 0 := by
+  intro hz hre1 hre2 hne
+  have h_nonconj : (1 - ρ) ≠ star ρ := by
+    intro h
+    have h_re : (1 - ρ).re = (star ρ).re := by rw [h]
+    have h_eq : 1 - ρ.re = ρ.re := by
+      simpa [Complex.sub_re, Complex.star_def] using h_re
+    have h_half : ρ.re = 1 / 2 := by linarith
+    exact hne h_half
+  exact melin_pair_sum_nondegenerate ρ (1 - ρ) h_nonconj
+
+/-- 谱点保持的扰动构造（子公理 2，磨光函数自由度）：
+    对任意磨光函数 g 和非临界线零点 ρ，存在两个磨光函数 f₁, f₂，使得：
+    (1) 它们在所有谱点 {specDiscM n} 上取值相同
+    (2) 它们的 Mellin 变换在除 {ρ,1-ρ} 之外的所有非平凡零点处相同
+    (3) f₂ 与 f₁ 在 {ρ,1-ρ} 处的 Mellin 和之差等于 g 的成对和：
+        (M[f₂](ρ)+M[f₂](1-ρ)) - (M[f₁](ρ)+M[f₁](1-ρ)) = M[g](ρ)+M[g](1-ρ)
+
+    数学依据：紧支光滑函数空间是无限维的，有足够自由度在保持
+    谱点取值和其他零点 Mellin 变换的同时，在一对零点处产生指定的扰动。
+    这是 Whitney 延拓定理 / 插值理论在 Mellin 变换下的变体。
+    与子公理 1 不同，这条不涉及 Γ 因子，纯粹是函数空间自由度的断言。 -/
+axiom spectral_preserving_perturbation_build (ρ : ℂ) (g : MollifiedTestFunction) :
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
+      ∃ (f1 f2 : MollifiedTestFunction),
+        (∀ n : ℕ, f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n)) ∧
+        (∀ (ρ' : ℂ), _root_.riemannZeta ρ' = 0 → 0 < ρ'.re → ρ'.re < 1 →
+          ρ' ≠ ρ → ρ' ≠ 1 - ρ →
+          melinTransform f1.toTestFunction ρ' = melinTransform f2.toTestFunction ρ') ∧
+        ((melinTransform f2.toTestFunction ρ + melinTransform f2.toTestFunction (1 - ρ)) -
+         (melinTransform f1.toTestFunction ρ + melinTransform f1.toTestFunction (1 - ρ)) =
+         melinTransform g.toTestFunction ρ + melinTransform g.toTestFunction (1 - ρ))
+
+/-- 磨光函数的谱点-Melin 分离（定理，由子公理 1+2 推出）：
     对非临界线零点 ρ=σ+it（σ≠1/2），
     存在两个磨光函数 f₁, f₂，使得：
     (1) 它们在所有谱点 {specDiscM n} 上取值相同
     (2) 它们的 Melin 变换在除 {ρ,1-ρ} 之外的所有非平凡零点处相同
     (3) 它们在 {ρ,1-ρ} 处的 Melin 变换之和不同
 
-    数学内容：
-    - 磨光函数（紧支集光滑）有足够的自由度，可以在保持离散点集
-      {specDiscM n} 取值的同时，任意指定 Melin 变换在有限个点处的值
-      （紧支集光滑函数的插值能力，Whitney 延拓定理的变体）
-    - 完成 Γ 因子 Λ(s)=π^{-s/2}Γ(s/2) 在 σ≠1/2 时非对称：
-      Γ(σ+it)/Γ(1-σ+it) ≠ 1，
-      使得可以选择 f₁,f₂ 满足 f̂₁(ρ)+f̂₁(1-ρ) ≠ f̂₂(ρ)+f̂₂(1-ρ)
-    这是 Weil 显式公式变分论证的技术核心，对应论文第 5.2 节。 -/
-axiom mollified_melin_separation (ρ : ℂ) :
+    证明：
+    (1) pair_nonzero_kernel_exists 给出 g，使得 M[g](ρ)+M[g](1-ρ) ≠ 0
+    (2) spectral_preserving_perturbation_build 给出 f₁,f₂，使得
+        谱点相同、其他零点 Mellin 相同、成对和之差 = g 的成对和 ≠ 0
+    (3) 故 f₁,f₂ 的成对和不同 -/
+theorem mollified_melin_separation (ρ : ℂ) :
     _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
       ∃ (f1 f2 : MollifiedTestFunction),
         (∀ n : ℕ, f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n)) ∧
@@ -1308,7 +1366,20 @@ axiom mollified_melin_separation (ρ : ℂ) :
           ρ' ≠ ρ → ρ' ≠ 1 - ρ →
           melinTransform f1.toTestFunction ρ' = melinTransform f2.toTestFunction ρ') ∧
         (melinTransform f1.toTestFunction ρ + melinTransform f1.toTestFunction (1 - ρ) ≠
-         melinTransform f2.toTestFunction ρ + melinTransform f2.toTestFunction (1 - ρ))
+         melinTransform f2.toTestFunction ρ + melinTransform f2.toTestFunction (1 - ρ)) := by
+  intro hz hre1 hre2 hne
+  rcases pair_nonzero_kernel_exists ρ hz hre1 hre2 hne with ⟨g, hg_nonzero⟩
+  rcases spectral_preserving_perturbation_build ρ g hz hre1 hre2 with ⟨f1, f2, h_pts, h_other, h_diff⟩
+  have h_pair_ne : melinTransform f1.toTestFunction ρ + melinTransform f1.toTestFunction (1 - ρ) ≠
+                    melinTransform f2.toTestFunction ρ + melinTransform f2.toTestFunction (1 - ρ) := by
+    intro h_eq
+    have h_contra : (melinTransform f2.toTestFunction ρ + melinTransform f2.toTestFunction (1 - ρ)) -
+                     (melinTransform f1.toTestFunction ρ + melinTransform f1.toTestFunction (1 - ρ)) = 0 := by
+      rw [h_eq]
+      <;> ring
+    rw [h_diff] at h_contra
+    exact hg_nonzero h_contra
+  exact ⟨f1, f2, h_pts, h_other, h_pair_ne⟩
 
 /-- 磨光函数的谱点保持扰动（定理，由局部化+分离推出）：
     对任意非临界线零点 ρ，存在两个磨光函数 f₁, f₂，使得：
