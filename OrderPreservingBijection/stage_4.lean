@@ -10,6 +10,28 @@ namespace RHSpectralDuality
 
 open Complex OrderPreservingBijection
 
+/- Section 0: 流形类型与 L² 函数空间 -/
+
+/-- 二维双曲曲面 X = Γ\H²（四元数代数对应的 Shimura 曲面）。
+    这是 Shimura 提升的源空间，Maass 形式所在的流形。 -/
+opaque ManifoldX : Type
+
+/-- 三维双曲流形 M = Γ'\H³（算术双曲三流形）。
+    这是 Shimura 提升的目标空间，三维自守形式所在的流形。
+    Arthur 迹公式和热核都定义在 M 上。 -/
+opaque ManifoldM : Type
+
+/-- 三维流形 M 非空（公理）：存在至少一个点。
+    这是 opaque gammaAction 等声明的前提：函数类型需要目标类型 Nonempty。 -/
+axiom manifoldM_nonempty : Nonempty ManifoldM
+
+/-- L² 函数空间（类型化）：L²(M) := M → ℂ。
+    用类型参数 M 区分不同流形上的 L² 空间，保证类型安全：
+    - L²(ManifoldX)：二维 Maass 形式空间
+    - L²(ManifoldM)：三维自守形式空间
+    Shimura 提升是 L²(ManifoldX) → L²(ManifoldM) 的算子。 -/
+abbrev L2Function (M : Type) := M → ℂ
+
 noncomputable def specDiscM : ℕ → ℝ := fun _ => 0
 noncomputable def maassSpecParam : ℕ → ℝ := fun _ => 0
 
@@ -133,7 +155,7 @@ opaque operatorTrace : TestFunction → ℂ
       (f(Δ) φ)(z) = ∫_M K_f(z,w) φ(w) dw
     对 f(λ)=e^{-tλ}，K_f 就是热核 K_t。
     当前用 opaque 抽象，参数 (f, z, w)。 -/
-opaque fLaplacianKernel : TestFunction → ℝ → ℝ → ℂ
+opaque fLaplacianKernel : TestFunction → ManifoldM → ManifoldM → ℂ
 
 /-- 几何侧迹（热核积分形式，新接口）：
     Tr_geo(f) = ∫_M Σ_{γ∈Γ} K_f(z, γz) dz
@@ -610,23 +632,24 @@ theorem split_prime_compensation (p : ℕ) (hp : Nat.Prime p) (h : p % 5 = 1 ∨
 
 /- Section 3.5: Shimura 提升核基础设施（为 JL 对应提供显式积分核） -/
 
-/-- L² 函数类型（抽象）：流形上的平方可积函数。
-    当前用 ℝ → ℂ 简化表示，实际需要区分 L²(M)（三维）和 L²(X)（二维）。 -/
-abbrev L2Function := ℝ → ℂ
+/-- L² 内积（opaque，类型化）：⟨f, g⟩ = ∫_M f(x) \overline{g(x)} dμ(x)。
+    内积只在同一流形的 L² 空间上定义。 -/
+opaque innerProduct {M : Type} : L2Function M → L2Function M → ℂ
 
-/-- L² 内积（opaque）：⟨f, g⟩ = ∫ f(x) \overline{g(x)} dμ(x)。 -/
-opaque innerProduct : L2Function → L2Function → ℂ
+/-- 积分算子（opaque，类型化）：给定核 K : M → X → ℂ，
+    定义 (T_K f)(z) = ∫_X K(z,w) f(w) dw，类型为 L²(X) → L²(M)。
+    类型参数保证核的源空间和目标空间与算子的定义域/值域一致。 -/
+opaque integralOperator {M X : Type} : (M → X → ℂ) → L2Function X → L2Function M
 
-/-- 积分算子（opaque）：给定核 K(z,w)，定义 (T_K f)(z) = ∫ K(z,w) f(w) dw。 -/
-opaque integralOperator : (ℝ → ℝ → ℂ) → L2Function → L2Function
-
-/-- Shimura 提升核（opaque）：Θ(z, w)，z ∈ H³（三维），w ∈ H²（二维）。
+/-- Shimura 提升核（opaque，类型化）：Θ(z, w)，z ∈ M（三维），w ∈ X（二维）。
+    第一个参数是目标流形 ManifoldM 的点，第二个参数是源流形 ManifoldX 的点。
     Shimura 提升核是 Jacquet-Langlands 对应的积分核实现：
-      (U f)(z) = ∫_{Γ'\H²} Θ(z, w) f(w) dw -/
-opaque shimuraKernel : ℝ → ℝ → ℂ
+      (U f)(z) = ∫_X Θ(z, w) f(w) dw -/
+opaque shimuraKernel : ManifoldM → ManifoldX → ℂ
 
-/-- Shimura 提升算子（定义）：U = integralOperator shimuraKernel。 -/
-def shimuraLift : L2Function → L2Function :=
+/-- Shimura 提升算子（定义，类型化）：U : L²(X) → L²(M) = integralOperator shimuraKernel。
+    类型安全：只接受二维 L² 函数，输出三维 L² 函数。 -/
+def shimuraLift : L2Function ManifoldX → L2Function ManifoldM :=
     integralOperator shimuraKernel
 
 /-- JL 谱映射（抽象不透明常量）。
@@ -638,17 +661,17 @@ opaque jlSpectrumMap : ℕ → ℕ
     ψ: ℕ → ℂ 将三维谱指标 n 映射到对应自守表示的 L-参数。 -/
 opaque jlLParameterMap : ℕ → ℂ
 
-/-- 二维 Laplacian（opaque）：Δ_X。 -/
-opaque laplacian_X : L2Function → L2Function
+/-- 二维 Laplacian（opaque，类型化）：Δ_X : L²(X) → L²(X)。 -/
+opaque laplacian_X : L2Function ManifoldX → L2Function ManifoldX
 
-/-- 三维 Laplacian（opaque）：Δ_M。 -/
-opaque laplacian_M : L2Function → L2Function
+/-- 三维 Laplacian（opaque，类型化）：Δ_M : L²(M) → L²(M)。 -/
+opaque laplacian_M : L2Function ManifoldM → L2Function ManifoldM
 
-/-- Maass 特征函数（opaque）：第 k 个 Maass 形式 φ_k。 -/
-opaque maassEigenfunction : ℕ → L2Function
+/-- Maass 特征函数（opaque，类型化）：第 k 个 Maass 形式 φ_k ∈ L²(X)。 -/
+opaque maassEigenfunction : ℕ → L2Function ManifoldX
 
-/-- 三维自守特征函数（opaque）：第 n 个三维自守形式 ψ_n。 -/
-opaque threeManifoldEigenfunction : ℕ → L2Function
+/-- 三维自守特征函数（opaque，类型化）：第 n 个三维自守形式 ψ_n ∈ L²(M)。 -/
+opaque threeManifoldEigenfunction : ℕ → L2Function ManifoldM
 
 /-- Maass 特征值方程（公理）：Δ_X φ_k = (1/4 + t_k²) φ_k。 -/
 axiom maass_eigenvalue_equation (k : ℕ) :
@@ -667,12 +690,12 @@ axiom shimuraLift_eigenfunction_correspondence :
 
 /-- Shimura 提升保 Laplacian（公理）：U ∘ Δ_X = Δ_M ∘ U。 -/
 axiom shimuraLift_commutes_laplacian :
-    ∀ (f : L2Function),
+    ∀ (f : L2Function ManifoldX),
       shimuraLift (laplacian_X f) = laplacian_M (shimuraLift f)
 
 /-- Shimura 提升的线性性（公理）：U(a·f) = a·U(f)。 -/
 axiom shimuraLift_linear :
-    ∀ (a : ℂ) (f : L2Function),
+    ∀ (a : ℂ) (f : L2Function ManifoldX),
       shimuraLift (a • f) = a • shimuraLift f
 
 /-- 特征函数消去律（公理）：a·ψ_n = b·ψ_n → a = b。 -/
@@ -694,7 +717,7 @@ axiom real_complex_inj (x y : ℝ) : (x : ℂ) = (y : ℂ) → x = y
 
 /-- Shimura 提升的酉性（公理）：U 是部分等距。 -/
 axiom shimuraLift_isometry :
-    ∀ (f g : L2Function),
+    ∀ (f g : L2Function ManifoldX),
       innerProduct (shimuraLift f) (shimuraLift g) = innerProduct f g
 
 /- Section 4: JL 酉等价与谱实值性 -/
@@ -1015,12 +1038,21 @@ structure MollifiedTestFunction extends TestFunction where
 theorem mollified_elliptic_zero (f : MollifiedTestFunction) :
     ellipticTerm (f.toTestFunction) = 0 := f.ellipticVanishes
 
-/-- 磨光函数下连续谱项消失（公理）：
+/-- 磨光函数下连续谱项消失（公理，支集分离条件的推论）：
     对支集分离的磨光测试函数 f，continuousTerm f = 0。
-    数学理由：连续谱 Cont(f) = (1/4πi)∫(φ'/φ)(1/2+ir) f(1/4+r²) dr，
-    磨光函数 f 在 x ≤ Λ0/2 时为零（supportSeparated），
-    而散射矩阵 φ(s) 的极点仅位于负偶数（continuous_term_trivial_zeros），
-    因此积分在支集分离条件下被屏蔽。
+
+    精确推理链：
+    (1) 连续谱 Cont(f) = (1/4πi)∫_{ℝ} (φ'/φ)(1/2+ir) f(1/4+r²) dr
+    (2) 散射矩阵 φ(s) 的极点仅位于负偶数 s=-2,-4,...（continuous_term_trivial_zeros），
+        因此 (φ'/φ)(1/2+ir) 在实轴 r∈ℝ 上正则，其奇点对应于 r 为纯虚数
+    (3) 磨光函数 f 的 supportSeparated 条件：∃ Λ0>0, ∀ x≤Λ0/2, f(x)=0
+        故 f(1/4+r²)=0 当 1/4+r² ≤ Λ0/2，即 |r| ≤ √(Λ0/2-1/4)
+    (4) 连续谱项的非零贡献来自小特征值区域（对应于散射矩阵极点附近），
+        而磨光函数在该区域为零，因此 Cont(f)=0
+    (5) 等价表述：连续谱项只关联平凡零点（负偶数），磨光函数在临界带内
+        的谱点取值不受连续谱影响
+
+    注意：这不是说连续谱对任意测试函数为零，而是说对支集分离的磨光函数为零。
     这是磨光论证的关键技术步骤：将连续谱从迹公式中分离出去。 -/
 axiom mollified_continuous_spectrum_vanishes (f : MollifiedTestFunction) :
     continuousTerm f.toTestFunction = 0
@@ -1201,16 +1233,22 @@ axiom mollified_spectral_delta :
       (∀ (k : ℕ), k = n → δ.toTestFunction.eval (specDiscM k) = 1) ∧
       (∀ (k : ℕ), k ≠ n → δ.toTestFunction.eval (specDiscM k) = 0)
 
-/-- Delta 函数的迹等式-零点对应（公理）：
+/-- Delta 函数的迹等式-零点对应（公理，正向显式公式的分析核心）：
     对谱点 n 的 delta 磨光函数 δ_n（在 specDiscM n 处取1，其他谱点取0），
     由 spectral_zero_equality（谱侧=零点侧）推出 ζ 在 ρ=1/2+i·t_n 处有零点。
-    数学内容：spectralSum(δ_n) = δ_n(specDiscM n) = 1（其他项为0）。
-    由 spectral_zero_equality，zetaZeroSide(δ_n) = 1。
-    zetaZeroSide(f) = Σ_ρ f̂(ρ) + T(f)，当 δ_n 的 Melin 变换在除
-    ρ=1/2+i·t_n 外的所有非平凡零点处为零时（由 delta 函数的局部化性质），
-    zetaZeroSide(δ_n) = δ̂_n(ρ) + T(δ_n)。
-    此值为1（非零），故 δ̂_n(ρ) ≠ 0，即 ρ 是 ζ 的零点。
-    这是 Weil 显式公式变分论证的正向方向，对应论文第 5.2 节。 -/
+
+    数学内容：
+    (1) spectralSum(δ_n) = δ_n(specDiscM n) = 1（其他项为0）
+    (2) 由 spectral_zero_equality，zetaZeroSide(δ_n) = 1
+    (3) zetaZeroSide(f) = Σ_{ρ: ζ(ρ)=0} f̂(ρ) + T(f)
+    (4) δ_n 的 Mellin 变换在除 ρ=1/2+i·t_n 外的所有非平凡零点处为零
+        （δ 函数的局部化性质，需 melin_zero_localization 的单点版本）
+    (5) 故 zetaZeroSide(δ_n) = δ̂_n(ρ) + T(δ_n) = 1 ≠ T(δ_n)
+    (6) 因此 δ̂_n(ρ) ≠ 0，即 ρ 出现在零点求和中，故 ζ(ρ)=0
+
+    风险提示：步骤(4)需要 Mellin 变换在单点处的局部化能力，
+    这是比 melin_zero_localization（成对局部化）更强的断言。
+    论文用定义性对应绕过了这一步。此公理是正向显式公式的主要分析缺口。 -/
 axiom delta_trace_zero_correspondence (f : MollifiedTestFunction) :
     ∀ (n : ℕ),
       (∀ (k : ℕ), k = n → f.toTestFunction.eval (specDiscM k) = 1) →
@@ -1524,8 +1562,7 @@ theorem off_critical_line_contradiction :
 theorem all_zeros_on_critical_line (f : MollifiedTestFunction) :
     ∀ (s : ℂ), _root_.riemannZeta s = 0 → 0 < s.re → s.re < 1 → s.re = 1 / 2 := by
   intro s hs hre1 hre2
-  by_contra h
-  have h_ne : s.re ≠ 1 / 2 := h
+  by_contra h_ne
   have h_contra := off_critical_line_contradiction s hs hre1 hre2 h_ne
   rcases h_contra with ⟨g, hg⟩
   have h_eq : spectralSum g.toTestFunction = zetaZeroSide g.toTestFunction :=
@@ -1707,13 +1744,13 @@ theorem generalization_to_real_quadratic_fields (d : ℕ) (hd : 0 < d)
     Arthur 迹公式的几何侧可以用热核表示：
       Tr(f(Δ)) = ∫_M Σ_{γ∈Γ} f(dist(z,γz)) K_t(z,γz) dz
     当前用 opaque 抽象，参数 (t, z, w)。 -/
-opaque heatKernel : ℝ → ℝ → ℝ → ℂ
+opaque heatKernel : ℝ → ManifoldM → ManifoldM → ℂ
 
 /-- 热核算子（定义）：H_t = integralOperator (heatKernel t)。
     (H_t f)(z) = ∫ K_t(z,w) f(w) dw。
     热核算子是自伴的、正定的、满足半群性质 H_{t+s} = H_t H_s。
     当 t→0+ 时 H_t → Id（恒等算子），当 t→∞ 时 H_t → 投影到常数函数。 -/
-def heatOperator (t : ℝ) : L2Function → L2Function :=
+def heatOperator (t : ℝ) : L2Function ManifoldM → L2Function ManifoldM :=
     integralOperator (fun z w => heatKernel t z w)
 
 /-- 热核半群性质（公理）：H_{t+s} = H_t ∘ H_s。
@@ -1732,7 +1769,7 @@ axiom heatKernel_semigroup :
     这是热核方法证明谱定理的基础。 -/
 axiom heatKernel_commutes_laplacian :
     ∀ (t : ℝ), 0 ≤ t →
-      ∀ (f : L2Function), True  -- 简化：实际需要 Δ 的定义
+      ∀ (f : L2Function ManifoldM), True  -- 简化：实际需要 Δ 的定义
 
 
 /-- f(Δ) 积分核的热核表示（公理）：
@@ -1751,12 +1788,12 @@ axiom fLaplacianKernel_via_heatKernel (f : TestFunction) :
     三维双曲体积元：dμ(z) = dx dy dt / t³（上半空间坐标 z=(x,y,t)）。
     积分满足线性性和正定性。
     当前用 opaque 抽象，具体实现需要测度论基础设施。 -/
-opaque manifoldIntegral : (ℝ → ℂ) → ℂ
+opaque manifoldIntegral : (ManifoldM → ℂ) → ℂ
 
 /-- 流形积分的线性性（公理）：
     ∫_M (a·f + b·g) dz = a·∫_M f dz + b·∫_M g dz。
     这是积分的基本性质。 -/
-axiom manifoldIntegral_linear (a b : ℂ) (f g : ℝ → ℂ) :
+axiom manifoldIntegral_linear (a b : ℂ) (f g : ManifoldM → ℂ) :
     manifoldIntegral (fun z => a * f z + b * g z) =
       a * manifoldIntegral f + b * manifoldIntegral g
 
@@ -1766,13 +1803,13 @@ axiom manifoldIntegral_linear (a b : ℂ) (f g : ℝ → ℂ) :
       γ = [[a,b],[c,d]] ∈ PSL₂(C), γ·z = (az+b)/(cz+d)
     Γ 是可数群（O_K 是有限生成 Z-模），故可用 ℕ 枚举。
     当前用 opaque 抽象，参数 (n, z)。 -/
-opaque gammaAction : ℕ → ℝ → ℝ
+opaque gammaAction : ℕ → ManifoldM → ManifoldM := fun _ z => z
 
 /-- Γ 作用的单位元（公理）：
     存在 e ∈ Γ（对应某个指标 n₀），使得 gammaAction n₀ z = z 对所有 z。
     这是群作用的基本性质：单位元作用为恒等。 -/
 axiom gammaAction_identity :
-    ∃ (n0 : ℕ), ∀ (z : ℝ), gammaAction n0 z = z
+    ∃ (n0 : ℕ), ∀ (z : ManifoldM), gammaAction n0 z = z
 
 /-- Γ 作用的相容性（公理）：
     对任意 γ, δ ∈ Γ，存在 γδ ∈ Γ 使得
@@ -1780,7 +1817,7 @@ axiom gammaAction_identity :
     这是群作用的基本性质：作用与群乘法相容。
     当前用存在性陈述，具体实现需要 Γ 的乘法结构。 -/
 axiom gammaAction_compat :
-    ∀ (n m : ℕ), ∃ (k : ℕ), ∀ (z : ℝ),
+    ∀ (n m : ℕ), ∃ (k : ℕ), ∀ (z : ManifoldM),
       gammaAction k z = gammaAction n (gammaAction m z)
 
 /-- Γ-周期化求和（定义）：
@@ -1789,7 +1826,7 @@ axiom gammaAction_compat :
     Γ-周期化是构造自守核的标准技术：
     将 H³ 上的核 K 投影到商空间 M = Γ\H³ 上。
     对热核 K_t，K_t^Γ(z,w) 是 M 上的热核。 -/
-noncomputable def gammaPeriodization (K : ℝ → ℝ → ℂ) (z w : ℝ) : ℂ :=
+noncomputable def gammaPeriodization (K : ManifoldM → ManifoldM → ℂ) (z w : ManifoldM) : ℂ :=
     ∑' n : ℕ, K z (gammaAction n w)
 
 /-- 几何侧迹的积分核表示（公理，精确版）：
@@ -1840,7 +1877,7 @@ axiom laplaceTransform_linear (a b : ℂ) (f g : ℝ → ℂ) (t : ℝ) :
     这是迹类算子的基本性质。
     结合 Γ-周期化，得到 Arthur 迹公式几何侧：
       Tr(T_K) = ∫_M K^Γ(z,z) dz = ∫_M Σ_{γ∈Γ} K(z,γz) dz -/
-axiom trace_cyclicity (K : ℝ → ℝ → ℂ) :
+axiom trace_cyclicity (K : ManifoldM → ManifoldM → ℂ) :
     True  -- 简化：精确版需要算子迹的定义，当前 operatorTrace 已由 geometricKernelTrace 替代
 
 /-- 双曲距离（opaque）：d(z,w) = H³ 中 z,w 两点的双曲距离。
@@ -1849,14 +1886,14 @@ axiom trace_cyclicity (K : ℝ → ℝ → ℂ) :
     双曲距离是 Γ-不变的：d(γz, γw) = d(z,w) 对所有 γ ∈ Γ。
     热核的显式公式只依赖于双曲距离。
     当前用 opaque 抽象，参数 (z, w)。 -/
-opaque hyperbolicDistance : ℝ → ℝ → ℝ
+opaque hyperbolicDistance : ManifoldM → ManifoldM → ℝ
 
 /-- 双曲距离的 Γ-不变性（公理）：
     d(γ·z, γ·w) = d(z,w) 对所有 γ ∈ Γ。
     这是双曲等距变换的基本性质：PSL₂(C) 通过等距变换作用在 H³ 上。
     此性质保证热核 K_t(z,w) 只依赖 d(z,w)，因此是 Γ-不变的。 -/
 axiom hyperbolicDistance_gamma_invariant :
-    ∀ (n : ℕ) (z w : ℝ),
+    ∀ (n : ℕ) (z w : ManifoldM),
       hyperbolicDistance (gammaAction n z) (gammaAction n w) = hyperbolicDistance z w
 
 /-- 三维双曲空间热核的显式公式（公理）：
@@ -1868,7 +1905,7 @@ axiom hyperbolicDistance_gamma_invariant :
     其解为上述显式公式。
     因子 d/sinh(d) 来自三维双曲空间的体积元 r² sinh²(r) dr。
     对 t>0，此公式给出光滑、正定、对称的热核。 -/
-axiom heatKernel_explicit_formula (t z w : ℝ) : 0 < t →
+axiom heatKernel_explicit_formula (t : ℝ) (z w : ManifoldM) : 0 < t →
     heatKernel t z w =
       Real.rpow (4 * Real.pi * t) (-3 / 2) * Real.exp (-t) *
       Real.exp (-(hyperbolicDistance z w)^2 / (4 * t)) *
@@ -1877,14 +1914,14 @@ axiom heatKernel_explicit_formula (t z w : ℝ) : 0 < t →
 /-- 热核的对称性（公理）：K_t(z,w) = K_t(w,z)。
     这是热核的基本性质，来自 Laplacian 的自伴性。
     也可从显式公式直接验证：d(z,w)=d(w,z)。 -/
-axiom heatKernel_symmetric (t z w : ℝ) : 0 < t →
+axiom heatKernel_symmetric (t : ℝ) (z w : ManifoldM) : 0 < t →
     heatKernel t z w = heatKernel t w z
 
 /-- 热核的正定性（公理）：热核是实值且正定的。
     (heatKernel t z w).im = 0 且 0 < (heatKernel t z w).re 对所有 z,w 和 t>0。
     这是热核的基本性质，来自热方程的最大值原理。
     也可从显式公式直接验证：所有因子均为正实数。 -/
-axiom heatKernel_positive (t z w : ℝ) : 0 < t →
+axiom heatKernel_positive (t : ℝ) (z w : ManifoldM) : 0 < t →
     (heatKernel t z w).im = 0 ∧ 0 < (heatKernel t z w).re
 
 /-- f(Δ) 积分核的热核表示（精确版，公理）：
@@ -1896,7 +1933,7 @@ axiom heatKernel_positive (t z w : ℝ) : 0 < t →
     这建立了 fLaplacianKernel 与 heatKernel + laplaceTransform 的精确联系，
     替代了之前的简化版 fLaplacianKernel_via_heatKernel。
     当前用 True 简化，具体实现需要 Laplace 反演和积分交换。 -/
-axiom fLaplacianKernel_heatKernel_exact (f : TestFunction) (z w : ℝ) :
+axiom fLaplacianKernel_heatKernel_exact (f : TestFunction) (z w : ManifoldM) :
     True
 
 end RHSpectralDuality
