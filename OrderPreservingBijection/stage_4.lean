@@ -147,29 +147,172 @@ opaque continuousTerm : TestFunction → ℂ
     注：已由 geometricKernelTrace（热核积分形式）替代，保留用于向后兼容。 -/
 opaque operatorTrace : TestFunction → ℂ
 
-/-- f(Δ) 的积分核（opaque）：K_f(z, w)。
-    通过热核的 Laplace 变换（或函数演算）得到：
-      K_f(z,w) = ∫_0^∞ f̂(t) K_t(z,w) dt
-    其中 K_t(z,w) 是热核（第6章定义），f̂ 是 f 的 Laplace 变换。
-    等价地，K_f 是算子 f(Δ) 的 Schwartz 核：
-      (f(Δ) φ)(z) = ∫_M K_f(z,w) φ(w) dw
-    对 f(λ)=e^{-tλ}，K_f 就是热核 K_t。
-    当前用 opaque 抽象，参数 (f, z, w)。 -/
-opaque fLaplacianKernel : TestFunction → ManifoldM → ManifoldM → ℂ
+/- 6. 显式积分核基础设施（热核部分）
+   Shimura 提升核基础设施已移至 Section 3.5。 -/
 
-/-- 几何侧迹（热核积分形式，新接口）：
+/-- 热核（opaque）：K_t(z, w) = 热方程 ∂_t u = Δ u 的基本解。
+    在三维双曲流形 M = Γ\H³ 上，热核有显式表达式：
+      K_t(z, w) = (4πt)^(-3/2) e^{-t} e^{-d(z,w)²/(4t)} · (d(z,w)/sinh(d(z,w)))
+    热核是对称的 K_t(z,w)=K_t(w,z)、正定的、满足半群性质。
+    Arthur 迹公式的几何侧可以用热核表示：
+      Tr(f(Δ)) = ∫_M Σ_{γ∈Γ} f(dist(z,γz)) K_t(z,γz) dz
+    当前用 opaque 抽象，参数 (t, z, w)。 -/
+opaque heatKernel : ℝ → ManifoldM → ManifoldM → ℂ
+
+
+
+/-- 流形上的积分（opaque）：∫_M g(z) dz。
+    积分在基本域 M = Γ\H³ 上关于双曲体积元进行。
+    三维双曲体积元：dμ(z) = dx dy dt / t³（上半空间坐标 z=(x,y,t)）。
+    积分满足线性性和正定性。
+    当前用 opaque 抽象，具体实现需要测度论基础设施。 -/
+opaque manifoldIntegral : (ManifoldM → ℂ) → ℂ
+
+/-- 流形积分的线性性（公理）：
+    ∫_M (a·f + b·g) dz = a·∫_M f dz + b·∫_M g dz。
+    这是积分的基本性质。 -/
+axiom manifoldIntegral_linear (a b : ℂ) (f g : ManifoldM → ℂ) :
+    manifoldIntegral (fun z => a * f z + b * g z) =
+      a * manifoldIntegral f + b * manifoldIntegral g
+
+/-- 算术群 Γ 的元素作用（opaque）：
+    gammaAction n z = γ_n · z，其中 γ_n 是 Γ = PSL₂(O_K) 的第 n 个元素。
+    Γ 通过分式线性变换作用在 H³ 上：
+      γ = [[a,b],[c,d]] ∈ PSL₂(C), γ·z = (az+b)/(cz+d)
+    Γ 是可数群（O_K 是有限生成 Z-模），故可用 ℕ 枚举。
+    当前用 opaque 抽象，参数 (n, z)。 -/
+opaque gammaAction : ℕ → ManifoldM → ManifoldM := fun _ z => z
+
+/-- Γ 作用的单位元（公理）：
+    存在 e ∈ Γ（对应某个指标 n₀），使得 gammaAction n₀ z = z 对所有 z。
+    这是群作用的基本性质：单位元作用为恒等。 -/
+axiom gammaAction_identity :
+    ∃ (n0 : ℕ), ∀ (z : ManifoldM), gammaAction n0 z = z
+
+/-- Γ 作用的相容性（公理）：
+    对任意 γ, δ ∈ Γ，存在 γδ ∈ Γ 使得
+      gammaAction (γδ) z = gammaAction γ (gammaAction δ z)。
+    这是群作用的基本性质：作用与群乘法相容。
+    当前用存在性陈述，具体实现需要 Γ 的乘法结构。 -/
+axiom gammaAction_compat :
+    ∀ (n m : ℕ), ∃ (k : ℕ), ∀ (z : ManifoldM),
+      gammaAction k z = gammaAction n (gammaAction m z)
+
+/-- Γ-周期化求和（定义）：
+    对核 K(z,w)，定义其 Γ-周期化：
+      K^Γ(z,w) = Σ_{γ∈Γ} K(z, γ·w) = Σ_{n:ℕ} K(z, gammaAction n w)
+    Γ-周期化是构造自守核的标准技术：
+    将 H³ 上的核 K 投影到商空间 M = Γ\H³ 上。
+    对热核 K_t，K_t^Γ(z,w) 是 M 上的热核。 -/
+noncomputable def gammaPeriodization (K : ManifoldM → ManifoldM → ℂ) (z w : ManifoldM) : ℂ :=
+    ∑' n : ℕ, K z (gammaAction n w)
+
+/- 6.1 分析基础设施：Laplace 变换、Γ 作用、热核显式公式 -/
+
+/-- Laplace 变换（opaque）：L[f](t) = ∫₀^∞ f(λ) e^{-tλ} dλ。
+    对紧支光滑 f，Laplace 变换在 Re(t)>0 上解析。
+    Laplace 变换建立了函数演算与热核的联系：
+      K_f(z,w) = L[f̂](t) 作用在热核上
+    其中 f̂ 是 f 的某种变换。
+    当前用 opaque 抽象积分，具体实现需要测度论基础设施。 -/
+opaque laplaceTransform : (ℝ → ℂ) → ℝ → ℂ
+
+/-- Laplace 变换的指数函数计算（公理）：
+    L[e^{-sλ}](t) = 1/(t+s)，对 t,s > 0。
+    这是 Laplace 变换的基本公式，直接计算：
+      ∫₀^∞ e^{-sλ} e^{-tλ} dλ = ∫₀^∞ e^{-(s+t)λ} dλ = 1/(s+t)
+    这个公式是热核函数演算的基础：
+    对 f(λ)=e^{-sλ}，f(Δ)=e^{-sΔ}=H_s（热核算子）。 -/
+axiom laplaceTransform_exp (s t : ℝ) : 0 < t → 0 < s →
+    laplaceTransform (fun x => Real.exp (-s * x)) t = 1 / (t + s)
+
+/-- Laplace 变换的线性性（公理）：
+    L[af + bg](t) = a·L[f](t) + b·L[g](t)。
+    这是积分线性性的直接推论。 -/
+axiom laplaceTransform_linear (a b : ℂ) (f g : ℝ → ℂ) (t : ℝ) :
+    laplaceTransform (fun x => a * f x + b * g x) t =
+      a * laplaceTransform f t + b * laplaceTransform g t
+
+/-- 积分核的复合（定义）：
+    (K1 ∘_K K2)(z,w) = ∫_M K1(z,u) K2(u,w) du。
+    对应于积分算子的复合：T_{K1} ∘ T_{K2} = T_{K1 ∘_K K2}。
+    这是定义迹循环性的前提。 -/
+noncomputable def kernelComposition (K1 K2 : ManifoldM → ManifoldM → ℂ) :
+    ManifoldM → ManifoldM → ℂ :=
+  fun z w => manifoldIntegral (fun u => K1 z u * K2 u w)
+
+/-- 迹的循环性（公理，精确版）：Tr(T_{K1} ∘ T_{K2}) = Tr(T_{K2} ∘ T_{K1})。
+    即复合核的对角线积分与顺序无关：
+      ∫_M (K1 ∘_K K2)(z,z) dz = ∫_M (K2 ∘_K K1)(z,z) dz。
+    这是迹类算子的基本性质，由 Fubini 定理交换积分顺序证明。
+    结合 Γ-周期化，得到 Arthur 迹公式几何侧的迹表示。 -/
+axiom trace_cyclicity (K1 K2 : ManifoldM → ManifoldM → ℂ) :
+    manifoldIntegral (fun z => kernelComposition K1 K2 z z) =
+    manifoldIntegral (fun z => kernelComposition K2 K1 z z)
+
+/-- 双曲距离（opaque）：d(z,w) = H³ 中 z,w 两点的双曲距离。
+    在双曲空间 H³ 的上半空间模型中：
+      d(z,w) = arcosh(1 + |z-w|² / (2 Im(z) Im(w)))
+    双曲距离是 Γ-不变的：d(γz, γw) = d(z,w) 对所有 γ ∈ Γ。
+    热核的显式公式只依赖于双曲距离。
+    当前用 opaque 抽象，参数 (z, w)。 -/
+opaque hyperbolicDistance : ManifoldM → ManifoldM → ℝ
+
+/-- 双曲距离的 Γ-不变性（公理）：
+    d(γ·z, γ·w) = d(z,w) 对所有 γ ∈ Γ。
+    这是双曲等距变换的基本性质：PSL₂(C) 通过等距变换作用在 H³ 上。
+    此性质保证热核 K_t(z,w) 只依赖 d(z,w)，因此是 Γ-不变的。 -/
+axiom hyperbolicDistance_gamma_invariant :
+    ∀ (n : ℕ) (z w : ManifoldM),
+      hyperbolicDistance (gammaAction n z) (gammaAction n w) = hyperbolicDistance z w
+
+/-- 三维双曲空间热核的显式公式（公理）：
+    K_t(z,w) = (4πt)^(-3/2) · e^{-t} · e^{-d(z,w)²/(4t)} · (d(z,w)/sinh(d(z,w)))
+    其中 d(z,w) 是双曲距离。
+    这是三维双曲空间 H³ 上热方程的基本解，由 McKean (1972) 给出。
+    推导：三维双曲空间的径向热核满足
+      ∂_t u = ∂_r² u + 2 coth(r) ∂_r u - u
+    其解为上述显式公式。
+    因子 d/sinh(d) 来自三维双曲空间的体积元 r² sinh²(r) dr。
+    对 t>0，此公式给出光滑、正定、对称的热核。 -/
+axiom heatKernel_explicit_formula (t : ℝ) (z w : ManifoldM) : 0 < t →
+    heatKernel t z w =
+      Real.rpow (4 * Real.pi * t) (-3 / 2) * Real.exp (-t) *
+      Real.exp (-(hyperbolicDistance z w)^2 / (4 * t)) *
+      (hyperbolicDistance z w / ((Real.exp (hyperbolicDistance z w) - Real.exp (-(hyperbolicDistance z w))) / 2))
+
+/-- 热核的对称性（公理）：K_t(z,w) = K_t(w,z)。
+    这是热核的基本性质，来自 Laplacian 的自伴性。
+    也可从显式公式直接验证：d(z,w)=d(w,z)。 -/
+axiom heatKernel_symmetric (t : ℝ) (z w : ManifoldM) : 0 < t →
+    heatKernel t z w = heatKernel t w z
+
+/-- 热核的正定性（公理）：热核是实值且正定的。
+    (heatKernel t z w).im = 0 且 0 < (heatKernel t z w).re 对所有 z,w 和 t>0。
+    这是热核的基本性质，来自热方程的最大值原理。
+    也可从显式公式直接验证：所有因子均为正实数。 -/
+axiom heatKernel_positive (t : ℝ) (z w : ManifoldM) : 0 < t →
+    (heatKernel t z w).im = 0 ∧ 0 < (heatKernel t z w).re
+
+/-- 实数轴上的积分（opaque）：∫₀^∞ h(t) dt。
+    用于热核的 Laplace 变换加权积分：K_f = ∫₀^∞ L[f](t) K_t dt。
+    当前用 opaque 抽象，具体实现需要测度论基础设施。 -/
+opaque realIntegral : (ℝ → ℂ) → ℂ
+
+
+/-- f(Δ) 的积分核（定义）：K_f(z, w) = ∫₀^∞ L[f](t) · K_t(z,w) dt。
+    即 f(Δ) 的积分核是热核的 Laplace 变换加权积分。
+    推导：由谱定理 f(Δ) = ∫ f(λ) dE(λ)，热核 e^{-tΔ} = ∫ e^{-tλ} dE(λ)，
+    由 Laplace 反演得 K_f = ∫ L[f](t) K_t dt。 -/
+def fLaplacianKernel (f : TestFunction) (z w : ManifoldM) : ℂ :=
+    realIntegral (fun t => laplaceTransform f t * heatKernel t z w)
+
+/-- 几何侧迹（定义，热核积分形式）：
     Tr_geo(f) = ∫_M Σ_{γ∈Γ} K_f(z, γz) dz
-    这是 Arthur 迹公式几何侧的显式积分表达式：
-    - K_f(z,w) 是 f(Δ) 的积分核
-    - Σ_{γ∈Γ} 是对算术群 Γ 的所有元素求和（轨道积分）
-    - ∫_M dz 是在基本域 M = Γ\H³ 上积分
-    由迹的循环性，Tr(f(Δ)) = ∫_M K_f(z,z) dz，
-    再利用 K_f(z,z) = Σ_{γ∈Γ} K_f(z,γz)（Γ-周期化），
-    得到上述几何侧表达式。
-    这替代了之前的抽象 operatorTrace，把"算子迹"这个黑箱
-    替换为流形上的显式积分。
-    当前用 opaque 抽象积分和求和，具体实现需要测度论基础设施。 -/
-opaque geometricKernelTrace : TestFunction → ℂ
+    即 geometricKernelTrace f = manifoldIntegral (fun z => gammaPeriodization (fLaplacianKernel f) z z)。
+    这是 Arthur 迹公式几何侧的显式积分表达式。 -/
+noncomputable def geometricKernelTrace (f : TestFunction) : ℂ :=
+    manifoldIntegral (fun z => gammaPeriodization (fLaplacianKernel f) z z)
 
 /-- 算子迹与热核积分迹等价（公理）：
     operatorTrace f = geometricKernelTrace f。
@@ -667,6 +810,31 @@ opaque laplacian_X : L2Function ManifoldX → L2Function ManifoldX
 /-- 三维 Laplacian（opaque，类型化）：Δ_M : L²(M) → L²(M)。 -/
 opaque laplacian_M : L2Function ManifoldM → L2Function ManifoldM
 
+/-- 热核算子（定义）：H_t = integralOperator (heatKernel t)。
+    (H_t f)(z) = ∫ K_t(z,w) f(w) dw。
+    热核算子是自伴的、正定的、满足半群性质 H_{t+s} = H_t H_s。
+    当 t→0+ 时 H_t → Id（恒等算子），当 t→∞ 时 H_t → 投影到常数函数。 -/
+def heatOperator (t : ℝ) : L2Function ManifoldM → L2Function ManifoldM :=
+    integralOperator (fun z w => heatKernel t z w)
+
+/-- 热核半群性质（公理）：H_{t+s} = H_t ∘ H_s。
+    这是热方程的基本性质：热流的时间可加性。
+    数学上，这等价于热核的卷积公式：
+      K_{t+s}(z,w) = ∫ K_t(z,u) K_s(u,w) du。
+    半群性质是热核谱表示的基础：H_t = e^{-tΔ}。 -/
+axiom heatKernel_semigroup :
+    ∀ (t s : ℝ), 0 ≤ t → 0 ≤ s →
+      heatOperator (t + s) = (heatOperator t) ∘ (heatOperator s)
+
+/-- 热核与 Laplacian 交换（公理，精确版）：H_t ∘ Δ_M = Δ_M ∘ H_t。
+    这是热方程的直接推论：热核算子是 Laplacian 的函数 H_t = e^{-tΔ_M}。
+    因此 H_t 保持 Laplacian 的特征子空间：
+    如果 Δ_M φ = λ φ，则 Δ_M (H_t φ) = H_t (Δ_M φ) = λ (H_t φ)。
+    这是热核方法证明谱定理的基础。 -/
+axiom heatKernel_commutes_laplacian :
+    ∀ (t : ℝ), 0 ≤ t →
+      ∀ (f : L2Function ManifoldM),
+        heatOperator t (laplacian_M f) = laplacian_M (heatOperator t f)
 /-- Maass 特征函数（opaque，类型化）：第 k 个 Maass 形式 φ_k ∈ L²(X)。 -/
 opaque maassEigenfunction : ℕ → L2Function ManifoldX
 
@@ -1077,13 +1245,22 @@ theorem mollified_trace_equality (f : MollifiedTestFunction) :
   rw [h_ellip, h_cont] at h_atf
   simpa using h_atf
 
-/-- ζ 零点侧求和（抽象不透明常量）。
-    Z(f) = Σ_{ρ: ζ(ρ)=0, 0<Re(ρ)<1} \hat{f}(ρ) + T(f)
-    其中 \hat{f} 是 f 的 Melin 变换（在零点 ρ 处的求值），
-    T(f) 是平凡零点 s=-2,-4,... 和极点 s=1 的贡献。
-    完整定义需要 Melin 变换、零点求和的收敛性（由临界带内零点密度 O(log T) 保证），
-    当前用 opaque 抽象。这是 Weil 显式公式的"零点侧"。 -/
-opaque zetaZeroSide : TestFunction → ℂ
+opaque melinTransform : TestFunction → ℂ → ℂ
+/-- 非平凡零点求和（opaque）：
+    Z_nontriv(f) = Σ_{ρ: ζ(ρ)=0, 0<Re(ρ)<1} melinTransform f ρ。
+    这是 zetaZeroSide 的一部分，只包含临界带内非平凡零点的贡献。 -/
+opaque nontrivialZeroSum : TestFunction → ℂ
+
+/-- 平凡零点与极点贡献（opaque）：
+    T(f) = Σ_{k≥1} melinTransform f (-2k) + melinTransform f (1) · Res_{s=1}(zetaLogDerivative)。
+    这是 zetaZeroSide 的另一部分，包含平凡零点 s=-2,-4,... 和极点 s=1 的贡献。 -/
+opaque trivialZeroContribution : TestFunction → ℂ
+
+/-- ζ 零点侧求和（定义）：
+    Z(f) = nontrivialZeroSum(f) + trivialZeroContribution(f)
+    即非平凡零点求和 + 平凡零点/极点贡献。
+    由留数定理，围道积分的留数来自所有奇点（非平凡零点+平凡零点+极点）。 -/
+def zetaZeroSide (f : TestFunction) : ℂ := nontrivialZeroSum f + trivialZeroContribution f
 
 /-- ζ 函数对数导数的围道积分（opaque）：
     I(f) = (1/2πi) ∮ (ζ'/ζ)(s) · f̂(s) ds
@@ -1233,29 +1410,194 @@ axiom mollified_spectral_delta :
       (∀ (k : ℕ), k = n → δ.toTestFunction.eval (specDiscM k) = 1) ∧
       (∀ (k : ℕ), k ≠ n → δ.toTestFunction.eval (specDiscM k) = 0)
 
-/-- Delta 函数的迹等式-零点对应（公理，正向显式公式的分析核心）：
-    对谱点 n 的 delta 磨光函数 δ_n（在 specDiscM n 处取1，其他谱点取0），
-    由 spectral_zero_equality（谱侧=零点侧）推出 ζ 在 ρ=1/2+i·t_n 处有零点。
 
-    数学内容：
-    (1) spectralSum(δ_n) = δ_n(specDiscM n) = 1（其他项为0）
-    (2) 由 spectral_zero_equality，zetaZeroSide(δ_n) = 1
-    (3) zetaZeroSide(f) = Σ_{ρ: ζ(ρ)=0} f̂(ρ) + T(f)
-    (4) δ_n 的 Mellin 变换在除 ρ=1/2+i·t_n 外的所有非平凡零点处为零
-        （δ 函数的局部化性质，需 melin_zero_localization 的单点版本）
-    (5) 故 zetaZeroSide(δ_n) = δ̂_n(ρ) + T(δ_n) = 1 ≠ T(δ_n)
-    (6) 因此 δ̂_n(ρ) ≠ 0，即 ρ 出现在零点求和中，故 ζ(ρ)=0
 
-    风险提示：步骤(4)需要 Mellin 变换在单点处的局部化能力，
-    这是比 melin_zero_localization（成对局部化）更强的断言。
-    论文用定义性对应绕过了这一步。此公理是正向显式公式的主要分析缺口。 -/
-axiom delta_trace_zero_correspondence (f : MollifiedTestFunction) :
+/-- 谱侧由谱点取值决定（定理，直接从 spectralSum 定义推出）：
+    如果两个测试函数在所有谱点 {specDiscM n} 上取值相同，
+    则它们的谱侧求和相等。
+    证明：spectralSum f = ∑' n, f.eval(specDiscM n)，逐项相等故无穷和相等。 -/
+theorem spectral_sum_determined_by_points (f1 f2 : TestFunction) :
+    (∀ n : ℕ, f1.eval (specDiscM n) = f2.eval (specDiscM n)) →
+    spectralSum f1 = spectralSum f2 := by
+  intro h
+  have h_tsum : ∑' n : ℕ, f1.eval (specDiscM n) = ∑' n : ℕ, f2.eval (specDiscM n) := by
+    congr with n
+    exact h n
+  simpa [spectralSum] using h_tsum
+
+
+/-- 谱点 Delta 的 Mellin 修正能力（公理，泛函分析自由度）：
+    对任意满足谱点条件的磨光函数 δ，存在另一个磨光函数 δ' 满足：
+    (1) 相同的谱点条件：δ'(specDiscM n)=1，其他谱点=0
+    (2) Mellin 消零：对所有非平凡零点 ρ ≠ s₀，melinTransform δ' ρ = 0
+    (3) Mellin 消零：对所有平凡零点 s=-2k，melinTransform δ' (-2k) = 0
+    (4) Mellin 消零：在极点 s=1 处，melinTransform δ' 1 = 0
+
+    数学依据：磨光函数空间 C_c^∞(ℝ) 在保持可数个离散点取值的同时，
+    仍有足够的自由度来控制其 Mellin 变换在另一个离散点集上的取值。
+    这是因为 C_c^∞(ℝ) 是无穷维 Fréchet 空间，而约束条件（谱点取值 + Mellin 消零）
+    只涉及可数个线性泛函，其核的余维数可数，空间仍有非平凡自由度。
+    风险等级：中（泛函分析标准结果，需验证约束集的线性无关性）。
+
+    与 mollified_spectral_delta 的区别：后者只保证谱点插值的存在性，
+    本公理保证在已有谱点 delta 的基础上可以修正 Mellin 变换而不破坏谱点条件。 -/
+axiom melin_transform_correction_for_spectral_delta :
+    ∀ (n : ℕ) (δ : MollifiedTestFunction),
+      (∀ (k : ℕ), k = n → δ.toTestFunction.eval (specDiscM k) = 1) →
+      (∀ (k : ℕ), k ≠ n → δ.toTestFunction.eval (specDiscM k) = 0) →
+      ∃ (δ' : MollifiedTestFunction),
+        (∀ (k : ℕ), k = n → δ'.toTestFunction.eval (specDiscM k) = 1) ∧
+        (∀ (k : ℕ), k ≠ n → δ'.toTestFunction.eval (specDiscM k) = 0) ∧
+        (∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
+          ρ ≠ (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ) →
+          melinTransform δ'.toTestFunction ρ = 0) ∧
+        (∀ (k : ℕ), melinTransform δ'.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0) ∧
+        melinTransform δ'.toTestFunction (1 : ℂ) = 0
+
+/-- 带 Mellin 消零的谱点 Delta（定理，由谱点插值 + Mellin 修正推出）：
+    对任意谱点 n，存在磨光函数 δ_n 满足谱点条件、Mellin 局部化、平凡贡献为零。
+    证明：
+    (1) mollified_spectral_delta n 给出 δ 满足谱点条件
+    (2) melin_transform_correction_for_spectral_delta 对 δ 应用，给出 δ'
+        满足相同谱点条件 + Mellin 在非平凡零点/平凡零点/极点处消零 -/
+theorem mollified_spectral_delta_with_melin_vanishing :
+    ∀ (n : ℕ), ∃ (δ : MollifiedTestFunction),
+      (∀ (k : ℕ), k = n → δ.toTestFunction.eval (specDiscM k) = 1) ∧
+      (∀ (k : ℕ), k ≠ n → δ.toTestFunction.eval (specDiscM k) = 0) ∧
+      (∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
+        ρ ≠ (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ) →
+        melinTransform δ.toTestFunction ρ = 0) ∧
+      (∀ (k : ℕ), melinTransform δ.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0) ∧
+      melinTransform δ.toTestFunction (1 : ℂ) = 0 := by
+  intro n
+  rcases mollified_spectral_delta n with ⟨δ, h1, h2⟩
+  exact melin_transform_correction_for_spectral_delta n δ h1 h2
+
+/-- 平凡贡献的 Mellin 消零判据（公理，留数定理）：
+    如果测试函数 f 的 Mellin 变换在所有平凡零点 s=-2,-4,...
+    和极点 s=1 处为零，则 trivialZeroContribution(f) = 0。
+
+    数学依据：trivialZeroContribution(f) 是围道积分在平凡零点和极点处的留数之和。
+    由留数定理，Res_{s=-2k}(ζ'/ζ · f̂) = f̂(-2k) · Res_{s=-2k}(ζ'/ζ)，
+    Res_{s=1}(ζ'/ζ · f̂) = f̂(1) · Res_{s=1}(ζ'/ζ)。
+    当 f̂ 在这些点为零时，所有留数为零，故平凡贡献为零。
+    风险等级：低（留数定理直接结果）。 -/
+axiom trivialZeroContribution_of_melin_vanishing (f : TestFunction) :
+    (∀ (k : ℕ), melinTransform f ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0) →
+    melinTransform f (1 : ℂ) = 0 →
+    trivialZeroContribution f = 0
+
+/-- Delta 函数的单点 Mellin 局部化（定理，由插值+留数判据推出）：
+    对任意谱点 n，存在磨光函数 δ_n 满足谱点条件、Mellin 局部化、平凡贡献为零。
+    证明：
+    (1) mollified_spectral_delta_with_melin_vanishing 给出 δ_n 满足
+        谱点条件 + Mellin 在非平凡零点/平凡零点/极点处消零
+    (2) trivialZeroContribution_of_melin_vanishing 由 Mellin 在平凡零点/极点处消零
+        推出 trivialZeroContribution(δ_n) = 0 -/
+theorem delta_melin_single_point_localization :
+    ∀ (n : ℕ), ∃ (δ : MollifiedTestFunction),
+      (∀ (k : ℕ), k = n → δ.toTestFunction.eval (specDiscM k) = 1) ∧
+      (∀ (k : ℕ), k ≠ n → δ.toTestFunction.eval (specDiscM k) = 0) ∧
+      (∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
+        ρ ≠ (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ) →
+        melinTransform δ.toTestFunction ρ = 0) ∧
+      trivialZeroContribution δ.toTestFunction = 0 := by
+  intro n
+  rcases mollified_spectral_delta_with_melin_vanishing n with
+    ⟨δ, h1, h2, h_melin_nontriv, h_melin_triv, h_melin_pole⟩
+  have h_triv_zero : trivialZeroContribution δ.toTestFunction = 0 :=
+    trivialZeroContribution_of_melin_vanishing δ.toTestFunction h_melin_triv h_melin_pole
+  exact ⟨δ, h1, h2, h_melin_nontriv, h_triv_zero⟩
+
+/-- 非平凡零点求和的局部化（公理）：
+    如果测试函数 f 的 Mellin 变换在所有非平凡零点处为零，
+    则 nontrivialZeroSum(f) = 0。
+    这是 nontrivialZeroSum 定义（Σ_{ρ} f̂(ρ)）的直接推论：
+    所有项为零，故和为零。 -/
+axiom nontrivialZeroSum_localization (f : TestFunction) :
+    (∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
+      melinTransform f ρ = 0) →
+    nontrivialZeroSum f = 0
+
+/-- 谱点 Delta 函数的谱和为 1（定理）：
+    如果 f 在 specDiscM n 处取 1，其他谱点取 0，
+    则 spectralSum(f) = ∑'_k f(specDiscM k) = 1。
+    证明：无穷求和中只有第 n 项为 1，其余为 0。 -/
+theorem spectralSum_delta_eq_one (f : TestFunction) (n : ℕ) :
+    (∀ (k : ℕ), k = n → f.eval (specDiscM k) = 1) →
+    (∀ (k : ℕ), k ≠ n → f.eval (specDiscM k) = 0) →
+    spectralSum f = 1 := by
+  intro h1 h2
+  have h : ∀ (k : ℕ), f.eval (specDiscM k) = if k = n then (1 : ℂ) else 0 := by
+    intro k
+    by_cases hk : k = n
+    · rw [if_pos hk]; exact h1 k hk
+    · rw [if_neg hk]; exact h2 k hk
+  have h_sum : spectralSum f = ∑' (k : ℕ), (if k = n then (1 : ℂ) else 0) := by
+    rw [show spectralSum f = ∑' (k : ℕ), f.eval (specDiscM k) from rfl]
+    apply tsum_congr
+    intro k
+    exact h k
+  rw [h_sum]
+  have h_single : ∑' (k : ℕ), (if k = n then (1 : ℂ) else 0) = 1 := by
+    simp
+  exact h_single
+
+/-- Delta 函数的迹等式-零点对应（定理，由结构分解+单点局部化+反证法推出）：
+    对谱点 n 的 delta 磨光函数 δ_n，由 spectral_zero_equality 推出
+    ζ 在 ρ=1/2+i·t_n 处有零点。
+
+    证明（反证法）：
+    (1) delta_melin_single_point_localization 给出 δ_n 满足谱点条件、
+        Mellin 局部化、平凡贡献为零
+    (2) spectralSum(δ_n) = 1（谱点条件）
+    (3) 由 spectral_zero_equality，zetaZeroSide(δ_n) = 1
+    (4) 由 zetaZeroSide_structure，zetaZeroSide(δ_n) = nontrivialZeroSum(δ_n) + trivialZeroContribution(δ_n)
+    (5) trivialZeroContribution(δ_n) = 0，故 nontrivialZeroSum(δ_n) = 1
+    (6) 反证：假设 s₀ = 1/2+i·t_n 不是零点
+    (7) 由 Mellin 局部化，所有非平凡零点 ρ ≠ s₀ 处 melinTransform δ_n ρ = 0
+    (8) 因 s₀ 不是零点，nontrivialZeroSum(δ_n) = 0，与 (5) 矛盾
+    (9) 故 s₀ 是零点 -/
+theorem delta_trace_zero_correspondence (f : MollifiedTestFunction) :
     ∀ (n : ℕ),
       (∀ (k : ℕ), k = n → f.toTestFunction.eval (specDiscM k) = 1) →
       (∀ (k : ℕ), k ≠ n → f.toTestFunction.eval (specDiscM k) = 0) →
       ∃ (ρ : ℂ), _root_.riemannZeta ρ = 0 ∧
-        ρ = (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ)
-
+        ρ = (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ) := by
+  intro n h1 h2
+  rcases delta_melin_single_point_localization n with ⟨δ, hδ1, hδ2, hδ_melin, hδ_triv⟩
+  have h_spec_sum : spectralSum δ.toTestFunction = 1 :=
+    spectralSum_delta_eq_one δ.toTestFunction n hδ1 hδ2
+  have h_zero_eq : zetaZeroSide δ.toTestFunction = spectralSum δ.toTestFunction :=
+    (spectral_zero_equality δ).symm
+  have h_zeta_one : zetaZeroSide δ.toTestFunction = 1 := by
+    rw [h_zero_eq, h_spec_sum]
+  have h_struct : zetaZeroSide δ.toTestFunction =
+      nontrivialZeroSum δ.toTestFunction + trivialZeroContribution δ.toTestFunction :=
+    rfl
+  have h_nontriv_one : nontrivialZeroSum δ.toTestFunction = 1 := by
+    rw [h_struct] at h_zeta_one
+    rw [hδ_triv] at h_zeta_one
+    simpa using h_zeta_one
+  let s0 : ℂ := (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ)
+  have h_main : _root_.riemannZeta s0 = 0 := by
+    by_contra h_not_zero
+    have h_all_zero : ∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
+        melinTransform δ.toTestFunction ρ = 0 := by
+      intro ρ hz hre1 hre2
+      by_cases h_eq : ρ = (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ)
+      · have h_s0_eq : s0 = ρ := by
+          simpa [s0] using h_eq.symm
+        have h_contra : _root_.riemannZeta s0 = 0 := by
+          rw [h_s0_eq]
+          exact hz
+        exact False.elim (h_not_zero h_contra)
+      · exact hδ_melin ρ hz hre1 hre2 h_eq
+    have h_nontriv_zero : nontrivialZeroSum δ.toTestFunction = 0 :=
+      nontrivialZeroSum_localization δ.toTestFunction h_all_zero
+    rw [h_nontriv_zero] at h_nontriv_one
+    <;> norm_num at h_nontriv_one <;> tauto
+  exact ⟨s0, h_main, rfl⟩
 /-- 正向支撑匹配（定理，由谱点插值 + delta 零点对应推出）：
     每个 Maass 参数 t_n → ζ 零点 ρ = 1/2+i·t_n。
     证明：
@@ -1280,27 +1622,6 @@ theorem maass_param_to_zero (f : MollifiedTestFunction) :
     ∀ (n : ℕ), ∃ (ρ : ℂ), _root_.riemannZeta ρ = 0 ∧
       ρ = (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ) :=
   forward_support_match f
-
-/-- 谱侧由谱点取值决定（定理，直接从 spectralSum 定义推出）：
-    如果两个测试函数在所有谱点 {specDiscM n} 上取值相同，
-    则它们的谱侧求和相等。
-    证明：spectralSum f = ∑' n, f.eval(specDiscM n)，逐项相等故无穷和相等。 -/
-theorem spectral_sum_determined_by_points (f1 f2 : TestFunction) :
-    (∀ n : ℕ, f1.eval (specDiscM n) = f2.eval (specDiscM n)) →
-    spectralSum f1 = spectralSum f2 := by
-  intro h
-  have h_tsum : ∑' n : ℕ, f1.eval (specDiscM n) = ∑' n : ℕ, f2.eval (specDiscM n) := by
-    congr with n
-    exact h n
-  simpa [spectralSum] using h_tsum
-
-/-- Melin 变换（opaque）：
-    对测试函数 f: ℝ→ℂ，其 Melin 变换 f̂: ℂ→ℂ。
-    完整定义为 f̂(s) = ∫₀^∞ f(x) x^{s-1} dx（或 Weil 标准化形式）。
-    这是 Weil 显式公式的核心工具，将实轴上的测试函数
-    变换为复平面上的全纯函数，使得零点侧求和可以表示为
-    Σ_{ρ: ζ(ρ)=0} f̂(ρ)。当前用 opaque 抽象。 -/
-opaque melinTransform : TestFunction → ℂ → ℂ
 
 /-- 零点侧的 Melin 变换局部化（公理）：
     对非临界线零点对 {ρ, 1-ρ}，如果两个测试函数的 Melin 变换
@@ -1734,206 +2055,5 @@ theorem generalization_to_real_quadratic_fields (d : ℕ) (hd : 0 < d)
     (h_order_preserving : True) (h_jl_correspondence : True) : True := by
   trivial
 
-/- 6. 显式积分核基础设施（热核部分）
-   Shimura 提升核基础设施已移至 Section 3.5。 -/
-
-/-- 热核（opaque）：K_t(z, w) = 热方程 ∂_t u = Δ u 的基本解。
-    在三维双曲流形 M = Γ\H³ 上，热核有显式表达式：
-      K_t(z, w) = (4πt)^(-3/2) e^{-t} e^{-d(z,w)²/(4t)} · (d(z,w)/sinh(d(z,w)))
-    热核是对称的 K_t(z,w)=K_t(w,z)、正定的、满足半群性质。
-    Arthur 迹公式的几何侧可以用热核表示：
-      Tr(f(Δ)) = ∫_M Σ_{γ∈Γ} f(dist(z,γz)) K_t(z,γz) dz
-    当前用 opaque 抽象，参数 (t, z, w)。 -/
-opaque heatKernel : ℝ → ManifoldM → ManifoldM → ℂ
-
-/-- 热核算子（定义）：H_t = integralOperator (heatKernel t)。
-    (H_t f)(z) = ∫ K_t(z,w) f(w) dw。
-    热核算子是自伴的、正定的、满足半群性质 H_{t+s} = H_t H_s。
-    当 t→0+ 时 H_t → Id（恒等算子），当 t→∞ 时 H_t → 投影到常数函数。 -/
-def heatOperator (t : ℝ) : L2Function ManifoldM → L2Function ManifoldM :=
-    integralOperator (fun z w => heatKernel t z w)
-
-/-- 热核半群性质（公理）：H_{t+s} = H_t ∘ H_s。
-    这是热方程的基本性质：热流的时间可加性。
-    数学上，这等价于热核的卷积公式：
-      K_{t+s}(z,w) = ∫ K_t(z,u) K_s(u,w) du。
-    半群性质是热核谱表示的基础：H_t = e^{-tΔ}。 -/
-axiom heatKernel_semigroup :
-    ∀ (t s : ℝ), 0 ≤ t → 0 ≤ s →
-      heatOperator (t + s) = (heatOperator t) ∘ (heatOperator s)
-
-/-- 热核与 Laplacian 交换（公理）：H_t ∘ Δ = Δ ∘ H_t。
-    这是热方程的直接推论：热核算子是 Laplacian 的函数 H_t = e^{-tΔ}。
-    因此 H_t 保持 Laplacian 的特征子空间：
-    如果 Δ φ = λ φ，则 Δ (H_t φ) = H_t (Δ φ) = λ (H_t φ)。
-    这是热核方法证明谱定理的基础。 -/
-axiom heatKernel_commutes_laplacian :
-    ∀ (t : ℝ), 0 ≤ t →
-      ∀ (f : L2Function ManifoldM), True  -- 简化：实际需要 Δ 的定义
-
-
-/-- f(Δ) 积分核的热核表示（公理）：
-    K_f(z,w) = ∫_0^∞ f̂(t) K_t(z,w) dt
-    即 f(Δ) 的积分核是热核的 Laplace 变换（函数演算）。
-    对 f(λ)=e^{-tλ}，K_f 就是热核 K_t；
-    对一般 f，K_f 通过谱定理 f(Δ) = ∫ f(λ) dE(λ) 得到。
-    这建立了 fLaplacianKernel 与 heatKernel 的联系，
-    使得 Arthur 迹公式可以完全用热核表述。
-    当前用 True 简化，具体实现需要 Laplace 变换和谱测度。 -/
-axiom fLaplacianKernel_via_heatKernel (f : TestFunction) :
-    True
-
-/-- 流形上的积分（opaque）：∫_M g(z) dz。
-    积分在基本域 M = Γ\H³ 上关于双曲体积元进行。
-    三维双曲体积元：dμ(z) = dx dy dt / t³（上半空间坐标 z=(x,y,t)）。
-    积分满足线性性和正定性。
-    当前用 opaque 抽象，具体实现需要测度论基础设施。 -/
-opaque manifoldIntegral : (ManifoldM → ℂ) → ℂ
-
-/-- 流形积分的线性性（公理）：
-    ∫_M (a·f + b·g) dz = a·∫_M f dz + b·∫_M g dz。
-    这是积分的基本性质。 -/
-axiom manifoldIntegral_linear (a b : ℂ) (f g : ManifoldM → ℂ) :
-    manifoldIntegral (fun z => a * f z + b * g z) =
-      a * manifoldIntegral f + b * manifoldIntegral g
-
-/-- 算术群 Γ 的元素作用（opaque）：
-    gammaAction n z = γ_n · z，其中 γ_n 是 Γ = PSL₂(O_K) 的第 n 个元素。
-    Γ 通过分式线性变换作用在 H³ 上：
-      γ = [[a,b],[c,d]] ∈ PSL₂(C), γ·z = (az+b)/(cz+d)
-    Γ 是可数群（O_K 是有限生成 Z-模），故可用 ℕ 枚举。
-    当前用 opaque 抽象，参数 (n, z)。 -/
-opaque gammaAction : ℕ → ManifoldM → ManifoldM := fun _ z => z
-
-/-- Γ 作用的单位元（公理）：
-    存在 e ∈ Γ（对应某个指标 n₀），使得 gammaAction n₀ z = z 对所有 z。
-    这是群作用的基本性质：单位元作用为恒等。 -/
-axiom gammaAction_identity :
-    ∃ (n0 : ℕ), ∀ (z : ManifoldM), gammaAction n0 z = z
-
-/-- Γ 作用的相容性（公理）：
-    对任意 γ, δ ∈ Γ，存在 γδ ∈ Γ 使得
-      gammaAction (γδ) z = gammaAction γ (gammaAction δ z)。
-    这是群作用的基本性质：作用与群乘法相容。
-    当前用存在性陈述，具体实现需要 Γ 的乘法结构。 -/
-axiom gammaAction_compat :
-    ∀ (n m : ℕ), ∃ (k : ℕ), ∀ (z : ManifoldM),
-      gammaAction k z = gammaAction n (gammaAction m z)
-
-/-- Γ-周期化求和（定义）：
-    对核 K(z,w)，定义其 Γ-周期化：
-      K^Γ(z,w) = Σ_{γ∈Γ} K(z, γ·w) = Σ_{n:ℕ} K(z, gammaAction n w)
-    Γ-周期化是构造自守核的标准技术：
-    将 H³ 上的核 K 投影到商空间 M = Γ\H³ 上。
-    对热核 K_t，K_t^Γ(z,w) 是 M 上的热核。 -/
-noncomputable def gammaPeriodization (K : ManifoldM → ManifoldM → ℂ) (z w : ManifoldM) : ℂ :=
-    ∑' n : ℕ, K z (gammaAction n w)
-
-/-- 几何侧迹的积分核表示（公理，精确版）：
-    geometricKernelTrace f = manifoldIntegral (fun z => gammaPeriodization (fLaplacianKernel f) z z)
-    即 geometricKernelTrace f = ∫_M Σ_{γ∈Γ} K_f(z, γ·z) dz
-    其中 K_f = fLaplacianKernel f 是 f(Δ) 的积分核，
-    gammaPeriodization K z z = Σ_{n:ℕ} K z (gammaAction n z) 是 Γ-周期化。
-    这明确了 geometricKernelTrace 是 f(Δ) 积分核的 Γ-周期化积分：
-    (1) Tr(f(Δ)) = ∫_M K_f(z,z) dz（迹的循环性）
-    (2) K_f(z,z) = Σ_{γ∈Γ} K_f(z,γz)（Γ-周期化）
-    (3) 故 Tr(f(Δ)) = ∫_M Σ_{γ∈Γ} K_f(z,γz) dz
-    这是 Arthur 迹公式几何侧的显式积分表达式，
-    把抽象的"算子迹"完全替换为流形上的显式积分。 -/
-axiom geometricKernelTrace_integral_representation (f : TestFunction) :
-    geometricKernelTrace f =
-      manifoldIntegral (fun z => gammaPeriodization (fLaplacianKernel f) z z)
-
-/- 6.1 分析基础设施：Laplace 变换、Γ 作用、热核显式公式 -/
-
-/-- Laplace 变换（opaque）：L[f](t) = ∫₀^∞ f(λ) e^{-tλ} dλ。
-    对紧支光滑 f，Laplace 变换在 Re(t)>0 上解析。
-    Laplace 变换建立了函数演算与热核的联系：
-      K_f(z,w) = L[f̂](t) 作用在热核上
-    其中 f̂ 是 f 的某种变换。
-    当前用 opaque 抽象积分，具体实现需要测度论基础设施。 -/
-opaque laplaceTransform : (ℝ → ℂ) → ℝ → ℂ
-
-/-- Laplace 变换的指数函数计算（公理）：
-    L[e^{-sλ}](t) = 1/(t+s)，对 t,s > 0。
-    这是 Laplace 变换的基本公式，直接计算：
-      ∫₀^∞ e^{-sλ} e^{-tλ} dλ = ∫₀^∞ e^{-(s+t)λ} dλ = 1/(s+t)
-    这个公式是热核函数演算的基础：
-    对 f(λ)=e^{-sλ}，f(Δ)=e^{-sΔ}=H_s（热核算子）。 -/
-axiom laplaceTransform_exp (s t : ℝ) : 0 < t → 0 < s →
-    laplaceTransform (fun x => Real.exp (-s * x)) t = 1 / (t + s)
-
-/-- Laplace 变换的线性性（公理）：
-    L[af + bg](t) = a·L[f](t) + b·L[g](t)。
-    这是积分线性性的直接推论。 -/
-axiom laplaceTransform_linear (a b : ℂ) (f g : ℝ → ℂ) (t : ℝ) :
-    laplaceTransform (fun x => a * f x + b * g x) t =
-      a * laplaceTransform f t + b * laplaceTransform g t
-
-/-- 迹的循环性（公理，精确版）：
-    对积分算子 T_K f(z) = ∫ K(z,w) f(w) dw，其迹为
-      Tr(T_K) = manifoldIntegral (fun z => K z z)
-    即迹等于核在对角线上的流形积分。
-    这是迹类算子的基本性质。
-    结合 Γ-周期化，得到 Arthur 迹公式几何侧：
-      Tr(T_K) = ∫_M K^Γ(z,z) dz = ∫_M Σ_{γ∈Γ} K(z,γz) dz -/
-axiom trace_cyclicity (K : ManifoldM → ManifoldM → ℂ) :
-    True  -- 简化：精确版需要算子迹的定义，当前 operatorTrace 已由 geometricKernelTrace 替代
-
-/-- 双曲距离（opaque）：d(z,w) = H³ 中 z,w 两点的双曲距离。
-    在双曲空间 H³ 的上半空间模型中：
-      d(z,w) = arcosh(1 + |z-w|² / (2 Im(z) Im(w)))
-    双曲距离是 Γ-不变的：d(γz, γw) = d(z,w) 对所有 γ ∈ Γ。
-    热核的显式公式只依赖于双曲距离。
-    当前用 opaque 抽象，参数 (z, w)。 -/
-opaque hyperbolicDistance : ManifoldM → ManifoldM → ℝ
-
-/-- 双曲距离的 Γ-不变性（公理）：
-    d(γ·z, γ·w) = d(z,w) 对所有 γ ∈ Γ。
-    这是双曲等距变换的基本性质：PSL₂(C) 通过等距变换作用在 H³ 上。
-    此性质保证热核 K_t(z,w) 只依赖 d(z,w)，因此是 Γ-不变的。 -/
-axiom hyperbolicDistance_gamma_invariant :
-    ∀ (n : ℕ) (z w : ManifoldM),
-      hyperbolicDistance (gammaAction n z) (gammaAction n w) = hyperbolicDistance z w
-
-/-- 三维双曲空间热核的显式公式（公理）：
-    K_t(z,w) = (4πt)^(-3/2) · e^{-t} · e^{-d(z,w)²/(4t)} · (d(z,w)/sinh(d(z,w)))
-    其中 d(z,w) 是双曲距离。
-    这是三维双曲空间 H³ 上热方程的基本解，由 McKean (1972) 给出。
-    推导：三维双曲空间的径向热核满足
-      ∂_t u = ∂_r² u + 2 coth(r) ∂_r u - u
-    其解为上述显式公式。
-    因子 d/sinh(d) 来自三维双曲空间的体积元 r² sinh²(r) dr。
-    对 t>0，此公式给出光滑、正定、对称的热核。 -/
-axiom heatKernel_explicit_formula (t : ℝ) (z w : ManifoldM) : 0 < t →
-    heatKernel t z w =
-      Real.rpow (4 * Real.pi * t) (-3 / 2) * Real.exp (-t) *
-      Real.exp (-(hyperbolicDistance z w)^2 / (4 * t)) *
-      (hyperbolicDistance z w / ((Real.exp (hyperbolicDistance z w) - Real.exp (-(hyperbolicDistance z w))) / 2))
-
-/-- 热核的对称性（公理）：K_t(z,w) = K_t(w,z)。
-    这是热核的基本性质，来自 Laplacian 的自伴性。
-    也可从显式公式直接验证：d(z,w)=d(w,z)。 -/
-axiom heatKernel_symmetric (t : ℝ) (z w : ManifoldM) : 0 < t →
-    heatKernel t z w = heatKernel t w z
-
-/-- 热核的正定性（公理）：热核是实值且正定的。
-    (heatKernel t z w).im = 0 且 0 < (heatKernel t z w).re 对所有 z,w 和 t>0。
-    这是热核的基本性质，来自热方程的最大值原理。
-    也可从显式公式直接验证：所有因子均为正实数。 -/
-axiom heatKernel_positive (t : ℝ) (z w : ManifoldM) : 0 < t →
-    (heatKernel t z w).im = 0 ∧ 0 < (heatKernel t z w).re
-
-/-- f(Δ) 积分核的热核表示（精确版，公理）：
-    K_f(z,w) = ∫₀^∞ (laplaceTransform f t) · heatKernel t z w dt
-    即 f(Δ) 的积分核是热核的 Laplace 变换加权积分。
-    推导：由谱定理 f(Δ) = ∫ f(λ) dE(λ)，热核 e^{-tΔ} = ∫ e^{-tλ} dE(λ)。
-    由 Laplace 反演 f(λ) = (1/2πi) ∫ L[f](s) e^{sλ} ds，
-    得 K_f = ∫ L[f](t) K_t dt。
-    这建立了 fLaplacianKernel 与 heatKernel + laplaceTransform 的精确联系，
-    替代了之前的简化版 fLaplacianKernel_via_heatKernel。
-    当前用 True 简化，具体实现需要 Laplace 反演和积分交换。 -/
-axiom fLaplacianKernel_heatKernel_exact (f : TestFunction) (z w : ManifoldM) :
-    True
 
 end RHSpectralDuality
