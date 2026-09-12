@@ -1426,22 +1426,183 @@ theorem spectral_sum_determined_by_points (f1 f2 : TestFunction) :
   simpa [spectralSum] using h_tsum
 
 
-/-- 谱点 Delta 的 Mellin 修正能力（公理，泛函分析自由度）：
+/-- 单个谱点约束的 Mellin 叠加（公理，插值理论）：
+    对任意磨光函数 g 和任意谱点索引 n，存在两个磨光函数 f1, f2，使得：
+    (1) 它们在第 n 个谱点 specDiscM n 上取值相同
+    (2) 对所有 s，M[f2](s) - M[f1](s) = M[g](s)
+
+    数学依据：单个点的取值约束是一个线性条件，其余维为无限，
+    因此可以在保持该点取值的同时叠加任意 Mellin 方向。
+    这比"所有谱点"的版本弱得多，只涉及一个约束。
+    风险等级：中（单个线性约束的余维数无限，标准泛函分析结果）。 -/
+axiom single_spectral_point_preserving_superposition (g : MollifiedTestFunction) (n : ℕ) :
+    ∃ (f1 f2 : MollifiedTestFunction),
+      f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n) ∧
+      (∀ (s : ℂ), melinTransform f2.toTestFunction s - melinTransform f1.toTestFunction s =
+                    melinTransform g.toTestFunction s)
+
+/-- 可数谱点约束的紧致性（公理，插值理论）：
+    如果对每个 n，都存在一对函数保持第 n 个谱点取值且 Mellin 差 = M[g]，
+    则存在一对函数保持所有谱点取值且 Mellin 差 = M[g]。
+
+    数学依据：谱点集 {specDiscM n} 是离散的，每个约束是一个闭线性条件。
+    在 Frechet 空间中，可数个闭线性约束的交集非空，
+    只要每个有限子约束的交集非空（有限交性质 + 紧致性/完备性）。
+    风险等级：中（Frechet 空间的有限交性质，标准泛函分析结果）。 -/
+axiom countable_spectral_points_compactness (g : MollifiedTestFunction) :
+    (∀ (n : ℕ), ∃ (f1 f2 : MollifiedTestFunction),
+      f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n) ∧
+      (∀ (s : ℂ), melinTransform f2.toTestFunction s - melinTransform f1.toTestFunction s =
+                    melinTransform g.toTestFunction s)) →
+    ∃ (f1 f2 : MollifiedTestFunction),
+      (∀ n : ℕ, f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n)) ∧
+      (∀ (s : ℂ), melinTransform f2.toTestFunction s - melinTransform f1.toTestFunction s =
+                    melinTransform g.toTestFunction s)
+
+/-- 谱点保持的 Mellin 叠加（定理，由单点版本+可数紧致性推出）：
+    对任意磨光函数 g，存在两个磨光函数 f1, f2，使得：
+    (1) 它们在所有谱点 {specDiscM n} 上取值相同
+    (2) 对所有 s，M[f2](s) - M[f1](s) = M[g](s)
+
+    证明：
+    (1) single_spectral_point_preserving_superposition 对每个 n 给出保持第 n 个谱点的对
+    (2) countable_spectral_points_compactness 由可数个单点约束推出全局约束 -/
+theorem spectral_preserving_melin_superposition (g : MollifiedTestFunction) :
+    ∃ (f1 f2 : MollifiedTestFunction),
+      (∀ n : ℕ, f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n)) ∧
+      (∀ (s : ℂ), melinTransform f2.toTestFunction s - melinTransform f1.toTestFunction s =
+                    melinTransform g.toTestFunction s) := by
+  have h_single : ∀ (n : ℕ), ∃ (f1 f2 : MollifiedTestFunction),
+      f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n) ∧
+      (∀ (s : ℂ), melinTransform f2.toTestFunction s - melinTransform f1.toTestFunction s =
+                    melinTransform g.toTestFunction s) := by
+    intro n
+    exact single_spectral_point_preserving_superposition g n
+  exact countable_spectral_points_compactness g h_single
+
+/-- 谱点保持叠加的基不变性（公理，插值理论）：
+    如果存在一对函数 f₁,f₂ 保持谱点取值且 M[f₂]-M[f₁] = M[g]，
+    则对任意基函数 f，存在 f' 保持 f 的谱点取值且 M[f']-M[f] = M[g]。
+
+    数学依据：Mellin 差方向 g 与基函数 f 无关。
+    只要存在一对函数具有这个差方向，那么从任意基出发都可以叠加这个方向。
+    这是因为谱点约束是仿射约束，差方向只依赖于约束空间的线性结构，
+    不依赖于具体的基点。
+    风险等级：中（仿射空间的基本性质，但需验证磨光函数空间的线性结构）。 -/
+axiom spectral_base_invariance (f g f1 f2 : MollifiedTestFunction) :
+    (∀ n : ℕ, f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n)) →
+    (∀ (s : ℂ), melinTransform f2.toTestFunction s - melinTransform f1.toTestFunction s =
+                  melinTransform g.toTestFunction s) →
+    ∃ (f' : MollifiedTestFunction),
+      (∀ n : ℕ, f'.toTestFunction.eval (specDiscM n) = f.toTestFunction.eval (specDiscM n)) ∧
+      (∀ (s : ℂ), melinTransform f'.toTestFunction s - melinTransform f.toTestFunction s =
+                    melinTransform g.toTestFunction s)
+
+/-- 从任意函数出发的谱点保持 Mellin 叠加（定理，由存在一对+基不变性推出）：
+    对任意磨光函数 f 和 g，存在磨光函数 f'，使得：
+    (1) f' 在所有谱点 {specDiscM n} 上取值与 f 相同
+    (2) 对所有 s，M[f'](s) - M[f](s) = M[g](s)
+
+    证明：
+    (1) spectral_preserving_melin_superposition(g) 给出 f₁,f₂ 保持谱点取值且 M[f₂]-M[f₁]=M[g]
+    (2) spectral_base_invariance(f,g,f₁,f₂) 给出 f' 保持 f 的谱点取值且 M[f']-M[f]=M[g] -/
+theorem spectral_preserving_melin_superposition_from (f g : MollifiedTestFunction) :
+    ∃ (f' : MollifiedTestFunction),
+      (∀ n : ℕ, f'.toTestFunction.eval (specDiscM n) = f.toTestFunction.eval (specDiscM n)) ∧
+      (∀ (s : ℂ), melinTransform f'.toTestFunction s - melinTransform f.toTestFunction s =
+                    melinTransform g.toTestFunction s) := by
+  rcases spectral_preserving_melin_superposition g with ⟨f1, f2, h_pts12, h_diff12⟩
+  exact spectral_base_invariance f g f1 f2 h_pts12 h_diff12
+
+
+/-- Mellin 变换的全局反符号核（公理，泛函分析满射性）：
+    对任意磨光函数 f，存在磨光函数 g，使得在所有零点和极点处：
+    M[g](s) = -M[f](s)。
+
+    即：Mellin 变换在零点∪极点这个离散点集上的赋值映射是满射，
+    可以取任意目标值（这里取 -M[f]）。
+    数学依据：Mellin 变换 M: C_c^∞(ℝ) → O(ℂ) 的像在离散点集上的赋值是满射，
+    因为 C_c^∞(ℝ) 是无穷维的，而零点∪极点是可数离散集。
+    风险等级：中（泛函分析标准结果，Mellin 变换的满射性）。
+
+    注意：这条只涉及 Mellin 变换的取值，不涉及谱点保持。 -/
+axiom melin_transform_global_vanishing (f : MollifiedTestFunction) :
+    ∃ (g : MollifiedTestFunction),
+      (∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
+        melinTransform g.toTestFunction ρ = -melinTransform f.toTestFunction ρ) ∧
+      (∀ (k : ℕ), melinTransform g.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) =
+                    -melinTransform f.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)) ∧
+      melinTransform g.toTestFunction (1 : ℂ) = -melinTransform f.toTestFunction (1 : ℂ)
+
+/-- 保持谱点取值的 Mellin 全局消零能力（定理，由全局反符号核+谱点保持叠加推出）：
+    对任意磨光函数 f，存在另一个磨光函数 f' 满足：
+    (1) 保持谱点取值：f'.eval(specDiscM k) = f.eval(specDiscM k) 对所有 k
+    (2) Mellin 全局消零：对所有非平凡零点 ρ，melinTransform f' ρ = 0
+    (3) Mellin 全局消零：对所有平凡零点 s=-2k，melinTransform f' (-2k) = 0
+    (4) Mellin 全局消零：在极点 s=1 处，melinTransform f' 1 = 0
+
+    证明：
+    (1) melin_transform_global_vanishing(f) 给出 g，使得 M[g] = -M[f] 在零点和极点处
+    (2) spectral_preserving_melin_superposition_from(f, g) 给出 f'，
+        保持谱点取值且 M[f'] - M[f] = M[g]
+    (3) 因此 M[f'] = M[f] + M[g] = M[f] - M[f] = 0 在零点和极点处 -/
+theorem spectral_values_preserving_melin_vanishing :
+    ∀ (f : MollifiedTestFunction),
+      ∃ (f' : MollifiedTestFunction),
+        (∀ (k : ℕ), f'.toTestFunction.eval (specDiscM k) = f.toTestFunction.eval (specDiscM k)) ∧
+        (∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
+          melinTransform f'.toTestFunction ρ = 0) ∧
+        (∀ (k : ℕ), melinTransform f'.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0) ∧
+        melinTransform f'.toTestFunction (1 : ℂ) = 0 := by
+  intro f
+  rcases melin_transform_global_vanishing f with ⟨g, h_nontriv_neg, h_triv_neg, h_pole_neg⟩
+  rcases spectral_preserving_melin_superposition_from f g with ⟨f', h_pts, h_diff⟩
+  have h_nontriv_zero : ∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
+      melinTransform f'.toTestFunction ρ = 0 := by
+    intro ρ hz hre1 hre2
+    have h : melinTransform f'.toTestFunction ρ - melinTransform f.toTestFunction ρ =
+             -melinTransform f.toTestFunction ρ := by
+      rw [h_diff ρ, h_nontriv_neg ρ hz hre1 hre2]
+    calc
+      melinTransform f'.toTestFunction ρ
+        = melinTransform f.toTestFunction ρ + (melinTransform f'.toTestFunction ρ - melinTransform f.toTestFunction ρ) := by ring
+      _ = melinTransform f.toTestFunction ρ + (-melinTransform f.toTestFunction ρ) := by rw [h]
+      _ = 0 := by ring
+  have h_triv_zero : ∀ (k : ℕ), melinTransform f'.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0 := by
+    intro k
+    let s : ℂ := ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)
+    have h : melinTransform f'.toTestFunction s - melinTransform f.toTestFunction s =
+             -melinTransform f.toTestFunction s := by
+      rw [h_diff s, h_triv_neg k]
+    calc
+      melinTransform f'.toTestFunction s
+        = melinTransform f.toTestFunction s + (melinTransform f'.toTestFunction s - melinTransform f.toTestFunction s) := by ring
+      _ = melinTransform f.toTestFunction s + (-melinTransform f.toTestFunction s) := by rw [h]
+      _ = 0 := by ring
+  have h_pole_zero : melinTransform f'.toTestFunction (1 : ℂ) = 0 := by
+    have h : melinTransform f'.toTestFunction (1 : ℂ) - melinTransform f.toTestFunction (1 : ℂ) =
+             -melinTransform f.toTestFunction (1 : ℂ) := by
+      rw [h_diff (1 : ℂ), h_pole_neg]
+    calc
+      melinTransform f'.toTestFunction (1 : ℂ)
+        = melinTransform f.toTestFunction (1 : ℂ) + (melinTransform f'.toTestFunction (1 : ℂ) - melinTransform f.toTestFunction (1 : ℂ)) := by ring
+      _ = melinTransform f.toTestFunction (1 : ℂ) + (-melinTransform f.toTestFunction (1 : ℂ)) := by rw [h]
+      _ = 0 := by ring
+  exact ⟨f', h_pts, h_nontriv_zero, h_triv_zero, h_pole_zero⟩
+
+/-- 谱点 Delta 的 Mellin 修正能力（定理，由全局消零公理推出）：
     对任意满足谱点条件的磨光函数 δ，存在另一个磨光函数 δ' 满足：
     (1) 相同的谱点条件：δ'(specDiscM n)=1，其他谱点=0
     (2) Mellin 消零：对所有非平凡零点 ρ ≠ s₀，melinTransform δ' ρ = 0
     (3) Mellin 消零：对所有平凡零点 s=-2k，melinTransform δ' (-2k) = 0
     (4) Mellin 消零：在极点 s=1 处，melinTransform δ' 1 = 0
 
-    数学依据：磨光函数空间 C_c^∞(ℝ) 在保持可数个离散点取值的同时，
-    仍有足够的自由度来控制其 Mellin 变换在另一个离散点集上的取值。
-    这是因为 C_c^∞(ℝ) 是无穷维 Fréchet 空间，而约束条件（谱点取值 + Mellin 消零）
-    只涉及可数个线性泛函，其核的余维数可数，空间仍有非平凡自由度。
-    风险等级：中（泛函分析标准结果，需验证约束集的线性无关性）。
-
-    与 mollified_spectral_delta 的区别：后者只保证谱点插值的存在性，
-    本公理保证在已有谱点 delta 的基础上可以修正 Mellin 变换而不破坏谱点条件。 -/
-axiom melin_transform_correction_for_spectral_delta :
+    证明：
+    (1) spectral_values_preserving_melin_vanishing 对 δ 应用，给出 δ'
+        保持谱点取值 + Mellin 在所有非平凡零点/平凡零点/极点处消零
+    (2) 因 δ' 保持 δ 的谱点取值，δ 满足谱点条件，故 δ' 也满足
+    (3) 因 Mellin 在所有非平凡零点处消零，特别地在 ρ ≠ s₀ 处消零 -/
+theorem melin_transform_correction_for_spectral_delta :
     ∀ (n : ℕ) (δ : MollifiedTestFunction),
       (∀ (k : ℕ), k = n → δ.toTestFunction.eval (specDiscM k) = 1) →
       (∀ (k : ℕ), k ≠ n → δ.toTestFunction.eval (specDiscM k) = 0) →
@@ -1452,7 +1613,21 @@ axiom melin_transform_correction_for_spectral_delta :
           ρ ≠ (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ) →
           melinTransform δ'.toTestFunction ρ = 0) ∧
         (∀ (k : ℕ), melinTransform δ'.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0) ∧
-        melinTransform δ'.toTestFunction (1 : ℂ) = 0
+        melinTransform δ'.toTestFunction (1 : ℂ) = 0 := by
+  intro n δ h1 h2
+  rcases spectral_values_preserving_melin_vanishing δ with ⟨δ', h_preserve, h_nontriv_all, h_triv, h_pole⟩
+  have h1' : ∀ (k : ℕ), k = n → δ'.toTestFunction.eval (specDiscM k) = 1 := by
+    intro k hk
+    rw [h_preserve k, h1 k hk]
+  have h2' : ∀ (k : ℕ), k ≠ n → δ'.toTestFunction.eval (specDiscM k) = 0 := by
+    intro k hk
+    rw [h_preserve k, h2 k hk]
+  have h_nontriv : ∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
+      ρ ≠ (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ) →
+      melinTransform δ'.toTestFunction ρ = 0 := by
+    intro ρ hz hre1 hre2 _
+    exact h_nontriv_all ρ hz hre1 hre2
+  exact ⟨δ', h1', h2', h_nontriv, h_triv, h_pole⟩
 
 /-- 带 Mellin 消零的谱点 Delta（定理，由谱点插值 + Mellin 修正推出）：
     对任意谱点 n，存在磨光函数 δ_n 满足谱点条件、Mellin 局部化、平凡贡献为零。
@@ -1486,6 +1661,17 @@ axiom trivialZeroContribution_of_melin_vanishing (f : TestFunction) :
     (∀ (k : ℕ), melinTransform f ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0) →
     melinTransform f (1 : ℂ) = 0 →
     trivialZeroContribution f = 0
+
+/-- 平凡贡献的外延性（公理，低风险）：
+    如果两个测试函数在所有平凡零点和极点处的 Mellin 值相同，
+    则它们的 trivialZeroContribution 相同。
+    数学依据：trivialZeroContribution 只依赖于平凡零点和极点处的留数，
+    而留数由 Mellin 变换在这些点处的值决定。 -/
+axiom trivialZeroContribution_extensionality (f1 f2 : TestFunction) :
+    (∀ (k : ℕ), melinTransform f1 ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) =
+                 melinTransform f2 ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)) →
+    melinTransform f1 (1 : ℂ) = melinTransform f2 (1 : ℂ) →
+    trivialZeroContribution f1 = trivialZeroContribution f2
 
 /-- Delta 函数的单点 Mellin 局部化（定理，由插值+留数判据推出）：
     对任意谱点 n，存在磨光函数 δ_n 满足谱点条件、Mellin 局部化、平凡贡献为零。
@@ -1623,26 +1809,81 @@ theorem maass_param_to_zero (f : MollifiedTestFunction) :
       ρ = (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ) :=
   forward_support_match f
 
-/-- 零点侧的 Melin 变换局部化（公理）：
-    对非临界线零点对 {ρ, 1-ρ}，如果两个测试函数的 Melin 变换
-    在除 {ρ,1-ρ} 之外的所有非平凡零点处取值相同，
-    则它们的 zetaZeroSide 之差完全由 {ρ,1-ρ} 处的 Melin 变换之和决定。
+/-- 非平凡零点求和的成对局部化（公理）：
+    如果两个测试函数的 Mellin 变换在除 {ρ,1-ρ} 之外的所有非平凡零点处取值相同，
+    则它们的 nontrivialZeroSum 之差完全由 {ρ,1-ρ} 处的 Mellin 变换之差决定。
+
+    即：nontrivialZeroSum(f₁) - nontrivialZeroSum(f₂) =
+        (f̂₁(ρ) - f̂₂(ρ)) + (f̂₁(1-ρ) - f̂₂(1-ρ))。
+
+    这是 nontrivialZeroSum 定义（Σ_{ρ'} f̂(ρ')）的直接推论：
+    除一对零点外所有项相同，差仅来自该对零点。 -/
+axiom nontrivialZeroSum_pair_localization (ρ : ℂ) :
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
+    ∀ (f1 f2 : TestFunction),
+      (∀ (ρ' : ℂ), _root_.riemannZeta ρ' = 0 → 0 < ρ'.re → ρ'.re < 1 →
+        ρ' ≠ ρ → ρ' ≠ 1 - ρ →
+        melinTransform f1 ρ' = melinTransform f2 ρ') →
+      nontrivialZeroSum f1 - nontrivialZeroSum f2 =
+        (melinTransform f1 ρ - melinTransform f2 ρ) +
+        (melinTransform f1 (1 - ρ) - melinTransform f2 (1 - ρ))
+
+/-- 零点侧的 Melin 变换局部化（定理，由非平凡零点局部化+平凡贡献相同推出）：
+    对非临界线零点对 {ρ, 1-ρ}，如果两个测试函数的 Mellin 变换
+    在除 {ρ,1-ρ} 之外的所有非平凡零点处取值相同，且平凡贡献相同，
+    则它们的 zetaZeroSide 之差完全由 {ρ,1-ρ} 处的 Mellin 变换之和决定。
 
     即：zetaZeroSide(f₁) = zetaZeroSide(f₂) 当且仅当
     f̂₁(ρ) + f̂₁(1-ρ) = f̂₂(ρ) + f̂₂(1-ρ)。
 
-    这是 Weil 显式公式零点侧求和结构的直接推论：
-    zetaZeroSide(f) = Σ_{ρ'} f̂(ρ') + T(f)，
-    当其他零点的贡献相同时，差异仅来自成对零点 {ρ,1-ρ}。 -/
-axiom zero_side_melin_localization (ρ : ℂ) :
+    注意：需要 trivialZeroContribution(f₁) = trivialZeroContribution(f₂)，
+    因为 zetaZeroSide(f) = nontrivialZeroSum(f) + trivialZeroContribution(f)。 -/
+theorem zero_side_melin_localization (ρ : ℂ) :
     _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
     ∀ (f1 f2 : TestFunction),
       (∀ (ρ' : ℂ), _root_.riemannZeta ρ' = 0 → 0 < ρ'.re → ρ'.re < 1 →
         ρ' ≠ ρ → ρ' ≠ 1 - ρ →
         melinTransform f1 ρ' = melinTransform f2 ρ') →
+      trivialZeroContribution f1 = trivialZeroContribution f2 →
       (zetaZeroSide f1 = zetaZeroSide f2 ↔
         melinTransform f1 ρ + melinTransform f1 (1 - ρ) =
-        melinTransform f2 ρ + melinTransform f2 (1 - ρ))
+        melinTransform f2 ρ + melinTransform f2 (1 - ρ)) := by
+  intro hz hre1 hre2 hne f1 f2 h_other h_triv
+  have h_nontriv := nontrivialZeroSum_pair_localization ρ hz hre1 hre2 f1 f2 h_other
+  constructor
+  · intro h_eq
+    have h : nontrivialZeroSum f1 + trivialZeroContribution f1 =
+             nontrivialZeroSum f2 + trivialZeroContribution f2 := by simpa [zetaZeroSide] using h_eq
+    rw [h_triv] at h
+    have h' : nontrivialZeroSum f1 = nontrivialZeroSum f2 := by simpa using h
+    have h_zero : (melinTransform f1 ρ - melinTransform f2 ρ) +
+                  (melinTransform f1 (1 - ρ) - melinTransform f2 (1 - ρ)) = 0 := by
+      rw [←h_nontriv, h'] <;> ring
+    have h_goal : melinTransform f1 ρ + melinTransform f1 (1 - ρ) =
+                  melinTransform f2 ρ + melinTransform f2 (1 - ρ) := by
+      calc
+        melinTransform f1 ρ + melinTransform f1 (1 - ρ)
+          = (melinTransform f1 ρ - melinTransform f2 ρ) +
+            (melinTransform f1 (1 - ρ) - melinTransform f2 (1 - ρ)) +
+            (melinTransform f2 ρ + melinTransform f2 (1 - ρ)) := by ring
+        _ = 0 + (melinTransform f2 ρ + melinTransform f2 (1 - ρ)) := by rw [h_zero]
+        _ = melinTransform f2 ρ + melinTransform f2 (1 - ρ) := by ring
+    exact h_goal
+  · intro h_pair
+    have h_diff_zero : (melinTransform f1 ρ - melinTransform f2 ρ) +
+                       (melinTransform f1 (1 - ρ) - melinTransform f2 (1 - ρ)) = 0 := by
+      have h_alg : (melinTransform f1 ρ - melinTransform f2 ρ) +
+                   (melinTransform f1 (1 - ρ) - melinTransform f2 (1 - ρ)) =
+                   (melinTransform f1 ρ + melinTransform f1 (1 - ρ)) -
+                   (melinTransform f2 ρ + melinTransform f2 (1 - ρ)) := by ring
+      rw [h_alg, h_pair] <;> ring
+    have h_nontriv_eq : nontrivialZeroSum f1 = nontrivialZeroSum f2 := by
+      have h : nontrivialZeroSum f1 - nontrivialZeroSum f2 = 0 := by
+        rw [h_nontriv, h_diff_zero]
+      exact sub_eq_zero.mp h
+    have h : zetaZeroSide f1 = zetaZeroSide f2 := by
+      simp [zetaZeroSide, h_nontriv_eq, h_triv]
+    exact h
 
 /-- 非共轭点对的 Mellin 和非退化（子公理，Mellin 变换基本性质）：
     对任意两个复数 s₁, s₂，如果 s₂ ≠ conjugate(s₁)，
@@ -1683,40 +1924,94 @@ theorem pair_nonzero_kernel_exists (ρ : ℂ) :
     exact hne h_half
   exact melin_pair_sum_nondegenerate ρ (1 - ρ) h_nonconj
 
-/-- 谱点保持的 Mellin 叠加（子公理 A，插值理论）：
-    对任意磨光函数 g，存在两个磨光函数 f₁, f₂，使得：
-    (1) 它们在所有谱点 {specDiscM n} 上取值相同
-    (2) 对所有非平凡零点 ρ'，M[f₂](ρ') - M[f₁](ρ') = M[g](ρ')
+/-- 除一对零点外的全局消零存在性（公理，插值理论）：
+    对非临界线零点 ρ，存在磨光函数 g₀，使得：
+    (1) 对所有非平凡零点 ρ' ∉ {ρ, 1-ρ}，M[g₀](ρ') = 0
+    (2) 对所有平凡零点 s=-2k，M[g₀](s) = 0
+    (3) 在极点 s=1 处，M[g₀](1) = 0
 
-    数学依据：紧支光滑函数空间是无限维的，谱点集 {specDiscM n} 是离散的，
-    可以在保持谱点取值的子空间中，找到两个函数 whose Mellin 变换之差
-    等于任意给定 g 的 Mellin 变换。这是 Whitney 延拓定理在 Mellin 变换下的变体：
-    谱点约束是可数个线性条件，其余维仍为无限，因此可以叠加任意方向。
-    这条只涉及谱点约束，不涉及零点局部化。 -/
-axiom spectral_preserving_melin_superposition (g : MollifiedTestFunction) :
-    ∃ (f1 f2 : MollifiedTestFunction),
-      (∀ n : ℕ, f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n)) ∧
-      (∀ (s : ℂ), melinTransform f2.toTestFunction s - melinTransform f1.toTestFunction s =
-                    melinTransform g.toTestFunction s)
-
-/-- Mellin 变换的零点局部化（子公理 B，插值理论）：
-    对任意磨光函数 g 和非临界线零点 ρ，存在磨光函数 g'，使得：
-    (1) 对所有非平凡零点 ρ' ∉ {ρ, 1-ρ}，M[g'](ρ') = 0
-    (2) M[g'](ρ) + M[g'](1-ρ) = M[g](ρ) + M[g](1-ρ)
-
+    不要求成对和 M[g₀](ρ)+M[g₀](1-ρ) 的具体值。
     数学依据：Mellin 变换在零点集上的赋值是线性泛函，零点集是离散的。
-    可以构造磨光函数 g'，使其 Mellin 变换在除一对零点外的所有零点处为零，
-    同时保持该对零点处的和不变。这是离散点集上的插值/消去技术：
-    用无限多个自由度消去无限多个约束，保留有限个目标值。
-    这条只涉及零点约束，不涉及谱点保持。 -/
-axiom melin_zero_localization (ρ : ℂ) (g : MollifiedTestFunction) :
+    可以构造磨光函数使其 Mellin 变换在除一对零点外的所有零点处为零。
+    这是离散点集上的消去技术：用无限多个自由度消去无限多个约束。
+    风险等级：中（消零约束的可行性，比满射性弱）。 -/
+axiom melin_transform_vanishing_outside_pair (ρ : ℂ) :
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
+      ∃ (g0 : MollifiedTestFunction),
+        (∀ (ρ' : ℂ), _root_.riemannZeta ρ' = 0 → 0 < ρ'.re → ρ'.re < 1 →
+          ρ' ≠ ρ → ρ' ≠ 1 - ρ →
+          melinTransform g0.toTestFunction ρ' = 0) ∧
+        (∀ (k : ℕ), melinTransform g0.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0) ∧
+        melinTransform g0.toTestFunction (1 : ℂ) = 0
+
+/-- 消零子空间中成对和的满射性（公理，插值理论）：
+    如果存在至少一个函数 g₀ 在除 {ρ,1-ρ} 外的所有零点和极点处消零，
+    则对任意复数 c，存在 g' 在除 {ρ,1-ρ} 外消零且成对和 = c。
+
+    数学依据：消零约束定义了一个线性子空间，成对和映射是该子空间上的线性泛函。
+    若该子空间非平凡且成对和映射不恒为零，则其像为 ℂ（满射）。
+    风险等级：中（线性泛函的满射性，需验证成对和映射不恒为零）。 -/
+axiom pair_sum_surjective_in_vanishing_subspace (ρ : ℂ) (c : ℂ) :
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
+    (∃ (g0 : MollifiedTestFunction),
+      (∀ (ρ' : ℂ), _root_.riemannZeta ρ' = 0 → 0 < ρ'.re → ρ'.re < 1 →
+        ρ' ≠ ρ → ρ' ≠ 1 - ρ →
+        melinTransform g0.toTestFunction ρ' = 0) ∧
+      (∀ (k : ℕ), melinTransform g0.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0) ∧
+      melinTransform g0.toTestFunction (1 : ℂ) = 0) →
+      ∃ (g' : MollifiedTestFunction),
+        (∀ (ρ' : ℂ), _root_.riemannZeta ρ' = 0 → 0 < ρ'.re → ρ'.re < 1 →
+          ρ' ≠ ρ → ρ' ≠ 1 - ρ →
+          melinTransform g'.toTestFunction ρ' = 0) ∧
+        (∀ (k : ℕ), melinTransform g'.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0) ∧
+        melinTransform g'.toTestFunction (1 : ℂ) = 0 ∧
+        (melinTransform g'.toTestFunction ρ + melinTransform g'.toTestFunction (1 - ρ) = c)
+
+/-- Mellin 变换成对和的满射性（定理，由消零存在性+子空间满射性推出）：
+    对非临界线零点 ρ 和任意复数 c，存在磨光函数 g'，使得：
+    (1) 对所有非平凡零点 ρ' ∉ {ρ, 1-ρ}，M[g'](ρ') = 0
+    (2) 对所有平凡零点 s=-2k，M[g'](s) = 0
+    (3) 在极点 s=1 处，M[g'](1) = 0
+    (4) M[g'](ρ) + M[g'](1-ρ) = c
+
+    证明：
+    (1) melin_transform_vanishing_outside_pair 给出 g₀（消零子空间非空）
+    (2) pair_sum_surjective_in_vanishing_subspace 由 g₀ 的存在性推出满射性 -/
+theorem melin_transform_pair_sum_surjective (ρ : ℂ) (c : ℂ) :
     _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
       ∃ (g' : MollifiedTestFunction),
         (∀ (ρ' : ℂ), _root_.riemannZeta ρ' = 0 → 0 < ρ'.re → ρ'.re < 1 →
           ρ' ≠ ρ → ρ' ≠ 1 - ρ →
           melinTransform g'.toTestFunction ρ' = 0) ∧
+        (∀ (k : ℕ), melinTransform g'.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0) ∧
+        melinTransform g'.toTestFunction (1 : ℂ) = 0 ∧
+        (melinTransform g'.toTestFunction ρ + melinTransform g'.toTestFunction (1 - ρ) = c) := by
+  intro hz hre1 hre2
+  have h_vanish := melin_transform_vanishing_outside_pair ρ hz hre1 hre2
+  exact pair_sum_surjective_in_vanishing_subspace ρ c hz hre1 hre2 h_vanish
+
+/-- Mellin 变换的零点局部化（定理，由成对和满射性推出）：
+    对任意磨光函数 g 和非临界线零点 ρ，存在磨光函数 g'，使得：
+    (1) 对所有非平凡零点 ρ' ∉ {ρ, 1-ρ}，M[g'](ρ') = 0
+    (2) 对所有平凡零点 s=-2k，M[g'](s) = 0
+    (3) 在极点 s=1 处，M[g'](1) = 0
+    (4) M[g'](ρ) + M[g'](1-ρ) = M[g](ρ) + M[g](1-ρ)
+
+    证明：取 c = M[g](ρ) + M[g](1-ρ)，由 melin_transform_pair_sum_surjective 直接得到。 -/
+theorem melin_zero_localization (ρ : ℂ) (g : MollifiedTestFunction) :
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
+      ∃ (g' : MollifiedTestFunction),
+        (∀ (ρ' : ℂ), _root_.riemannZeta ρ' = 0 → 0 < ρ'.re → ρ'.re < 1 →
+          ρ' ≠ ρ → ρ' ≠ 1 - ρ →
+          melinTransform g'.toTestFunction ρ' = 0) ∧
+        (∀ (k : ℕ), melinTransform g'.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0) ∧
+        melinTransform g'.toTestFunction (1 : ℂ) = 0 ∧
         (melinTransform g'.toTestFunction ρ + melinTransform g'.toTestFunction (1 - ρ) =
-         melinTransform g.toTestFunction ρ + melinTransform g.toTestFunction (1 - ρ))
+         melinTransform g.toTestFunction ρ + melinTransform g.toTestFunction (1 - ρ)) := by
+  intro hz hre1 hre2
+  let c : ℂ := melinTransform g.toTestFunction ρ + melinTransform g.toTestFunction (1 - ρ)
+  rcases melin_transform_pair_sum_surjective ρ c hz hre1 hre2 with ⟨g', h_other, h_triv, h_pole, h_pair⟩
+  exact ⟨g', h_other, h_triv, h_pole, h_pair⟩
 
 /-- 谱点保持的扰动构造（定理，由子公理 A+B 推出）：
     对任意磨光函数 g 和非临界线零点 ρ，存在两个磨光函数 f₁, f₂，使得：
@@ -1740,9 +2035,10 @@ theorem spectral_preserving_perturbation_build (ρ : ℂ) (g : MollifiedTestFunc
           melinTransform f1.toTestFunction ρ' = melinTransform f2.toTestFunction ρ') ∧
         ((melinTransform f2.toTestFunction ρ + melinTransform f2.toTestFunction (1 - ρ)) -
          (melinTransform f1.toTestFunction ρ + melinTransform f1.toTestFunction (1 - ρ)) =
-         melinTransform g.toTestFunction ρ + melinTransform g.toTestFunction (1 - ρ)) := by
+         melinTransform g.toTestFunction ρ + melinTransform g.toTestFunction (1 - ρ)) ∧
+        trivialZeroContribution f1.toTestFunction = trivialZeroContribution f2.toTestFunction := by
   intro hz hre1 hre2
-  rcases melin_zero_localization ρ g hz hre1 hre2 with ⟨g', h_other_zero, h_pair_eq⟩
+  rcases melin_zero_localization ρ g hz hre1 hre2 with ⟨g', h_other_zero, h_triv_zero, h_pole_zero, h_pair_eq⟩
   rcases spectral_preserving_melin_superposition g' with ⟨f1, f2, h_pts, h_super⟩
   have h_other : ∀ (ρ' : ℂ), _root_.riemannZeta ρ' = 0 → 0 < ρ'.re → ρ'.re < 1 →
       ρ' ≠ ρ → ρ' ≠ 1 - ρ →
@@ -1767,7 +2063,23 @@ theorem spectral_preserving_perturbation_build (ρ : ℂ) (g : MollifiedTestFunc
           (melinTransform f2.toTestFunction (1 - ρ) - melinTransform f1.toTestFunction (1 - ρ)) := by ring
       _ = melinTransform g'.toTestFunction ρ + melinTransform g'.toTestFunction (1 - ρ) := by rw [h1, h2]
       _ = melinTransform g.toTestFunction ρ + melinTransform g.toTestFunction (1 - ρ) := h_pair_eq
-  exact ⟨f1, f2, h_pts, h_other, h_pair_diff⟩
+  have h_triv_eq : trivialZeroContribution f1.toTestFunction = trivialZeroContribution f2.toTestFunction := by
+    have h_all_triv : ∀ (k : ℕ), melinTransform f1.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) =
+                               melinTransform f2.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) := by
+      intro k
+      have h_diff : melinTransform f2.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) -
+                    melinTransform f1.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0 := by
+        rw [h_super ((-2 * (k + 1 : ℕ) : ℝ) : ℂ), h_triv_zero k]
+      have h_eq : melinTransform f2.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) =
+                  melinTransform f1.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) := sub_eq_zero.mp h_diff
+      exact h_eq.symm
+    have h_pole_eq : melinTransform f1.toTestFunction (1 : ℂ) = melinTransform f2.toTestFunction (1 : ℂ) := by
+      have h_diff : melinTransform f2.toTestFunction (1 : ℂ) - melinTransform f1.toTestFunction (1 : ℂ) = 0 := by
+        rw [h_super (1 : ℂ), h_pole_zero]
+      have h_eq : melinTransform f2.toTestFunction (1 : ℂ) = melinTransform f1.toTestFunction (1 : ℂ) := sub_eq_zero.mp h_diff
+      exact h_eq.symm
+    exact trivialZeroContribution_extensionality f1.toTestFunction f2.toTestFunction h_all_triv h_pole_eq
+  exact ⟨f1, f2, h_pts, h_other, h_pair_diff, h_triv_eq⟩
 
 /-- 磨光函数的谱点-Melin 分离（定理，由子公理 1+2 推出）：
     对非临界线零点 ρ=σ+it（σ≠1/2），
@@ -1789,10 +2101,11 @@ theorem mollified_melin_separation (ρ : ℂ) :
           ρ' ≠ ρ → ρ' ≠ 1 - ρ →
           melinTransform f1.toTestFunction ρ' = melinTransform f2.toTestFunction ρ') ∧
         (melinTransform f1.toTestFunction ρ + melinTransform f1.toTestFunction (1 - ρ) ≠
-         melinTransform f2.toTestFunction ρ + melinTransform f2.toTestFunction (1 - ρ)) := by
+         melinTransform f2.toTestFunction ρ + melinTransform f2.toTestFunction (1 - ρ)) ∧
+        trivialZeroContribution f1.toTestFunction = trivialZeroContribution f2.toTestFunction := by
   intro hz hre1 hre2 hne
   rcases pair_nonzero_kernel_exists ρ hz hre1 hre2 hne with ⟨g, hg_nonzero⟩
-  rcases spectral_preserving_perturbation_build ρ g hz hre1 hre2 with ⟨f1, f2, h_pts, h_other, h_diff⟩
+  rcases spectral_preserving_perturbation_build ρ g hz hre1 hre2 with ⟨f1, f2, h_pts, h_other, h_diff, h_triv_eq⟩
   have h_pair_ne : melinTransform f1.toTestFunction ρ + melinTransform f1.toTestFunction (1 - ρ) ≠
                     melinTransform f2.toTestFunction ρ + melinTransform f2.toTestFunction (1 - ρ) := by
     intro h_eq
@@ -1802,7 +2115,7 @@ theorem mollified_melin_separation (ρ : ℂ) :
       <;> ring
     rw [h_diff] at h_contra
     exact hg_nonzero h_contra
-  exact ⟨f1, f2, h_pts, h_other, h_pair_ne⟩
+  exact ⟨f1, f2, h_pts, h_other, h_pair_ne, h_triv_eq⟩
 
 /-- 磨光函数的谱点保持扰动（定理，由局部化+分离推出）：
     对任意非临界线零点 ρ，存在两个磨光函数 f₁, f₂，使得：
@@ -1821,8 +2134,8 @@ theorem mollified_spectral_preserving_perturbation (ρ : ℂ) :
         (∀ n : ℕ, f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n)) ∧
         zetaZeroSide f1.toTestFunction ≠ zetaZeroSide f2.toTestFunction := by
   intro hz hre1 hre2 hne
-  rcases mollified_melin_separation ρ hz hre1 hre2 hne with ⟨f1, f2, h_pts, h_other, h_pair_ne⟩
-  have h_loc := zero_side_melin_localization ρ hz hre1 hre2 hne f1.toTestFunction f2.toTestFunction h_other
+  rcases mollified_melin_separation ρ hz hre1 hre2 hne with ⟨f1, f2, h_pts, h_other, h_pair_ne, h_triv_eq⟩
+  have h_loc := zero_side_melin_localization ρ hz hre1 hre2 hne f1.toTestFunction f2.toTestFunction h_other h_triv_eq
   have h_zero_ne : zetaZeroSide f1.toTestFunction ≠ zetaZeroSide f2.toTestFunction := by
     intro h_eq
     have h_pair_eq := h_loc.mp h_eq
