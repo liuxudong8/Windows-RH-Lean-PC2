@@ -40,48 +40,45 @@ axiom riemann_zeta_zero_symmetry (ρ : ℂ) :
     Shimura 提升是 L²(ManifoldX) → L²(ManifoldM) 的算子。 -/
 abbrev L2Function (M : Type) := M → ℂ
 
-noncomputable def specDiscM : ℕ → ℝ := fun _ => 0
-noncomputable def maassSpecParam : ℕ → ℝ := fun _ => 0
+/-- 三维离散谱序列的存在性（公理，第一档）：
+    存在序列 s : ℕ → ℝ，满足：(1) 非负 (2) 严格递增 (3) 无界。
+    这是自伴椭圆算子离散谱的标准性质（Weyl 定律）。 -/
+axiom specDiscM_exists :
+    ∃ (s : ℕ → ℝ),
+      (∀ n : ℕ, 0 ≤ s n) ∧
+      (∀ n : ℕ, s n < s (n + 1)) ∧
+      (∀ M : ℝ, ∃ n : ℕ, s n > M)
 
-/-- 三维离散谱非负（公理）：
-    Laplace-Beltrami 算子 Δ_M 是自伴椭圆算子，本征值 ≥ 0。 -/
-axiom specDiscM_nonneg_axiom : ∀ n : ℕ, 0 ≤ specDiscM n
+/-- 三维离散谱（定义，由存在性公理通过 Classical.choose 给出）。 -/
+noncomputable def specDiscM : ℕ → ℝ := Classical.choose specDiscM_exists
 
-/-- 三维离散谱严格递增（公理）：
-    按本征值从小到大排列（计重数）。 -/
-axiom specDiscM_strict_mono_axiom : ∀ n : ℕ, specDiscM n < specDiscM (n + 1)
-
-/-- 三维离散谱无界（公理）：
-    离散谱趋向 +∞（Weyl 定律）。 -/
-axiom specDiscM_unbounded_axiom : ∀ M : ℝ, ∃ n : ℕ, specDiscM n > M
-
-/-- 三维离散谱 SpecDisc(M) 的性质束（定理，由三个原子公理合取）：
+/-- 三维离散谱 SpecDisc(M) 的性质束（定理，由 Classical.choose_spec 推出）：
     1. 非负 2. 严格递增 3. 无界 -/
 theorem specDiscM_properties :
     (∀ n : ℕ, 0 ≤ specDiscM n) ∧
     (∀ n : ℕ, specDiscM n < specDiscM (n + 1)) ∧
     (∀ M : ℝ, ∃ n : ℕ, specDiscM n > M) :=
-  ⟨specDiscM_nonneg_axiom, specDiscM_strict_mono_axiom, specDiscM_unbounded_axiom⟩
+  Classical.choose_spec specDiscM_exists
 
-/-- Maass 谱参数非负（公理）：
-    取 t ≥ 0 分支（t 与 -t 对应同一本征值 λ=1/4+t²）。 -/
-axiom maassSpecParam_nonneg_axiom : ∀ n : ℕ, 0 ≤ maassSpecParam n
+/-- Maass 谱参数序列的存在性（公理，第一档）：
+    存在序列 t : ℕ → ℝ，满足：(1) 非负 (2) 严格递增 (3) 无界。
+    这是 Maass 形式谱参数的标准性质（Weyl 定律）。 -/
+axiom maassSpecParam_exists :
+    ∃ (t : ℕ → ℝ),
+      (∀ n : ℕ, 0 ≤ t n) ∧
+      (∀ n : ℕ, t n < t (n + 1)) ∧
+      (∀ M : ℝ, ∃ n : ℕ, t n > M)
 
-/-- Maass 谱参数严格递增（公理）：
-    按 |t| 从小到大排列。 -/
-axiom maassSpecParam_strict_mono_axiom : ∀ n : ℕ, maassSpecParam n < maassSpecParam (n + 1)
+/-- Maass 谱参数（定义，由存在性公理通过 Classical.choose 给出）。 -/
+noncomputable def maassSpecParam : ℕ → ℝ := Classical.choose maassSpecParam_exists
 
-/-- Maass 谱参数无界（公理）：
-    Maass 谱参数趋向 +∞（Weyl 定律）。 -/
-axiom maassSpecParam_unbounded_axiom : ∀ M : ℝ, ∃ n : ℕ, maassSpecParam n > M
-
-/-- Maass 谱参数 SpecMaass(X) 的性质束（定理，由三个原子公理合取）：
+/-- Maass 谱参数 SpecMaass(X) 的性质束（定理，由 Classical.choose_spec 推出）：
     1. 非负 2. 严格递增 3. 无界 -/
 theorem maassSpecParam_properties :
     (∀ n : ℕ, 0 ≤ maassSpecParam n) ∧
     (∀ n : ℕ, maassSpecParam n < maassSpecParam (n + 1)) ∧
     (∀ M : ℝ, ∃ n : ℕ, maassSpecParam n > M) :=
-  ⟨maassSpecParam_nonneg_axiom, maassSpecParam_strict_mono_axiom, maassSpecParam_unbounded_axiom⟩
+  Classical.choose_spec maassSpecParam_exists
 
 /-- 三维离散谱非负（由 specDiscM_properties 推出） -/
 theorem specDiscM_nonneg (n : ℕ) : 0 ≤ specDiscM n := specDiscM_properties.1 n
@@ -264,6 +261,11 @@ noncomputable def continuousTerm (f : TestFunction) : ℂ :=
     积分满足线性性和正定性。
     当前用 opaque 抽象，具体实现需要测度论基础设施。 -/
 opaque manifoldIntegral : (ManifoldM → ℂ) → ℂ
+
+/-- 二维双曲曲面 X 上的积分（opaque）：∫_X h(w) dw。
+    与 manifoldIntegral 类似，但定义域是 ManifoldX 而非 ManifoldM。
+    用于 Shimura 提升算子的积分定义。 -/
+opaque manifoldIntegralX : (ManifoldX → ℂ) → ℂ
 
 /-- 流形积分的线性性（公理）：
     ∫_M (a·f + b·g) dz = a·∫_M f dz + b·∫_M g dz。
@@ -787,21 +789,17 @@ theorem split_prime_compensation (p : ℕ) (hp : Nat.Prime p) (h : p % 5 = 1 ∨
     内积只在同一流形的 L² 空间上定义。 -/
 opaque innerProduct {M : Type} : L2Function M → L2Function M → ℂ
 
-/-- 积分算子（opaque，类型化）：给定核 K : M → X → ℂ，
-    定义 (T_K f)(z) = ∫_X K(z,w) f(w) dw，类型为 L²(X) → L²(M)。
-    类型参数保证核的源空间和目标空间与算子的定义域/值域一致。 -/
-opaque integralOperator {M X : Type} : (M → X → ℂ) → L2Function X → L2Function M
-
 /-- Shimura 提升核（opaque，类型化）：Θ(z, w)，z ∈ M（三维），w ∈ X（二维）。
     第一个参数是目标流形 ManifoldM 的点，第二个参数是源流形 ManifoldX 的点。
     Shimura 提升核是 Jacquet-Langlands 对应的积分核实现：
       (U f)(z) = ∫_X Θ(z, w) f(w) dw -/
 opaque shimuraKernel : ManifoldM → ManifoldX → ℂ
 
-/-- Shimura 提升算子（定义，类型化）：U : L²(X) → L²(M) = integralOperator shimuraKernel。
+/-- Shimura 提升算子（定义，类型化）：U : L²(X) → L²(M)。
+    (U f)(z) = ∫_X Θ(z,w) f(w) dw，其中 Θ = shimuraKernel。
     类型安全：只接受二维 L² 函数，输出三维 L² 函数。 -/
-def shimuraLift : L2Function ManifoldX → L2Function ManifoldM :=
-    integralOperator shimuraKernel
+def shimuraLift (f : L2Function ManifoldX) : L2Function ManifoldM :=
+    fun (z : ManifoldM) => manifoldIntegralX (fun (w : ManifoldX) => shimuraKernel z w * f w)
 
 /-- JL 谱映射（抽象不透明常量）。
     φ : ℕ → ℕ 将三维双曲流形 M 的离散谱索引
@@ -823,8 +821,8 @@ opaque laplacian_M : L2Function ManifoldM → L2Function ManifoldM
     (H_t f)(z) = ∫ K_t(z,w) f(w) dw。
     热核算子是自伴的、正定的、满足半群性质 H_{t+s} = H_t H_s。
     当 t→0+ 时 H_t → Id（恒等算子），当 t→∞ 时 H_t → 投影到常数函数。 -/
-noncomputable def heatOperator (t : ℝ) : L2Function ManifoldM → L2Function ManifoldM :=
-    integralOperator (fun z w => heatKernel t z w)
+noncomputable def heatOperator (t : ℝ) (f : L2Function ManifoldM) : L2Function ManifoldM :=
+    fun (z : ManifoldM) => manifoldIntegral (fun (w : ManifoldM) => heatKernel t z w * f w)
 
 /-- 热核半群性质（公理）：H_{t+s} = H_t ∘ H_s。
     这是热方程的基本性质：热流的时间可加性。
