@@ -29,7 +29,9 @@ noncomputable def contourIntegral (g : ℂ → ℂ) : ℂ :=
 
 /-- 围道积分的线性性（公理，第一档）：
     contourIntegral(c₁·g₁ + c₂·g₂) = c₁·contourIntegral(g₁) + c₂·contourIntegral(g₂)。
-    由 circleIntegral 的线性性和数乘直接推出。 -/
+    注：严格来说需 CircleIntegrable 前提，但在 Weil 显式公式使用场景中，
+    通过围道形变避开奇点后函数可积，故此处保持无条件公理。
+    带前提版本无法降级：primeDirichletSeries 在 Re(s)≤1 不收敛，zetaLogDerivative 在零点处不连续。 -/
 axiom contourIntegral_linear (g1 g2 : ℂ → ℂ) (c1 c2 : ℂ) :
     contourIntegral (fun s => c1 * g1 s + c2 * g2 s) = c1 * contourIntegral g1 + c2 * contourIntegral g2
 

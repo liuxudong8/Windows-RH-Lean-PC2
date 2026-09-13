@@ -11,6 +11,7 @@
 
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 import Mathlib.Data.Complex.Basic
+import Mathlib.MeasureTheory.Integral.Bochner.ContinuousLinearMap
 import OrderPreservingBijection.HyperbolicMeasure
 
 namespace OrderPreservingBijection
@@ -72,19 +73,45 @@ theorem manifoldIntegral_linear (a b : ℂ) (f g : ManifoldM → ℂ)
   rw [MeasureTheory.integral_add h1 h2, MeasureTheory.integral_smul, MeasureTheory.integral_smul]
   <;> simp [smul_eq_mul]
 
-/-- 流形积分的正定性（公理，测度结构）：
+/-- 流形积分的正定性（定理，测度结构）：
     对实值非负函数 f（f(z) ∈ ℝ≥0），∫_M f dz ≥ 0。
-    这是测度的基本性质：正测度的积分非负。
-    表述为：若 ∀ z, f z = ↑(f z).re ∧ 0 ≤ (f z).re，则 0 ≤ (manifoldIntegral f).re。 -/
-axiom manifoldIntegral_positive (f : ManifoldM → ℂ)
+    由 Bochner 积分的 integral_complex_ofReal + integral_nonneg 推出。 -/
+theorem manifoldIntegral_positive (f : ManifoldM → ℂ)
     (h_real : ∀ z, f z = (f z).re) (h_nonneg : ∀ z, 0 ≤ (f z).re) :
-    0 ≤ (manifoldIntegral f).re
+    0 ≤ (manifoldIntegral f).re := by
+  let g : ManifoldM → ℝ := fun z => (f z).re
+  have h_f_eq : f = fun z => (g z : ℂ) := by
+    funext z
+    rw [h_real z]
+    <;> simp [g]
+  have h1 : manifoldIntegral f = manifoldIntegral (fun z : ManifoldM => (g z : ℂ)) := by rw [h_f_eq]
+  have h2 : manifoldIntegral (fun z : ManifoldM => (g z : ℂ)) = (∫ z, (g z : ℂ) ∂hyperbolicMeasure3) := by
+    rfl
+  have h3 : (∫ z, (g z : ℂ) ∂hyperbolicMeasure3) = ((∫ z, g z ∂hyperbolicMeasure3 : ℝ) : ℂ) :=
+    integral_complex_ofReal
+  have h_nonneg' : 0 ≤ g := fun z => h_nonneg z
+  have h_int_nonneg : 0 ≤ ∫ z, g z ∂hyperbolicMeasure3 := MeasureTheory.integral_nonneg h_nonneg'
+  rw [h1, h2, h3]
+  simpa [Complex.ofReal_re] using h_int_nonneg
 
-/-- 二维流形积分的正定性（公理，测度结构）：
+/-- 二维流形积分的正定性（定理，测度结构）：
     与 manifoldIntegral_positive 类似，但定义域是 ManifoldX。 -/
-axiom manifoldIntegralX_positive (f : ManifoldX → ℂ)
+theorem manifoldIntegralX_positive (f : ManifoldX → ℂ)
     (h_real : ∀ z, f z = (f z).re) (h_nonneg : ∀ z, 0 ≤ (f z).re) :
-    0 ≤ (manifoldIntegralX f).re
+    0 ≤ (manifoldIntegralX f).re := by
+  let g : ManifoldX → ℝ := fun z => (f z).re
+  have h_f_eq : f = fun z => (g z : ℂ) := by
+    funext z
+    rw [h_real z]
+    <;> simp [g]
+  have h1 : manifoldIntegralX f = manifoldIntegralX (fun z : ManifoldX => (g z : ℂ)) := by rw [h_f_eq]
+  have h2 : manifoldIntegralX (fun z : ManifoldX => (g z : ℂ)) = (∫ z, (g z : ℂ) ∂hyperbolicMeasure2) := by rfl
+  have h3 : (∫ z, (g z : ℂ) ∂hyperbolicMeasure2) = ((∫ z, g z ∂hyperbolicMeasure2 : ℝ) : ℂ) :=
+    integral_complex_ofReal
+  have h_nonneg' : 0 ≤ g := fun z => h_nonneg z
+  have h_int_nonneg : 0 ≤ ∫ z, g z ∂hyperbolicMeasure2 := MeasureTheory.integral_nonneg h_nonneg'
+  rw [h1, h2, h3]
+  simpa [Complex.ofReal_re] using h_int_nonneg
 
 /-- SL₂(ℂ)：行列式为 1 的 2×2 复矩阵。
     PSL₂(ℂ) = SL₂(ℂ) / {±I} 是 ℍ³ 的等距同构群。 -/
