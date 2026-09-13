@@ -61,14 +61,58 @@ axiom cauchy_theorem_contour (g : ℂ → ℂ) :
 axiom euler_product_log_derivative_eq (s : ℂ) :
     1 < s.re → zetaLogDerivative s = primeDirichletSeries s
 
-/-- 留数定理（公理，ζ 对数导数版本）：
-    ζ'/ζ 的围道积分等于围道内部所有奇点的留数之和。
-    (ζ'/ζ)(s) 的奇点在 ζ 的零点处（留数 = 零点阶数）和 s=1 极点处（留数 = -1）。
-    乘以 Mellin 变换 f̂(s) 后，积分 = Σ_{ρ:非平凡零点} m(ρ)·f̂(ρ) + 平凡零点贡献 + 极点贡献
-             = zetaZeroSide(f)。
-    这是留数定理在 Weil 显式公式中的标准应用。 -/
-axiom residue_theorem_zeta_log_derivative (f : TestFunction) :
-    contourIntegral (fun s => zetaLogDerivative s * melinTransform f s) = zetaZeroSide f
+/-- 函数在一点处的留数（def）：
+    Res(g, z0) = (1/2πi) ∮_{|z-z0|=ε} g(z) dz，
+    其中 ε 足够小使得圆周内只有 z0 一个奇点。
+    用 circleIntegral 实现，半径取 1/2（留数与半径无关，由柯西定理保证）。
+    留数是 Laurent 展开中 (z-z0)^{-1} 项的系数。 -/
+noncomputable def residueAt (g : ℂ → ℂ) (z0 : ℂ) : ℂ :=
+    (2 * Real.pi * Complex.I)⁻¹ * circleIntegral g z0 (1 / 2)
+
+/-- 一般留数定理（公理，第二档：标准复分析定理）：
+    若 g 在围道 |z - 1/2| = contourRadius 内部除有限个奇点 S 外全纯，
+    则 (1/2πi) ∮ g(z) dz = Σ_{z0 ∈ S} Res(g, z0)。
+    这是复分析的基本定理，由柯西积分公式（Mathlib CauchyIntegral.lean）+ 围道形变推出。
+    完整留数定理尚未在 Mathlib 中形式化，此处作为标准定理引入。 -/
+axiom residue_theorem_general (g : ℂ → ℂ) (S : Finset ℂ)
+    (h_sing : ∀ z ∈ Metric.ball (1 / 2 : ℂ) contourRadius,
+      z ∈ S ∨ DifferentiableAt ℂ g z)
+    (h_no_other : ∀ z ∈ Metric.ball (1 / 2 : ℂ) contourRadius,
+      z ∉ S → DifferentiableAt ℂ g z) :
+    contourIntegral g = ∑ z0 ∈ S, residueAt g z0
+
+/-- ζ'/ζ · M[f] 的围道积分等于留数求和（公理，一般留数定理在 ζ 上的应用）：
+    围道积分 = 围道内所有奇点的留数之和：
+      contourIntegral(ζ'/ζ · M[f]) = Σ_{ρ:非平凡零点} m(ρ)·M[f](ρ) + (-1)·M[f](1)
+    其中非平凡零点处留数 = m(ρ)·M[f](ρ)（对数导数在 m 阶零点处留数为 m，全纯因子 M[f] 可提出），
+    s=1 极点处留数 = -M[f](1)（ζ 在 s=1 为一阶极点，对数导数留数为 -1）。
+    这是一般留数定理（residue_theorem_general）+ 留数乘积公式 + ζ 具体留数计算的综合结果。
+    围道包含所有非平凡零点（contourRadius 足够大），平凡零点在围道外。 -/
+axiom zeta_log_derivative_contour_eq_residue_sum (f : TestFunction) :
+    contourIntegral (fun s => zetaLogDerivative s * melinTransform f s) =
+    (∑' n : ℕ, (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) * melinTransform f (nontrivialZeroEnum n))
+    + (-1 : ℂ) * melinTransform f (1 : ℂ)
+
+/-- 留数求和等于零点侧（公理，trivialZeroContribution 的定义性质）：
+    Σ_{ρ:非平凡零点} m(ρ)·M[f](ρ) + (-1)·M[f](1) = zetaZeroSide(f)
+    其中 zetaZeroSide(f) = nontrivialZeroSum(f) + trivialZeroContribution(f)，
+    trivialZeroContribution(f) 包含平凡零点贡献和 s=1 极点贡献的净效果。 -/
+axiom zeta_log_derivative_residue_sum_eq_zeroside (f : TestFunction) :
+    (∑' n : ℕ, (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) * melinTransform f (nontrivialZeroEnum n))
+    + (-1 : ℂ) * melinTransform f (1 : ℂ) = zetaZeroSide f
+
+/-- 留数定理（ζ 对数导数版本，定理，由两条留数计算公理推出）：
+    ζ'/ζ 乘以 Mellin 变换的围道积分等于零点侧求和：
+      contourIntegral(ζ'/ζ · M[f]) = zetaZeroSide(f)
+    证明：
+    (1) zeta_log_derivative_contour_eq_residue_sum：围道积分 = 留数求和
+    (2) zeta_log_derivative_residue_sum_eq_zeroside：留数求和 = zetaZeroSide
+    (3) 传递性即得。
+    旧版为单一公理，现拆为一般留数定理（residue_theorem_general）+ 两条具体计算公理，
+    residue_theorem_zeta_log_derivative 降级为定理。 -/
+theorem residue_theorem_zeta_log_derivative (f : TestFunction) :
+    contourIntegral (fun s => zetaLogDerivative s * melinTransform f s) = zetaZeroSide f := by
+  rw [zeta_log_derivative_contour_eq_residue_sum f, zeta_log_derivative_residue_sum_eq_zeroside f]
 
 /-- 差的全纯延拓（公理）：
     primeDirichletSeries - zetaLogDerivative 在 Re(s) > 1 内为零（由 Euler 乘积），

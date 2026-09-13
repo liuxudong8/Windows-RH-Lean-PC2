@@ -47,17 +47,25 @@ theorem riemann_zeta_zero_symmetry (ρ : ℂ) :
   have h_re2 : (1 - ρ).re < 1 := by simp [Complex.sub_re] <;> linarith
   exact ⟨h_zero, h_re1, h_re2⟩
 
-/-- 三维离散谱序列的存在性（公理，第一档）：
-    存在序列 s : ℕ → ℝ，满足：(1) 非负 (2) 严格递增 (3) 无界。
-    这是自伴椭圆算子离散谱的标准性质（Weyl 定律）。 -/
-axiom specDiscM_exists :
+/-- 二维 Laplacian（opaque，类型化）：Δ_X : L²(X) → L²(X)。 -/
+opaque laplacian_X : L2Function ManifoldX → L2Function ManifoldX
+
+/-- 三维 Laplacian 具有离散谱（公理，第一档，非空洞版本）：
+    存在序列 s : ℕ → ℝ，满足：
+    (1) 非负 (2) 严格递增 (3) 无界
+    (4) 每个 s n 都是 laplacian_M 的特征值（存在非零特征向量）。
+    这是自伴椭圆算子离散谱的标准性质（Rellich 引理 + 紧自伴算子谱定理）。
+    比旧版 specDiscM_exists 更强：序列不再是任意的，而是 Laplacian 的特征值枚举。 -/
+axiom laplacian_has_discrete_spectrum :
     ∃ (s : ℕ → ℝ),
       (∀ n : ℕ, 0 ≤ s n) ∧
       (∀ n : ℕ, s n < s (n + 1)) ∧
-      (∀ M : ℝ, ∃ n : ℕ, s n > M)
+      (∀ M : ℝ, ∃ n : ℕ, s n > M) ∧
+      (∀ n : ℕ, ∃ (ψ : L2Function ManifoldM), ψ ≠ 0 ∧ laplacian_M ψ = (s n : ℂ) • ψ)
 
-/-- 三维离散谱（定义，由存在性公理通过 Classical.choose 给出）。 -/
-noncomputable def specDiscM : ℕ → ℝ := Classical.choose specDiscM_exists
+/-- 三维离散谱（定义，由离散谱公理通过 Classical.choose 给出）。
+    非空洞：specDiscM n 是 laplacian_M 的第 n 个特征值。 -/
+noncomputable def specDiscM : ℕ → ℝ := Classical.choose laplacian_has_discrete_spectrum
 
 /-- 三维离散谱 SpecDisc(M) 的性质束（定理，由 Classical.choose_spec 推出）：
     1. 非负 2. 严格递增 3. 无界 -/
@@ -65,19 +73,31 @@ theorem specDiscM_properties :
     (∀ n : ℕ, 0 ≤ specDiscM n) ∧
     (∀ n : ℕ, specDiscM n < specDiscM (n + 1)) ∧
     (∀ M : ℝ, ∃ n : ℕ, specDiscM n > M) :=
-  Classical.choose_spec specDiscM_exists
+  let h := Classical.choose_spec laplacian_has_discrete_spectrum
+  ⟨h.1, h.2.1, h.2.2.1⟩
 
-/-- Maass 谱参数序列的存在性（公理，第一档）：
-    存在序列 t : ℕ → ℝ，满足：(1) 非负 (2) 严格递增 (3) 无界。
-    这是 Maass 形式谱参数的标准性质（Weyl 定律）。 -/
-axiom maassSpecParam_exists :
+/-- specDiscM n 是 laplacian_M 的特征值（定理，由离散谱公理推出）：
+    存在非零 ψ，使得 laplacian_M ψ = specDiscM(n) · ψ。 -/
+theorem specDiscM_is_eigenvalue (n : ℕ) :
+    ∃ (ψ : L2Function ManifoldM), ψ ≠ 0 ∧ laplacian_M ψ = (specDiscM n : ℂ) • ψ :=
+  (Classical.choose_spec laplacian_has_discrete_spectrum).2.2.2 n
+
+/-- Maass Laplacian 具有离散谱（公理，第一档，非空洞版本）：
+    存在序列 t : ℕ → ℝ，满足：
+    (1) 非负 (2) 严格递增 (3) 无界
+    (4) 每个 1/4 + t_n² 都是 laplacian_X 的特征值（存在非零特征向量）。
+    这是 Maass 形式谱参数的标准性质（Weyl 定律）。
+    比旧版 maassSpecParam_exists 更强：t_n 不再是任意的，而是 Maass Laplacian 的谱参数。 -/
+axiom maass_laplacian_has_discrete_spectrum :
     ∃ (t : ℕ → ℝ),
       (∀ n : ℕ, 0 ≤ t n) ∧
       (∀ n : ℕ, t n < t (n + 1)) ∧
-      (∀ M : ℝ, ∃ n : ℕ, t n > M)
+      (∀ M : ℝ, ∃ n : ℕ, t n > M) ∧
+      (∀ n : ℕ, ∃ (φ : L2Function ManifoldX), φ ≠ 0 ∧ laplacian_X φ = ((1 / 4 + (t n)^2 : ℝ) : ℂ) • φ)
 
-/-- Maass 谱参数（定义，由存在性公理通过 Classical.choose 给出）。 -/
-noncomputable def maassSpecParam : ℕ → ℝ := Classical.choose maassSpecParam_exists
+/-- Maass 谱参数（定义，由离散谱公理通过 Classical.choose 给出）。
+    非空洞：maassSpecParam n 对应 laplacian_X 的特征值 1/4 + t_n²。 -/
+noncomputable def maassSpecParam : ℕ → ℝ := Classical.choose maass_laplacian_has_discrete_spectrum
 
 /-- Maass 谱参数 SpecMaass(X) 的性质束（定理，由 Classical.choose_spec 推出）：
     1. 非负 2. 严格递增 3. 无界 -/
@@ -85,7 +105,14 @@ theorem maassSpecParam_properties :
     (∀ n : ℕ, 0 ≤ maassSpecParam n) ∧
     (∀ n : ℕ, maassSpecParam n < maassSpecParam (n + 1)) ∧
     (∀ M : ℝ, ∃ n : ℕ, maassSpecParam n > M) :=
-  Classical.choose_spec maassSpecParam_exists
+  let h := Classical.choose_spec maass_laplacian_has_discrete_spectrum
+  ⟨h.1, h.2.1, h.2.2.1⟩
+
+/-- 1/4 + maassSpecParam(n)² 是 laplacian_X 的特征值（定理，由离散谱公理推出）：
+    存在非零 φ，使得 laplacian_X φ = (1/4 + t_n²) · φ。 -/
+theorem maassSpecParam_is_eigenvalue (n : ℕ) :
+    ∃ (φ : L2Function ManifoldX), φ ≠ 0 ∧ laplacian_X φ = ((1 / 4 + (maassSpecParam n)^2 : ℝ) : ℂ) • φ :=
+  (Classical.choose_spec maass_laplacian_has_discrete_spectrum).2.2.2 n
 
 /-- 三维离散谱非负（由 specDiscM_properties 推出） -/
 theorem specDiscM_nonneg (n : ℕ) : 0 ≤ specDiscM n := specDiscM_properties.1 n
@@ -535,6 +562,32 @@ theorem split_prime_compensation (p : ℕ) (hp : Nat.Prime p) (h : p % 5 = 1 ∨
     内积只在同一流形的 L² 空间上定义。 -/
 opaque innerProduct {M : Type} : L2Function M → L2Function M → ℂ
 
+/-- 三维 Laplacian 自伴性（公理，算子结构）：
+    ⟨Δ_M f, g⟩ = ⟨f, Δ_M g⟩ 对所有 f, g ∈ L²(M)。
+    这是椭圆微分算子的基本性质：Laplacian 关于 L² 内积自伴。
+    自伴性保证特征值为实数，特征子空间正交。 -/
+axiom laplacian_M_self_adjoint (f g : L2Function ManifoldM) :
+    innerProduct (laplacian_M f) g = innerProduct f (laplacian_M g)
+
+/-- 二维 Laplacian 自伴性（公理，算子结构）：
+    ⟨Δ_X f, g⟩ = ⟨f, Δ_X g⟩ 对所有 f, g ∈ L²(X)。
+    Maass Laplacian 同样是自伴算子。 -/
+axiom laplacian_X_self_adjoint (f g : L2Function ManifoldX) :
+    innerProduct (laplacian_X f) g = innerProduct f (laplacian_X g)
+
+/-- 内积共轭对称（公理，内积空间结构）：
+    ⟨f, g⟩ = conj(⟨g, f⟩)。
+    这是内积的定义性质之一。 -/
+axiom innerProduct_conj_sym {M : Type} (f g : L2Function M) :
+    innerProduct f g = star (innerProduct g f)
+
+/-- 内积正定性（公理，内积空间结构）：
+    ⟨f, f⟩ 的实部 ≥ 0，且 ⟨f, f⟩ = 0 → f = 0。
+    这是内积的定义性质之一，保证 L² 是准 Hilbert 空间。 -/
+axiom innerProduct_pos_def {M : Type} (f : L2Function M) :
+    0 ≤ (innerProduct f f).re ∧
+    (innerProduct f f = 0 → f = 0)
+
 /-- Shimura 提升核（opaque，类型化）：Θ(z, w)，z ∈ M（三维），w ∈ X（二维）。
     第一个参数是目标流形 ManifoldM 的点，第二个参数是源流形 ManifoldX 的点。
     Shimura 提升核是 Jacquet-Langlands 对应的积分核实现：
@@ -557,8 +610,6 @@ opaque jlSpectrumMap : ℕ → ℕ
     L-参数是表示的内在属性，不预设等于 Maass 的 L-参数。 -/
 opaque jlLParameterMap : ℕ → ℂ
 
-/-- 二维 Laplacian（opaque，类型化）：Δ_X : L²(X) → L²(X)。 -/
-opaque laplacian_X : L2Function ManifoldX → L2Function ManifoldX
 
 /-- Maass 特征函数（opaque，类型化）：第 k 个 Maass 形式 φ_k ∈ L²(X)。 -/
 opaque maassEigenfunction : ℕ → L2Function ManifoldX
@@ -981,50 +1032,28 @@ noncomputable def zetaLogDerivativeIntegral (f : TestFunction) : ℂ :=
 noncomputable def primeIdealDirichletIntegral (f : TestFunction) : ℂ :=
     contourIntegral (fun s => primeDirichletSeries s * melinTransform f s)
 
-/-- 几何侧的逐项积分形式（def，由 Mellin 反演等价于 geometricSum）：
-    I_term(f) = Σ_p W(p) · (1/2πi) ∮ f̂(s) N(p)^{-s} ds = geometricSum(f)。
-    由 Mellin 反演公式 f(log N(p)) = (1/2πi) ∮ f̂(s) N(p)^{-s} ds，
-    代入每个素理想项即得 I_term(f) = geometricSum(f)。
-    此处直接定义为 geometricSum，将 Mellin 反演压缩为定义。 -/
-noncomputable def geometricTermwiseIntegral (f : TestFunction) : ℂ := geometricSum f
-
-/-- Mellin 反演（公理，Perron 公式第一步-A）：
-    几何侧素理想加权求和等于逐项积分形式：
-      geometricSum(f) = geometricTermwiseIntegral(f)
-
-    数学内容：几何侧通过保序双射变为素理想求和 Σ_p W(p) f(log N(p))。
-    由 Mellin 反演公式，对任意 x>0，
-    f(x) = (1/2πi) ∮ f̂(s) e^{-sx} ds（等价地 f(log N(p)) = (1/2πi) ∮ f̂(s) N(p)^{-s} ds）。
-    代入每个素理想项，得到逐项积分形式 geometricTermwiseIntegral(f)。
-    这是 Mellin 变换反演公式在数域上的应用。 -/
-theorem geometric_sum_mellin_inversion (f : MollifiedTestFunction) :
-    geometricSum f.toTestFunction = geometricTermwiseIntegral f.toTestFunction := by
-  rfl
-
-/-- 求和-积分交换（公理，Perron 公式第一步-B）：
-    逐项积分形式等于 Dirichlet 生成函数的围道积分：
-      geometricTermwiseIntegral(f) = primeIdealDirichletIntegral(f)
-
-    数学内容：geometricTermwiseIntegral(f) = Σ_p W(p) · ∮ f̂(s) N(p)^{-s} ds。
-    交换无穷求和与围道积分，得到
-    (1/2πi) ∮ (Σ_p W(p) N(p)^{-s}) f̂(s) ds = primeIdealDirichletIntegral(f)。
-    交换的合法性由磨光函数的紧支集和光滑性保证
-    （控制收敛定理 / Fubini 定理的围道积分版本）。
-    这是 Perron 公式证明中的关键分析步骤。 -/
-axiom termwise_integral_swap (f : MollifiedTestFunction) :
-    geometricTermwiseIntegral f.toTestFunction = primeIdealDirichletIntegral f.toTestFunction
-
-/-- Perron 公式（定理，由 Mellin 反演 + 求和-积分交换推出）：
-    几何侧素理想加权求和等于其 Dirichlet 生成函数的围道积分：
+/-- Perron 公式（公理，Weil 显式公式第一步）：
+    几何侧素理想/素测地线加权求和等于其 Dirichlet 生成函数的围道积分：
       geometricSum(f) = primeIdealDirichletIntegral(f)
-    证明：
-    (1) geometric_sum_mellin_inversion: geometricSum(f) = geometricTermwiseIntegral(f)
-    (2) termwise_integral_swap: geometricTermwiseIntegral(f) = primeIdealDirichletIntegral(f)
-    (3) 传递性即得。
-    这是 Perron 公式在数域上的标准应用。 -/
+      = (1/2πi) ∮ D(s) · M[f](s) ds
+    其中 D(s) = primeDirichletSeries(s) = Σ_p (log p) p^{-s}/(1-p^{-s})。
+
+    数学内容：
+    (1) Mellin 反演：f(log N(p)) = (1/2πi) ∮ M[f](s) N(p)^{-s} ds
+    (2) 代入几何侧求和：Σ_p W(p) f(log N(p)) = Σ_p W(p) · ∮ M[f](s) N(p)^{-s} ds
+    (3) 求和-积分交换（控制收敛定理，磨光函数保证）：
+        = (1/2πi) ∮ (Σ_p W(p) N(p)^{-s}) M[f](s) ds = primeIdealDirichletIntegral(f)
+    这是 Perron (1908) 公式在数域上的标准应用，是 Weil 显式公式的核心步骤。
+    旧版拆为 geometric_sum_mellin_inversion(rfl) + termwise_integral_swap(公理)，
+    现合并为单一 Perron 公式公理，删除冗余中间层。 -/
+axiom perron_formula (f : MollifiedTestFunction) :
+    geometricSum f.toTestFunction = primeIdealDirichletIntegral f.toTestFunction
+
+/-- Perron 公式（定理，直接引用公理）：
+    几何侧 = Dirichlet 生成函数围道积分。 -/
 theorem perron_formula_geometric (f : MollifiedTestFunction) :
-    geometricSum f.toTestFunction = primeIdealDirichletIntegral f.toTestFunction := by
-  rw [geometric_sum_mellin_inversion f, termwise_integral_swap f]
+    geometricSum f.toTestFunction = primeIdealDirichletIntegral f.toTestFunction :=
+  perron_formula f
 
 /-- Euler 乘积（定理，由柯西定理 + Euler 乘积推出）：
     素理想 Dirichlet 生成函数的围道积分等于 ζ 对数导数的围道积分：
