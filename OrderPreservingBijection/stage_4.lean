@@ -597,7 +597,7 @@ opaque shimuraKernel : ManifoldM → ManifoldX → ℂ
 /-- Shimura 提升算子（定义，类型化）：U : L²(X) → L²(M)。
     (U f)(z) = ∫_X Θ(z,w) f(w) dw，其中 Θ = shimuraKernel。
     类型安全：只接受二维 L² 函数，输出三维 L² 函数。 -/
-def shimuraLift (f : L2Function ManifoldX) : L2Function ManifoldM :=
+noncomputable def shimuraLift (f : L2Function ManifoldX) : L2Function ManifoldM :=
     fun (z : ManifoldM) => manifoldIntegralX (fun (w : ManifoldX) => shimuraKernel z w * f w)
 
 /-- JL 谱映射（抽象不透明常量）。
@@ -1060,8 +1060,8 @@ theorem perron_formula_geometric (f : MollifiedTestFunction) :
       primeIdealDirichletIntegral(f) = zetaLogDerivativeIntegral(f)
 
     证明：
-    (1) 由 euler_product_log_derivative_eq（Euler 乘积取对数导数），
-        在 Re(s)>1 内 primeDirichletSeries(s) = zetaLogDerivative(s)。
+    (1) 由 Euler 乘积对数导数等式（ζ'/ζ = -primeDirichletSeries，Re(s)>1），
+        差 (primeDirichletSeries - zetaLogDerivative) 可解析延拓。
     (2) 由 primeDirichlet_zetaLogDerivative_diff_holomorphic，
         差 (primeDirichletSeries - zetaLogDerivative)·M[f] 在围道内部全纯。
     (3) 由 cauchy_theorem_contour（柯西定理），全纯函数的围道积分为零。
@@ -1600,13 +1600,6 @@ axiom nontrivialZeroSum_tsum_linear (f1 f2 : TestFunction) :
     nontrivialZeroSum f1 - nontrivialZeroSum f2 =
       ∑' (n : ℕ), (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) *
         (melinTransform f1 (nontrivialZeroEnum n) - melinTransform f2 (nontrivialZeroEnum n))
-
-/-- tsum 的单点隔离性质（公理）：
-    如果序列 a : ℕ → ℂ 除 n₁ 外所有项为零，则 ∑' n, a n = a n₁。
-    风险等级：中低（tsum 基本性质）。 -/
-axiom tsum_one_point_isolation (a : ℕ → ℂ) (n1 : ℕ) :
-    (∀ (n : ℕ), n ≠ n1 → a n = 0) →
-    ∑' (n : ℕ), a n = a n1
 
 /-- tsum 的两项隔离性质（公理）：
     如果序列 a : ℕ → ℂ 除 n₁, n₂（n₁ ≠ n₂）外所有项为零，

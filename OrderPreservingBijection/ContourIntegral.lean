@@ -53,14 +53,6 @@ axiom cauchy_theorem_contour (g : ℂ → ℂ) :
     (∀ s ∈ Metric.ball (1 / 2 : ℂ) contourRadius, DifferentiableAt ℂ g s) →
     contourIntegral g = 0
 
-/-- Euler 乘积 → 对数导数等式（公理，Re(s) > 1）：
-    由 Mathlib 的 riemannZeta_eulerProduct（ζ(s) = ∏_p (1-p^{-s})^{-1}），
-    取对数导数得 ζ'/ζ(s) = Σ_p (log p) p^{-s}/(1-p^{-s}) = primeDirichletSeries(s)。
-    此公理断言该等式在 Re(s) > 1 半平面成立。
-    Mathlib 有 Euler 乘积，但对数导数的逐项求导需要额外分析。 -/
-axiom euler_product_log_derivative_eq (s : ℂ) :
-    1 < s.re → zetaLogDerivative s = primeDirichletSeries s
-
 /-- 函数在一点处的留数（def）：
     Res(g, z0) = (1/2πi) ∮_{|z-z0|=ε} g(z) dz，
     其中 ε 足够小使得圆周内只有 z0 一个奇点。

@@ -11,22 +11,13 @@
 
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 import Mathlib.Data.Complex.Basic
+import OrderPreservingBijection.HyperbolicMeasure
 
 namespace OrderPreservingBijection
 
-/-- 上半平面 ℍ² = {z ∈ ℂ | Im(z) > 0}，二维双曲空间的标准模型。
-    双曲度量：ds² = (dx² + dy²) / y²。
-    这是 Shimura 提升的源空间（通用覆盖），商空间 X = Γ\ℍ² 后续添加。 -/
-def UpperHalfPlane : Type := {z : ℂ // 0 < z.im}
-
-/-- 上半空间 ℍ³ = {(z, t) ∈ ℂ × ℝ | t > 0}，三维双曲空间的标准模型。
-    双曲度量：ds² = (|dz|² + dt²) / t²。
-    这是 Arthur 迹公式的目标空间（通用覆盖），商空间 M = Γ'\ℍ³ 后续添加。 -/
-def UpperHalfSpace3 : Type := {p : ℂ × ℝ // 0 < p.2}
-
 /-- 二维双曲曲面 X = Γ\ℍ²（四元数代数对应的 Shimura 曲面）。
     当前实例化为上半平面 ℍ²（通用覆盖），商结构由 gammaAction 隐式处理。
-    Maass 形式所在的流形，Shimura 提升的源空间。 -/
+    类型 UpperHalfPlane/UpperHalfSpace3 定义在 HyperbolicMeasure 模块中。 -/
 abbrev ManifoldX : Type := UpperHalfPlane
 
 /-- 三维双曲流形 M = Γ'\ℍ³（算术双曲三流形）。
@@ -52,17 +43,16 @@ theorem manifoldX_nonempty : Nonempty ManifoldX := by
     Shimura 提升是 L²(ManifoldX) → L²(ManifoldM) 的算子。 -/
 abbrev L2Function (M : Type) := M → ℂ
 
-/-- 流形上的积分（opaque）：∫_M g(z) dz。
-    积分在基本域 M = Γ\H³ 上关于双曲体积元进行。
-    三维双曲体积元：dμ(z) = dx dy dt / t³（上半空间坐标 z=(x,y,t)）。
-    积分满足线性性和正定性。
-    当前用 opaque 抽象，具体实现需要测度论基础设施。 -/
-opaque manifoldIntegral : (ManifoldM → ℂ) → ℂ
+/-- 流形上的积分（显式定义）：∫_M g dμ₃。
+    关于双曲测度 hyperbolicMeasure3 的 Bochner 积分，定义在 HyperbolicMeasure 模块。
+    注意：当前 ManifoldM = ℍ³（通用覆盖），体积无穷。 -/
+noncomputable def manifoldIntegral (f : ManifoldM → ℂ) : ℂ :=
+  hyperbolicIntegral3 f
 
-/-- 二维双曲曲面 X 上的积分（opaque）：∫_X h(w) dw。
-    与 manifoldIntegral 类似，但定义域是 ManifoldX 而非 ManifoldM。
-    用于 Shimura 提升算子的积分定义。 -/
-opaque manifoldIntegralX : (ManifoldX → ℂ) → ℂ
+/-- 二维流形 X 上的积分（显式定义）：∫_X h dμ₂。
+    关于双曲测度 hyperbolicMeasure2 的 Bochner 积分。 -/
+noncomputable def manifoldIntegralX (f : ManifoldX → ℂ) : ℂ :=
+  hyperbolicIntegral2 f
 
 /-- 流形积分的线性性（公理）：
     ∫_M (a·f + b·g) dz = a·∫_M f dz + b·∫_M g dz。
@@ -85,21 +75,10 @@ axiom manifoldIntegralX_positive (f : ManifoldX → ℂ)
     (h_real : ∀ z, f z = (f z).re) (h_nonneg : ∀ z, 0 ≤ (f z).re) :
     0 ≤ (manifoldIntegralX f).re
 
-/-- 三维流形体积为正（公理，测度结构）：
-    ∫_M 1 dz > 0。
-    这是有限体积双曲流形的基本性质：体积为正实数。 -/
-axiom manifoldIntegral_one_pos : 0 < (manifoldIntegral (fun _ => (1 : ℂ))).re
-
-/-- 二维流形体积为正（公理，测度结构）：
-    ∫_X 1 dw > 0。 -/
-axiom manifoldIntegralX_one_pos : 0 < (manifoldIntegralX (fun _ => (1 : ℂ))).re
-
-/-- 算术群 Γ 的元素作用（opaque）：
-    gammaAction n z = γ_n · z，其中 γ_n 是 Γ = PSL₂(O_K) 的第 n 个元素。
-    Γ 通过分式线性变换作用在 H³ 上：
-      γ = [[a,b],[c,d]] ∈ PSL₂(C), γ·z = (az+b)/(cz+d)
-    Γ 是可数群（O_K 是有限生成 Z-模），故可用 ℕ 枚举。
-    当前用 opaque 抽象，参数 (n, z)。 -/
+/-- Arithmetic group Gamma action (opaque).
+    gammaAction n z = gamma_n dot z, where gamma_n is the n-th element of Gamma.
+    Gamma acts on H3 by fractional linear transformations.
+    Gamma is countable, so indexed by Nat. -/
 opaque gammaAction : ℕ → ManifoldM → ManifoldM := fun _ z => z
 
 /-- Γ 作用的单位元（公理）：

@@ -9,6 +9,7 @@ import OrderPreservingBijection.ManifoldInfrastructure
 import OrderPreservingBijection.BasicInfrastructure
 import Mathlib.MeasureTheory.Integral.Gamma
 import Mathlib.Analysis.SpecialFunctions.Gamma.BohrMollerup
+import Mathlib.Analysis.SpecialFunctions.Arcosh
 
 namespace OrderPreservingBijection
 
@@ -100,26 +101,83 @@ theorem trace_cyclicity (K1 K2 : ManifoldM → ManifoldM → ℂ) :
   funext z
   <;> ring
 
-/-- 双曲距离（opaque）：d(z,w) = H³ 中 z,w 两点的双曲距离。
-    在双曲空间 H³ 的上半空间模型中：
-      d(z,w) = arcosh(1 + |z-w|² / (2 Im(z) Im(w)))
-    双曲距离是 Γ-不变的：d(γz, γw) = d(z,w) 对所有 γ ∈ Γ。
-    热核的显式公式只依赖于双曲距离。
-    当前用 opaque 抽象，参数 (z, w)。 -/
-opaque hyperbolicDistance : ManifoldM → ManifoldM → ℝ
+/-- 三维双曲空间 ℍ³ 上半空间模型的双曲距离（显式定义）。
+    对 p = (z, t), q = (w, s) ∈ ℍ³（z,w ∈ ℂ，t,s > 0）：
+      cosh d(p,q) = 1 + (|z-w|² + (t-s)²) / (2ts)
+    因此 d(p,q) = arcosh(1 + (|z-w|² + (t-s)²) / (2ts))。
+    这是 ℍ³ 上半空间模型的标准距离公式。
+    参数 ≥ 1：|z-w|² ≥ 0，(t-s)² ≥ 0，2ts > 0（t,s > 0），故分式 ≥ 0，1 + 分式 ≥ 1。
+    旧版为 opaque，现降级为显式定义。 -/
+noncomputable def hyperbolicDistance (p q : ManifoldM) : ℝ :=
+  Real.arcosh (1 + (Complex.normSq (p.val.1 - q.val.1) + (p.val.2 - q.val.2)^2) / (2 * p.val.2 * q.val.2))
+
+/-- 双曲距离参数在 arcosh 定义域内（引理）：1 + (...) ≥ 1。 -/
+lemma hyperbolicDistance_arg_ge_one (p q : ManifoldM) :
+    1 ≤ 1 + (Complex.normSq (p.val.1 - q.val.1) + (p.val.2 - q.val.2)^2) / (2 * p.val.2 * q.val.2) := by
+  have h1 : 0 ≤ Complex.normSq (p.val.1 - q.val.1) := Complex.normSq_nonneg _
+  have h2 : 0 ≤ (p.val.2 - q.val.2)^2 := by positivity
+  have h3 : 0 < p.val.2 := p.property
+  have h4 : 0 < q.val.2 := q.property
+  have h5 : 0 < 2 * p.val.2 * q.val.2 := by positivity
+  have h6 : 0 ≤ (Complex.normSq (p.val.1 - q.val.1) + (p.val.2 - q.val.2)^2) / (2 * p.val.2 * q.val.2) := by
+    apply div_nonneg
+    · positivity
+    · positivity
+  linarith
+
+/-- 双曲距离对称性（定理，由显式公式直接推出）：d(p,q) = d(q,p)。
+    公式中 |z-w|² = |w-z|²，(t-s)² = (s-t)²，分母 2ts = 2st，故对称。 -/
+theorem hyperbolicDistance_symmetric (p q : ManifoldM) :
+    hyperbolicDistance p q = hyperbolicDistance q p := by
+  have h1 : Complex.normSq (p.val.1 - q.val.1) = Complex.normSq (q.val.1 - p.val.1) := by
+    rw [show p.val.1 - q.val.1 = -(q.val.1 - p.val.1) by ring]
+    rw [Complex.normSq_neg]
+  have h2 : (p.val.2 - q.val.2)^2 = (q.val.2 - p.val.2)^2 := by
+    rw [show p.val.2 - q.val.2 = -(q.val.2 - p.val.2) by ring]
+    rw [neg_sq]
+  have h3 : 2 * p.val.2 * q.val.2 = 2 * q.val.2 * p.val.2 := by ring
+  simp [hyperbolicDistance, h1, h2, h3]
 
 /-- 双曲距离的 Γ-不变性（公理）：
     d(γ·z, γ·w) = d(z,w) 对所有 γ ∈ Γ。
     这是双曲等距变换的基本性质：PSL₂(C) 通过等距变换作用在 H³ 上。
-    此性质保证热核 K_t(z,w) 只依赖 d(z,w)，因此是 Γ-不变的。 -/
+    此性质保证热核 K_t(z,w) 只依赖 d(z,w)，因此是 Γ-不变的。
+    距离本身已显式化，但 gammaAction 仍为 opaque，故不变性保持为公理。 -/
 axiom hyperbolicDistance_gamma_invariant :
     ∀ (n : ℕ) (z w : ManifoldM),
       hyperbolicDistance (gammaAction n z) (gammaAction n w) = hyperbolicDistance z w
 
+/-- 双曲距离非负（定理，由 arcosh 值域推出）：d(p,q) ≥ 0。
+    Real.arcosh(x) ≥ 0 对 x ≥ 1 成立，而距离参数 ≥ 1（hyperbolicDistance_arg_ge_one）。 -/
+theorem hyperbolicDistance_nonneg (p q : ManifoldM) :
+    0 ≤ hyperbolicDistance p q :=
+  Real.arcosh_nonneg (hyperbolicDistance_arg_ge_one p q)
+
+/-- d/sinh(d) 的连续延拓（定义）：
+    当 d ≠ 0 时为 d/sinh(d)；当 d = 0 时取极限值 1（lim_{d→0} d/sinh(d) = 1）。
+    热核公式中 d/sinh(d) 在 d=0 处有可去奇点，必须用连续延拓，否则 K_t(z,z)=0（与正定性矛盾）。
+    对 d ≥ 0，d_over_sinh(d) > 0：d>0 时 d>0 且 sinh(d)>0；d=0 时值为 1。 -/
+noncomputable def d_over_sinh (d : ℝ) : ℝ :=
+  if d = 0 then 1 else d / Real.sinh d
+
+/-- d_over_sinh 正性（定理）：d ≥ 0 → d_over_sinh(d) > 0。
+    d=0 时值为 1；d>0 时 d>0 且 sinh(d)>0（Real.sinh_pos_iff），故商为正。 -/
+theorem d_over_sinh_pos (d : ℝ) (h : 0 ≤ d) : 0 < d_over_sinh d := by
+  by_cases h0 : d = 0
+  · rw [d_over_sinh, h0, if_pos rfl]
+    norm_num
+  · have hpos : 0 < d := by
+      by_contra h'
+      have : d = 0 := by linarith
+      exact h0 this
+    rw [d_over_sinh, if_neg h0]
+    apply div_pos hpos
+    exact Real.sinh_pos_iff.mpr hpos
+
 /-- 三维双曲热核（定义）：K_t(z, w) = 热方程的基本解。
     对 t>0，显式公式为：
-      K_t(z,w) = (4πt)^(-3/2) · e^{-t} · e^{-d²/(4t)} · (d / sinh d)
-    其中 d = hyperbolicDistance(z,w)。
+      K_t(z,w) = (4πt)^(-3/2) · e^{-t} · e^{-d²/(4t)} · d_over_sinh(d)
+    其中 d = hyperbolicDistance(z,w)，d_over_sinh 是 d/sinh(d) 的连续延拓（d=0 时为 1）。
     对 t≤0，定义为 0（热核仅在 t>0 时有意义）。
     因子 d/sinh(d) 来自三维双曲空间的体积元。 -/
 noncomputable def heatKernel (t : ℝ) (z w : ManifoldM) : ℂ :=
@@ -127,7 +185,7 @@ noncomputable def heatKernel (t : ℝ) (z w : ManifoldM) : ℂ :=
       let d := hyperbolicDistance z w
       ((Real.rpow (4 * Real.pi * t) (-3 / 2) * Real.exp (-t) *
         Real.exp (-(d)^2 / (4 * t)) *
-        (d / ((Real.exp d - Real.exp (-d)) / 2)) : ℝ) : ℂ)
+        d_over_sinh d : ℝ) : ℂ)
     else 0
 
 /-- 热核显式公式（定理，由定义直接推出）。 -/
@@ -135,21 +193,50 @@ theorem heatKernel_explicit_formula (t : ℝ) (z w : ManifoldM) (ht : 0 < t) :
     heatKernel t z w =
       ((Real.rpow (4 * Real.pi * t) (-3 / 2) * Real.exp (-t) *
         Real.exp (-(hyperbolicDistance z w)^2 / (4 * t)) *
-        (hyperbolicDistance z w / ((Real.exp (hyperbolicDistance z w) - Real.exp (-(hyperbolicDistance z w))) / 2)) : ℝ) : ℂ) := by
+        d_over_sinh (hyperbolicDistance z w) : ℝ) : ℂ) := by
   simp [heatKernel, ht]
 
-/-- 热核的对称性（公理）：K_t(z,w) = K_t(w,z)。
-    这是热核的基本性质，来自 Laplacian 的自伴性。
-    也可从显式公式直接验证：d(z,w)=d(w,z)。 -/
-axiom heatKernel_symmetric (t : ℝ) (z w : ManifoldM) : 0 < t →
-    heatKernel t z w = heatKernel t w z
+/-- 热核的对称性（定理，由显式公式 + 距离对称性推出）：K_t(z,w) = K_t(w,z)。
+    热核显式公式只依赖 d(z,w)，而 d(z,w)=d(w,z)（hyperbolicDistance_symmetric），故对称。
+    旧版为公理，现降级为定理。 -/
+theorem heatKernel_symmetric (t : ℝ) (z w : ManifoldM) (ht : 0 < t) :
+    heatKernel t z w = heatKernel t w z := by
+  rw [heatKernel_explicit_formula t z w ht, heatKernel_explicit_formula t w z ht]
+  rw [hyperbolicDistance_symmetric z w]
 
-/-- 热核的正定性（公理）：热核是实值且正定的。
+/-- 热核的正定性（定理，由显式公式直接验证）：热核是实值且正定的。
     (heatKernel t z w).im = 0 且 0 < (heatKernel t z w).re 对所有 z,w 和 t>0。
-    这是热核的基本性质，来自热方程的最大值原理。
-    也可从显式公式直接验证：所有因子均为正实数。 -/
-axiom heatKernel_positive (t : ℝ) (z w : ManifoldM) : 0 < t →
-    (heatKernel t z w).im = 0 ∧ 0 < (heatKernel t z w).re
+    证明：所有因子均为正实数——
+    (1) (4πt)^(-3/2) > 0（正数的实幂为正）
+    (2) e^{-t} > 0（指数函数恒正）
+    (3) e^{-d²/(4t)} > 0（指数函数恒正）
+    (4) d_over_sinh(d) > 0（d ≥ 0，d_over_sinh_pos）
+    乘积为正实数，嵌入 ℂ 后虚部为 0、实部为正。
+    旧版为公理，现降级为定理。 -/
+theorem heatKernel_positive (t : ℝ) (z w : ManifoldM) (ht : 0 < t) :
+    (heatKernel t z w).im = 0 ∧ 0 < (heatKernel t z w).re := by
+  set d := hyperbolicDistance z w with hd
+  set v := Real.rpow (4 * Real.pi * t) (-3 / 2) * Real.exp (-t) *
+      Real.exp (-(d)^2 / (4 * t)) * d_over_sinh d with hv
+  have h1 : 0 < Real.rpow (4 * Real.pi * t) (-3 / 2) := by
+    apply Real.rpow_pos_of_pos
+    positivity
+  have h2 : 0 < Real.exp (-t) := Real.exp_pos _
+  have h3 : 0 < Real.exp (-(d)^2 / (4 * t)) := Real.exp_pos _
+  have h4 : 0 ≤ d := hyperbolicDistance_nonneg z w
+  have h5 : 0 < d_over_sinh d := d_over_sinh_pos d h4
+  have h6 : 0 < v := by
+    rw [hv]
+    positivity
+  have h7 : heatKernel t z w = (v : ℂ) := by
+    rw [heatKernel_explicit_formula t z w ht, hv]
+    <;> rfl
+  rw [h7]
+  constructor
+  · simp
+  · have hre : ((v : ℂ)).re = v := by simp
+    rw [hre]
+    exact h6
 
 /-- f(Δ) 的积分核（定义）：K_f(z, w) = ∫₀^∞ L[f](t) · K_t(z,w) dt。
     即 f(Δ) 的积分核是热核的 Laplace 变换加权积分。
