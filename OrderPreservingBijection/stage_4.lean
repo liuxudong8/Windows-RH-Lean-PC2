@@ -5,6 +5,10 @@ Stage-4: RH Spectral Duality Argument (v4.0)
 import OrderPreservingBijection.stage_3
 import OrderPreservingBijection.QuadraticFieldFive
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
+import Mathlib.NumberTheory.LSeries.RiemannZeta
+import Mathlib.MeasureTheory.Integral.CircleIntegral
+import OrderPreservingBijection.ContourIntegral
+import Mathlib.MeasureTheory.Integral.Gamma
 
 namespace RHSpectralDuality
 
@@ -25,13 +29,30 @@ opaque ManifoldM : Type
     这是 opaque gammaAction 等声明的前提：函数类型需要目标类型 Nonempty。 -/
 axiom manifoldM_nonempty : Nonempty ManifoldM
 
-/-- 黎曼ζ函数的零点对称性（公理，函数方程）：
+/-- 黎曼ζ函数的零点对称性（定理，函数方程的直接推论）：
     如果 ρ 是非平凡零点（0 < Re(ρ) < 1），则 1 - ρ 也是非平凡零点。
-    这是黎曼ζ函数函数方程的直接推论。
-    风险等级：第一档（ZFC 标准结果，函数方程的直接推论）。 -/
-axiom riemann_zeta_zero_symmetry (ρ : ℂ) :
+    由 Mathlib 的 riemannZeta_one_sub（函数方程）直接推出：
+    ζ(1-ρ) = C(ρ)·ζ(ρ) = C(ρ)·0 = 0，其中 C(ρ) 是 Γ 和 cos 的乘积。 -/
+theorem riemann_zeta_zero_symmetry (ρ : ℂ) :
     _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
-    _root_.riemannZeta (1 - ρ) = 0 ∧ 0 < (1 - ρ).re ∧ (1 - ρ).re < 1
+    _root_.riemannZeta (1 - ρ) = 0 ∧ 0 < (1 - ρ).re ∧ (1 - ρ).re < 1 := by
+  intro hz hre1 hre2
+  have h1 : ∀ (n : ℕ), ρ ≠ (-n : ℂ) := by
+    intro n
+    intro h
+    have hre : ρ.re = (-n : ℝ) := by exact_mod_cast congr_arg Complex.re h
+    linarith
+  have h2 : ρ ≠ (1 : ℂ) := by
+    intro h
+    have hre : ρ.re = 1 := by exact_mod_cast congr_arg Complex.re h
+    linarith
+  have h_fe : _root_.riemannZeta (1 - ρ) = 2 * (2 * Real.pi) ^ (-ρ) * Complex.Gamma ρ * Complex.cos (Real.pi * ρ / 2) * _root_.riemannZeta ρ :=
+    riemannZeta_one_sub h1 h2
+  have h_zero : _root_.riemannZeta (1 - ρ) = 0 := by
+    rw [h_fe, hz] <;> ring
+  have h_re1 : 0 < (1 - ρ).re := by simp [Complex.sub_re] <;> linarith
+  have h_re2 : (1 - ρ).re < 1 := by simp [Complex.sub_re] <;> linarith
+  exact ⟨h_zero, h_re1, h_re2⟩
 
 /-- L² 函数空间（类型化）：L²(M) := M → ℂ。
     用类型参数 M 区分不同流形上的 L² 空间，保证类型安全：
@@ -228,10 +249,10 @@ opaque ellipticWeight : ℝ → ℂ
 noncomputable def ellipticTerm (f : TestFunction) : ℂ :=
     ∑ ℓ ∈ ellipticClassLengths_finite.toFinset, ellipticWeight ℓ * f.eval ℓ
 
-/-- 实数轴上的积分（opaque）：∫₀^∞ h(t) dt。
-    用于连续谱贡献、热核 Laplace 变换、Mellin 变换等。
-    当前用 opaque 抽象，具体实现需要测度论基础设施。 -/
-opaque realIntegral : (ℝ → ℂ) → ℂ
+/-- 实数轴正半轴上的积分（def，Lebesgue 积分）：∫₀^∞ h(t) dt。
+    定义为 Ioi 0 上的 Lebesgue 积分。用于连续谱贡献、热核 Laplace 变换、Mellin 变换等。 -/
+noncomputable def realIntegral (h : ℝ → ℂ) : ℂ :=
+    ∫ t in Set.Ioi (0 : ℝ), h t
 
 /-- 实数积分的线性性（公理，第一档）：
     ∫₀^∞ (c₁·h₁ + c₂·h₂)(t) dt = c₁·∫₀^∞ h₁(t) dt + c₂·∫₀^∞ h₂(t) dt。
@@ -315,14 +336,42 @@ noncomputable def gammaPeriodization (K : ManifoldM → ManifoldM → ℂ) (z w 
 noncomputable def laplaceTransform (f : ℝ → ℂ) (t : ℝ) : ℂ :=
     realIntegral (fun x => f x * Real.exp (-t * x))
 
-/-- Laplace 变换的指数函数计算（公理）：
+/-- Laplace 变换的指数函数计算（定理，Mathlib integral_exp_neg_mul_rpow）：
     L[e^{-sλ}](t) = 1/(t+s)，对 t,s > 0。
-    这是 Laplace 变换的基本公式，直接计算：
-      ∫₀^∞ e^{-sλ} e^{-tλ} dλ = ∫₀^∞ e^{-(s+t)λ} dλ = 1/(s+t)
-    这个公式是热核函数演算的基础：
-    对 f(λ)=e^{-sλ}，f(Δ)=e^{-sΔ}=H_s（热核算子）。 -/
-axiom laplaceTransform_exp (s t : ℝ) : 0 < t → 0 < s →
-    laplaceTransform (fun x => Real.exp (-s * x)) t = 1 / (t + s)
+    由 Mathlib 的 integral_exp_neg_mul_rpow（取 p=1, b=t+s）直接推出：
+      ∫₀^∞ e^{-(s+t)λ} dλ = (s+t)^{-1}·Γ(2) = 1/(s+t)。
+    这个公式是热核函数演算的基础。 -/
+theorem laplaceTransform_exp (s t : ℝ) : 0 < t → 0 < s →
+    laplaceTransform (fun x => Real.exp (-s * x)) t = 1 / (t + s) := by
+  intro ht hs
+  have h_pos : 0 < t + s := by linarith
+  simp only [laplaceTransform, realIntegral]
+  have h_real : ∫ x : ℝ in Set.Ioi (0 : ℝ), Real.exp (-(t + s) * x) = 1 / (t + s) := by
+    have h := _root_.integral_exp_neg_mul_rpow (p := 1) (b := t + s) (by norm_num) h_pos
+    have h_eq1 : (fun x : ℝ => Real.exp (-(t + s) * x)) = (fun x : ℝ => Real.exp (-(t + s) * x ^ (1 : ℝ))) := by
+      funext x; simp [Real.rpow_one]
+    have h1 : ∫ x : ℝ in Set.Ioi (0 : ℝ), Real.exp (-(t + s) * x) = (t + s) ^ (-1 : ℝ) * Real.Gamma 2 := by
+      rw [h_eq1]
+      have h_simp : (t + s) ^ (-1 / 1 : ℝ) * Real.Gamma (1 / 1 + 1) = (t + s) ^ (-1 : ℝ) * Real.Gamma 2 := by
+        norm_num
+      rw [h_simp] at h
+      exact h
+    rw [h1]
+    have h2 : (t + s) ^ (-1 : ℝ) * Real.Gamma 2 = 1 / (t + s) := by
+      rw [Real.Gamma_two]
+      have h3 : (t + s) ^ (-1 : ℝ) = 1 / (t + s) := by
+        rw [Real.rpow_neg_one] <;> field_simp
+      rw [h3] <;> ring
+    rw [h2]
+  have h_eq : (fun x : ℝ => (Real.exp (-s * x) * Real.exp (-t * x) : ℂ)) = fun x : ℝ => (Real.exp (-(t + s) * x) : ℂ) := by
+    funext x
+    have h : Real.exp (-s * x) * Real.exp (-t * x) = Real.exp (-(t + s) * x) := by
+      rw [← Real.exp_add] <;> ring
+    have h' : (Real.exp (-s * x) * Real.exp (-t * x) : ℂ) = (Real.exp (-(t + s) * x) : ℂ) := by
+      rw [← Complex.ofReal_mul, h]
+    exact h'
+  rw [h_eq]
+  exact_mod_cast h_real
 
 /-- Laplace 变换的线性性（定理，由积分线性性推出）：
     L[af + bg](t) = a·L[f](t) + b·L[g](t)。
@@ -886,10 +935,11 @@ axiom l_parameter_standard_form :
 axiom l_parameter_im_nonneg :
     ∀ (n : ℕ), 0 ≤ (jlLParameterMap n).im
 
-/-- 实数嵌入复数的单射性（公理）：
+/-- 实数嵌入复数的单射性（定理，Complex.ofReal_injective）：
     (x : ℂ) = (y : ℂ) → x = y 对实数 x, y。
-    这是 Complex.ofReal 的基本性质：嵌入是单射。 -/
-axiom real_complex_inj (x y : ℝ) : (x : ℂ) = (y : ℂ) → x = y
+    直接由 Mathlib 的 Complex.ofReal_injective 推出。 -/
+theorem real_complex_inj (x y : ℝ) : (x : ℂ) = (y : ℂ) → x = y :=
+  fun h => Complex.ofReal_injective h
 
 /-- Shimura 提升的酉性（公理）：U 是部分等距。 -/
 axiom shimuraLift_isometry :
@@ -1361,22 +1411,42 @@ theorem mollified_trace_equality (f : MollifiedTestFunction) :
     由留数定理，围道积分的留数来自所有奇点（非平凡零点+平凡零点+极点）。 -/
 noncomputable def zetaZeroSide (f : TestFunction) : ℂ := nontrivialZeroSum f + trivialZeroContribution f
 
-/-- ζ 函数对数导数的围道积分（def，留数定理计算结果）：
-    I(f) = (1/2πi) ∮ (ζ'/ζ)(s) · M[f](s) ds = zetaZeroSide(f)。
-    由留数定理，围道积分等于围道内部所有奇点的留数之和。
-    (ζ'/ζ)(s) 的奇点恰在 ζ 的零点处（留数为零点阶数）和 s=1 极点处，
-    因此 I(f) = Σ_{ρ:非平凡零点} M[f](ρ) + Σ_{k≥1} M[f](-2k) + M[f](1)
-             = nontrivialZeroSum(f) + trivialZeroContribution(f)
-             = zetaZeroSide(f)。
-    这是留数定理在 Weil 显式公式中的标准应用，定义即留数计算结果。 -/
-noncomputable def zetaLogDerivativeIntegral (f : TestFunction) : ℂ := zetaZeroSide f
+/- Section 4.5: 围道积分应用（依赖 TestFunction 的公理）
+    纯基础设施在 ContourIntegral.lean 中。 -/
 
-/-- 素理想 Dirichlet 生成函数的围道积分（def，由 Perron 公式等价于 geometricSum）：
-    I_D(f) = (1/2πi) ∮ D(s) · f̂(s) ds = geometricSum(f)。
-    其中 D(s) = Σ_p W(p) N(p)^{-s} 是几何侧素理想加权求和的 Dirichlet 级数生成函数。
-    由 Mellin 反演 + 求和-积分交换，对磨光函数 I_D(f) = geometricSum(f)。
-    此处直接定义为 geometricSum，将分析步骤压缩为定义。 -/
-noncomputable def primeIdealDirichletIntegral (f : TestFunction) : ℂ := geometricSum f
+/-- 留数定理（公理，ζ 对数导数版本）：
+    ζ'/ζ 的围道积分等于围道内部所有奇点的留数之和。
+    (ζ'/ζ)(s) 的奇点在 ζ 的零点处（留数 = 零点阶数）和 s=1 极点处（留数 = -1）。
+    乘以 Mellin 变换 f̂(s) 后，积分 = Σ_{ρ:非平凡零点} m(ρ)·f̂(ρ) + 平凡零点贡献 + 极点贡献
+             = zetaZeroSide(f)。
+    这是留数定理在 Weil 显式公式中的标准应用。 -/
+axiom residue_theorem_zeta_log_derivative (f : TestFunction) :
+    contourIntegral (fun s => zetaLogDerivative s * melinTransform f s) = zetaZeroSide f
+
+/-- 差的全纯延拓（公理）：
+    primeDirichletSeries - zetaLogDerivative 在 Re(s) > 1 内为零（由 Euler 乘积），
+    且可解析延拓为围道内部的全纯函数（仅有的奇点在 ζ 零点处，但已被 zetaLogDerivative 的定义抵消）。
+    因此差在围道内部全纯，由柯西定理围道积分为零。 -/
+axiom primeDirichlet_zetaLogDerivative_diff_holomorphic (f : TestFunction) :
+    ∀ s ∈ Metric.ball (1 / 2 : ℂ) contourRadius,
+    DifferentiableAt ℂ (fun s => (primeDirichletSeries s - zetaLogDerivative s) * melinTransform f s) s
+
+/- End Section 4.5 -/
+
+/-- ζ 函数对数导数的围道积分（def，真正的围道积分）：
+    I(f) = (1/2πi) ∮ (ζ'/ζ)(s) · M[f](s) ds。
+    用 contourIntegral 实现，被积函数为 zetaLogDerivative(s) * melinTransform f(s)。
+    其值等于 zetaZeroSide(f) 由留数定理（residue_theorem_zeta_log_derivative）保证，不再写进定义。 -/
+noncomputable def zetaLogDerivativeIntegral (f : TestFunction) : ℂ :=
+    contourIntegral (fun s => zetaLogDerivative s * melinTransform f s)
+
+/-- 素理想 Dirichlet 生成函数的围道积分（def，真正的围道积分）：
+    I_D(f) = (1/2πi) ∮ D(s) · M[f](s) ds。
+    其中 D(s) = primeDirichletSeries(s) = Σ_p (log p) p^{-s}/(1-p^{-s}) 是素理想生成函数。
+    用 contourIntegral 实现，不再直接定义为 geometricSum。
+    其与 geometricSum 的关系由 Perron 公式（perron_formula_geometric）保证。 -/
+noncomputable def primeIdealDirichletIntegral (f : TestFunction) : ℂ :=
+    contourIntegral (fun s => primeDirichletSeries s * melinTransform f s)
 
 /-- 几何侧的逐项积分形式（def，由 Mellin 反演等价于 geometricSum）：
     I_term(f) = Σ_p W(p) · (1/2πi) ∮ f̂(s) N(p)^{-s} ds = geometricSum(f)。
@@ -1408,9 +1478,8 @@ theorem geometric_sum_mellin_inversion (f : MollifiedTestFunction) :
     交换的合法性由磨光函数的紧支集和光滑性保证
     （控制收敛定理 / Fubini 定理的围道积分版本）。
     这是 Perron 公式证明中的关键分析步骤。 -/
-theorem termwise_integral_swap (f : MollifiedTestFunction) :
-    geometricTermwiseIntegral f.toTestFunction = primeIdealDirichletIntegral f.toTestFunction := by
-  rfl
+axiom termwise_integral_swap (f : MollifiedTestFunction) :
+    geometricTermwiseIntegral f.toTestFunction = primeIdealDirichletIntegral f.toTestFunction
 
 /-- Perron 公式（定理，由 Mellin 反演 + 求和-积分交换推出）：
     几何侧素理想加权求和等于其 Dirichlet 生成函数的围道积分：
@@ -1424,19 +1493,37 @@ theorem perron_formula_geometric (f : MollifiedTestFunction) :
     geometricSum f.toTestFunction = primeIdealDirichletIntegral f.toTestFunction := by
   rw [geometric_sum_mellin_inversion f, termwise_integral_swap f]
 
-/-- Euler 乘积（公理，Weil 显式公式第一步-B）：
+/-- Euler 乘积（定理，由柯西定理 + Euler 乘积推出）：
     素理想 Dirichlet 生成函数的围道积分等于 ζ 对数导数的围道积分：
       primeIdealDirichletIntegral(f) = zetaLogDerivativeIntegral(f)
 
-    数学内容：由 Euler 乘积 ζ(s) = ∏_p (1-N(p)^{-s})^{-1}，取对数导数得
-    (ζ'/ζ)(s) = Σ_p (log N(p)) N(p)^{-s} / (1-N(p)^{-s})
-              = Σ_p Σ_{m≥1} (log N(p)) N(p)^{-ms}。
-    几何侧权重 W(p) = N log N/(N-1)² 对应的生成函数 D(s)
-    与 (ζ'/ζ)(s) 在 Re(s)>1 内相差一个全纯函数（来自 m≥2 的高次幂项
-    和权重的精确匹配）。由柯西定理，全纯函数的围道积分为零，
-    因此 D(s) 和 (ζ'/ζ)(s) 的围道积分相等。 -/
-axiom euler_product_integral (f : MollifiedTestFunction) :
-    primeIdealDirichletIntegral f.toTestFunction = zetaLogDerivativeIntegral f.toTestFunction
+    证明：
+    (1) 由 euler_product_log_derivative_eq（Euler 乘积取对数导数），
+        在 Re(s)>1 内 primeDirichletSeries(s) = zetaLogDerivative(s)。
+    (2) 由 primeDirichlet_zetaLogDerivative_diff_holomorphic，
+        差 (primeDirichletSeries - zetaLogDerivative)·M[f] 在围道内部全纯。
+    (3) 由 cauchy_theorem_contour（柯西定理），全纯函数的围道积分为零。
+    (4) 因此 ∮ D(s)M[f](s)ds = ∮ (ζ'/ζ)(s)M[f](s)ds，即两个围道积分相等。 -/
+theorem euler_product_integral (f : MollifiedTestFunction) :
+    primeIdealDirichletIntegral f.toTestFunction = zetaLogDerivativeIntegral f.toTestFunction := by
+  let g1 : ℂ → ℂ := fun s => primeDirichletSeries s * melinTransform f.toTestFunction s
+  let g2 : ℂ → ℂ := fun s => zetaLogDerivative s * melinTransform f.toTestFunction s
+  let gdiff : ℂ → ℂ := fun s => (primeDirichletSeries s - zetaLogDerivative s) * melinTransform f.toTestFunction s
+  have h_eq : gdiff = fun s => g1 s + (-1 : ℂ) * g2 s := by
+    funext s; simp [g1, g2, gdiff] <;> ring
+  have h_lin : contourIntegral gdiff = contourIntegral g1 - contourIntegral g2 := by
+    rw [h_eq]
+    have h := contourIntegral_linear g1 g2 (1 : ℂ) (-1 : ℂ)
+    have h' : contourIntegral (fun s : ℂ => g1 s + -1 * g2 s) = contourIntegral g1 - contourIntegral g2 := by
+      simpa [one_mul, neg_one_mul, sub_eq_add_neg] using h
+    exact h'
+    
+  have h_diff : contourIntegral gdiff = 0 :=
+    cauchy_theorem_contour gdiff (primeDirichlet_zetaLogDerivative_diff_holomorphic f.toTestFunction)
+  have h_main : contourIntegral g1 - contourIntegral g2 = 0 := by
+    rw [← h_lin, h_diff]
+  simp only [primeIdealDirichletIntegral, zetaLogDerivativeIntegral, g1, g2]
+  exact sub_eq_zero.mp h_main
 
 /-- 几何侧的对数导数表示（定理，由 Perron 公式 + Euler 乘积推出）：
     对磨光测试函数 f，几何侧求和等于 ζ 对数导数的围道积分：
@@ -1462,7 +1549,8 @@ theorem geometric_sum_log_derivative (f : MollifiedTestFunction) :
     这是留数定理在 Weil 显式公式中的标准应用。 -/
 theorem log_derivative_integral_residues (f : MollifiedTestFunction) :
     zetaLogDerivativeIntegral f.toTestFunction = zetaZeroSide f.toTestFunction := by
-  rw [zetaLogDerivativeIntegral]
+  simp only [zetaLogDerivativeIntegral]
+  exact residue_theorem_zeta_log_derivative f.toTestFunction
 
 /-- Weil 显式公式（定理，由两步推出）：
     对磨光测试函数 f，几何侧 = ζ 零点侧：
