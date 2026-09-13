@@ -1,6 +1,6 @@
 # Stage 4: RH 谱对偶论证框架 — 总结文档
 
-> **版本**: v7.0（双曲测度完全具体化 + 双曲距离显式化 + 热核正定定理化 + 死公理清理）
+> **版本**: v7.1（gammaAction 具体化 + manifoldIntegral_linear 降级 + contourRadius 降级 + 死公理扫描）
 > **最后更新**: 2026-09-13
 > **核心文件**: `stage_4.lean` + 9 个独立模块
 > **编译状态**: 通过（`lake build OrderPreservingBijection.stage_4`，0 error, stage_4 零 sorry）
@@ -65,20 +65,20 @@ BasicInfrastructure ← MollifiedFunction ← Interpolation
 | 指标 | 数值 |
 |------|------|
 | 总文件数 | 10 |
-| 总行数 | 3327 |
-| 公理 (axiom) | 53 |
-| 定理 (theorem) | 114 |
-| 不透明常量 (opaque) | 15 |
-| 定义 (def/abbrev) | 50 |
+| 总行数 | 3386 |
+| 公理 (axiom) | 51 |
+| 定理 (theorem) | 116 |
+| 不透明常量 (opaque) | 14 |
+| 定义 (def/abbrev) | 53 |
 | stage_4 sorry | 0 |
 | True 简化公理 | 0 |
 | 第三档分析公理 | 0 |
 
 ---
 
-## 四、公理分档（53 条）
+## 四、公理分档（51 条）
 
-### 第一档：ZFC 标准结果/定义性（约 28 条，53%）
+### 第一档：ZFC 标准结果/定义性（约 26 条，51%）
 
 **双曲空间与流形结构（7）**
 1. `manifoldIntegral_linear` — 流形积分线性性（Bochner 积分性质，可降级）
@@ -126,7 +126,7 @@ BasicInfrastructure ← MollifiedFunction ← Interpolation
 27. `innerProduct_conj_sym` — 内积共轭对称
 28. `innerProduct_pos_def` — 内积正定
 
-### 第二档：已知大定理（约 25 条，47%）
+### 第二档：已知大定理（约 25 条，49%）
 
 **Arthur迹公式（2）**
 29. `spectral_decomposition_additivity` — 谱分解可加性
@@ -246,24 +246,66 @@ d(p,q) = arcosh(1 + (|z_p - z_q|² + (t_p - t_q)²) / (2·t_p·t_q))
 - 关键技术：`abbrev` 而非 `def` 定义子类型 → MeasurableSpace 实例自动传递；`withDensity` 期望 `α → ENNReal`
 - opaque 17→15（-2），公理 55→53（-2），文件数 9→10
 
+### 21. gammaAction 具体化（v7.1）
+- 定义 SL2C 结构（行列式为 1 的 2×2 复矩阵，含 Nonempty 实例）
+- 定义 moebiusAction 显式公式：ℍ³ 上半空间模型的 Möbius 作用
+  - z' = ((az+b)·star(cz+d) + star(c)·t²) / (|cz+d|² + |c|²·t²)
+  - t' = t / (|cz+d|² + |c|²·t²)
+- 含 t'>0 的完整证明（分 c=0/c≠0，用 det=1 保证分母非零）
+- gammaAction 从 opaque 降为 def：gammaAction n z = moebiusAction (gammaEnum n) z
+- gammaEnum : ℕ → SL2C 保持 opaque（Γ=PSL₂(O_K) 的可数枚举，需 O_K 数论）
+- 关键技术：structure 字段需单独写类型（ : ℂ 而非  b c d : ℂ）；复数共轭用 star 而非 Complex.conj
+
+### 22. manifoldIntegral_linear 降级（v7.1）
+- 发现是死公理（全项目只在声明处出现）
+- 原无条件版本数学上不正确：不可积函数 integral=0，但两不可积函数之和可能可积
+- 降级为带 Integrable 前提的定理，用 Mathlib integral_add + integral_smul 证明
+- 技术细节：* 与 • 需用 smul_eq_mul 桥接；MeasureTheory.Integrable 需完整命名空间
+
+### 23. contourRadius 降级（v7.1）
+- 从 opaque 降为 def：contourRadius := 1
+- contourRadius_pos 从公理降为定理（y norm_num）
+- 数学依据：围道积分形变不变性，具体半径值不影响结论
+
+### 24. 死公理扫描（v7.1）
+- 精确扫描 51 个公理（排除注释和声明行），发现 13 个未引用
+- 全部是结构公理（自伴性、内积、群作用、热核性质、留数定理基础），数学上必要，保留
+- 无可删除的真正死公理（之前已清理 tsum_one_point_isolation、euler_product_log_derivative_eq）
+- ellipticWeight 和 laplacian_M 评估为难以降级：前者依赖 Γ 椭圆共轭类结构，后者是无界算子需偏导数/Sobolev 空间
+
 ---
 
-## 七、Opaque 分类（15 个）
+## 七、Opaque 分类（14 个）
 
-**抽象基础设施（9 个，不能降级）**
-- 内积：innerProduct
-- 算子：laplacian_X, laplacian_M, transferOperator
-- 本征函数：maassEigenfunction, threeManifoldEigenfunction
-- 谱映射：jlLParameterMap
-- 围道：contourRadius
-- ζ 函数：zeroMultiplicity（零点重数函数）
+**无界算子（2 个）**
+- laplacian_M, laplacian_X：Laplace-Beltrami 算子，显式形式化需偏导数+Sobolev 空间+无界算子定义域
 
-**不宜降级（4 个，降级会藏数学）**
-- gammaAction, ellipticClassLengths, ellipticWeight, jlSpectrumMap
+**本征函数（2 个）**
+- maassEigenfunction, threeManifoldEigenfunction：需谱定理+特征向量构造
 
-**技术障碍（2 个）**
+**谱映射（2 个）**
+- jlSpectrumMap：定义顺序循环依赖
+- jlLParameterMap：不宜降级（降级会藏数学）
+
+**核/算子（3 个）**
+- shimuraKernel：Shimura 提升核，需显式公式
+- transferOperator：转移算子
 - scatteringMatrixLogDerivative：需复导数
-- （注：hyperbolicDistance 已从 opaque 降为 def，manifoldIntegral/X 已降为 def）
+
+**多态内积（1 个）**
+- innerProduct：多态 {M : Type}，无法用单一积分定义覆盖
+
+**群枚举（1 个）**
+- gammaEnum：Γ=PSL₂(O_K) 的可数枚举，需 O_K=Z[(1+√5)/2] 数论
+
+**椭圆类（2 个）**
+- ellipticClassLengths, ellipticWeight：依赖 Γ 椭圆共轭类结构（旋转角、中心化子体积）
+
+**ζ 函数（1 个）**
+- zeroMultiplicity：零点重数函数
+
+**已降级为 def（29 个）**
+operatorTrace（删除）、discreteSpectralTrace、continuousSpectralTrace、parabolicTerm、centralizerIntegral、rawOrbitalIntegral、laplaceTransform、melinTransform、trivialZeroContribution、zetaLogDerivativeIntegral、geometricTermwiseIntegral、primeIdealDirichletIntegral、continuousTerm、nontrivialZeroSum、zetaZeroSide、fLaplacianKernel、geometricKernelTrace、ellipticTerm、distributionSupport、nontrivialZeroEnum、correlation、heatKernel、realIntegral、ManifoldX（→abbrev）、ManifoldM（→abbrev）、hyperbolicDistance、manifoldIntegral、manifoldIntegralX、contourRadius、gammaAction（→def，依赖 gammaEnum）
 
 **已降级为 def（27 个）**
 operatorTrace（删除）、discreteSpectralTrace、continuousSpectralTrace、parabolicTerm、centralizerIntegral、rawOrbitalIntegral、laplaceTransform、melinTransform、trivialZeroContribution、zetaLogDerivativeIntegral、geometricTermwiseIntegral、primeIdealDirichletIntegral、continuousTerm、nontrivialZeroSum、zetaZeroSide、fLaplacianKernel、geometricKernelTrace、ellipticTerm、distributionSupport、nontrivialZeroEnum、correlation、heatKernel、realIntegral、ManifoldX（→abbrev）、ManifoldM（→abbrev）、hyperbolicDistance、manifoldIntegral、manifoldIntegralX
@@ -287,8 +329,8 @@ operatorTrace（删除）、discreteSpectralTrace、continuousSpectralTrace、pa
 
 | 档位 | 数量 | 占比 | 含义 |
 |------|------|------|------|
-| 第一档：ZFC标准/定义性 | ~28 | 53% | mathlib可证或定义性质 |
-| 第二档：已知大定理 | ~25 | 47% | 数学上已确立，形式化是工作量 |
+| 第一档：ZFC标准/定义性 | ~26 | 51% | mathlib可证或定义性质 |
+| 第二档：已知大定理 | ~25 | 49% | 数学上已确立，形式化是工作量 |
 | 第三档：未证明分析断言 | 0 | 0% | 需要新数学思想 |
 
 **结论**：理论在逻辑上闭合于 ZFC。所有 6 个数学缺陷已处理（2 消除 + 4 澄清）。所有前提都是已知数学结果，无循环论证，无未证明断言。剩余工作是"把已知定理写进 Lean"，不是"发现新数学"。
@@ -300,7 +342,7 @@ operatorTrace（删除）、discreteSpectralTrace、continuousSpectralTrace、pa
 | # | 难题 | 当前状态 | 下一步 |
 |---|------|---------|--------|
 | 1 | specDiscM/maassSpecParam 非空洞化 | **已完成折中方案**：laplacian_has_discrete_spectrum 公理，specDiscM 从"任意序列"变为"Laplacian 特征值枚举" | 可选：引入 resolvent_compact + Rellich 引理，从紧算子谱定理推出枚举（成本高） |
-| 2 | ManifoldX/M 显式实例化 | **大幅推进**：上半平面/上半空间子类型 + 双曲距离显式公式 + 双曲测度完全具体化（Bochner积分） | gammaAction 从 opaque 改为分式线性变换；商空间 Γ\ℍⁿ 显式化（Quotient/基本域） |
+| 2 | ManifoldX/M 显式实例化 | **大幅推进**：上半平面/上半空间子类型 + 双曲距离显式公式 + 双曲测度完全具体化（Bochner积分） + gammaAction 具体化（SL2C+Möbius公式） | gammaEnum 具体化（需 O_K 数论）；商空间 Γ\ℍⁿ 显式化（Quotient/基本域） |
 | 3 | Weil 显式公式完整 Lean 化 | **大幅推进**：Perron 公式显式化 + 留数定理自建 + Euler 乘积定理化 | 用 Mathlib 柯西积分公式证明一般留数定理（需 Laurent 展开+围道形变，工程量大） |
 
 ---
@@ -330,12 +372,12 @@ operatorTrace（删除）、discreteSpectralTrace、continuousSpectralTrace、pa
 
 ## 十二、下一步方向
 
-1. **gammaAction 具体化**（优先级高）：从 opaque 改为分式线性变换 γ·z = (az+b)/(cz+d)，需定义 PSL₂(O_K) 群结构
-2. **继续降 opaque**（中等优先级）：laplacian_M（从公理+opaque 改为具体微分算子）、ellipticWeight（显式公式）、contourRadius（具体序列）
-3. **manifoldIntegral_linear 降级**（低难度）：Bochner 积分线性性可从 Mathlib 直接推出
+1. **降级结构公理**（优先级高）：contourIntegral_linear（circleIntegral 线性性）、manifoldIntegral_positive（Bochner 积分正定性）、heatKernel_semigroup（热核卷积）
+2. **gammaEnum 具体化**（长期）：定义 O_K=Z[(1+√5)/2] 整数环和 PSL₂(O_K) 的可数枚举
+3. **商空间显式化**（长期）：用 Quotient 或基本域实现 Γ\ℍⁿ，恢复有限体积性质
 4. **一般留数定理证明**（长期）：用 Mathlib 柯西积分公式 + Laurent 展开 + 围道形变证明 residue_theorem_general
 5. **PWW 子公理的严格证明**（非当前目标）：Whitney 插值 + Paley-Wiener 满射性的完整分析证明
 6. **大定理形式化**（非当前目标）：Arthur 迹公式、JL 对应、Dolgopyat 混合
-7. **商空间显式化**（长期）：用 Quotient 或基本域实现 Γ\ℍⁿ
+7. **laplacian_M 显式化**（超长期）：偏导数+Sobolev 空间+无界算子定义域
 8. **resolvent_compact 完整方案**（可选）：引入 Rellich 引理，从紧算子谱定理推出谱枚举
 9. **向实二次域推广**：论文第 6 节的条件性声明

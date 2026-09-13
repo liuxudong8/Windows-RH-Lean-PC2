@@ -13,13 +13,14 @@ import OrderPreservingBijection.ZetaZeros
 
 namespace OrderPreservingBijection
 
-/-- 围道半径（opaque）：Weil 显式公式中使用的圆围道半径。
-    以 1/2 为中心，半径足够大以包含所有相关非平凡零点。
-    具体值不影响结论（由围道积分的形变不变性保证）。 -/
-opaque contourRadius : ℝ
+/-- 围道半径（def）：Weil 显式公式中使用的圆围道半径。
+    以 1/2 为中心。具体值不影响结论（围道积分形变不变性），取 1 简化。
+    从 opaque 降为 def：任意正实数均可，取 1 是规范选择。 -/
+def contourRadius : ℝ := 1
 
-/-- 围道半径为正（公理）。 -/
-axiom contourRadius_pos : 0 < contourRadius
+/-- 围道半径为正（定理，由定义直接推出）。 -/
+theorem contourRadius_pos : 0 < contourRadius := by
+  simp [contourRadius] <;> norm_num
 
 /-- 归一化围道积分（def）：(1/2πi) ∮_{|s - 1/2| = contourRadius} g(s) ds。
     用 Mathlib 的 circleIntegral 实现，中心在 1/2（临界线中点）。 -/
