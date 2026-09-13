@@ -1,12 +1,15 @@
 /-
   围道积分基础设施模块
-  为 Weil 显式公式提供围道积分、ζ 对数导数、素理想 Dirichlet 级数等基础定义。
-  依赖 TestFunction / melinTransform / zetaZeroSide 的公理留在 stage_4.lean。
+  为 Weil 显式公式提供围道积分、ζ 对数导数、素理想 Dirichlet 级数、留数定理等。
+  依赖 BasicInfrastructure、MellinInfrastructure、ZetaZeros。
 -/
 
 import Mathlib.MeasureTheory.Integral.CircleIntegral
 import Mathlib.NumberTheory.LSeries.RiemannZeta
 import Mathlib.Analysis.Calculus.Deriv.Basic
+import OrderPreservingBijection.BasicInfrastructure
+import OrderPreservingBijection.MellinInfrastructure
+import OrderPreservingBijection.ZetaZeros
 
 namespace OrderPreservingBijection
 
@@ -57,5 +60,22 @@ axiom cauchy_theorem_contour (g : ℂ → ℂ) :
     Mathlib 有 Euler 乘积，但对数导数的逐项求导需要额外分析。 -/
 axiom euler_product_log_derivative_eq (s : ℂ) :
     1 < s.re → zetaLogDerivative s = primeDirichletSeries s
+
+/-- 留数定理（公理，ζ 对数导数版本）：
+    ζ'/ζ 的围道积分等于围道内部所有奇点的留数之和。
+    (ζ'/ζ)(s) 的奇点在 ζ 的零点处（留数 = 零点阶数）和 s=1 极点处（留数 = -1）。
+    乘以 Mellin 变换 f̂(s) 后，积分 = Σ_{ρ:非平凡零点} m(ρ)·f̂(ρ) + 平凡零点贡献 + 极点贡献
+             = zetaZeroSide(f)。
+    这是留数定理在 Weil 显式公式中的标准应用。 -/
+axiom residue_theorem_zeta_log_derivative (f : TestFunction) :
+    contourIntegral (fun s => zetaLogDerivative s * melinTransform f s) = zetaZeroSide f
+
+/-- 差的全纯延拓（公理）：
+    primeDirichletSeries - zetaLogDerivative 在 Re(s) > 1 内为零（由 Euler 乘积），
+    且可解析延拓为围道内部的全纯函数（仅有的奇点在 ζ 零点处，但已被 zetaLogDerivative 的定义抵消）。
+    因此差在围道内部全纯，由柯西定理围道积分为零。 -/
+axiom primeDirichlet_zetaLogDerivative_diff_holomorphic (f : TestFunction) :
+    ∀ s ∈ Metric.ball (1 / 2 : ℂ) contourRadius,
+    DifferentiableAt ℂ (fun s => (primeDirichletSeries s - zetaLogDerivative s) * melinTransform f s) s
 
 end OrderPreservingBijection

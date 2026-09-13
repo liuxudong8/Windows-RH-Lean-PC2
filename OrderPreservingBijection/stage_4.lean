@@ -8,6 +8,12 @@ import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 import Mathlib.NumberTheory.LSeries.RiemannZeta
 import Mathlib.MeasureTheory.Integral.CircleIntegral
 import OrderPreservingBijection.ContourIntegral
+import OrderPreservingBijection.BasicInfrastructure
+import OrderPreservingBijection.MellinInfrastructure
+import OrderPreservingBijection.ManifoldInfrastructure
+import OrderPreservingBijection.HeatKernel
+import OrderPreservingBijection.MollifiedFunction
+import OrderPreservingBijection.Interpolation
 import Mathlib.MeasureTheory.Integral.Gamma
 
 namespace RHSpectralDuality
@@ -15,19 +21,6 @@ namespace RHSpectralDuality
 open Complex OrderPreservingBijection
 
 /- Section 0: 流形类型与 L² 函数空间 -/
-
-/-- 二维双曲曲面 X = Γ\H²（四元数代数对应的 Shimura 曲面）。
-    这是 Shimura 提升的源空间，Maass 形式所在的流形。 -/
-opaque ManifoldX : Type
-
-/-- 三维双曲流形 M = Γ'\H³（算术双曲三流形）。
-    这是 Shimura 提升的目标空间，三维自守形式所在的流形。
-    Arthur 迹公式和热核都定义在 M 上。 -/
-opaque ManifoldM : Type
-
-/-- 三维流形 M 非空（公理）：存在至少一个点。
-    这是 opaque gammaAction 等声明的前提：函数类型需要目标类型 Nonempty。 -/
-axiom manifoldM_nonempty : Nonempty ManifoldM
 
 /-- 黎曼ζ函数的零点对称性（定理，函数方程的直接推论）：
     如果 ρ 是非平凡零点（0 < Re(ρ) < 1），则 1 - ρ 也是非平凡零点。
@@ -53,13 +46,6 @@ theorem riemann_zeta_zero_symmetry (ρ : ℂ) :
   have h_re1 : 0 < (1 - ρ).re := by simp [Complex.sub_re] <;> linarith
   have h_re2 : (1 - ρ).re < 1 := by simp [Complex.sub_re] <;> linarith
   exact ⟨h_zero, h_re1, h_re2⟩
-
-/-- L² 函数空间（类型化）：L²(M) := M → ℂ。
-    用类型参数 M 区分不同流形上的 L² 空间，保证类型安全：
-    - L²(ManifoldX)：二维 Maass 形式空间
-    - L²(ManifoldM)：三维自守形式空间
-    Shimura 提升是 L²(ManifoldX) → L²(ManifoldM) 的算子。 -/
-abbrev L2Function (M : Type) := M → ℂ
 
 /-- 三维离散谱序列的存在性（公理，第一档）：
     存在序列 s : ℕ → ℝ，满足：(1) 非负 (2) 严格递增 (3) 无界。
@@ -147,41 +133,6 @@ theorem maassSpecParam_strict_mono (n : ℕ) : maassSpecParam n < maassSpecParam
 theorem maassSpecParam_unbounded (M : ℝ) : ∃ n : ℕ, maassSpecParam n > M :=
   maassSpecParam_properties.2.2 M
 
-structure TestFunction where
-  toFun : ℝ → ℂ
-  hasCompactSupport : ∃ (R : ℝ), 0 < R ∧ ∀ (x : ℝ), |x| > R → toFun x = 0
-
-instance : CoeFun TestFunction (fun _ => ℝ → ℂ) := ⟨TestFunction.toFun⟩
-def TestFunction.eval (f : TestFunction) (x : ℝ) : ℂ := f.toFun x
-
-/-- TestFunction 的加法：逐点相加，支集为两支集的并。 -/
-noncomputable instance : Add TestFunction where
-  add f1 f2 :=
-    ⟨fun x => f1.eval x + f2.eval x, by
-      let R1 := Classical.choose f1.hasCompactSupport
-      let hR1 := Classical.choose_spec f1.hasCompactSupport
-      let R2 := Classical.choose f2.hasCompactSupport
-      let hR2 := Classical.choose_spec f2.hasCompactSupport
-      refine ⟨max R1 R2, ?_, ?_⟩
-      · exact lt_max_iff.mpr (Or.inl hR1.1)
-      · intro x hx
-        have h1' : |x| > R1 := lt_of_le_of_lt (le_max_left R1 R2) hx
-        have h2' : |x| > R2 := lt_of_le_of_lt (le_max_right R1 R2) hx
-        have hf1 : f1.eval x = 0 := hR1.2 x h1'
-        have hf2 : f2.eval x = 0 := hR2.2 x h2'
-        rw [hf1, hf2] <;> ring⟩
-
-/-- TestFunction 的数乘：逐点数乘，支集不变。 -/
-noncomputable instance : SMul ℂ TestFunction where
-  smul c f :=
-    ⟨fun x => c * f.eval x, by
-      let R := Classical.choose f.hasCompactSupport
-      let hR := Classical.choose_spec f.hasCompactSupport
-      refine ⟨R, hR.1, ?_⟩
-      intro x hx
-      have hf : f.eval x = 0 := hR.2 x hx
-      rw [hf] <;> ring⟩
-
 /-- 轨道权重 W(γ) = N log N/(N-1)²，N = principalIdealNorm(γ.element) -/
 noncomputable def orbitWeight (γ : PrimeGeodesic) : ℝ :=
   let N : ℝ := (principalIdealNorm γ.element : ℝ)
@@ -207,58 +158,6 @@ noncomputable def spectralSum (f : TestFunction) : ℂ :=
 noncomputable def geometricSum (f : TestFunction) : ℂ :=
   ∑' (γ : PrimeGeodesic), (orbitWeight γ : ℂ) * f.eval (geodesicLengthPrime γ)
 
-/-- 椭圆共轭类的特征长度集合（opaque）：
-    E_ell = {ℓ(γ) : γ ∈ Γ 椭圆共轭类}
-    即算术群 Γ 中所有椭圆元素的共轭类对应的特征长度（旋转角）集合。 -/
-opaque ellipticClassLengths : Set ℝ
-
-/-- 椭圆类特征长度有界（公理）：
-    椭圆共轭类的特征长度集合 ellipticClassLengths 是有界的。
-    数学原因：椭圆元素的特征值在单位圆上，故旋转角（特征长度）有界。 -/
-axiom elliptic_class_lengths_bounded :
-    ∃ (M : ℝ), 0 < M ∧ ∀ (ℓ : ℝ), ℓ ∈ ellipticClassLengths → |ℓ| ≤ M
-
-/-- 椭圆类特征长度离散（公理）：
-    椭圆共轭类的特征长度集合 ellipticClassLengths 是离散的。
-    数学原因：算术群 Γ 在 G 中离散，椭圆共轭类的特征长度只能取离散的值。 -/
-axiom elliptic_class_lengths_discrete :
-    ∀ (ℓ : ℝ), ℓ ∈ ellipticClassLengths →
-      ∃ (ε : ℝ), 0 < ε ∧ ∀ (ℓ' : ℝ), ℓ' ∈ ellipticClassLengths → |ℓ' - ℓ| < ε → ℓ' = ℓ
-
-/-- 实数中有界离散子集有限（公理，Bolzano-Weierstrass 推论）：
-    如果 S ⊆ ℝ 有界且离散，则 S 有限。 -/
-axiom bounded_discrete_real_set_finite (S : Set ℝ)
-    (h_bounded : ∃ (M : ℝ), 0 < M ∧ ∀ (ℓ : ℝ), ℓ ∈ S → |ℓ| ≤ M)
-    (h_discrete : ∀ (ℓ : ℝ), ℓ ∈ S →
-      ∃ (ε : ℝ), 0 < ε ∧ ∀ (ℓ' : ℝ), ℓ' ∈ S → |ℓ' - ℓ| < ε → ℓ' = ℓ) :
-    Set.Finite S
-
-/-- 椭圆类特征长度集合有限（引理，由有界+离散+Bolzano-Weierstrass推出）：
-    ellipticClassLengths 是有限集。 -/
-lemma ellipticClassLengths_finite : Set.Finite ellipticClassLengths :=
-    bounded_discrete_real_set_finite ellipticClassLengths elliptic_class_lengths_bounded elliptic_class_lengths_discrete
-
-/-- 椭圆类权重（opaque）：w(ℓ) 是特征长度为 ℓ 的椭圆共轭类的权重。
-    由椭圆共轭类的几何（旋转角、中心化子体积）决定。 -/
-opaque ellipticWeight : ℝ → ℂ
-
-/-- 椭圆共轭类贡献（def，有限加权求和）：
-    E(f) = Σ_{ℓ∈E_ell} w(ℓ)·f(ℓ)，
-    其中 E_ell = ellipticClassLengths 是椭圆类特征长度集合（已证有限），
-    w(ℓ) = ellipticWeight ℓ 是对应椭圆类的权重。 -/
-noncomputable def ellipticTerm (f : TestFunction) : ℂ :=
-    ∑ ℓ ∈ ellipticClassLengths_finite.toFinset, ellipticWeight ℓ * f.eval ℓ
-
-/-- 实数轴正半轴上的积分（def，Lebesgue 积分）：∫₀^∞ h(t) dt。
-    定义为 Ioi 0 上的 Lebesgue 积分。用于连续谱贡献、热核 Laplace 变换、Mellin 变换等。 -/
-noncomputable def realIntegral (h : ℝ → ℂ) : ℂ :=
-    ∫ t in Set.Ioi (0 : ℝ), h t
-
-/-- 实数积分的线性性（公理，第一档）：
-    ∫₀^∞ (c₁·h₁ + c₂·h₂)(t) dt = c₁·∫₀^∞ h₁(t) dt + c₂·∫₀^∞ h₂(t) dt。
-    这是 Lebesgue 积分的基本性质，标准分析结果。 -/
-axiom realIntegral_linear (h1 h2 : ℝ → ℂ) (c1 c2 : ℂ) :
-    realIntegral (fun t => c1 * h1 t + c2 * h2 t) = c1 * realIntegral h1 + c2 * realIntegral h2
 
 /-- 散射矩阵的对数导数（opaque）：(φ'/φ)(s)，φ 为 Eisenstein 级数散射矩阵。
     散射矩阵满足函数方程 φ(s)φ(1-s)=1，故 (φ'/φ)(1/2+ir) 关于 r 为偶函数。
@@ -276,211 +175,9 @@ noncomputable def continuousTerm (f : TestFunction) : ℂ :=
 /- 6. 显式积分核基础设施（热核部分）
    Shimura 提升核基础设施已移至 Section 3.5。 -/
 
-/-- 流形上的积分（opaque）：∫_M g(z) dz。
-    积分在基本域 M = Γ\H³ 上关于双曲体积元进行。
-    三维双曲体积元：dμ(z) = dx dy dt / t³（上半空间坐标 z=(x,y,t)）。
-    积分满足线性性和正定性。
-    当前用 opaque 抽象，具体实现需要测度论基础设施。 -/
-opaque manifoldIntegral : (ManifoldM → ℂ) → ℂ
-
-/-- 二维双曲曲面 X 上的积分（opaque）：∫_X h(w) dw。
-    与 manifoldIntegral 类似，但定义域是 ManifoldX 而非 ManifoldM。
-    用于 Shimura 提升算子的积分定义。 -/
-opaque manifoldIntegralX : (ManifoldX → ℂ) → ℂ
-
-/-- 流形积分的线性性（公理）：
-    ∫_M (a·f + b·g) dz = a·∫_M f dz + b·∫_M g dz。
-    这是积分的基本性质。 -/
-axiom manifoldIntegral_linear (a b : ℂ) (f g : ManifoldM → ℂ) :
-    manifoldIntegral (fun z => a * f z + b * g z) =
-      a * manifoldIntegral f + b * manifoldIntegral g
-
-/-- 算术群 Γ 的元素作用（opaque）：
-    gammaAction n z = γ_n · z，其中 γ_n 是 Γ = PSL₂(O_K) 的第 n 个元素。
-    Γ 通过分式线性变换作用在 H³ 上：
-      γ = [[a,b],[c,d]] ∈ PSL₂(C), γ·z = (az+b)/(cz+d)
-    Γ 是可数群（O_K 是有限生成 Z-模），故可用 ℕ 枚举。
-    当前用 opaque 抽象，参数 (n, z)。 -/
-opaque gammaAction : ℕ → ManifoldM → ManifoldM := fun _ z => z
-
-/-- Γ 作用的单位元（公理）：
-    存在 e ∈ Γ（对应某个指标 n₀），使得 gammaAction n₀ z = z 对所有 z。
-    这是群作用的基本性质：单位元作用为恒等。 -/
-axiom gammaAction_identity :
-    ∃ (n0 : ℕ), ∀ (z : ManifoldM), gammaAction n0 z = z
-
-/-- Γ 作用的相容性（公理）：
-    对任意 γ, δ ∈ Γ，存在 γδ ∈ Γ 使得
-      gammaAction (γδ) z = gammaAction γ (gammaAction δ z)。
-    这是群作用的基本性质：作用与群乘法相容。
-    当前用存在性陈述，具体实现需要 Γ 的乘法结构。 -/
-axiom gammaAction_compat :
-    ∀ (n m : ℕ), ∃ (k : ℕ), ∀ (z : ManifoldM),
-      gammaAction k z = gammaAction n (gammaAction m z)
-
-/-- Γ-周期化求和（定义）：
-    对核 K(z,w)，定义其 Γ-周期化：
-      K^Γ(z,w) = Σ_{γ∈Γ} K(z, γ·w) = Σ_{n:ℕ} K(z, gammaAction n w)
-    Γ-周期化是构造自守核的标准技术：
-    将 H³ 上的核 K 投影到商空间 M = Γ\H³ 上。
-    对热核 K_t，K_t^Γ(z,w) 是 M 上的热核。 -/
-noncomputable def gammaPeriodization (K : ManifoldM → ManifoldM → ℂ) (z w : ManifoldM) : ℂ :=
-    ∑' n : ℕ, K z (gammaAction n w)
-
 /- 6.1 分析基础设施：Laplace 变换、Γ 作用、热核显式公式 -/
 
 
-
-/-- Laplace 变换（def，用 realIntegral 实现）：
-    L[f](t) = ∫₀^∞ f(x) e^{-tx} dx。 -/
-noncomputable def laplaceTransform (f : ℝ → ℂ) (t : ℝ) : ℂ :=
-    realIntegral (fun x => f x * Real.exp (-t * x))
-
-/-- Laplace 变换的指数函数计算（定理，Mathlib integral_exp_neg_mul_rpow）：
-    L[e^{-sλ}](t) = 1/(t+s)，对 t,s > 0。
-    由 Mathlib 的 integral_exp_neg_mul_rpow（取 p=1, b=t+s）直接推出：
-      ∫₀^∞ e^{-(s+t)λ} dλ = (s+t)^{-1}·Γ(2) = 1/(s+t)。
-    这个公式是热核函数演算的基础。 -/
-theorem laplaceTransform_exp (s t : ℝ) : 0 < t → 0 < s →
-    laplaceTransform (fun x => Real.exp (-s * x)) t = 1 / (t + s) := by
-  intro ht hs
-  have h_pos : 0 < t + s := by linarith
-  simp only [laplaceTransform, realIntegral]
-  have h_real : ∫ x : ℝ in Set.Ioi (0 : ℝ), Real.exp (-(t + s) * x) = 1 / (t + s) := by
-    have h := _root_.integral_exp_neg_mul_rpow (p := 1) (b := t + s) (by norm_num) h_pos
-    have h_eq1 : (fun x : ℝ => Real.exp (-(t + s) * x)) = (fun x : ℝ => Real.exp (-(t + s) * x ^ (1 : ℝ))) := by
-      funext x; simp [Real.rpow_one]
-    have h1 : ∫ x : ℝ in Set.Ioi (0 : ℝ), Real.exp (-(t + s) * x) = (t + s) ^ (-1 : ℝ) * Real.Gamma 2 := by
-      rw [h_eq1]
-      have h_simp : (t + s) ^ (-1 / 1 : ℝ) * Real.Gamma (1 / 1 + 1) = (t + s) ^ (-1 : ℝ) * Real.Gamma 2 := by
-        norm_num
-      rw [h_simp] at h
-      exact h
-    rw [h1]
-    have h2 : (t + s) ^ (-1 : ℝ) * Real.Gamma 2 = 1 / (t + s) := by
-      rw [Real.Gamma_two]
-      have h3 : (t + s) ^ (-1 : ℝ) = 1 / (t + s) := by
-        rw [Real.rpow_neg_one] <;> field_simp
-      rw [h3] <;> ring
-    rw [h2]
-  have h_eq : (fun x : ℝ => (Real.exp (-s * x) * Real.exp (-t * x) : ℂ)) = fun x : ℝ => (Real.exp (-(t + s) * x) : ℂ) := by
-    funext x
-    have h : Real.exp (-s * x) * Real.exp (-t * x) = Real.exp (-(t + s) * x) := by
-      rw [← Real.exp_add] <;> ring
-    have h' : (Real.exp (-s * x) * Real.exp (-t * x) : ℂ) = (Real.exp (-(t + s) * x) : ℂ) := by
-      rw [← Complex.ofReal_mul, h]
-    exact h'
-  rw [h_eq]
-  exact_mod_cast h_real
-
-/-- Laplace 变换的线性性（定理，由积分线性性推出）：
-    L[af + bg](t) = a·L[f](t) + b·L[g](t)。
-    证明：Laplace 变换是积分算子，展开定义后由 realIntegral_linear 直接推出。 -/
-theorem laplaceTransform_linear (a b : ℂ) (f g : ℝ → ℂ) (t : ℝ) :
-    laplaceTransform (fun x => a * f x + b * g x) t =
-      a * laplaceTransform f t + b * laplaceTransform g t := by
-  rw [laplaceTransform, laplaceTransform, laplaceTransform]
-  have h_integrand : (fun x : ℝ => (a * f x + b * g x) * (Real.exp (-t * x) : ℂ)) =
-                      (fun x : ℝ => a * (f x * (Real.exp (-t * x) : ℂ)) + b * (g x * (Real.exp (-t * x) : ℂ))) := by
-    funext x
-    <;> ring
-  rw [h_integrand]
-  exact realIntegral_linear (fun x : ℝ => f x * (Real.exp (-t * x) : ℂ)) (fun x : ℝ => g x * (Real.exp (-t * x) : ℂ)) a b
-
-/-- 积分核的复合（定义）：
-    (K1 ∘_K K2)(z,w) = ∫_M K1(z,u) K2(u,w) du。
-    对应于积分算子的复合：T_{K1} ∘ T_{K2} = T_{K1 ∘_K K2}。
-    这是定义迹循环性的前提。 -/
-noncomputable def kernelComposition (K1 K2 : ManifoldM → ManifoldM → ℂ) :
-    ManifoldM → ManifoldM → ℂ :=
-  fun z w => manifoldIntegral (fun u => K1 z u * K2 u w)
-
-/-- 流形积分的 Fubini 定理（公理，第一档标准结果）：
-    ∫_M ∫_M f(z,u) du dz = ∫_M ∫_M f(z,u) dz du。
-    对迹类核函数成立，是积分交换顺序的标准性质。 -/
-axiom manifoldIntegral_fubini (f : ManifoldM → ManifoldM → ℂ) :
-    manifoldIntegral (fun z => manifoldIntegral (fun u => f z u)) =
-    manifoldIntegral (fun u => manifoldIntegral (fun z => f z u))
-
-/-- 迹的循环性（定理，由 Fubini 定理推出）：Tr(T_{K1} ∘ T_{K2}) = Tr(T_{K2} ∘ T_{K1})。
-    即复合核的对角线积分与顺序无关：
-      ∫_M (K1 ∘_K K2)(z,z) dz = ∫_M (K2 ∘_K K1)(z,z) dz。
-    证明：展开 kernelComposition，用 Fubini 交换积分顺序，再变量重命名 z↔u。 -/
-theorem trace_cyclicity (K1 K2 : ManifoldM → ManifoldM → ℂ) :
-    manifoldIntegral (fun z => kernelComposition K1 K2 z z) =
-    manifoldIntegral (fun z => kernelComposition K2 K1 z z) := by
-  simp [kernelComposition]
-  rw [manifoldIntegral_fubini (fun z u => K1 z u * K2 u z)]
-  congr
-  funext u
-  congr
-  funext z
-  <;> ring
-
-/-- 双曲距离（opaque）：d(z,w) = H³ 中 z,w 两点的双曲距离。
-    在双曲空间 H³ 的上半空间模型中：
-      d(z,w) = arcosh(1 + |z-w|² / (2 Im(z) Im(w)))
-    双曲距离是 Γ-不变的：d(γz, γw) = d(z,w) 对所有 γ ∈ Γ。
-    热核的显式公式只依赖于双曲距离。
-    当前用 opaque 抽象，参数 (z, w)。 -/
-opaque hyperbolicDistance : ManifoldM → ManifoldM → ℝ
-
-/-- 双曲距离的 Γ-不变性（公理）：
-    d(γ·z, γ·w) = d(z,w) 对所有 γ ∈ Γ。
-    这是双曲等距变换的基本性质：PSL₂(C) 通过等距变换作用在 H³ 上。
-    此性质保证热核 K_t(z,w) 只依赖 d(z,w)，因此是 Γ-不变的。 -/
-axiom hyperbolicDistance_gamma_invariant :
-    ∀ (n : ℕ) (z w : ManifoldM),
-      hyperbolicDistance (gammaAction n z) (gammaAction n w) = hyperbolicDistance z w
-
-/-- 三维双曲热核（定义）：K_t(z, w) = 热方程的基本解。
-    对 t>0，显式公式为：
-      K_t(z,w) = (4πt)^(-3/2) · e^{-t} · e^{-d²/(4t)} · (d / sinh d)
-    其中 d = hyperbolicDistance(z,w)。
-    对 t≤0，定义为 0（热核仅在 t>0 时有意义）。
-    因子 d/sinh(d) 来自三维双曲空间的体积元。 -/
-noncomputable def heatKernel (t : ℝ) (z w : ManifoldM) : ℂ :=
-    if 0 < t then
-      let d := hyperbolicDistance z w
-      ((Real.rpow (4 * Real.pi * t) (-3 / 2) * Real.exp (-t) *
-        Real.exp (-(d)^2 / (4 * t)) *
-        (d / ((Real.exp d - Real.exp (-d)) / 2)) : ℝ) : ℂ)
-    else 0
-
-/-- 热核显式公式（定理，由定义直接推出）。 -/
-theorem heatKernel_explicit_formula (t : ℝ) (z w : ManifoldM) (ht : 0 < t) :
-    heatKernel t z w =
-      ((Real.rpow (4 * Real.pi * t) (-3 / 2) * Real.exp (-t) *
-        Real.exp (-(hyperbolicDistance z w)^2 / (4 * t)) *
-        (hyperbolicDistance z w / ((Real.exp (hyperbolicDistance z w) - Real.exp (-(hyperbolicDistance z w))) / 2)) : ℝ) : ℂ) := by
-  simp [heatKernel, ht]
-
-/-- 热核的对称性（公理）：K_t(z,w) = K_t(w,z)。
-    这是热核的基本性质，来自 Laplacian 的自伴性。
-    也可从显式公式直接验证：d(z,w)=d(w,z)。 -/
-axiom heatKernel_symmetric (t : ℝ) (z w : ManifoldM) : 0 < t →
-    heatKernel t z w = heatKernel t w z
-
-/-- 热核的正定性（公理）：热核是实值且正定的。
-    (heatKernel t z w).im = 0 且 0 < (heatKernel t z w).re 对所有 z,w 和 t>0。
-    这是热核的基本性质，来自热方程的最大值原理。
-    也可从显式公式直接验证：所有因子均为正实数。 -/
-axiom heatKernel_positive (t : ℝ) (z w : ManifoldM) : 0 < t →
-    (heatKernel t z w).im = 0 ∧ 0 < (heatKernel t z w).re
-
-/-- f(Δ) 的积分核（定义）：K_f(z, w) = ∫₀^∞ L[f](t) · K_t(z,w) dt。
-    即 f(Δ) 的积分核是热核的 Laplace 变换加权积分。
-    推导：由谱定理 f(Δ) = ∫ f(λ) dE(λ)，热核 e^{-tΔ} = ∫ e^{-tλ} dE(λ)，
-    由 Laplace 反演得 K_f = ∫ L[f](t) K_t dt。 -/
-noncomputable def fLaplacianKernel (f : TestFunction) (z w : ManifoldM) : ℂ :=
-    realIntegral (fun t => laplaceTransform f t * heatKernel t z w)
-
-/-- 几何侧迹（定义，热核积分形式）：
-    Tr_geo(f) = ∫_M Σ_{γ∈Γ} K_f(z, γz) dz
-    即 geometricKernelTrace f = manifoldIntegral (fun z => gammaPeriodization (fLaplacianKernel f) z z)。
-    这是 Arthur 迹公式几何侧的显式积分表达式。 -/
-noncomputable def geometricKernelTrace (f : TestFunction) : ℂ :=
-    manifoldIntegral (fun z => gammaPeriodization (fLaplacianKernel f) z z)
 
 /-- 卷积算子在离散谱上的迹（def，由谱定理直接给出）：
     Tr_disc(K_f) = Σ_n f(specDiscM n) = spectralSum f。
@@ -863,34 +560,6 @@ opaque jlLParameterMap : ℕ → ℂ
 /-- 二维 Laplacian（opaque，类型化）：Δ_X : L²(X) → L²(X)。 -/
 opaque laplacian_X : L2Function ManifoldX → L2Function ManifoldX
 
-/-- 三维 Laplacian（opaque，类型化）：Δ_M : L²(M) → L²(M)。 -/
-opaque laplacian_M : L2Function ManifoldM → L2Function ManifoldM
-
-/-- 热核算子（定义）：H_t = integralOperator (heatKernel t)。
-    (H_t f)(z) = ∫ K_t(z,w) f(w) dw。
-    热核算子是自伴的、正定的、满足半群性质 H_{t+s} = H_t H_s。
-    当 t→0+ 时 H_t → Id（恒等算子），当 t→∞ 时 H_t → 投影到常数函数。 -/
-noncomputable def heatOperator (t : ℝ) (f : L2Function ManifoldM) : L2Function ManifoldM :=
-    fun (z : ManifoldM) => manifoldIntegral (fun (w : ManifoldM) => heatKernel t z w * f w)
-
-/-- 热核半群性质（公理）：H_{t+s} = H_t ∘ H_s。
-    这是热方程的基本性质：热流的时间可加性。
-    数学上，这等价于热核的卷积公式：
-      K_{t+s}(z,w) = ∫ K_t(z,u) K_s(u,w) du。
-    半群性质是热核谱表示的基础：H_t = e^{-tΔ}。 -/
-axiom heatKernel_semigroup :
-    ∀ (t s : ℝ), 0 ≤ t → 0 ≤ s →
-      heatOperator (t + s) = (heatOperator t) ∘ (heatOperator s)
-
-/-- 热核与 Laplacian 交换（公理，精确版）：H_t ∘ Δ_M = Δ_M ∘ H_t。
-    这是热方程的直接推论：热核算子是 Laplacian 的函数 H_t = e^{-tΔ_M}。
-    因此 H_t 保持 Laplacian 的特征子空间：
-    如果 Δ_M φ = λ φ，则 Δ_M (H_t φ) = H_t (Δ_M φ) = λ (H_t φ)。
-    这是热核方法证明谱定理的基础。 -/
-axiom heatKernel_commutes_laplacian :
-    ∀ (t : ℝ), 0 ≤ t →
-      ∀ (f : L2Function ManifoldM),
-        heatOperator t (laplacian_M f) = laplacian_M (heatOperator t f)
 /-- Maass 特征函数（opaque，类型化）：第 k 个 Maass 形式 φ_k ∈ L²(X)。 -/
 opaque maassEigenfunction : ℕ → L2Function ManifoldX
 
@@ -1249,114 +918,6 @@ theorem dolgopyat_geometric_backstop (f g : ℝ → ℂ) :
   rw [h_abs] at h
   exact h
 
-/- Section 5: 磨光测试函数与 RH -/
-
-structure MollifiedTestFunction extends TestFunction where
-  supportSeparated : ∃ (Λ0 Λ1 : ℝ), 0 < Λ0 ∧ Λ0 < Λ1 ∧
-    (∀ x, x ≤ Λ0 / 2 → toFun x = 0) ∧
-    (∀ x, Λ0 ≤ x ∧ x ≤ Λ1 → toFun x = 1)
-  ellipticVanishes : ellipticTerm (⟨toFun, hasCompactSupport⟩) = 0
-
-theorem mollified_elliptic_zero (f : MollifiedTestFunction) :
-    ellipticTerm (f.toTestFunction) = 0 := f.ellipticVanishes
-
-/-- Mellin 变换（def，标准积分定义）：
-    M[f](s) = ∫₀^∞ f(x) x^{s-1} dx = ∫₀^∞ f(x) e^{(s-1) ln x} dx。
-    对紧支光滑 f，Mellin 变换在 Re(s) 充分大时绝对收敛，
-    并可解析延拓到整个复平面（除可能的极点外）。
-    这是 Weil 显式公式和磨光函数插值理论的核心工具。 -/
-noncomputable def melinTransform (f : TestFunction) (s : ℂ) : ℂ :=
-    realIntegral (fun x : ℝ => if 0 < x then f.eval x * Complex.exp ((s - 1) * (Real.log x : ℂ)) else 0)
-
-/-- Mellin 变换的线性性（定理，由积分线性性推出）：
-    M[c₁·f₁ + c₂·f₂](s) = c₁·M[f₁](s) + c₂·M[f₂](s)。
-    证明：Mellin 变换是积分算子，积分的线性性直接推出 Mellin 变换的线性性。
-    这是 Paley-Wiener 理论和磨光函数插值的基础。 -/
-theorem melinTransform_linear (f1 f2 : TestFunction) (c1 c2 : ℂ) (s : ℂ) :
-    melinTransform (c1 • f1 + c2 • f2) s = c1 * melinTransform f1 s + c2 * melinTransform f2 s := by
-  have h_integrand : (fun x : ℝ => if 0 < x then (c1 • f1 + c2 • f2).eval x * Complex.exp ((s - 1) * (Real.log x : ℂ)) else 0) =
-      (fun x : ℝ => c1 * (if 0 < x then f1.eval x * Complex.exp ((s - 1) * (Real.log x : ℂ)) else 0) +
-                        c2 * (if 0 < x then f2.eval x * Complex.exp ((s - 1) * (Real.log x : ℂ)) else 0)) := by
-    funext x
-    by_cases hx : 0 < x
-    · rw [if_pos hx, if_pos hx, if_pos hx]
-      have h_eval : (c1 • f1 + c2 • f2).eval x = c1 * f1.eval x + c2 * f2.eval x := by
-        rfl
-      rw [h_eval] <;> ring
-    · rw [if_neg hx, if_neg hx, if_neg hx] <;> ring
-  rw [melinTransform, melinTransform, melinTransform, h_integrand]
-  rw [realIntegral_linear]
-  <;> ring
-
-/-- 非平凡零点枚举的存在性（公理，第一档）：
-    存在单射 e : ℕ → ℂ，枚举所有临界带内的非平凡零点。
-    由 Weyl 定律，非平凡零点可数，因此存在这样的无重复枚举。
-    风险等级：第一档（Weyl 定律 + 可数集枚举定理）。 -/
-axiom nontrivialZeroEnum_exists :
-    ∃ (e : ℕ → ℂ),
-      (Function.Injective e) ∧
-      (∀ (n : ℕ), _root_.riemannZeta (e n) = 0 ∧ 0 < (e n).re ∧ (e n).re < 1) ∧
-      (∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ∃ (n : ℕ), e n = ρ)
-
-/-- 非平凡零点的枚举（定义，由存在性公理通过 Classical.choose 给出）：
-    nontrivialZeroEnum : ℕ → ℂ 枚举所有临界带内的非平凡零点。 -/
-noncomputable def nontrivialZeroEnum : ℕ → ℂ :=
-    Classical.choose nontrivialZeroEnum_exists
-
-/-- 非平凡零点枚举的性质（定理，由 Classical.choose_spec 推出）。 -/
-theorem nontrivialZeroEnum_spec :
-    (Function.Injective nontrivialZeroEnum) ∧
-    (∀ (n : ℕ), _root_.riemannZeta (nontrivialZeroEnum n) = 0 ∧ 0 < (nontrivialZeroEnum n).re ∧ (nontrivialZeroEnum n).re < 1) ∧
-    (∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ∃ (n : ℕ), nontrivialZeroEnum n = ρ) :=
-    Classical.choose_spec nontrivialZeroEnum_exists
-
-/-- 非平凡零点枚举的覆盖性（定理）。 -/
-theorem nontrivialZeroEnum_covers_all (ρ : ℂ) :
-    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
-    ∃ (n : ℕ), nontrivialZeroEnum n = ρ :=
-    nontrivialZeroEnum_spec.2.2 ρ
-
-/-- 非平凡零点枚举的单射性（定理）。 -/
-theorem nontrivialZeroEnum_injective : Function.Injective nontrivialZeroEnum :=
-    nontrivialZeroEnum_spec.1
-
-/-- 枚举元素都是非平凡零点（定理）。 -/
-theorem nontrivialZeroEnum_are_zeros (n : ℕ) :
-    _root_.riemannZeta (nontrivialZeroEnum n) = 0 ∧
-    0 < (nontrivialZeroEnum n).re ∧ (nontrivialZeroEnum n).re < 1 :=
-    nontrivialZeroEnum_spec.2.1 n
-
-/-- 零点重数函数（opaque）：zeroMultiplicity s 给出 ζ(s) 在 s 处的零点重数。
-    对非零点，重数为 0。 -/
-opaque zeroMultiplicity : ℂ → ℕ
-
-/-- 非平凡零点处重数为正（公理，定义性质）：
-    如果 ρ 是非平凡零点，则 zeroMultiplicity ρ > 0。 -/
-axiom zeroMultiplicity_positive_at_nontrivial_zeros (ρ : ℂ) :
-    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → 0 < zeroMultiplicity ρ
-
-/-- 零点重数的函数方程对称性（公理，ζ函数方程的推论）：
-    zeroMultiplicity ρ = zeroMultiplicity (1 - ρ)。 -/
-axiom zeroMultiplicity_symmetry (ρ : ℂ) :
-    zeroMultiplicity ρ = zeroMultiplicity (1 - ρ)
-
-/-- 非平凡零点求和（定义，带重数）：
-    Z_nontriv(f) = ∑'_{n:ℕ} (zeroMultiplicity(enum n) : ℂ) * melinTransform f (enum n)。
-    即对所有非平凡零点按重数加权的 Mellin 变换值求和。
-    由 Weyl 定律，级数绝对收敛（磨光函数的 Mellin 变换在零点处有界，重数有界）。 -/
-noncomputable def nontrivialZeroSum (f : TestFunction) : ℂ :=
-    ∑' (n : ℕ), (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) * melinTransform f (nontrivialZeroEnum n)
-
-/-- 平凡零点与极点贡献（def，留数公式）：
-    T(f) = Σ_{k≥1} M[f](-2k) + M[f](1)。
-    其中第一项是平凡零点 s=-2,-4,... 的留数贡献，
-    第二项是极点 s=1 的留数贡献（Res_{s=1}(ζ'/ζ)=1，符号已吸收）。
-    由留数定理，围道积分在平凡零点和极点处的留数由 Mellin 变换在这些点的值决定。
-    对磨光函数，Mellin 变换速降，故级数绝对收敛。 -/
-noncomputable def trivialZeroContribution (f : TestFunction) : ℂ :=
-    (∑' (k : ℕ), melinTransform f ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)) +
-    melinTransform f (1 : ℂ)
-
 /-- 连续谱项的围道移动公式（公理，留数定理+散射矩阵函数方程）：
     连续谱项 Cont(f) = (1/2πi)∫_{Re(s)=1/2} (φ'/φ)(s) f̃(s) ds
     经围道向左移动后，等于所有极点处留数之和：
@@ -1381,7 +942,7 @@ axiom continuous_term_contour_shift (f : TestFunction) :
     而 trivialZeroContribution f 定义为同一表达式，故相等。 -/
 theorem continuousTerm_eq_trivialZeroContribution (f : TestFunction) :
     continuousTerm f = trivialZeroContribution f := by
-  rw [continuous_term_contour_shift f, trivialZeroContribution]
+  rw [continuous_term_contour_shift f] <;> rfl
 
 /-- 磨光迹等式（定理，由 Arthur 迹公式 + 连续谱=平凡贡献 + 椭圆项消失推出）：
     对磨光测试函数 f，迹公式简化为：
@@ -1404,34 +965,6 @@ theorem mollified_trace_equality (f : MollifiedTestFunction) :
   have h_ellip : ellipticTerm f.toTestFunction = 0 := f.ellipticVanishes
   rw [h_cont, h_ellip] at h_atf
   simpa using h_atf
-
-/-- ζ 零点侧求和（定义）：
-    Z(f) = nontrivialZeroSum(f) + trivialZeroContribution(f)
-    即非平凡零点求和 + 平凡零点/极点贡献。
-    由留数定理，围道积分的留数来自所有奇点（非平凡零点+平凡零点+极点）。 -/
-noncomputable def zetaZeroSide (f : TestFunction) : ℂ := nontrivialZeroSum f + trivialZeroContribution f
-
-/- Section 4.5: 围道积分应用（依赖 TestFunction 的公理）
-    纯基础设施在 ContourIntegral.lean 中。 -/
-
-/-- 留数定理（公理，ζ 对数导数版本）：
-    ζ'/ζ 的围道积分等于围道内部所有奇点的留数之和。
-    (ζ'/ζ)(s) 的奇点在 ζ 的零点处（留数 = 零点阶数）和 s=1 极点处（留数 = -1）。
-    乘以 Mellin 变换 f̂(s) 后，积分 = Σ_{ρ:非平凡零点} m(ρ)·f̂(ρ) + 平凡零点贡献 + 极点贡献
-             = zetaZeroSide(f)。
-    这是留数定理在 Weil 显式公式中的标准应用。 -/
-axiom residue_theorem_zeta_log_derivative (f : TestFunction) :
-    contourIntegral (fun s => zetaLogDerivative s * melinTransform f s) = zetaZeroSide f
-
-/-- 差的全纯延拓（公理）：
-    primeDirichletSeries - zetaLogDerivative 在 Re(s) > 1 内为零（由 Euler 乘积），
-    且可解析延拓为围道内部的全纯函数（仅有的奇点在 ζ 零点处，但已被 zetaLogDerivative 的定义抵消）。
-    因此差在围道内部全纯，由柯西定理围道积分为零。 -/
-axiom primeDirichlet_zetaLogDerivative_diff_holomorphic (f : TestFunction) :
-    ∀ s ∈ Metric.ball (1 / 2 : ℂ) contourRadius,
-    DifferentiableAt ℂ (fun s => (primeDirichletSeries s - zetaLogDerivative s) * melinTransform f s) s
-
-/- End Section 4.5 -/
 
 /-- ζ 函数对数导数的围道积分（def，真正的围道积分）：
     I(f) = (1/2πi) ∮ (ζ'/ζ)(s) · M[f](s) ds。
@@ -1585,61 +1118,6 @@ theorem spectral_zero_equality (f : MollifiedTestFunction) :
   rw [h2, h3] at h1
   simpa using h1
 
-/-- 磨光函数的 Whitney 点插值（公理，Whitney 延拓定理）：
-    对任意可数点集 S ⊆ ℝ 和任意赋值 v : ℝ → ℂ，存在磨光函数 f，使得
-    f.eval(x) = v(x) 对所有 x ∈ S。
-
-    数学依据：Whitney 延拓定理——在离散点集上指定任意函数值，
-    存在紧支光滑延拓。可数集在 ℝ 中无内部，可选择 supportSeparated 区间
-    与 S 不相交，故磨光约束不影响插值能力。
-    风险等级：中（标准 Whitney 延拓，磨光约束下的变体）。 -/
-axiom whitney_mollified_point_interpolation
-    (S : Set ℝ) (hS : S.Countable) (v : ℝ → ℂ) :
-    ∃ (f : MollifiedTestFunction),
-      (∀ (x : ℝ), x ∈ S → f.toTestFunction.eval x = v x)
-
-/-- 点插值纤维上的 Mellin 满射性（公理，Paley-Wiener 定理）：
-    给定满足点插值约束的磨光函数 f₀（f₀.eval(x)=v(x) 对 x∈S），
-    对任意可数点集 T ⊆ ℂ 和任意赋值 w : ℂ → ℂ，存在磨光函数 f，使得：
-    (1) f.eval(x) = f₀.eval(x) 对所有 x ∈ S（保持点插值）
-    (2) M[f](s) = w(s) 对所有 s ∈ T。
-
-    数学依据：Paley-Wiener 定理——满足点插值约束的函数构成仿射子空间，
-    其差空间是无限维的（在 S 上取零的紧支光滑函数），Mellin 变换
-    在这个差空间上的像仍然包含任意可数点集赋值。
-    等价地说：点插值只施加可数个线性约束，其余维无限，
-    故 Mellin 赋值仍可任意指定。
-    风险等级：中高（Paley-Wiener 满射性，是插值理论的分析核心）。 -/
-axiom mellin_surjectivity_over_point_fiber
-    (f0 : MollifiedTestFunction) (S : Set ℝ) (hS : S.Countable)
-    (T : Set ℂ) (hT : T.Countable) (w : ℂ → ℂ) :
-    ∃ (f : MollifiedTestFunction),
-      (∀ (x : ℝ), x ∈ S → f.toTestFunction.eval x = f0.toTestFunction.eval x) ∧
-      (∀ (s : ℂ), s ∈ T → melinTransform f.toTestFunction s = w s)
-
-/-- Paley-Wiener-Whitney 联合插值（定理，由 Whitney 点插值 + 纤维上 Mellin 满射推出）：
-    对任意可数点集 S ⊆ ℝ（函数取值点）、可数点集 T ⊆ ℂ（Mellin 赋值点）、
-    任意赋值 v : ℝ → ℂ 和 w : ℂ → ℂ，存在磨光函数 f，使得：
-    (1) f.eval(x) = v(x) 对所有 x ∈ S
-    (2) M[f](s) = w(s) 对所有 s ∈ T。
-
-    证明：
-    (1) whitney_mollified_point_interpolation 给出 f₀ 满足点插值
-    (2) mellin_surjectivity_over_point_fiber(f₀, S, T, w) 给出 f 保持点插值且满足 Mellin 赋值 -/
-theorem paley_wiener_whitney_joint_interpolation
-    (S : Set ℝ) (hS : S.Countable) (v : ℝ → ℂ)
-    (T : Set ℂ) (hT : T.Countable) (w : ℂ → ℂ) :
-    ∃ (f : MollifiedTestFunction),
-      (∀ (x : ℝ), x ∈ S → f.toTestFunction.eval x = v x) ∧
-      (∀ (s : ℂ), s ∈ T → melinTransform f.toTestFunction s = w s) := by
-  rcases whitney_mollified_point_interpolation S hS v with ⟨f0, hf0⟩
-  rcases mellin_surjectivity_over_point_fiber f0 S hS T hT w with ⟨f, h_pts, h_melin⟩
-  have h_final_pts : ∀ (x : ℝ), x ∈ S → f.toTestFunction.eval x = v x := by
-    intro x hx
-    calc
-      f.toTestFunction.eval x = f0.toTestFunction.eval x := h_pts x hx
-      _ = v x := hf0 x hx
-  exact ⟨f, h_final_pts, h_melin⟩
 
 /-- 谱点保持的可数 Mellin 叠加（定理，由 PWW 联合插值直接推出）：
     对任意磨光函数 f, g 和可数点集 T ⊆ ℂ，存在磨光函数 f'，使得：
@@ -1709,8 +1187,6 @@ theorem mollified_spectral_delta :
       exact hk h_inj
     simp [v, h_ne]
 
-
-
 /-- 谱侧由谱点取值决定（定理，直接从 spectralSum 定义推出）：
     如果两个测试函数在所有谱点 {specDiscM n} 上取值相同，
     则它们的谱侧求和相等。
@@ -1723,15 +1199,6 @@ theorem spectral_sum_determined_by_points (f1 f2 : TestFunction) :
     congr with n
     exact h n
   simpa [spectralSum] using h_tsum
-
-
-/-- 可数集上 Mellin 变换任意赋值（定理，由 PWW 联合插值取 S=∅ 推出）：
-    对任意可数集 T ⊆ ℂ 和任意赋值 w : ℂ → ℂ，存在磨光函数 f，使得
-    M[f](s) = w(s) 对所有 s ∈ T。 -/
-theorem mellin_countable_interpolation (T : Set ℂ) (hT : T.Countable) (w : ℂ → ℂ) :
-    ∃ (f : MollifiedTestFunction), ∀ (s : ℂ), s ∈ T → melinTransform f.toTestFunction s = w s := by
-  rcases paley_wiener_whitney_joint_interpolation (∅ : Set ℝ) Set.countable_empty (fun _ => 0) T hT w with ⟨f, _, h_melin⟩
-  exact ⟨f, h_melin⟩
 
 /-- Mellin 变换在零点∪极点上的数乘封闭性（定理，由可数集任意赋值推出）：
     对任意磨光函数 f 和任意复数 c，存在磨光函数 g，使得在所有零点和极点处：
@@ -1951,7 +1418,7 @@ theorem trivialZeroContribution_of_melin_vanishing (f : TestFunction) :
     simp
   calc
     trivialZeroContribution f
-      = (∑' (k : ℕ), melinTransform f ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)) + melinTransform f (1 : ℂ) := by rw [trivialZeroContribution]
+      = (∑' (k : ℕ), melinTransform f ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)) + melinTransform f (1 : ℂ) := by rfl
     _ = 0 + melinTransform f (1 : ℂ) := by rw [h_tsum]
     _ = 0 + 0 := by rw [h_pole]
     _ = 0 := by ring
@@ -1972,10 +1439,10 @@ theorem trivialZeroContribution_extensionality (f1 f2 : TestFunction) :
     rw [tsum_congr h_triv]
   calc
     trivialZeroContribution f1
-      = (∑' (k : ℕ), melinTransform f1 ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)) + melinTransform f1 (1 : ℂ) := by rw [trivialZeroContribution]
+      = (∑' (k : ℕ), melinTransform f1 ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)) + melinTransform f1 (1 : ℂ) := by rfl
     _ = (∑' (k : ℕ), melinTransform f2 ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)) + melinTransform f1 (1 : ℂ) := by rw [h_tsum]
     _ = (∑' (k : ℕ), melinTransform f2 ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)) + melinTransform f2 (1 : ℂ) := by rw [h_pole]
-    _ = trivialZeroContribution f2 := by rw [trivialZeroContribution]
+    _ = trivialZeroContribution f2 := by rfl
 
 /-- Delta 函数的单点 Mellin 局部化（定理，由插值+留数判据推出）：
     对任意谱点 n，存在磨光函数 δ_n 满足谱点条件、Mellin 局部化、平凡贡献为零。
@@ -1998,25 +1465,6 @@ theorem delta_melin_single_point_localization :
   have h_triv_zero : trivialZeroContribution δ.toTestFunction = 0 :=
     trivialZeroContribution_of_melin_vanishing δ.toTestFunction h_melin_triv h_melin_pole
   exact ⟨δ, h1, h2, h_melin_nontriv, h_triv_zero⟩
-
-/-- 非平凡零点求和的局部化（定理，由定义直接推出）：
-    如果测试函数 f 的 Mellin 变换在所有非平凡零点处为零，
-    则 nontrivialZeroSum(f) = 0。
-
-    证明：对所有 n，nontrivialZeroEnum n 是非平凡零点，故 M[f](nontrivialZeroEnum n) = 0，
-    因此 tsum = 0。 -/
-theorem nontrivialZeroSum_localization (f : TestFunction) :
-    (∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
-      melinTransform f ρ = 0) →
-    nontrivialZeroSum f = 0 := by
-  intro h
-  have h_all : ∀ (n : ℕ), melinTransform f (nontrivialZeroEnum n) = 0 := by
-    intro n
-    have hz : _root_.riemannZeta (nontrivialZeroEnum n) = 0 := (nontrivialZeroEnum_are_zeros n).1
-    have hre1 : 0 < (nontrivialZeroEnum n).re := (nontrivialZeroEnum_are_zeros n).2.1
-    have hre2 : (nontrivialZeroEnum n).re < 1 := (nontrivialZeroEnum_are_zeros n).2.2
-    exact h (nontrivialZeroEnum n) hz hre1 hre2
-  simp [nontrivialZeroSum, h_all, tsum_zero]
 
 /-- 谱点 Delta 函数的谱和为 1（定理）：
     如果 f 在 specDiscM n 处取 1，其他谱点取 0，
