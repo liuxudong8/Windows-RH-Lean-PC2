@@ -382,25 +382,27 @@ axiom hyperbolicDistance_gamma_invariant :
     ∀ (n : ℕ) (z w : ManifoldM),
       hyperbolicDistance (gammaAction n z) (gammaAction n w) = hyperbolicDistance z w
 
-/-- 热核（opaque）：K_t(z, w) = 热方程的基本解。
-    在三维双曲流形上有显式表达式（见 heatKernel_explicit_formula）。
-    热核是对称的、正定的、满足半群性质。 -/
-opaque heatKernel : ℝ → ManifoldM → ManifoldM → ℂ
+/-- 三维双曲热核（定义）：K_t(z, w) = 热方程的基本解。
+    对 t>0，显式公式为：
+      K_t(z,w) = (4πt)^(-3/2) · e^{-t} · e^{-d²/(4t)} · (d / sinh d)
+    其中 d = hyperbolicDistance(z,w)。
+    对 t≤0，定义为 0（热核仅在 t>0 时有意义）。
+    因子 d/sinh(d) 来自三维双曲空间的体积元。 -/
+noncomputable def heatKernel (t : ℝ) (z w : ManifoldM) : ℂ :=
+    if 0 < t then
+      let d := hyperbolicDistance z w
+      ((Real.rpow (4 * Real.pi * t) (-3 / 2) * Real.exp (-t) *
+        Real.exp (-(d)^2 / (4 * t)) *
+        (d / ((Real.exp d - Real.exp (-d)) / 2)) : ℝ) : ℂ)
+    else 0
 
-/-- 三维双曲空间热核的显式公式（公理）：
-    K_t(z,w) = (4πt)^(-3/2) · e^{-t} · e^{-d(z,w)²/(4t)} · (d(z,w)/sinh(d(z,w)))
-    其中 d(z,w) 是双曲距离。
-    这是三维双曲空间 H³ 上热方程的基本解，由 McKean (1972) 给出。
-    推导：三维双曲空间的径向热核满足
-      ∂_t u = ∂_r² u + 2 coth(r) ∂_r u - u
-    其解为上述显式公式。
-    因子 d/sinh(d) 来自三维双曲空间的体积元 r² sinh²(r) dr。
-    对 t>0，此公式给出光滑、正定、对称的热核。 -/
-axiom heatKernel_explicit_formula (t : ℝ) (z w : ManifoldM) : 0 < t →
+/-- 热核显式公式（定理，由定义直接推出）。 -/
+theorem heatKernel_explicit_formula (t : ℝ) (z w : ManifoldM) (ht : 0 < t) :
     heatKernel t z w =
-      Real.rpow (4 * Real.pi * t) (-3 / 2) * Real.exp (-t) *
-      Real.exp (-(hyperbolicDistance z w)^2 / (4 * t)) *
-      (hyperbolicDistance z w / ((Real.exp (hyperbolicDistance z w) - Real.exp (-(hyperbolicDistance z w))) / 2))
+      ((Real.rpow (4 * Real.pi * t) (-3 / 2) * Real.exp (-t) *
+        Real.exp (-(hyperbolicDistance z w)^2 / (4 * t)) *
+        (hyperbolicDistance z w / ((Real.exp (hyperbolicDistance z w) - Real.exp (-(hyperbolicDistance z w))) / 2)) : ℝ) : ℂ) := by
+  simp [heatKernel, ht]
 
 /-- 热核的对称性（公理）：K_t(z,w) = K_t(w,z)。
     这是热核的基本性质，来自 Laplacian 的自伴性。
@@ -821,7 +823,7 @@ opaque laplacian_M : L2Function ManifoldM → L2Function ManifoldM
     (H_t f)(z) = ∫ K_t(z,w) f(w) dw。
     热核算子是自伴的、正定的、满足半群性质 H_{t+s} = H_t H_s。
     当 t→0+ 时 H_t → Id（恒等算子），当 t→∞ 时 H_t → 投影到常数函数。 -/
-def heatOperator (t : ℝ) : L2Function ManifoldM → L2Function ManifoldM :=
+noncomputable def heatOperator (t : ℝ) : L2Function ManifoldM → L2Function ManifoldM :=
     integralOperator (fun z w => heatKernel t z w)
 
 /-- 热核半群性质（公理）：H_{t+s} = H_t ∘ H_s。
@@ -1122,11 +1124,6 @@ theorem three_manifold_eigenvalue_positive (n : ℕ) (hn : n ≥ 1) :
 
 /- 4.3 Dolgopyat 指数混合：仅作几何兜底补充 -/
 
-/-- 测地流关联函数（抽象常量，具体实现需要 L²(M) 与 Liouville 测度）。
-    C(f,g,t) = ∫_M f(x) g(φ_t x) dμ(x) - (∫ f dμ)(∫ g dμ)
-    其中 φ_t 是 M = PSL2(O_K)\H³ 上的测地流，μ 为 Liouville 测度。 -/
-opaque correlation : (ℝ → ℂ) → (ℝ → ℂ) → ℝ → ℂ
-
 /-- 测地流转移算子（opaque）：
     L_t: L²(M) → L²(M)，由测地流 φ_t 诱导的 Perron-Frobenius 转移算子。
     对观测函数 f，(L_t f)(x) = f(φ_t x)（或其加权版本）。
@@ -1136,16 +1133,16 @@ opaque correlation : (ℝ → ℂ) → (ℝ → ℂ) → ℝ → ℂ
     当前用 opaque 抽象，具体实现需要 L²(M) 与 Liouville 测度。 -/
 opaque transferOperator : ℝ → (ℝ → ℂ) → (ℝ → ℂ) → ℂ
 
-/-- 关联函数与转移算子的关系（公理）：
-    关联函数是转移算子的矩阵元（减去平衡态贡献）：
-      C(f,g,t) = L_t(f,g)
-    其中 L_t(f,g) = ⟨g, L_t f⟩ - ⟨g,1⟩⟨1,f⟩。
-    这是动力系统的标准定义：关联函数衡量观测 f 在时间 t 后
-    与观测 g 的统计相关性，转移算子编码了时间演化。
-    数学上，这是 Koopman 算子 / Perron-Frobenius 算子的基本性质。 -/
-axiom correlation_transfer_operator_identity :
+/-- 测地流关联函数（定义）：
+    C(f,g,t) = transferOperator t f g，即转移算子的矩阵元（减去平衡态贡献）。
+    具体实现需要 L²(M) 与 Liouville 测度，当前通过 transferOperator 抽象。 -/
+def correlation (f g : ℝ → ℂ) (t : ℝ) : ℂ := transferOperator t f g
+
+/-- 关联函数与转移算子的关系（定理，由定义直接推出）。 -/
+theorem correlation_transfer_operator_identity :
     ∀ (f g : ℝ → ℂ) (t : ℝ),
-      correlation f g t = transferOperator t f g
+      correlation f g t = transferOperator t f g := by
+  intro f g t; rfl
 
 /-- Dolgopyat 谱隙估计（公理，Dolgopyat 的核心贡献）：
     测地流转移算子 L_t 在不稳定方向上有谱隙：
@@ -1243,29 +1240,43 @@ theorem melinTransform_linear (f1 f2 : TestFunction) (c1 c2 : ℂ) (s : ℂ) :
   rw [realIntegral_linear]
   <;> ring
 
-/-- 非平凡零点的枚举（opaque）：
-    nontrivialZeroEnum : ℕ → ℂ 枚举所有临界带内的非平凡零点。
-    由 Weyl 定律，非平凡零点可数，因此存在这样的枚举。 -/
-opaque nontrivialZeroEnum : ℕ → ℂ
+/-- 非平凡零点枚举的存在性（公理，第一档）：
+    存在单射 e : ℕ → ℂ，枚举所有临界带内的非平凡零点。
+    由 Weyl 定律，非平凡零点可数，因此存在这样的无重复枚举。
+    风险等级：第一档（Weyl 定律 + 可数集枚举定理）。 -/
+axiom nontrivialZeroEnum_exists :
+    ∃ (e : ℕ → ℂ),
+      (Function.Injective e) ∧
+      (∀ (n : ℕ), _root_.riemannZeta (e n) = 0 ∧ 0 < (e n).re ∧ (e n).re < 1) ∧
+      (∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ∃ (n : ℕ), e n = ρ)
 
-/-- 非平凡零点枚举的覆盖性（公理）：
-    对任意非平凡零点 ρ（ζ(ρ)=0 且 0<Re(ρ)<1），存在 n 使得 nontrivialZeroEnum n = ρ。
-    风险等级：第一档（Weyl 定律的直接推论，非平凡零点可数）。 -/
-axiom nontrivialZeroEnum_covers_all (ρ : ℂ) :
+/-- 非平凡零点的枚举（定义，由存在性公理通过 Classical.choose 给出）：
+    nontrivialZeroEnum : ℕ → ℂ 枚举所有临界带内的非平凡零点。 -/
+noncomputable def nontrivialZeroEnum : ℕ → ℂ :=
+    Classical.choose nontrivialZeroEnum_exists
+
+/-- 非平凡零点枚举的性质（定理，由 Classical.choose_spec 推出）。 -/
+theorem nontrivialZeroEnum_spec :
+    (Function.Injective nontrivialZeroEnum) ∧
+    (∀ (n : ℕ), _root_.riemannZeta (nontrivialZeroEnum n) = 0 ∧ 0 < (nontrivialZeroEnum n).re ∧ (nontrivialZeroEnum n).re < 1) ∧
+    (∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ∃ (n : ℕ), nontrivialZeroEnum n = ρ) :=
+    Classical.choose_spec nontrivialZeroEnum_exists
+
+/-- 非平凡零点枚举的覆盖性（定理）。 -/
+theorem nontrivialZeroEnum_covers_all (ρ : ℂ) :
     _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
-    ∃ (n : ℕ), nontrivialZeroEnum n = ρ
+    ∃ (n : ℕ), nontrivialZeroEnum n = ρ :=
+    nontrivialZeroEnum_spec.2.2 ρ
 
-/-- 非平凡零点枚举的单射性（公理）：
-    nontrivialZeroEnum 是单射，每个非平凡零点恰好出现一次。
-    风险等级：第一档（可数集可以无重复枚举）。 -/
-axiom nontrivialZeroEnum_injective : Function.Injective nontrivialZeroEnum
+/-- 非平凡零点枚举的单射性（定理）。 -/
+theorem nontrivialZeroEnum_injective : Function.Injective nontrivialZeroEnum :=
+    nontrivialZeroEnum_spec.1
 
-/-- 枚举元素都是非平凡零点（公理）：
-    对任意 n，nontrivialZeroEnum n 是非平凡零点（ζ=0 且 0<Re<1）。
-    风险等级：第一档（枚举的定义性质）。 -/
-axiom nontrivialZeroEnum_are_zeros (n : ℕ) :
+/-- 枚举元素都是非平凡零点（定理）。 -/
+theorem nontrivialZeroEnum_are_zeros (n : ℕ) :
     _root_.riemannZeta (nontrivialZeroEnum n) = 0 ∧
-    0 < (nontrivialZeroEnum n).re ∧ (nontrivialZeroEnum n).re < 1
+    0 < (nontrivialZeroEnum n).re ∧ (nontrivialZeroEnum n).re < 1 :=
+    nontrivialZeroEnum_spec.2.1 n
 
 /-- 非平凡零点求和（定义）：
     Z_nontriv(f) = ∑'_{n:ℕ} melinTransform f (nontrivialZeroEnum n)。
@@ -2891,12 +2902,14 @@ theorem all_zeros_on_critical_line (f : MollifiedTestFunction) :
     spectral_zero_equality g
   exact hg h_eq
 
-/-- 分布的支撑（opaque）：
-    对 TestFunction 上的线性泛函 D（分布），其支撑 supp(D) 是 ℝ 的子集，
-    表示 D"非零"或"有奇点"的点集。
-    完整定义需要分布论（test function 空间、对偶、支撑概念），
-    当前用 opaque 抽象。这是逆向显式公式分布支撑比较的核心概念。 -/
-opaque distributionSupport : (TestFunction → ℂ) → Set ℝ
+/-- 分布的支撑（定义）：
+    对 TestFunction 上的线性泛函 D（分布），其支撑 supp(D) 是 ℝ 的子集：
+    x ∈ supp(D) 当且仅当 x 的每个邻域内都存在测试函数 f 使得 D(f) ≠ 0。
+    等价地，supp(D) 是使得 D 在其补集上为零的最小闭集。
+    这是分布论的标准定义。 -/
+def distributionSupport (D : TestFunction → ℂ) : Set ℝ :=
+    {x : ℝ | ∀ (R : ℝ), 0 < R → ∃ (f : TestFunction),
+      (∀ (y : ℝ), |y - x| ≥ R → f.eval y = 0) ∧ D f ≠ 0}
 
 /-- 分布相等-支撑相同原理（公理）：
     如果两个分布 D1, D2 在所有磨光测试函数上相等，
