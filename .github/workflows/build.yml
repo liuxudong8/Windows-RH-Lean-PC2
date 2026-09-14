@@ -27,5 +27,8 @@ jobs:
       - name: Fetch dependencies
         run: lake update
 
+      - name: Get mathlib cache
+        run: lake exe cache get || true
+
       - name: Build project
         run: lake build
