@@ -2,7 +2,6 @@ name: Build and test
 
 on:
   push:
-    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -12,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Setup Lean
-        uses: leanprover/setup-lean@v1
+        uses: leanprover/actions/setup-lean@v4
       - name: Fetch dependencies
         run: lake update
       - name: Build project

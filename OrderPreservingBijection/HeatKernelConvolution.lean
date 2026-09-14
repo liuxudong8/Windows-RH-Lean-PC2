@@ -280,8 +280,46 @@ theorem heatKernel_angular_integral (d r s : ℝ) (hd : 0 < d) (hr : 0 < r) (hs 
       deriv F θ = Real.exp (-(rho θ)^2 / (4 * s)) * (rho θ / Real.sinh (rho θ)) * Real.sin θ := by
     intro θ hθ
     exact (hF_hasDeriv θ hθ).deriv
-  -- h_int: deriv F interval integrable (sorry: math clear — rho>0 on (0,pi], d_over_sinh continuous)
-  have h_int : IntervalIntegrable (deriv F) volume 0 Real.pi := by sorry
+  -- h_int: deriv F interval integrable
+  -- Strategy: extend integrand continuously via d_over_sinh, prove ContinuousOn → IntervalIntegrable,
+  -- then congr_uIoo to transfer to deriv F (which equals integrand on (0,pi)).
+  set f_int : ℝ → ℝ := fun θ =>
+      Real.exp (-(rho θ)^2 / (4 * s)) * (rho θ / Real.sinh (rho θ)) * Real.sin θ with hf_int
+  set f_ext : ℝ → ℝ := fun θ =>
+      Real.exp (-(rho θ)^2 / (4 * s)) * d_over_sinh (rho θ) * Real.sin θ with hf_ext
+  -- f_ext continuous on [0, pi] (d_over_sinh_continuous + rho continuous + exp/sin continuous)
+  have hf_ext_cont : ContinuousOn f_ext (Set.uIcc (0 : ℝ) Real.pi) := by
+    simp only [hf_ext]
+    have h1 : ContinuousOn (fun θ : ℝ => (rho θ)^2) (Set.uIcc (0 : ℝ) Real.pi) := h_rho_cont.pow 2
+    have h2 : ContinuousOn (fun θ : ℝ => -((rho θ)^2) / (4 * s)) (Set.uIcc (0 : ℝ) Real.pi) :=
+      h1.neg.div continuousOn_const (fun _ _ => hs_ne)
+    have h3 : ContinuousOn (fun θ : ℝ => Real.exp (-((rho θ)^2) / (4 * s))) (Set.uIcc (0 : ℝ) Real.pi) :=
+      Real.continuous_exp.continuousOn.comp h2 (fun _ _ => Set.mem_univ _)
+    have h4 : ContinuousOn (fun θ : ℝ => d_over_sinh (rho θ)) (Set.uIcc (0 : ℝ) Real.pi) :=
+      d_over_sinh_continuous.continuousOn.comp h_rho_cont (fun _ _ => Set.mem_univ _)
+    exact (h3.mul h4).mul Real.continuous_sin.continuousOn
+  have hf_ext_ii : IntervalIntegrable f_ext volume 0 Real.pi :=
+    hf_ext_cont.intervalIntegrable
+  -- f_int = f_ext on (0, pi) because rho θ > 0 → d_over_sinh (rho θ) = rho θ / sinh (rho θ)
+  have h_eq_on : Set.EqOn f_int f_ext (Set.uIoo (0 : ℝ) Real.pi) := by
+    intro θ hθ
+    have h_rho_pos : 0 < rho θ := by
+      have h_gt := h_g_gt_one θ hθ
+      have h : 1 < Real.cosh r * Real.cosh d - B * Real.cos θ := h_gt
+      simpa [hrho] using Real.arcosh_pos h
+    have h_dos : d_over_sinh (rho θ) = rho θ / Real.sinh (rho θ) := by
+      rw [d_over_sinh]
+      simp [h_rho_pos.ne']
+      <;> field_simp <;> ring
+    simp only [hf_int, hf_ext, h_dos]
+  have hf_int_ii : IntervalIntegrable f_int volume 0 Real.pi :=
+    hf_ext_ii.congr_uIoo h_eq_on.symm
+  -- deriv F = f_int on (0, pi), so deriv F is also IntervalIntegrable
+  have h_deriv_eq' : Set.EqOn f_int (deriv F) (Set.uIoo (0 : ℝ) Real.pi) := by
+    intro θ hθ
+    exact (h_deriv_eq θ hθ).symm
+  have h_int : IntervalIntegrable (deriv F) volume 0 Real.pi :=
+    hf_int_ii.congr_uIoo h_deriv_eq'
   -- FTC
   have h_ftc0 : ∫ θ in (0 : ℝ)..Real.pi, deriv F θ = F Real.pi - F 0 :=
     intervalIntegral.integral_deriv_eq_sub_uIoo hF_cont hF_diff h_int
@@ -291,7 +329,10 @@ theorem heatKernel_angular_integral (d r s : ℝ) (hd : 0 < d) (hr : 0 < r) (hs 
     = F Real.pi - F 0 := by
     have h_eq_integral : ∫ θ in (0 : ℝ)..Real.pi,
         Real.exp (-(rho θ)^2 / (4 * s)) * (rho θ / Real.sinh (rho θ)) * Real.sin θ
-      = ∫ θ in (0 : ℝ)..Real.pi, deriv F θ := by sorry
+      = ∫ θ in (0 : ℝ)..Real.pi, deriv F θ := by
+      have h : ∫ θ in (0 : ℝ)..Real.pi, f_int θ = ∫ θ in (0 : ℝ)..Real.pi, deriv F θ :=
+        intervalIntegral.integral_congr_uIoo h_deriv_eq'
+      simpa [hf_int] using h
     rw [h_eq_integral, h_ftc0]
   rw [integral_Icc_eq_interval, h_ftc]
   exact F_endpoints_diff d r s hd hr hs B hB
