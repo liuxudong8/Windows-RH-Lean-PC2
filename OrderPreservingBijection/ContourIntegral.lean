@@ -27,13 +27,20 @@ theorem contourRadius_pos : 0 < contourRadius := by
 noncomputable def contourIntegral (g : ℂ → ℂ) : ℂ :=
     (2 * Real.pi * Complex.I)⁻¹ * circleIntegral g (1 / 2 : ℂ) contourRadius
 
-/-- 围道积分的线性性（公理，第一档）：
-    contourIntegral(c₁·g₁ + c₂·g₂) = c₁·contourIntegral(g₁) + c₂·contourIntegral(g₂)。
-    注：严格来说需 CircleIntegrable 前提，但在 Weil 显式公式使用场景中，
-    通过围道形变避开奇点后函数可积，故此处保持无条件公理。
-    带前提版本无法降级：primeDirichletSeries 在 Re(s)≤1 不收敛，zetaLogDerivative 在零点处不连续。 -/
-axiom contourIntegral_linear (g1 g2 : ℂ → ℂ) (c1 c2 : ℂ) :
-    contourIntegral (fun s => c1 * g1 s + c2 * g2 s) = c1 * contourIntegral g1 + c2 * contourIntegral g2
+/-- Contour integral linearity (theorem, from Mathlib circleIntegral):
+    For CircleIntegrable g1, g2, contourIntegral(c1*g1 + c2*g2) = c1*contourIntegral(g1) + c2*contourIntegral(g2).
+    Downgraded from axiom: Mathlib has circleIntegral.integral_add (with integrable premise) and integral_smul. -/
+theorem contourIntegral_linear (g1 g2 : ℂ → ℂ) (c1 c2 : ℂ)
+    (h1 : CircleIntegrable g1 (1 / 2 : ℂ) contourRadius)
+    (h2 : CircleIntegrable g2 (1 / 2 : ℂ) contourRadius) :
+    contourIntegral (fun s => c1 * g1 s + c2 * g2 s) = c1 * contourIntegral g1 + c2 * contourIntegral g2 := by
+  have h1s : CircleIntegrable (fun s => c1 • g1 s) (1 / 2 : ℂ) contourRadius := h1.const_smul (a := c1)
+  have h2s : CircleIntegrable (fun s => c2 • g2 s) (1 / 2 : ℂ) contourRadius := h2.const_smul (a := c2)
+  have h_eq1 : (fun s : ℂ => c1 * g1 s + c2 * g2 s) = fun s => c1 • g1 s + c2 • g2 s := by
+    funext s; simp [smul_eq_mul]
+  rw [h_eq1]
+  simp only [contourIntegral, circleIntegral.integral_add h1s h2s, circleIntegral.integral_smul]
+  <;> simp [smul_eq_mul] <;> ring
 
 /-- 黎曼ζ函数的对数导数（def）：ζ'/ζ(s) = (dζ/ds)(s) / ζ(s)。
     在 ζ(s) ≠ 0 且 s ≠ 1 处有定义；零点处用 0 占位（留数由围道积分处理）。
@@ -109,12 +116,15 @@ theorem residue_theorem_zeta_log_derivative (f : TestFunction) :
     contourIntegral (fun s => zetaLogDerivative s * melinTransform f s) = zetaZeroSide f := by
   rw [zeta_log_derivative_contour_eq_residue_sum f, zeta_log_derivative_residue_sum_eq_zeroside f]
 
-/-- 差的全纯延拓（公理）：
-    primeDirichletSeries - zetaLogDerivative 在 Re(s) > 1 内为零（由 Euler 乘积），
-    且可解析延拓为围道内部的全纯函数（仅有的奇点在 ζ 零点处，但已被 zetaLogDerivative 的定义抵消）。
-    因此差在围道内部全纯，由柯西定理围道积分为零。 -/
+/-- Difference holomorphic extension + circle integrability (axiom):
+    primeDirichletSeries - zetaLogDerivative vanishes for Re(s) > 1 (Euler product),
+    and extends holomorphically inside the contour (singularities at zeta zeros canceled
+    by zetaLogDerivative definition). Thus the difference is holomorphic inside the contour
+    and CircleIntegrable on the contour, so Cauchy theorem gives zero contour integral.
+    Enhanced to include CircleIntegrable: needed for contourIntegral_linear downgrade. -/
 axiom primeDirichlet_zetaLogDerivative_diff_holomorphic (f : TestFunction) :
-    ∀ s ∈ Metric.ball (1 / 2 : ℂ) contourRadius,
-    DifferentiableAt ℂ (fun s => (primeDirichletSeries s - zetaLogDerivative s) * melinTransform f s) s
+    (∀ s ∈ Metric.ball (1 / 2 : ℂ) contourRadius,
+      DifferentiableAt ℂ (fun s => (primeDirichletSeries s - zetaLogDerivative s) * melinTransform f s) s) ∧
+    CircleIntegrable (fun s => (primeDirichletSeries s - zetaLogDerivative s) * melinTransform f s) (1 / 2 : ℂ) contourRadius
 
 end OrderPreservingBijection

@@ -262,15 +262,6 @@ opaque laplacian_M : L2Function ManifoldM → L2Function ManifoldM
 noncomputable def heatOperator (t : ℝ) (f : L2Function ManifoldM) : L2Function ManifoldM :=
     fun (z : ManifoldM) => manifoldIntegral (fun (w : ManifoldM) => heatKernel t z w * f w)
 
-/-- 热核半群性质（公理）：H_{t+s} = H_t ∘ H_s。
-    这是热方程的基本性质：热流的时间可加性。
-    数学上，这等价于热核的卷积公式：
-      K_{t+s}(z,w) = ∫ K_t(z,u) K_s(u,w) du。
-    半群性质是热核谱表示的基础：H_t = e^{-tΔ}。 -/
-axiom heatKernel_semigroup :
-    ∀ (t s : ℝ), 0 ≤ t → 0 ≤ s →
-      heatOperator (t + s) = (heatOperator t) ∘ (heatOperator s)
-
 /-- 热核与 Laplacian 交换（公理，精确版）：H_t ∘ Δ_M = Δ_M ∘ H_t。
     这是热方程的直接推论：热核算子是 Laplacian 的函数 H_t = e^{-tΔ_M}。
     因此 H_t 保持 Laplacian 的特征子空间：

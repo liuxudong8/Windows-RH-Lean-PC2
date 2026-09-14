@@ -12,6 +12,7 @@ import OrderPreservingBijection.BasicInfrastructure
 import OrderPreservingBijection.MellinInfrastructure
 import OrderPreservingBijection.ManifoldInfrastructure
 import OrderPreservingBijection.HeatKernel
+import OrderPreservingBijection.HeatKernelSemigroup
 import OrderPreservingBijection.MollifiedFunction
 import OrderPreservingBijection.Interpolation
 import Mathlib.MeasureTheory.Integral.Gamma
@@ -1071,21 +1072,38 @@ theorem euler_product_integral (f : MollifiedTestFunction) :
   let g1 : ℂ → ℂ := fun s => primeDirichletSeries s * melinTransform f.toTestFunction s
   let g2 : ℂ → ℂ := fun s => zetaLogDerivative s * melinTransform f.toTestFunction s
   let gdiff : ℂ → ℂ := fun s => (primeDirichletSeries s - zetaLogDerivative s) * melinTransform f.toTestFunction s
-  have h_eq : gdiff = fun s => g1 s + (-1 : ℂ) * g2 s := by
-    funext s; simp [g1, g2, gdiff] <;> ring
-  have h_lin : contourIntegral gdiff = contourIntegral g1 - contourIntegral g2 := by
-    rw [h_eq]
-    have h := contourIntegral_linear g1 g2 (1 : ℂ) (-1 : ℂ)
-    have h' : contourIntegral (fun s : ℂ => g1 s + -1 * g2 s) = contourIntegral g1 - contourIntegral g2 := by
+  have h_holo : ∀ s ∈ Metric.ball (1 / 2 : ℂ) contourRadius, DifferentiableAt ℂ gdiff s :=
+    (primeDirichlet_zetaLogDerivative_diff_holomorphic f.toTestFunction).1
+  have h_diff_int : CircleIntegrable gdiff (1 / 2 : ℂ) contourRadius :=
+    (primeDirichlet_zetaLogDerivative_diff_holomorphic f.toTestFunction).2
+  have h_diff : contourIntegral gdiff = 0 := cauchy_theorem_contour gdiff h_holo
+  have h_eq : gdiff = fun s => g1 s - g2 s := by funext s; simp [g1, g2, gdiff] <;> ring
+  by_cases h1 : CircleIntegrable g1 (1 / 2 : ℂ) contourRadius
+  · -- Case 1: g1 integrable, then g2 = g1 - gdiff integrable
+    have h2 : CircleIntegrable g2 (1 / 2 : ℂ) contourRadius := by
+      have hg2 : g2 = fun s => g1 s - gdiff s := by funext s; rw [h_eq] <;> ring
+      rw [hg2]
+      exact h1.sub h_diff_int
+    have h_lin : contourIntegral gdiff = contourIntegral g1 - contourIntegral g2 := by
+      rw [h_eq]
+      have h := contourIntegral_linear g1 g2 (1 : ℂ) (-1 : ℂ) h1 h2
       simpa [one_mul, neg_one_mul, sub_eq_add_neg] using h
-    exact h'
-    
-  have h_diff : contourIntegral gdiff = 0 :=
-    cauchy_theorem_contour gdiff (primeDirichlet_zetaLogDerivative_diff_holomorphic f.toTestFunction)
-  have h_main : contourIntegral g1 - contourIntegral g2 = 0 := by
-    rw [← h_lin, h_diff]
-  simp only [primeIdealDirichletIntegral, zetaLogDerivativeIntegral, g1, g2]
-  exact sub_eq_zero.mp h_main
+    have h_main : contourIntegral g1 - contourIntegral g2 = 0 := by rw [←h_lin, h_diff]
+    simp only [primeIdealDirichletIntegral, zetaLogDerivativeIntegral, g1, g2]
+    exact sub_eq_zero.mp h_main
+  · -- Case 2: g1 not integrable, then g2 cannot be integrable (else g1 = g2 + gdiff integrable)
+    have h2_not : ¬ CircleIntegrable g2 (1 / 2 : ℂ) contourRadius := by
+      intro h2
+      have h1' : CircleIntegrable g1 (1 / 2 : ℂ) contourRadius := by
+        have hg1 : g1 = fun s => g2 s + gdiff s := by funext s; rw [h_eq] <;> ring
+        rw [hg1]
+        exact h2.add h_diff_int
+      exact h1 h1'
+    have h_g1_zero : contourIntegral g1 = 0 := by
+      rw [contourIntegral, circleIntegral.integral_undef h1] <;> ring
+    have h_g2_zero : contourIntegral g2 = 0 := by
+      rw [contourIntegral, circleIntegral.integral_undef h2_not] <;> ring
+    simp only [primeIdealDirichletIntegral, zetaLogDerivativeIntegral, g1, g2, h_g1_zero, h_g2_zero]
 
 /-- 几何侧的对数导数表示（定理，由 Perron 公式 + Euler 乘积推出）：
     对磨光测试函数 f，几何侧求和等于 ζ 对数导数的围道积分：
