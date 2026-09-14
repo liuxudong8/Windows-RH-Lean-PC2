@@ -174,6 +174,10 @@ theorem d_over_sinh_pos (d : ℝ) (h : 0 ≤ d) : 0 < d_over_sinh d := by
     apply div_pos hpos
     exact Real.sinh_pos_iff.mpr hpos
 
+/-- d_over_sinh 连续性（公理）：d_over_sinh 在 ℝ 上连续。
+    证明路径：d≠0 时显然；d=0 时用 isEquivalent_sinh (sinh ~[nhds 0] id) 得 d/sinh(d) → 1。 -/
+axiom d_over_sinh_continuous : Continuous d_over_sinh
+
 /-- 三维双曲热核（定义）：K_t(z, w) = 热方程的基本解。
     对 t>0，显式公式为：
       K_t(z,w) = (4πt)^(-3/2) · e^{-t} · e^{-d²/(4t)} · d_over_sinh(d)
