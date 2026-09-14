@@ -11,14 +11,21 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
-      - name: Setup Lean
-        uses: leanprover/setup-lean@v2
+
+      - name: Install elan
+        run: |
+          set -o pipefail
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> $GITHUB_PATH
+
       - name: Cache .lake
         uses: actions/cache@v4
         with:
           path: .lake
           key: ${{ runner.os }}-lake-${{ hashFiles('lakefile.toml', 'lean-toolchain') }}
+
       - name: Fetch dependencies
         run: lake update
+
       - name: Build project
         run: lake build
