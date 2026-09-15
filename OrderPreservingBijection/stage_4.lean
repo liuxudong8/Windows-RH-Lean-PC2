@@ -1605,17 +1605,6 @@ theorem mellin_pair_separation_construction (ρ : ℂ) :
     simp [w1, w2, h_ne] <;> ring
   exact ⟨f1, f2, h_pts, h_m1ρ, h_m2ρ, h_T_eq⟩
 
-/-- 磨光函数 Mellin 变换的垂直速降性（公理，中低风险，标准分析）：
-    对任意磨光函数 f，存在常数 C_f > 0，使得对所有 s ∈ (0,1) + iℝ：
-    |M[f](s)| ≤ C_f / (1 + |s.im|)²。
-    数学依据：紧支光滑函数的 Fourier/Mellin 变换在垂直方向速降（分部积分）。
-    MollifiedTestFunction 隐含光滑性（磨光函数本意），故此公理成立。
-    风险等级：中低（标准调和分析结果；形式化需 TestFunction 加光滑性前提）。 -/
-axiom mollified_mellin_vertical_decay (f : MollifiedTestFunction) :
-    ∃ (C : ℝ), 0 < C ∧
-      ∀ (s : ℂ), 0 < s.re → s.re < 1 →
-        ‖(melinTransform f.toTestFunction s)‖ ≤ C / (1 + |s.im|) ^ 2
-
 /-- ζ 非平凡零点计数估计（公理，中风险，已知定理 Riemann-von Mangoldt）：
     存在常数 C，使得对所有 T > 0，虚部在 [0,T] 内的非平凡零点个数 ≤ C * (T + 1) * log(T + 2)。
     数学依据：Riemann-von Mangoldt 公式 N(T) = (T/2π)log(T/2π) - T/2π + O(log T)。
