@@ -1,8 +1,15 @@
 <#
-Windows-RH-Lean-PC2 一键提交推送脚本
-仓库根目录运行
+Windows-RH-Lean-PC2 one-click push script
+Run under repository root directory
 #>
-$commitMsg = Read-Host -Prompt "输入本次提交备注"
+Write-Host "===== Check local changes =====" -ForegroundColor Cyan
+$changes = git status --porcelain
+if ([string]::IsNullOrWhiteSpace($changes)) {
+    Write-Host "⚠️ No changes detected, exit." -ForegroundColor Yellow
+    exit
+}
+
+$commitMsg = Read-Host -Prompt "Input commit message"
 if ([string]::IsNullOrWhiteSpace($commitMsg)) {
     $commitMsg = "update: lean source & docs"
 }
@@ -16,7 +23,7 @@ git commit -m "$commitMsg"
 Write-Host "`n=== git push origin main ===" -ForegroundColor Cyan
 git push origin main
 
-Write-Host "`n✅ 推送完成！" -ForegroundColor Green
+Write-Host "`n✅ Push completed!" -ForegroundColor Green
 $lastHash = git rev-parse --short HEAD
-Write-Host "本次提交哈希: $lastHash"
-Write-Host "Actions地址: https://github.com/liuxudong8/Windows-RH-Lean-PC2/actions`n"
+Write-Host "Commit hash: $lastHash"
+Write-Host "Actions URL: https://github.com/liuxudong8/Windows-RH-Lean-PC2/actions`n"
