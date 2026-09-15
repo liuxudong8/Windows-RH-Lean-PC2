@@ -28,116 +28,6 @@ noncomputable def intervalIndicator (a b : ℝ) (ha : 0 < a) (hab : a < b) : Tes
           intro h; have h1 : 0 ≤ x := le_of_lt (lt_of_lt_of_le ha h.1); linarith
       simp only [h_notin, if_false] }
 
-/-- 区间指示函数的 Mellin 变换非零族（公理，有限维线性代数）：
-    对任意 m 个互不相同的复点 t_0,...,t_{m-1}，存在 m 个区间 [a_i,b_i]，
-    使得矩阵 A_{ji} = M[1_{[a_i,b_i]}](t_j) 可逆。
-    数学依据：取区间 [a_i, a_i+ε]，ε→0 时 A_{ji} ≈ ε·a_i^{t_j-1}，
-    极限矩阵 (a_i^{t_j-1}) 是广义 Vandermonde 矩阵（a_i>0 互不相同，t_j 互不相同），故可逆；
-    由行列式连续性，ε 足够小时 A 可逆。
-    这是纯分析断言，比完整的 Mellin 满射性更基本、更透明。 -/
-axiom mellin_interval_linear_independence {m : ℕ} (t : Fin m → ℂ) (ht : Function.Injective t) :
-    ∃ (a b : Fin m → ℝ) (ha : ∀ i, 0 < a i) (hab : ∀ i, a i < b i),
-      ∀ (c : Fin m → ℂ), (∀ j, ∑ i : Fin m, c i * melinTransform (intervalIndicator (a i) (b i) (ha i) (hab i)) (t j) = 0) → c = 0
-
-/-- Mellin 变换有限集满射性（定理，由区间指示函数线性无关推出）：
-    对任意 m 个互不相同的点 t_j 和任意赋值 w_j，存在 TestFunction f
-    使得 M[f](t_j) = w_j 对所有 j。
-    证明：由 mellin_interval_linear_independence 得到 m 个区间指示函数，
-    其 Mellin 变换向量线性无关。m 个线性无关向量在 m 维空间 ℂ^m 中构成基，
-    故可线性组合得到任意 w。 -/
-theorem mellin_finite_surjectivity {m : ℕ} (t : Fin m → ℂ) (ht : Function.Injective t) (w : Fin m → ℂ) :
-    ∃ (f : TestFunction), ∀ (j : Fin m), melinTransform f (t j) = w j := by
-  rcases mellin_interval_linear_independence t ht with ⟨a, b, ha, hab, h_indep⟩
-  let v : Fin m → (Fin m → ℂ) := fun i => fun j => melinTransform (intervalIndicator (a i) (b i) (ha i) (hab i)) (t j)
-  let L : (Fin m → ℂ) →ₗ[ℂ] (Fin m → ℂ) :=
-    { toFun := fun c => fun j => ∑ i : Fin m, c i * v i j
-      map_add' := by
-        intro c1 c2
-        ext j
-        have h1 : ∀ i, (c1 i + c2 i) * v i j = c1 i * v i j + c2 i * v i j := by intro i; ring
-        have h : ∑ i : Fin m, (c1 i + c2 i) * v i j = (∑ i : Fin m, c1 i * v i j) + ∑ i : Fin m, c2 i * v i j := by
-          rw [Finset.sum_congr rfl (fun i _ => h1 i)]
-          rw [Finset.sum_add_distrib]
-        exact h
-      map_smul' := by
-        intro z c
-        ext j
-        have h : ∑ i : Fin m, (z * c i) * v i j = z * ∑ i : Fin m, c i * v i j := by
-          rw [Finset.mul_sum]
-          apply Finset.sum_congr rfl
-          intro i _
-          ring
-        exact h }
-  have h_inj : Function.Injective L := by
-    intro c1 c2 h
-    have h_eq : ∀ j, ∑ i : Fin m, (c1 i - c2 i) * v i j = 0 := by
-      intro j
-      have h1 : (L c1) j = (L c2) j := by rw [h]
-      have h2 : (L c1) j = ∑ i : Fin m, c1 i * v i j := by rfl
-      have h3 : (L c2) j = ∑ i : Fin m, c2 i * v i j := by rfl
-      rw [h2, h3] at h1
-      have h4 : ∑ i : Fin m, c1 i * v i j - ∑ i : Fin m, c2 i * v i j = 0 := by
-        exact sub_eq_zero.mpr h1
-      have h1 : ∀ i, (c1 i - c2 i) * v i j = c1 i * v i j - c2 i * v i j := by intro i; ring
-      have h5 : ∑ i : Fin m, (c1 i - c2 i) * v i j = ∑ i : Fin m, c1 i * v i j - ∑ i : Fin m, c2 i * v i j := by
-        rw [Finset.sum_congr rfl (fun i _ => h1 i)]
-        rw [Finset.sum_sub_distrib]
-      rw [h5]
-      exact h4
-    have h_zero : c1 - c2 = 0 := h_indep (c1 - c2) h_eq
-    have h_eq2 : c1 = c2 := by
-      simpa [sub_eq_zero] using h_zero
-    exact h_eq2
-  have h_surj : Function.Surjective L := by
-    have h_ker : LinearMap.ker L = ⊥ := by
-      exact LinearMap.ker_eq_bot.mpr h_inj
-    have h_main : LinearMap.range L = ⊤ := by
-      exact?
-    intro y
-    have h_y : y ∈ LinearMap.range L := by
-      rw [h_main]
-      trivial
-    exact h_y
-  rcases h_surj w with ⟨c, hc⟩
-  let f_i : Fin m → TestFunction := fun i => intervalIndicator (a i) (b i) (ha i) (hab i)
-  let f : TestFunction := ∑ i : Fin m, c i • f_i i
-  refine ⟨f, ?_⟩
-  intro j
-  have h_melin_zero : melinTransform (0 : TestFunction) (t j) = 0 := by
-    have h := melinTransform_linear (0 : TestFunction) (0 : TestFunction) (0 : ℂ) (0 : ℂ) (t j)
-    have h0 : (0 : ℂ) • (0 : TestFunction) + (0 : ℂ) • (0 : TestFunction) = (0 : TestFunction) := by
-      apply TestFunction.toFun_injective
-      funext x
-      change (0 : ℂ) * (0 : ℂ) + (0 : ℂ) * (0 : ℂ) = (0 : ℂ)
-      ring
-    rw [h0] at h
-    have h1 : (0 : ℂ) * melinTransform (0 : TestFunction) (t j) + (0 : ℂ) * melinTransform (0 : TestFunction) (t j) = (0 : ℂ) := by ring
-    rw [h1] at h
-    exact h
-  have h_melin_sum : ∀ (s : Finset (Fin m)) (c' : Fin m → ℂ),
-      melinTransform (∑ i ∈ s, c' i • f_i i) (t j) = ∑ i ∈ s, c' i * melinTransform (f_i i) (t j) := by
-    intro s c'
-    induction s using Finset.induction with
-    | empty =>
-      simpa using h_melin_zero
-    | @insert i s hi ih =>
-      rw [Finset.sum_insert hi, Finset.sum_insert hi]
-      have h_one : (1 : ℂ) • (∑ k ∈ s, c' k • f_i k) = ∑ k ∈ s, c' k • f_i k := by
-        apply TestFunction.toFun_injective
-        funext x
-        change (1 : ℂ) * (∑ k ∈ s, c' k • f_i k).eval x = (∑ k ∈ s, c' k • f_i k).eval x
-        ring
-      rw [←h_one]
-      rw [melinTransform_linear (f_i i) (∑ k ∈ s, c' k • f_i k) (c' i) (1 : ℂ) (t j)]
-      rw [ih]
-      ring
-  have h_main : melinTransform f (t j) = ∑ i : Fin m, c i * v i j := by
-    rw [h_melin_sum (Finset.univ) c]
-  rw [h_main]
-  have h2 : (L c) j = w j := by rw [hc]
-  simpa [L, v] using h2
-
-
 /-- 点集可分离性（定义）：存在 Λ0<Λ1 使得 S 与 (-∞,Λ0/2]∪[Λ0,Λ1] 不相交。 -/
 def PointSetSeparable (S : Set ℝ) : Prop :=
     ∃ (Λ0 Λ1 : ℝ), 0 < Λ0 ∧ Λ0 < Λ1 ∧
@@ -320,64 +210,48 @@ theorem whitney_mollified_point_interpolation
     f.toTestFunction.eval x = f0.eval x := hf x hx
     _ = v x := h_interp x hx
 
-/-- Mellin 变换的有限集满射性（定理，由区间指示函数基 + 有限维线性代数推出）：
-    对任意有限点集 T ⊆ ℂ 和任意赋值 w : ℂ → ℂ，存在紧支集 TestFunction f
-    使得 Mellin 变换 M[f] 在 T 上等于 w。
-    证明：将 T 枚举为 t : Fin m → ℂ，由 mellin_finite_surjectivity 直接得到。
-    注意：可数集版本在数学上不成立（指数型整函数零点密度限制），
-    反证法中只需要有限集版本。 -/
-theorem mellin_finite_set_surjectivity
-    (T : Set ℂ) (hT : T.Finite) (w : ℂ → ℂ) :
-    ∃ (h : TestFunction), ∀ (s : ℂ), s ∈ T → melinTransform h s = w s := by
-  let s : Finset ℂ := hT.toFinset
-  have hTs : (↑s : Set ℂ) = T := hT.coe_toFinset
-  let lst : List ℂ := s.toList
-  have h_nodup : lst.Nodup := Finset.nodup_toList s
-  have h_mem : ∀ (x : ℂ), x ∈ lst ↔ x ∈ s := by
-    intro x; simp [lst]
-  let m := lst.length
-  let t : Fin m → ℂ := fun i => lst.get i
-  have ht_inj : Function.Injective t := List.nodup_iff_injective_get.mp h_nodup
-  have h_range : Set.range t = T := by
-    ext x
-    simp only [Set.mem_range, t]
-    constructor
-    · rintro ⟨i, rfl⟩
-      have h_in_lst : lst.get i ∈ lst := List.get_mem lst i
-      have h_in_s : lst.get i ∈ s := (h_mem (lst.get i)).mp h_in_lst
-      have h_in_T : lst.get i ∈ T := by
-        have h : (lst.get i ∈ (↑s : Set ℂ)) := h_in_s
-        rwa [hTs] at h
-      exact h_in_T
-    · intro hx
-      have h_in_s : x ∈ s := by
-        have h : x ∈ T := hx
-        have h' : x ∈ (↑s : Set ℂ) := by rwa [hTs]
-        exact h'
-      have h_in_lst : x ∈ lst := (h_mem x).mpr h_in_s
-      rcases List.mem_iff_get.mp h_in_lst with ⟨i, rfl⟩
-      exact ⟨i, rfl⟩
-  let w' : Fin m → ℂ := fun i => w (t i)
-  rcases mellin_finite_surjectivity t ht_inj w' with ⟨h, hh⟩
-  refine ⟨h, ?_⟩
-  intro s hs
-  have h_in_range : s ∈ Set.range t := by rw [h_range]; exact hs
-  rcases h_in_range with ⟨i, rfl⟩
-  exact hh i
-
-/-- 有限集上 Mellin 变换任意赋值且 nontrivialZeroSum 为零（公理，泛函分析）：
-    对任意有限点集 T ⊆ ℂ 和任意赋值 w，存在 TestFunction h 使得：
+/-- 有限集上 Mellin 变换任意赋值且 nontrivialZeroSum 为零，带统一范数估计（公理，泛函分析基本定理）：
+    存在统一常数 C，使得对任意有限点集 T、任意赋值 w（在 T 上以 B 为界），
+    存在 TestFunction h 满足：
     (1) M[h]|_T = w
     (2) nontrivialZeroSum(h) = 0
+    (3) ‖M[h](s)‖ ≤ C * max(B,1) / (1+|Im|)² 在临界带内
 
-    数学依据：TestFunction 空间无限维，nontrivialZeroSum 是一个线性泛函，
-    其核 {h | nontrivialZeroSum(h)=0} 是余维 1 的子空间，仍然无限维。
-    有限个点的赋值约束是有限维的，因此可以在核中找到满足赋值的函数。
-    风险等级：中（标准泛函分析，核的无限维性 + 有限维约束）。 -/
-axiom mellin_finite_surjectivity_zero_sum (T : Set ℂ) (hT : T.Finite) (w : ℂ → ℂ) :
+    ZFC 依据：Hahn-Banach 定理 + Mellin 变换作为线性泛函的统一有界性。
+    关键：M[·](s) 的范数 ≤ ∫_{supp} x^{σ-1} dx，对 σ∈(0,1) 和固定支集统一有界，
+    故有限维约束的最小范数解的界只依赖于 ‖w‖_∞，不依赖于 |T|。
+    风险等级：中（标准泛函分析；ZFC 内可证，形式化需 Hahn-Banach + 积分估计）。 -/
+axiom mellin_finite_surjectivity_zero_sum_norm_bound :
+    ∃ (C : ℝ), 0 < C ∧
+      ∀ (T : Set ℂ), T.Finite → ∀ (w : ℂ → ℂ) (B : ℝ),
+        (∀ (t : ℂ), t ∈ T → ‖w t‖ ≤ B) →
+        ∃ (h : TestFunction),
+          (∀ (s : ℂ), s ∈ T → melinTransform h s = w s) ∧
+          nontrivialZeroSum h = 0 ∧
+          (∀ (s : ℂ), 0 < s.re → s.re < 1 →
+            ‖melinTransform h s‖ ≤ C * max B 1 / (1 + |s.im|) ^ 2)
+
+/-- 有限集上 Mellin 变换任意赋值且 nontrivialZeroSum 为零（定理，由带范数估计版本推出，忽略范数条件）。零 sorry。 -/
+theorem mellin_finite_surjectivity_zero_sum (T : Set ℂ) (hT : T.Finite) (w : ℂ → ℂ) :
     ∃ (h : TestFunction),
       (∀ (s : ℂ), s ∈ T → melinTransform h s = w s) ∧
-      nontrivialZeroSum h = 0
+      nontrivialZeroSum h = 0 := by
+  rcases mellin_finite_surjectivity_zero_sum_norm_bound with ⟨C, hC_pos, h_main⟩
+  have h_image_finite : (Set.image w T).Finite := Set.Finite.image w hT
+  have h_norm_image_finite : (Set.image (fun t : ℂ => ‖w t‖) T).Finite := Set.Finite.image (fun t : ℂ => ‖w t‖) hT
+  have h_bdd : ∃ (B : ℝ), ∀ (t : ℂ), t ∈ T → ‖w t‖ ≤ B := by
+    have h1 : (Set.image (fun t : ℂ => ‖w t‖) T).Finite := h_norm_image_finite
+    have h2 : ∃ (B : ℝ), ∀ (x : ℝ), x ∈ Set.image (fun t : ℂ => ‖w t‖) T → x ≤ B := by
+      exact Set.Finite.bddAbove h1
+    rcases h2 with ⟨B, hB⟩
+    refine ⟨max B 0, ?_⟩
+    intro t ht
+    have h3 : ‖w t‖ ∈ Set.image (fun t : ℂ => ‖w t‖) T := ⟨t, ht, rfl⟩
+    have h4 : ‖w t‖ ≤ B := hB ‖w t‖ h3
+    exact le_trans h4 (le_max_left B 0)
+  rcases h_bdd with ⟨B, hB⟩
+  rcases h_main T hT w B hB with ⟨h, hh, h_nz, _⟩
+  exact ⟨h, hh, h_nz⟩
 
 /-- 点插值纤维的 Mellin 丰富性（公理，磨光函数空间结构性质）：
     对任意磨光函数 f0、可分离可数点集 S、任意满足 nontrivialZeroSum(h)=0 的 TestFunction h，

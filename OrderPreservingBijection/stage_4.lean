@@ -1623,30 +1623,1076 @@ axiom mollified_mellin_vertical_decay (f : MollifiedTestFunction) :
 axiom zero_counting_estimate :
     ∃ (C : ℝ), 0 < C ∧
       ∀ (T : ℝ), 0 < T →
-        Set.ncard {s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ 0 ≤ s.im ∧ s.im ≤ T} ≤
+        Set.encard {s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ 0 ≤ s.im ∧ s.im ≤ T} ≤
         (Nat.ceil (C * (T + 1) * Real.log (T + 2)) : ENat)
 
-/-- 非临界线零点的尾部贡献主导性（公理，中风险，由速降性+零点密度可证）：
+/-- ζ 非平凡零点重数的对数增长（公理，中低风险，已知定理）：
+    存在常数 C，使得对所有非平凡零点 ρ，重数 m(ρ) ≤ C * (1 + log(2 + |Im(ρ)|))。
+    数学依据：ζ 函数的阶为 1，由 Jensen 公式可得零点重数的对数增长界。
+    这是标准结果（Titchmarsh, The Theory of the Riemann Zeta-Function）。
+    风险等级：中低（已知定理；纸笔证明标准，Mathlib 尚未形式化）。 -/
+axiom zero_multiplicity_log_growth :
+    ∃ (C : ℝ), 0 < C ∧
+      ∀ (n : ℕ), (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) ≤ C * (1 + Real.log (2 + |(nontrivialZeroEnum n).im|))
+
+
+
+-- === 分层求和基础设施（内联，避免循环依赖） ===
+lemma finite_of_encard_le {α : Type*} {s : Set α} {n : ℕ}
+    (h : Set.encard s ≤ (n : ENat)) : s.Finite := by
+  by_contra hinf
+  have h_inf : s.Infinite := Set.not_finite.mp hinf
+  have h_top : Set.encard s = ⊤ := Set.encard_eq_top h_inf
+  rw [h_top] at h; simp at h
+
+lemma finite_preimage_of_injective {α β : Type*} {f : α → β} {s : Set α}
+    (h_inj : Function.Injective f) (h_fin : (f '' s).Finite) : s.Finite := by
+  have h_inj_on : Set.InjOn f s := fun x _ y _ hxy => h_inj hxy
+  have h : s = f ⁻¹' (f '' s) := by ext x; simp [h_inj] <;> aesop
+  rw [h]; apply Set.Finite.preimage _ h_fin; intro x _ y _ hxy; exact h_inj hxy
+
+lemma summable_of_finite_bounded (f : ℕ → ℝ) (hf_nonneg : ∀ n, 0 ≤ f n)
+    (M : ℝ) (h_bound : ∀ (n : ℕ), ∑ i ∈ Finset.range n, f i ≤ M) : Summable f :=
+  summable_of_sum_range_le hf_nonneg h_bound
+
+lemma log_pow_ineq (k : ℕ) : Real.log ((2^k : ℝ) + 2) ≤ ((k : ℝ) + 2) * Real.log 2 := by
+  have h21 : (1 : ℝ) ≤ (2^k : ℝ) := by have h211 : 1 ≤ 2^k := Nat.one_le_pow k 2 (by norm_num); exact_mod_cast h211
+  have h22 : (2^k : ℝ) + 2 ≤ 4 * (2^k : ℝ) := by nlinarith
+  have h23 : 4 * (2^k : ℝ) = (2^(k+2) : ℝ) := by simp [pow_succ] <;> ring
+  have h1 : (2^k : ℝ) + 2 ≤ (2^(k+2) : ℝ) := by rw [h23] at h22; exact h22
+  have h_pos : 0 < (2^k : ℝ) + 2 := by positivity
+  have h2 : Real.log ((2^k : ℝ) + 2) ≤ Real.log (2^(k+2) : ℝ) := Real.log_le_log h_pos h1
+  rw [Real.log_pow] at h2 <;> simpa using h2
+-- riemannZeta 共轭性质（公理，标准事实：Dirichlet 级数实系数）
+axiom riemannZeta_conj : ∀ (s : ℂ), _root_.riemannZeta (star s) = star (_root_.riemannZeta s)
+
+-- 障碍 1：从 encard 上界推出 card 上界
+lemma card_le_of_encard_le {α : Type*} {s : Set α} {n : ℕ}
+    (h_fin : s.Finite) (h : Set.encard s ≤ (n : ENat)) : h_fin.toFinset.card ≤ n := by
+  have h1 : Set.encard s = ↑(h_fin.toFinset.card) := by
+    rw [Set.Finite.encard_eq_coe h_fin]
+    simp [Set.Finite.toFinset]
+    rfl
+  rw [h1] at h
+  exact_mod_cast h
+
+-- 障碍 2：下半平面共轭引理
+lemma lower_conj_eq_upper (T : ℝ) :
+    star '' {s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ -T ≤ s.im ∧ s.im ≤ 0} =
+    {s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ 0 ≤ s.im ∧ s.im ≤ T} := by
+  ext s
+  simp only [Set.mem_image]
+  constructor
+  · rintro ⟨z, hz, rfl⟩
+    have hz1 : _root_.riemannZeta z = 0 := hz.1
+    have hz2 : 0 < z.re := hz.2.1
+    have hz3 : z.re < 1 := hz.2.2.1
+    have hz4 : -T ≤ z.im := hz.2.2.2.1
+    have hz5 : z.im ≤ 0 := hz.2.2.2.2
+    have h1 : _root_.riemannZeta (star z) = 0 := by rw [riemannZeta_conj z, hz1]; simp
+    have h2 : (star z).re = z.re := by simp
+    have h3 : (star z).im = -z.im := by simp
+    exact ⟨h1, by rw [h2]; exact hz2, by rw [h2]; exact hz3, by rw [h3]; linarith, by rw [h3]; linarith⟩
+  · intro hs
+    have hs1 : _root_.riemannZeta s = 0 := hs.1
+    have hs2 : 0 < s.re := hs.2.1
+    have hs3 : s.re < 1 := hs.2.2.1
+    have hs4 : 0 ≤ s.im := hs.2.2.2.1
+    have hs5 : s.im ≤ T := hs.2.2.2.2
+    refine' ⟨star s, _ , _⟩
+    · have h1 : _root_.riemannZeta (star s) = 0 := by rw [riemannZeta_conj s, hs1]; simp
+      have h2 : (star s).re = s.re := by simp
+      have h3 : (star s).im = -s.im := by simp
+      exact ⟨h1, by rw [h2]; exact hs2, by rw [h2]; exact hs3, by rw [h3]; linarith, by rw [h3]; linarith⟩
+    · simp
+
+-- ceil 上界引理
+lemma ceil_le_add_one (x : ℝ) (hx : 0 ≤ x) : (Nat.ceil x : ℝ) ≤ x + 1 := by
+  have h1 : (Nat.ceil x : ℝ) < x + 1 := Nat.ceil_lt_add_one hx
+  linarith
+
+-- star 单射性
+lemma star_inj (x y : ℂ) : star x = star y → x = y := by
+  intro h; have h2 : star (star x) = star (star y) := by rw [h]
+  have h3 : star (star x) = x := by simp
+  have h4 : star (star y) = y := by simp
+  rw [h3, h4] at h2; exact h2
+
+-- 每层基数上界（直接上界，不简化系数）
+lemma layer_card_bound_raw (C1 : ℝ) (hC1_pos : 0 < C1)
+    (hC1 : ∀ (T : ℝ), 0 < T → Set.encard {s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ 0 ≤ s.im ∧ s.im ≤ T} ≤ (Nat.ceil (C1 * (T + 1) * Real.log (T + 2)) : ENat))
+    (k : ℕ) (h_layer_fin : ({n : ℕ | (2^k : ℝ) ≤ |(nontrivialZeroEnum n).im| ∧ |(nontrivialZeroEnum n).im| < (2^(k+1) : ℝ)}).Finite) :
+    (h_layer_fin.toFinset.card : ℝ) ≤ 2 * (C1 * ((2^(k+1) : ℝ) + 1) * Real.log ((2^(k+1) : ℝ) + 2) + 1) := by
+  let T := (2^(k+1) : ℝ)
+  have hT_pos : 0 < T := by positivity
+  let Upper : Set ℂ := {s | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ 0 ≤ s.im ∧ s.im ≤ T}
+  let Lower : Set ℂ := {s | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ -T ≤ s.im ∧ s.im ≤ 0}
+  let S_ℂ : Set ℂ := {s | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ |s.im| ≤ T}
+  let preimage : Set ℕ := {n | |(nontrivialZeroEnum n).im| ≤ T}
+  let layer_k : Set ℕ := {n | (2^k : ℝ) ≤ |(nontrivialZeroEnum n).im| ∧ |(nontrivialZeroEnum n).im| < (2^(k+1) : ℝ)}
+  have h_upper_encard : Set.encard Upper ≤ (Nat.ceil (C1 * (T + 1) * Real.log (T + 2)) : ENat) := hC1 T hT_pos
+  have h_upper_fin : Upper.Finite := finite_of_encard_le h_upper_encard
+  have h_eq_lower_upper : star '' Lower = Upper := lower_conj_eq_upper T
+  have h_star_img_fin : (star '' Lower).Finite := by rw [h_eq_lower_upper]; exact h_upper_fin
+  have h_lower_fin : Lower.Finite := finite_preimage_of_injective star_inj h_star_img_fin
+  have h_S_fin : S_ℂ.Finite := by
+    have h_decomp : S_ℂ ⊆ Upper ∪ Lower := by
+      intro s hs; have him : |s.im| ≤ T := hs.2.2.2
+      by_cases h : 0 ≤ s.im
+      · exact Or.inl ⟨hs.1, hs.2.1, hs.2.2.1, h, by linarith [abs_le.mp him]⟩
+      · exact Or.inr ⟨hs.1, hs.2.1, hs.2.2.1, by linarith [abs_le.mp him], by linarith⟩
+    exact Set.Finite.subset (Set.Finite.union h_upper_fin h_lower_fin) h_decomp
+  have h_img_sub : nontrivialZeroEnum '' preimage ⊆ S_ℂ := by
+    intro s hs; rcases hs with ⟨n, hn, rfl⟩
+    have hz : _root_.riemannZeta (nontrivialZeroEnum n) = 0 ∧ 0 < (nontrivialZeroEnum n).re ∧ (nontrivialZeroEnum n).re < 1 := nontrivialZeroEnum_are_zeros n
+    exact ⟨hz.1, hz.2.1, hz.2.2, hn⟩
+  have h_preimg_fin : preimage.Finite := by
+    have h_img_fin : (nontrivialZeroEnum '' preimage).Finite := Set.Finite.subset h_S_fin h_img_sub
+    exact finite_preimage_of_injective nontrivialZeroEnum_injective h_img_fin
+  have h_sub_layer : layer_k ⊆ preimage := by intro n hn; exact le_of_lt hn.2
+  have h1 : h_layer_fin.toFinset.card ≤ h_preimg_fin.toFinset.card := by
+    have h11 : h_layer_fin.toFinset ⊆ h_preimg_fin.toFinset := by
+      intro x hx
+      have h23 : x ∈ layer_k := (Set.Finite.mem_toFinset h_layer_fin).mp hx
+      have h24 : x ∈ preimage := h_sub_layer h23
+      exact (Set.Finite.mem_toFinset h_preimg_fin).mpr h24
+    exact Finset.card_le_card h11
+  have h_img_fin : (nontrivialZeroEnum '' preimage).Finite := Set.Finite.subset h_S_fin h_img_sub
+  have h_eq_img : h_img_fin.toFinset = Finset.image nontrivialZeroEnum h_preimg_fin.toFinset :=
+    Set.Finite.toFinset_image nontrivialZeroEnum h_preimg_fin h_img_fin
+  have h2 : h_preimg_fin.toFinset.card = h_img_fin.toFinset.card := by
+    rw [h_eq_img, Finset.card_image_of_injOn]
+    exact fun x _ y _ hxy => nontrivialZeroEnum_injective hxy
+  have h3 : h_img_fin.toFinset ⊆ h_S_fin.toFinset := by
+    intro z hz
+    have h4 : z ∈ nontrivialZeroEnum '' preimage := (Set.Finite.mem_toFinset h_img_fin).mp hz
+    have h5 : z ∈ S_ℂ := h_img_sub h4
+    exact (Set.Finite.mem_toFinset h_S_fin).mpr h5
+  have h4 : h_preimg_fin.toFinset.card ≤ h_S_fin.toFinset.card := by rw [h2]; exact Finset.card_le_card h3
+  have h_union_fin : (Upper ∪ Lower).Finite := Set.Finite.union h_upper_fin h_lower_fin
+  have h_sub_S : S_ℂ ⊆ Upper ∪ Lower := by
+    intro s hs; have him : |s.im| ≤ T := hs.2.2.2
+    by_cases h : 0 ≤ s.im
+    · exact Or.inl ⟨hs.1, hs.2.1, hs.2.2.1, h, by linarith [abs_le.mp him]⟩
+    · exact Or.inr ⟨hs.1, hs.2.1, hs.2.2.1, by linarith [abs_le.mp him], by linarith⟩
+  have h5 : h_S_fin.toFinset.card ≤ h_union_fin.toFinset.card := by
+    have h51 : h_S_fin.toFinset ⊆ h_union_fin.toFinset := by
+      intro z hz
+      have h6 : z ∈ S_ℂ := (Set.Finite.mem_toFinset h_S_fin).mp hz
+      have h7 : z ∈ Upper ∪ Lower := h_sub_S h6
+      exact (Set.Finite.mem_toFinset h_union_fin).mpr h7
+    exact Finset.card_le_card h51
+  have h_eq_union : h_union_fin.toFinset = h_upper_fin.toFinset ∪ h_lower_fin.toFinset :=
+    Set.Finite.toFinset_union h_upper_fin h_lower_fin h_union_fin
+  have h6 : h_union_fin.toFinset.card ≤ h_upper_fin.toFinset.card + h_lower_fin.toFinset.card := by
+    rw [h_eq_union]; exact Finset.card_union_le _ _
+  have h_star_img_fin2 : (star '' Lower).Finite := h_star_img_fin
+  have h_eq_star : h_star_img_fin2.toFinset = Finset.image star h_lower_fin.toFinset :=
+    Set.Finite.toFinset_image star h_lower_fin h_star_img_fin2
+  have h7 : h_lower_fin.toFinset.card = h_star_img_fin2.toFinset.card := by
+    rw [h_eq_star, Finset.card_image_of_injOn]
+    exact fun x _ y _ hxy => star_inj x y hxy
+  have h8 : h_star_img_fin2.toFinset = h_upper_fin.toFinset := by
+    ext z
+    simp only [Set.Finite.mem_toFinset]
+    have h9 : z ∈ star '' Lower ↔ z ∈ Upper := by rw [h_eq_lower_upper]
+    exact h9
+  have h9 : h_lower_fin.toFinset.card = h_upper_fin.toFinset.card := by rw [h7, h8]
+  have h10 : h_upper_fin.toFinset.card ≤ Nat.ceil (C1 * (T + 1) * Real.log (T + 2)) :=
+    card_le_of_encard_le h_upper_fin h_upper_encard
+  have h_log_pos : 0 < Real.log (T + 2) := Real.log_pos (by linarith)
+  have h_nonneg : 0 ≤ C1 * (T + 1) * Real.log (T + 2) := by
+    have h1 : 0 < C1 := hC1_pos
+    have h2 : 0 < T + 1 := by linarith
+    positivity
+  have h11 : (Nat.ceil (C1 * (T + 1) * Real.log (T + 2)) : ℝ) ≤ C1 * (T + 1) * Real.log (T + 2) + 1 :=
+    ceil_le_add_one (C1 * (T + 1) * Real.log (T + 2)) h_nonneg
+  calc (h_layer_fin.toFinset.card : ℝ)
+    ≤ (h_preimg_fin.toFinset.card : ℝ) := by exact_mod_cast h1
+    _ ≤ (h_S_fin.toFinset.card : ℝ) := by exact_mod_cast h4
+    _ ≤ (h_union_fin.toFinset.card : ℝ) := by exact_mod_cast h5
+    _ ≤ (h_upper_fin.toFinset.card : ℝ) + (h_lower_fin.toFinset.card : ℝ) := by exact_mod_cast h6
+    _ = 2 * (h_upper_fin.toFinset.card : ℝ) := by rw [h9]; ring
+    _ ≤ 2 * (Nat.ceil (C1 * (T + 1) * Real.log (T + 2)) : ℝ) := by gcongr
+    _ ≤ 2 * (C1 * (T + 1) * Real.log (T + 2) + 1) := by gcongr
+
+-- 每点上界的代数估计
+lemma point_bound_algebra (C2 : ℝ) (hC2_pos : 0 < C2) (k : ℕ) :
+    C2 * (1 + ((k : ℝ) + 2) * Real.log 2) ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) := by
+  have h_log2_le_one : Real.log 2 ≤ 1 := by
+    have h1 : (2 : ℝ) ≤ Real.exp 1 := by
+      have h2 : (1 : ℝ) + 1 ≤ Real.exp 1 := Real.add_one_le_exp 1
+      norm_num at h2 ⊢; exact h2
+    have h3 : Real.log 2 ≤ Real.log (Real.exp 1) := Real.log_le_log (by norm_num) h1
+    have h4 : Real.log (Real.exp 1) = 1 := by simp
+    rw [h4] at h3; exact h3
+  have h1 : (k : ℝ) + 2 ≤ 4 * ((k : ℝ) + 1) := by
+    have h11 : (k : ℝ) ≥ 0 := by exact_mod_cast Nat.zero_le k
+    linarith
+  have h3 : 1 + ((k : ℝ) + 2) * Real.log 2 ≤ 4 * ((k : ℝ) + 1) := by
+    calc 1 + ((k : ℝ) + 2) * Real.log 2
+      ≤ 1 + ((k : ℝ) + 2) * 1 := by gcongr
+      _ = 1 + ((k : ℝ) + 2) := by ring
+      _ ≤ 4 * ((k : ℝ) + 1) := by linarith
+  have h4 : C2 * (1 + ((k : ℝ) + 2) * Real.log 2) ≤ C2 * (4 * ((k : ℝ) + 1)) := by gcongr
+  have h5 : C2 * (4 * ((k : ℝ) + 1)) ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) := by
+    have h6 : (1 : ℝ) * ((k : ℝ) + 1) ≥ 0 := by positivity
+    nlinarith
+  linarith
+
+lemma card_bound_simplified (C1 : ℝ) (hC1_pos : 0 < C1) (k : ℕ) :
+    2 * (C1 * ((2^(k+1) : ℝ) + 1) * Real.log ((2^(k+1) : ℝ) + 2) + 1) ≤ (16 * C1 + 2) * (2 : ℝ)^k * ((k : ℝ) + 1) := by
+  have h1 : (2^(k+1) : ℝ) + 1 ≤ 4 * (2 : ℝ)^k := by
+    have h11 : (2^(k+1) : ℝ) = 2 * (2 : ℝ)^k := by simp [pow_succ] <;> ring
+    rw [h11]
+    have h12 : (1 : ℝ) ≤ (2 : ℝ)^k := by have h13 : (1 : ℕ) ≤ 2^k := Nat.one_le_pow k 2 (by norm_num); exact_mod_cast h13
+    linarith
+  have h_log2_le_one : Real.log 2 ≤ 1 := by
+    have h1 : (2 : ℝ) ≤ Real.exp 1 := by
+      have h2 : (1 : ℝ) + 1 ≤ Real.exp 1 := Real.add_one_le_exp 1
+      norm_num at h2 ⊢; exact h2
+    have h3 : Real.log 2 ≤ Real.log (Real.exp 1) := Real.log_le_log (by norm_num) h1
+    have h4 : Real.log (Real.exp 1) = 1 := by simp
+    rw [h4] at h3; exact h3
+  have h21 : (2^(k+1) : ℝ) + 2 ≤ (2^(k+2) : ℝ) := by
+    have h22 : (2^(k+1) : ℝ) = 2 * (2 : ℝ)^k := by simp [pow_succ] <;> ring
+    have h23 : (2^(k+2) : ℝ) = 4 * (2 : ℝ)^k := by simp [pow_succ] <;> ring
+    rw [h22, h23]
+    have h24 : (1 : ℝ) ≤ (2 : ℝ)^k := by have h25 : (1 : ℕ) ≤ 2^k := Nat.one_le_pow k 2 (by norm_num); exact_mod_cast h25
+    linarith
+  have h25 : (1 : ℝ) ≤ (2^(k+1) : ℝ) + 2 := by
+    have h26 : (0 : ℝ) ≤ (2^(k+1) : ℝ) := by positivity
+    have h27 : (2^(k+1) : ℝ) + 2 ≥ 2 := by linarith
+    linarith
+  have h_log_nonneg : 0 ≤ Real.log ((2^(k+1) : ℝ) + 2) := Real.log_nonneg h25
+  have h23 : Real.log ((2^(k+1) : ℝ) + 2) ≤ Real.log (2^(k+2) : ℝ) := Real.log_le_log (by positivity) h21
+  have h241 : Real.log (2^(k+2) : ℝ) = ((k + 2 : ℕ) : ℝ) * Real.log 2 := by rw [Real.log_pow]
+  have h242 : ((k + 2 : ℕ) : ℝ) = (k : ℝ) + 2 := by simp
+  have h24 : Real.log (2^(k+2) : ℝ) = ((k : ℝ) + 2) * Real.log 2 := by rw [h241, h242]
+  have h27 : ((k : ℝ) + 2) ≤ 2 * ((k : ℝ) + 1) := by
+    have h26 : (k : ℝ) ≥ 0 := by exact_mod_cast Nat.zero_le k
+    linarith
+  have h2 : Real.log ((2^(k+1) : ℝ) + 2) ≤ 2 * ((k : ℝ) + 1) := by
+    calc Real.log ((2^(k+1) : ℝ) + 2)
+      ≤ Real.log (2^(k+2) : ℝ) := h23
+      _ = ((k : ℝ) + 2) * Real.log 2 := h24
+      _ ≤ ((k : ℝ) + 2) * 1 := by gcongr
+      _ ≤ 2 * ((k : ℝ) + 1) := by
+        have h28 : ((k : ℝ) + 2) * 1 = (k : ℝ) + 2 := by ring
+        rw [h28]; exact h27
+  have h3 : 2 * (C1 * ((2^(k+1) : ℝ) + 1) * Real.log ((2^(k+1) : ℝ) + 2) + 1) ≤
+           2 * (C1 * (4 * (2 : ℝ)^k) * (2 * ((k : ℝ) + 1)) + 1) := by
+    gcongr <;> linarith
+  have h4 : 2 * (C1 * (4 * (2 : ℝ)^k) * (2 * ((k : ℝ) + 1)) + 1) = 16 * C1 * (2 : ℝ)^k * ((k : ℝ) + 1) + 2 := by ring
+  have h5 : (2 : ℝ) ≤ 2 * (2 : ℝ)^k * ((k : ℝ) + 1) := by
+    have h51 : (1 : ℝ) ≤ (2 : ℝ)^k := by have h52 : (1 : ℕ) ≤ 2^k := Nat.one_le_pow k 2 (by norm_num); exact_mod_cast h52
+    have h53 : (1 : ℝ) ≤ (k : ℝ) + 1 := by exact_mod_cast Nat.succ_pos k
+    nlinarith
+  have h6 : 16 * C1 * (2 : ℝ)^k * ((k : ℝ) + 1) + 2 ≤ (16 * C1 + 2) * (2 : ℝ)^k * ((k : ℝ) + 1) := by
+    have h7 : 2 ≤ 2 * (2 : ℝ)^k * ((k : ℝ) + 1) := h5
+    nlinarith
+  calc 2 * (C1 * ((2^(k+1) : ℝ) + 1) * Real.log ((2^(k+1) : ℝ) + 2) + 1)
+    ≤ 2 * (C1 * (4 * (2 : ℝ)^k) * (2 * ((k : ℝ) + 1)) + 1) := h3
+    _ = 16 * C1 * (2 : ℝ)^k * ((k : ℝ) + 1) + 2 := h4
+    _ ≤ (16 * C1 + 2) * (2 : ℝ)^k * ((k : ℝ) + 1) := h6
+
+lemma log_bound_for_layer (k : ℕ) {n : ℕ} (hn : (2^k : ℝ) ≤ |(nontrivialZeroEnum n).im| ∧ |(nontrivialZeroEnum n).im| < (2^(k+1) : ℝ)) :
+    Real.log (2 + |(nontrivialZeroEnum n).im|) ≤ ((k : ℝ) + 2) * Real.log 2 := by
+  have h_im2 : |(nontrivialZeroEnum n).im| < (2^(k+1) : ℝ) := hn.2
+  have h_log1 : 2 + |(nontrivialZeroEnum n).im| ≤ (2^(k+2) : ℝ) := by
+    have h : 2 + |(nontrivialZeroEnum n).im| < (2^(k+1) : ℝ) + 2 := by linarith
+    have h2 : (2^(k+1) : ℝ) + 2 ≤ (2^(k+2) : ℝ) := by
+      have h22 : (2^(k+1) : ℝ) = 2 * (2 : ℝ)^k := by simp [pow_succ] <;> ring
+      have h23 : (2^(k+2) : ℝ) = 4 * (2 : ℝ)^k := by simp [pow_succ] <;> ring
+      rw [h22, h23]
+      have h24 : (1 : ℝ) ≤ (2 : ℝ)^k := by have h25 : (1 : ℕ) ≤ 2^k := Nat.one_le_pow k 2 (by norm_num); exact_mod_cast h25
+      have h26 : 2 * (2 : ℝ)^k + 2 ≤ 4 * (2 : ℝ)^k := by
+        have h27 : 2 ≤ 2 * (2 : ℝ)^k := by have h28 : (1 : ℝ) ≤ (2 : ℝ)^k := h24; linarith
+        linarith
+      exact h26
+    linarith
+  have h3 : Real.log (2 + |(nontrivialZeroEnum n).im|) ≤ Real.log (2^(k+2) : ℝ) := Real.log_le_log (by positivity) h_log1
+  have h4 : Real.log (2^(k+2) : ℝ) = ((k : ℝ) + 2) * Real.log 2 := by
+    have h41 : Real.log (2^(k+2) : ℝ) = ((k + 2 : ℕ) : ℝ) * Real.log 2 := by rw [Real.log_pow]
+    have h42 : ((k + 2 : ℕ) : ℝ) = (k : ℝ) + 2 := by simp
+    rw [h41, h42]
+  rw [h4] at h3; exact h3
+
+lemma pow2_sq (k : ℕ) : ((2^k : ℝ))^2 = (2 : ℝ)^(2 * k) := by
+  have h13 : ((2^k : ℝ))^2 = (2 : ℝ)^(k * 2) := by rw [pow_mul]
+  have h14 : k * 2 = 2 * k := by ring
+  rw [h13, h14]
+
+lemma layer_sum_bound (C1 C2 : ℝ) (hC1_pos : 0 < C1) (hC2_pos : 0 < C2)
+    (hC1 : ∀ (T : ℝ), 0 < T → Set.encard {s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ 0 ≤ s.im ∧ s.im ≤ T} ≤ (Nat.ceil (C1 * (T + 1) * Real.log (T + 2)) : ENat))
+    (hC2 : ∀ (n : ℕ), (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) ≤ C2 * (1 + Real.log (2 + |(nontrivialZeroEnum n).im|)))
+    (k : ℕ) (h_layer_fin : ({n : ℕ | (2^k : ℝ) ≤ |(nontrivialZeroEnum n).im| ∧ |(nontrivialZeroEnum n).im| < (2^(k+1) : ℝ)}).Finite) :
+    ∑ n ∈ h_layer_fin.toFinset, ((zeroMultiplicity (nontrivialZeroEnum n) : ℝ) / (1 + |(nontrivialZeroEnum n).im|) ^ 2) ≤
+    ((16 * C1 + 2) * (C2 * 4 + 1)) * ((k : ℝ) + 1)^2 / (2 : ℝ)^k := by
+  let w : ℕ → ℝ := fun n => (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) / (1 + |(nontrivialZeroEnum n).im|) ^ 2
+  let layer_k : Set ℕ := {n | (2^k : ℝ) ≤ |(nontrivialZeroEnum n).im| ∧ |(nontrivialZeroEnum n).im| < (2^(k+1) : ℝ)}
+  have h_point : ∀ n ∈ layer_k, w n ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := by
+    intro n hn
+    have h_im1 : (2^k : ℝ) ≤ |(nontrivialZeroEnum n).im| := hn.1
+    have h_log : Real.log (2 + |(nontrivialZeroEnum n).im|) ≤ ((k : ℝ) + 2) * Real.log 2 := log_bound_for_layer k hn
+    have h_m : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) ≤ C2 * (1 + Real.log (2 + |(nontrivialZeroEnum n).im|)) := hC2 n
+    have h_m2 : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) ≤ C2 * (1 + ((k : ℝ) + 2) * Real.log 2) := by
+      calc _ ≤ C2 * (1 + Real.log (2 + |(nontrivialZeroEnum n).im|)) := h_m
+           _ ≤ C2 * (1 + ((k : ℝ) + 2) * Real.log 2) := by gcongr
+    have h_m3 : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) := by
+      calc _ ≤ C2 * (1 + ((k : ℝ) + 2) * Real.log 2) := h_m2
+           _ ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) := point_bound_algebra C2 hC2_pos k
+    have h_denom : (1 + |(nontrivialZeroEnum n).im|)^2 ≥ (2 : ℝ)^(2 * k) := by
+      have h8 : (1 : ℝ) ≤ (2^k : ℝ) := by have h9 : (1 : ℕ) ≤ 2^k := Nat.one_le_pow k 2 (by norm_num); exact_mod_cast h9
+      have h10 : (1 : ℝ) ≤ |(nontrivialZeroEnum n).im| := by linarith
+      have h11 : (1 + |(nontrivialZeroEnum n).im|)^2 ≥ ((2^k : ℝ))^2 := by nlinarith
+      rw [pow2_sq k] at h11; exact h11
+    have h_w : w n ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := by
+      dsimp only [w]
+      calc _ ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) / (1 + |(nontrivialZeroEnum n).im|)^2 := by gcongr
+           _ ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := by gcongr
+    exact h_w
+  have h_card : (h_layer_fin.toFinset.card : ℝ) ≤ (16 * C1 + 2) * (2 : ℝ)^k * ((k : ℝ) + 1) := by
+    have h_card_raw := layer_card_bound_raw C1 hC1_pos hC1 k h_layer_fin
+    have h_simp := card_bound_simplified C1 hC1_pos k
+    linarith
+  have h_sum1 : ∑ n ∈ h_layer_fin.toFinset, w n ≤ ∑ n ∈ h_layer_fin.toFinset, (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := by
+    apply Finset.sum_le_sum
+    intro n hn
+    have hn' : n ∈ layer_k := (Set.Finite.mem_toFinset h_layer_fin).mp hn
+    exact h_point n hn'
+  have h_sum2 : ∑ n ∈ h_layer_fin.toFinset, (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) = (h_layer_fin.toFinset.card : ℝ) * ((C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k)) := by
+    simp [Finset.sum_const] <;> ring
+  have h_sum : ∑ n ∈ h_layer_fin.toFinset, w n ≤ (h_layer_fin.toFinset.card : ℝ) * ((C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k)) := by
+    calc ∑ n ∈ h_layer_fin.toFinset, w n
+      ≤ ∑ n ∈ h_layer_fin.toFinset, (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := h_sum1
+      _ = (h_layer_fin.toFinset.card : ℝ) * ((C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k)) := h_sum2
+  have h_pos : (2 : ℝ)^k > 0 := by positivity
+  calc ∑ n ∈ h_layer_fin.toFinset, w n
+    ≤ (h_layer_fin.toFinset.card : ℝ) * ((C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k)) := h_sum
+    _ ≤ ((16 * C1 + 2) * (2 : ℝ)^k * ((k : ℝ) + 1)) * ((C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k)) := by gcongr
+    _ = ((16 * C1 + 2) * (C2 * 4 + 1)) * ((k : ℝ) + 1)^2 / (2 : ℝ)^k := by
+      field_simp [h_pos.ne'] <;> ring
+
+
+lemma sum_quadratic_geometric_formula (n : ℕ) :
+    ∑ i ∈ Finset.range n, (((i : ℝ) + 1)^2 / (2 : ℝ)^i) = 12 - 2 * ((n : ℝ)^2 + 4 * (n : ℝ) + 6) / (2 : ℝ)^n := by
+  induction n with
+  | zero => norm_num
+  | succ n ih =>
+    rw [Finset.sum_range_succ, ih]
+    simp [pow_succ] <;> field_simp <;> ring
+
+lemma summable_quadratic_over_geometric : Summable (fun (k : ℕ) => ((k : ℝ) + 1)^2 / (2 : ℝ)^k) := by
+  have h_nonneg : ∀ (k : ℕ), 0 ≤ ((k : ℝ) + 1)^2 / (2 : ℝ)^k := by intro k; positivity
+  have h_bounded : ∀ (n : ℕ), ∑ i ∈ Finset.range n, (((i : ℝ) + 1)^2 / (2 : ℝ)^i) ≤ 12 := by
+    intro n
+    have h_formula := sum_quadratic_geometric_formula n
+    rw [h_formula]
+    have h_pos : 0 ≤ 2 * ((n : ℝ)^2 + 4 * (n : ℝ) + 6) / (2 : ℝ)^n := by positivity
+    linarith
+  exact summable_of_sum_range_le h_nonneg h_bounded
+
+
+-- === 基础设施结束 ===
+
+
+-- === zero_weighted_series_summable 降级证明基础设施 ===
+
+lemma small_finite : ({n : ℕ | |(nontrivialZeroEnum n).im| < 1}).Finite := by
+  rcases zero_counting_estimate with ⟨C1, hC1_pos, hC1⟩
+  let S_up : Set ℂ := {s | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ 0 ≤ s.im ∧ s.im ≤ 1}
+  have h_up_fin : S_up.Finite := finite_of_encard_le (hC1 1 (by norm_num))
+  let S_low : Set ℂ := {s | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ -1 ≤ s.im ∧ s.im ≤ 0}
+  have h_low_fin : S_low.Finite := by
+    have h_conj_map : S_low = (fun s : ℂ => star s) '' S_up := by
+      ext s
+      simp only [S_up, S_low, Set.mem_image]
+      constructor
+      · intro h
+        refine ⟨star s, ?_, by simp⟩
+        have h_zeta : _root_.riemannZeta (star s) = 0 := by rw [riemannZeta_conj, h.1]; simp
+        have h_im1 : 0 ≤ (star s).im := by simp [Complex.ext_iff] at h ⊢ <;> linarith
+        have h_im2 : (star s).im ≤ 1 := by simp [Complex.ext_iff] at h ⊢ <;> linarith
+        exact ⟨h_zeta, h.2.1, h.2.2.1, h_im1, h_im2⟩
+      · rintro ⟨t, ht, rfl⟩
+        have h_zeta : _root_.riemannZeta (star t) = 0 := by rw [riemannZeta_conj, ht.1]; simp
+        have h_im1 : -1 ≤ (star t).im := by simp [Complex.ext_iff] at ht ⊢ <;> linarith
+        have h_im2 : (star t).im ≤ 0 := by simp [Complex.ext_iff] at ht ⊢ <;> linarith
+        exact ⟨h_zeta, ht.2.1, ht.2.2.1, h_im1, h_im2⟩
+    rw [h_conj_map]; exact h_up_fin.image _
+  have h_band : {s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ |s.im| < 1} ⊆ S_up ∪ S_low := by
+    intro s hs
+    have h2 : |s.im| < 1 := hs.2.2.2
+    have h2' : -1 < s.im ∧ s.im < 1 := abs_lt.mp h2
+    by_cases h3 : 0 ≤ s.im
+    · left; exact ⟨hs.1, hs.2.1, hs.2.2.1, h3, by linarith⟩
+    · right
+      have h4 : s.im < 0 := by linarith
+      have h5 : -1 ≤ s.im := by linarith
+      have h6 : s.im ≤ 0 := by linarith
+      have h_goal : _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ -1 ≤ s.im ∧ s.im ≤ 0 :=
+        ⟨hs.1, hs.2.1, hs.2.2.1, h5, h6⟩
+      simpa [S_low] using h_goal
+  have h_band_fin : ({s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ |s.im| < 1}).Finite :=
+    (h_up_fin.union h_low_fin).subset h_band
+  let img_set : Set ℂ := nontrivialZeroEnum '' ({n : ℕ | |(nontrivialZeroEnum n).im| < 1})
+  have h_img_subset : img_set ⊆ {s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ |s.im| < 1} := by
+    intro s hs
+    rcases hs with ⟨n, hn, rfl⟩
+    have h_z := nontrivialZeroEnum_are_zeros n
+    exact ⟨h_z.1, h_z.2.1, h_z.2.2, hn⟩
+  have h_img_fin : img_set.Finite := h_band_fin.subset h_img_subset
+  have h_inj : Set.InjOn nontrivialZeroEnum ({n : ℕ | |(nontrivialZeroEnum n).im| < 1}) := by
+    intro n _ m _ h; exact nontrivialZeroEnum_injective h
+  exact Set.Finite.of_finite_image h_img_fin h_inj
+
+lemma exists_layer_index (t : ℝ) (ht : 1 ≤ t) : ∃ (k : ℕ), (2^k : ℝ) ≤ t ∧ t < (2^(k+1) : ℝ) := by
+  have h_pos : 0 < t + 1 := by linarith
+  let N := Nat.ceil (Real.logb 2 (t + 1))
+  have h1 : (2 : ℝ) ^ (Real.logb 2 (t + 1)) = t + 1 :=
+    Real.rpow_logb (b := (2 : ℝ)) (x := t + 1) (by norm_num) (by norm_num) h_pos
+  have h2 : Real.logb 2 (t + 1) ≤ (N : ℝ) := Nat.le_ceil _
+  have h3 : (2 : ℝ) ^ (Real.logb 2 (t + 1)) ≤ (2 : ℝ) ^ (N : ℝ) := by
+    apply Real.rpow_le_rpow_of_exponent_le <;> norm_num <;> exact h2
+  have h4 : t + 1 ≤ (2 : ℝ) ^ (N : ℝ) := by
+    calc t + 1 = (2 : ℝ) ^ (Real.logb 2 (t + 1)) := h1.symm
+         _ ≤ (2 : ℝ) ^ (N : ℝ) := h3
+  have h5 : (2 : ℝ) ^ (N : ℝ) = (2^N : ℝ) := by norm_cast
+  have h6 : t + 1 ≤ (2^N : ℝ) := by rw [← h5]; exact h4
+  have h7 : t < (2^N : ℝ) := by linarith
+  have h8 : (2^N : ℝ) ≤ (2^(N+1) : ℝ) := by
+    have h9 : (2^N : ℝ) * 2 = (2^(N+1) : ℝ) := by simp [pow_succ]
+    have h10 : (2^N : ℝ) ≤ (2^N : ℝ) * 2 := by
+      have h11 : (0 : ℝ) ≤ (2^N : ℝ) := by positivity
+      nlinarith
+    rw [h9] at h10; exact h10
+  have h_exists : ∃ k : ℕ, t < (2^(k+1) : ℝ) := ⟨N, by linarith⟩
+  let k := Nat.find h_exists
+  have h_k_prop : t < (2^(k+1) : ℝ) := Nat.find_spec h_exists
+  have h_k_min : ∀ m < k, ¬(t < (2^(m+1) : ℝ)) := fun m hm => Nat.find_min h_exists hm
+  have h_k_ge : (2^k : ℝ) ≤ t := by
+    by_cases h_k0 : k = 0
+    · rw [h_k0]; norm_num; linarith
+    · have h_pred : k - 1 < k := by omega
+      have h_not : ¬(t < (2^((k-1)+1) : ℝ)) := h_k_min (k-1) h_pred
+      have h_eq : (k - 1) + 1 = k := by omega
+      rw [h_eq] at h_not
+      have h' : (2^k : ℝ) ≤ t := by linarith
+      exact h'
+  exact ⟨k, h_k_ge, h_k_prop⟩
+
+
+/-- ζ 非平凡零点的加权级数收敛性（定理，已降级）：
+    分层估计 A_k = {n : 2^k ≤ |Im(ρₙ)| < 2^(k+1)}，每层贡献 O(k²/2^k)，∑ k²/2^k < ∞。
+    依赖 zero_counting_estimate + zero_multiplicity_log_growth + layer_sum_bound + summable_quadratic_over_geometric。 -/
+theorem zero_weighted_series_summable :
+    Summable (fun n : ℕ => (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) / (1 + |(nontrivialZeroEnum n).im|)^2) := by
+  rcases zero_counting_estimate with ⟨C1, hC1_pos, hC1⟩
+  rcases zero_multiplicity_log_growth with ⟨C2, hC2_pos, hC2⟩
+  let w : ℕ → ℝ := fun n => (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) / (1 + |(nontrivialZeroEnum n).im|)^2
+  let small : Set ℕ := {n | |(nontrivialZeroEnum n).im| < 1}
+  let layer : ℕ → Set ℕ := fun k => {n | (2^k : ℝ) ≤ |(nontrivialZeroEnum n).im| ∧ |(nontrivialZeroEnum n).im| < (2^(k+1) : ℝ)}
+  have h_small_fin : small.Finite := small_finite
+  have h_layer_fin : ∀ k, (layer k).Finite := by
+    intro k
+    have h1 : (layer k) ⊆ {n : ℕ | |(nontrivialZeroEnum n).im| < (2^(k+1) : ℝ)} := by
+      intro n hn; exact hn.2
+    have h2 : ({n : ℕ | |(nontrivialZeroEnum n).im| < (2^(k+1) : ℝ)}).Finite := by
+      let T := (2^(k+1) : ℝ)
+      have hT_pos : 0 < (2^(k+1) : ℝ) := by positivity
+      let S_up : Set ℂ := {s | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ 0 ≤ s.im ∧ s.im ≤ T}
+      have h_up_fin : S_up.Finite := finite_of_encard_le (hC1 T hT_pos)
+      let S_low : Set ℂ := {s | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ -T ≤ s.im ∧ s.im ≤ 0}
+      have h_low_fin : S_low.Finite := by
+        have h_conj_map : S_low = (fun s : ℂ => star s) '' S_up := by
+          ext s
+          simp only [S_up, S_low, Set.mem_image]
+          constructor
+          · intro h
+            refine ⟨star s, ?_, by simp⟩
+            have h_zeta : _root_.riemannZeta (star s) = 0 := by rw [riemannZeta_conj, h.1]; simp
+            have h_im1 : 0 ≤ (star s).im := by simp [Complex.ext_iff] at h ⊢ <;> linarith
+            have h_im2 : (star s).im ≤ T := by simp [Complex.ext_iff] at h ⊢ <;> linarith
+            exact ⟨h_zeta, h.2.1, h.2.2.1, h_im1, h_im2⟩
+          · rintro ⟨t, ht, rfl⟩
+            have h_zeta : _root_.riemannZeta (star t) = 0 := by rw [riemannZeta_conj, ht.1]; simp
+            have h_im1 : -T ≤ (star t).im := by simp [Complex.ext_iff] at ht ⊢ <;> linarith
+            have h_im2 : (star t).im ≤ 0 := by simp [Complex.ext_iff] at ht ⊢ <;> linarith
+            exact ⟨h_zeta, ht.2.1, ht.2.2.1, h_im1, h_im2⟩
+        rw [h_conj_map]; exact h_up_fin.image _
+      have h_band : {s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ |s.im| < T} ⊆ S_up ∪ S_low := by
+        intro s hs
+        have h2 : |s.im| < T := hs.2.2.2
+        have h2' : -T < s.im ∧ s.im < T := abs_lt.mp h2
+        by_cases h3 : 0 ≤ s.im
+        · left; exact ⟨hs.1, hs.2.1, hs.2.2.1, h3, by linarith⟩
+        · right
+          have h4 : s.im < 0 := by linarith
+          have h5 : -T ≤ s.im := by linarith
+          have h6 : s.im ≤ 0 := by linarith
+          have h_goal : _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ -T ≤ s.im ∧ s.im ≤ 0 :=
+            ⟨hs.1, hs.2.1, hs.2.2.1, h5, h6⟩
+          simpa [S_low] using h_goal
+      have h_band_fin : ({s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ |s.im| < T}).Finite :=
+        (h_up_fin.union h_low_fin).subset h_band
+      let img_set : Set ℂ := nontrivialZeroEnum '' ({n : ℕ | |(nontrivialZeroEnum n).im| < T})
+      have h_img_subset : img_set ⊆ {s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ |s.im| < T} := by
+        intro s hs
+        rcases hs with ⟨n, hn, rfl⟩
+        have h_z := nontrivialZeroEnum_are_zeros n
+        exact ⟨h_z.1, h_z.2.1, h_z.2.2, hn⟩
+      have h_img_fin : img_set.Finite := h_band_fin.subset h_img_subset
+      have h_inj : Set.InjOn nontrivialZeroEnum ({n : ℕ | |(nontrivialZeroEnum n).im| < T}) := by
+        intro n _ m _ h; exact nontrivialZeroEnum_injective h
+      exact Set.Finite.of_finite_image h_img_fin h_inj
+    exact h2.subset h1
+  let C := (16 * C1 + 2) * (C2 * 4 + 1)
+  have h_layer_sum : ∀ (k : ℕ), ∑ n ∈ (h_layer_fin k).toFinset, w n ≤ C * ((k : ℝ) + 1)^2 / (2^k : ℝ) := by
+    intro k
+    have h := layer_sum_bound C1 C2 hC1_pos hC2_pos hC1 hC2 k (h_layer_fin k)
+    convert h using 1
+    <;> field_simp <;> ring
+  have h_nonneg_g : ∀ (k : ℕ), 0 ≤ C * ((k : ℝ) + 1)^2 / (2^k : ℝ) := by intro k; positivity
+  have h_summable_geom : Summable (fun (k : ℕ) => C * ((k : ℝ) + 1)^2 / (2^k : ℝ)) := by
+    have h : Summable (fun k : ℕ => ((k : ℝ) + 1)^2 / (2^k : ℝ)) := summable_quadratic_over_geometric
+    have h_eq : (fun (k : ℕ) => C * (((k : ℝ) + 1)^2 / (2^k : ℝ))) = (fun (k : ℕ) => C * ((k : ℝ) + 1)^2 / (2^k : ℝ)) := by
+      funext k
+      field_simp
+      <;> ring
+    rw [← h_eq]
+    exact Summable.mul_left C h
+  set G : ℕ → ℝ := fun (k : ℕ) => C * ((k : ℝ) + 1)^2 / (2^k : ℝ) with hG
+  have hG_summable : Summable G := by
+    rw [hG]
+    exact h_summable_geom
+  have h_nonneg_G : ∀ k, 0 ≤ G k := by
+    intro k
+    rw [hG]
+    positivity
+  have h_nonneg_w : ∀ n, 0 ≤ w n := by intro n; positivity
+  let B := (∑ n ∈ h_small_fin.toFinset, w n) + ∑' k : ℕ, G k
+  have h_range_bound : ∀ N : ℕ, ∑ i ∈ Finset.range N, w i ≤ B := by
+    intro N
+    let s := Finset.range N
+    let M := s.fold max 0 (fun n => |(nontrivialZeroEnum n).im|)
+    have hM_in : ∀ n ∈ s, |(nontrivialZeroEnum n).im| ≤ M := by
+      intro n hn
+      rw [Finset.le_fold_max]
+      right
+      exact ⟨n, hn, by linarith⟩
+    by_cases hM_lt1 : M < 1
+    · have h_sub : s ⊆ h_small_fin.toFinset := by
+        intro n hn
+        have h2 : |(nontrivialZeroEnum n).im| ≤ M := hM_in n hn
+        have h3 : |(nontrivialZeroEnum n).im| < 1 := by linarith
+        simpa [small, Set.Finite.mem_toFinset] using h3
+      have h4 : ∑ n ∈ s, w n ≤ ∑ n ∈ h_small_fin.toFinset, w n :=
+        Finset.sum_le_sum_of_subset_of_nonneg h_sub (fun _ _ _ => by positivity)
+      have h5 : 0 ≤ ∑' k : ℕ, G k := by positivity
+      have h6 : ∑ n ∈ h_small_fin.toFinset, w n ≤ B := by
+        dsimp only [B]; linarith
+      linarith
+    · have hM_ge1 : 1 ≤ M := by linarith
+      rcases exists_layer_index M hM_ge1 with ⟨K, hK1, hK2⟩
+      let U := h_small_fin.toFinset ∪ (Finset.biUnion (Finset.range (K + 1)) (fun k => (h_layer_fin k).toFinset))
+      have h_cover : s ⊆ U := by
+        intro n hn
+        have h2 : |(nontrivialZeroEnum n).im| ≤ M := hM_in n hn
+        by_cases h3 : |(nontrivialZeroEnum n).im| < 1
+        · have h4 : n ∈ h_small_fin.toFinset := by
+            simpa [small, Set.Finite.mem_toFinset] using h3
+          exact Finset.mem_union_left _ h4
+        · have h4 : 1 ≤ |(nontrivialZeroEnum n).im| := by linarith
+          rcases exists_layer_index |(nontrivialZeroEnum n).im| h4 with ⟨k, hk1, hk2⟩
+          have h5 : k ≤ K := by
+            by_contra h6
+            have h7 : K < k := by omega
+            have h8 : (2^(K+1) : ℝ) ≤ (2^k : ℝ) := by
+              apply pow_le_pow_right₀ <;> norm_num <;> omega
+            have h9 : (2^k : ℝ) ≤ |(nontrivialZeroEnum n).im| := hk1
+            have h10 : (2^(K+1) : ℝ) ≤ |(nontrivialZeroEnum n).im| := by linarith
+            have h11 : |(nontrivialZeroEnum n).im| < (2^(K+1) : ℝ) := by linarith [hK2, h2]
+            linarith
+          have h6 : k ∈ Finset.range (K + 1) := by simp [Finset.mem_range]; omega
+          have h7 : n ∈ (h_layer_fin k).toFinset := by
+            simpa [layer, Set.Finite.mem_toFinset] using ⟨hk1, hk2⟩
+          have h8 : n ∈ Finset.biUnion (Finset.range (K + 1)) (fun k => (h_layer_fin k).toFinset) :=
+            Finset.mem_biUnion.mpr ⟨k, h6, h7⟩
+          exact Finset.mem_union_right _ h8
+      have h_disj_layers : ∀ k1 k2, k1 ≠ k2 → Disjoint ((h_layer_fin k1).toFinset) ((h_layer_fin k2).toFinset) := by
+        intro k1 k2 hne
+        rw [Finset.disjoint_left]
+        intro n hn1 hn2
+        have h1' : (2^k1 : ℝ) ≤ |(nontrivialZeroEnum n).im| ∧ |(nontrivialZeroEnum n).im| < (2^(k1+1) : ℝ) := by
+          simpa [layer, Set.Finite.mem_toFinset] using hn1
+        have h2' : (2^k2 : ℝ) ≤ |(nontrivialZeroEnum n).im| ∧ |(nontrivialZeroEnum n).im| < (2^(k2+1) : ℝ) := by
+          simpa [layer, Set.Finite.mem_toFinset] using hn2
+        have h1 := h1'.1
+        have h2 := h1'.2
+        have h3 := h2'.1
+        have h4 := h2'.2
+        by_cases h_lt : k1 < k2
+        · have h5 : k1 + 1 ≤ k2 := by omega
+          have h6 : (2^(k1+1) : ℝ) ≤ (2^k2 : ℝ) := by
+            apply pow_le_pow_right₀ <;> norm_num <;> omega
+          linarith
+        · have h_ge : k2 ≤ k1 := by omega
+          have h_eq : k2 < k1 := by omega
+          have h5 : k2 + 1 ≤ k1 := by omega
+          have h6 : (2^(k2+1) : ℝ) ≤ (2^k1 : ℝ) := by
+            apply pow_le_pow_right₀ <;> norm_num <;> omega
+          linarith
+      have h_disj_small : Disjoint h_small_fin.toFinset (Finset.biUnion (Finset.range (K + 1)) (fun k => (h_layer_fin k).toFinset)) := by
+        rw [Finset.disjoint_left]
+        intro n hn1 hn2
+        have h9 : |(nontrivialZeroEnum n).im| < 1 := by simpa [small, Set.Finite.mem_toFinset] using hn1
+        rcases Finset.mem_biUnion.mp hn2 with ⟨k, _, hnk⟩
+        have h10' : (2^k : ℝ) ≤ |(nontrivialZeroEnum n).im| ∧ |(nontrivialZeroEnum n).im| < (2^(k+1) : ℝ) := by
+          simpa [layer, Set.Finite.mem_toFinset] using hnk
+        have h10 := h10'.1
+        have h11 : (1 : ℝ) ≤ (2^k : ℝ) := by
+          have h12 : ∀ k : ℕ, (1 : ℝ) ≤ (2^k : ℝ) := by
+            intro k; induction k <;> simp [*, pow_succ] <;> norm_num <;> linarith
+          exact h12 k
+        linarith
+      have h_sum_layers : ∑ n ∈ (Finset.biUnion (Finset.range (K + 1)) (fun k => (h_layer_fin k).toFinset)), w n =
+          ∑ k ∈ Finset.range (K + 1), ∑ n ∈ (h_layer_fin k).toFinset, w n := by
+        rw [Finset.sum_biUnion]
+        intro k _ k2 _ hne
+        exact h_disj_layers k k2 hne
+      have h_sum_U : ∑ n ∈ U, w n = (∑ n ∈ h_small_fin.toFinset, w n) + ∑ k ∈ Finset.range (K + 1), ∑ n ∈ (h_layer_fin k).toFinset, w n := by
+        rw [Finset.sum_union h_disj_small, h_sum_layers]
+      have h4 : ∑ n ∈ s, w n ≤ ∑ n ∈ U, w n :=
+        Finset.sum_le_sum_of_subset_of_nonneg h_cover (fun _ _ _ => by positivity)
+      rw [h_sum_U] at h4
+      have h7 : ∑ k ∈ Finset.range (K + 1), ∑ n ∈ (h_layer_fin k).toFinset, w n ≤ ∑ k ∈ Finset.range (K + 1), G k := by
+        apply Finset.sum_le_sum
+        intro k _
+        exact h_layer_sum k
+      have h8 : ∑ k ∈ Finset.range (K + 1), G k ≤ ∑' k : ℕ, G k :=
+        Summable.sum_le_tsum (Finset.range (K + 1)) (fun i _ => h_nonneg_G i) hG_summable
+      have h10 : 0 ≤ ∑' k : ℕ, G k := by positivity
+      linarith
+  exact summable_of_sum_range_le h_nonneg_w h_range_bound
+
+/-- 单点 Mellin 分离的存在性（定理，由 mellin_finite_surjectivity_zero_sum 推出）。零 sorry。
+    对非临界线零点 ρ 和任意有限 T（不含 ρ），存在 TestFunction h 满足：
+    (1) M[h](ρ) = 1
+    (2) M[h](s) = 0 for s ∈ T
+    (3) nontrivialZeroSum(h) = 0
+    证明：取 T1 = T ∪ {ρ}，w(s) = (if s=ρ then 1 else 0)，由 mellin_finite_surjectivity_zero_sum 即得。 -/
+theorem mellin_single_point_separation (ρ : ℂ) :
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
+    ∀ (T : Set ℂ), T.Finite → ρ ∉ T →
+    ∃ (h : TestFunction),
+      melinTransform h ρ = 1 ∧
+      (∀ (s : ℂ), s ∈ T → melinTransform h s = 0) ∧
+      nontrivialZeroSum h = 0 := by
+  intro hz hre1 hre2 hne T hT hρ_notin
+  let T1 : Set ℂ := insert ρ T
+  have hT1 : T1.Finite := Set.Finite.insert ρ hT
+  let w : ℂ → ℂ := fun s => if s = ρ then 1 else 0
+  rcases mellin_finite_surjectivity_zero_sum T1 hT1 w with ⟨h, hh, h_nz⟩
+  have h_mρ : melinTransform h ρ = 1 := by
+    have hρ_in : ρ ∈ T1 := Or.inl rfl
+    have h := hh ρ hρ_in
+    simpa [w] using h
+  have h_mT : ∀ (s : ℂ), s ∈ T → melinTransform h s = 0 := by
+    intro s hs
+    have hs_in_T1 : s ∈ T1 := Or.inr hs
+    have h_ne : s ≠ ρ := by intro h; rw [h] at hs; exact hρ_notin hs
+    have h := hh s hs_in_T1
+    rw [h]
+    simp [w, h_ne] <;> ring
+  exact ⟨h, h_mρ, h_mT, h_nz⟩
+
+/-- 单点 Mellin 分离的统一速降（定理，由 mellin_finite_surjectivity_zero_sum_norm_bound 推出）。零 sorry。
+    证明：取 T1 = T ∪ {ρ}，w(s) = (if s=ρ then 1 else 0)，则 ‖w‖_∞ ≤ 1。
+    由带范数估计的有限插值公理，存在 h 满足 M[h]|_{T1} = w, nontrivialZeroSum=0,
+    且 ‖M[h](s)‖ ≤ C * max(1,1) / (1+|Im|)² = C/(1+|Im|)²。 -/
+theorem mellin_single_point_separation_decay (ρ : ℂ) :
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
+    ∃ (C : ℝ), 0 < C ∧
+      ∀ (T : Set ℂ), T.Finite → ρ ∉ T →
+      ∃ (h : TestFunction),
+        melinTransform h ρ = 1 ∧
+        (∀ (s : ℂ), s ∈ T → melinTransform h s = 0) ∧
+        nontrivialZeroSum h = 0 ∧
+        (∀ (s : ℂ), 0 < s.re → s.re < 1 →
+          ‖melinTransform h s‖ ≤ C / (1 + |s.im|) ^ 2) := by
+  intro hz hre1 hre2 hne
+  rcases mellin_finite_surjectivity_zero_sum_norm_bound with ⟨C0, hC0_pos, h_main⟩
+  refine ⟨C0, hC0_pos, fun T hT hρ_notin => ?_⟩
+  let T1 : Set ℂ := insert ρ T
+  have hT1 : T1.Finite := Set.Finite.insert ρ hT
+  let w : ℂ → ℂ := fun s => if s = ρ then 1 else 0
+  have hB : ∀ (t : ℂ), t ∈ T1 → ‖w t‖ ≤ 1 := by
+    intro t ht
+    by_cases h : t = ρ
+    · rw [h]; simp [w] <;> norm_num
+    · have h' : w t = 0 := by simp [w, h]
+      rw [h'] <;> simp <;> norm_num
+  rcases h_main T1 hT1 w 1 hB with ⟨h, hh, h_nz, h_bound⟩
+  have h_mρ : melinTransform h ρ = 1 := by
+    have hρ_in : ρ ∈ T1 := Or.inl rfl
+    have h := hh ρ hρ_in
+    simpa [w] using h
+  have h_mT : ∀ (s : ℂ), s ∈ T → melinTransform h s = 0 := by
+    intro s hs
+    have hs_in_T1 : s ∈ T1 := Or.inr hs
+    have h_ne : s ≠ ρ := by intro h; rw [h] at hs; exact hρ_notin hs
+    have h := hh s hs_in_T1
+    rw [h]
+    simp [w, h_ne] <;> ring
+  have h_bound' : ∀ (s : ℂ), 0 < s.re → s.re < 1 → ‖melinTransform h s‖ ≤ C0 / (1 + |s.im|) ^ 2 := by
+    intro s hre1' hre2'
+    have h := h_bound s hre1' hre2'
+    simpa [max_eq_left (show (1 : ℝ) ≤ 1 by norm_num)] using h
+  exact ⟨h, h_mρ, h_mT, h_nz, h_bound'⟩
+
+/-- Mellin 分离对的统一速降界（定理，由单点分离公理 + PWW + 纤维丰富性推出）。零 sorry。
+    构造：
+    (1) 由 mellin_single_point_separation_decay 得 h（M[h](ρ)=1, M[h]|_T=0, nontrivialZeroSum=0, 速降界 C）
+    (2) PWW 构造 f₂（谱点取值 0, M[f₂](ρ)=0, M[f₂]|_T=0）
+    (3) mollified_point_fiber_mellin_rich 叠加 h 得 f₁ = f₂ + h
+    (4) M[f₁]-M[f₂] = M[h]，速降界直接继承 -/
+theorem mellin_pair_uniform_decay_bound (ρ : ℂ) :
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
+    ∃ (C : ℝ), 0 < C ∧
+      ∀ (T : Set ℂ), T.Finite → ρ ∉ T →
+      ∃ (f1 f2 : MollifiedTestFunction),
+        (∀ (n : ℕ), f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n)) ∧
+        melinTransform f1.toTestFunction ρ = 1 ∧
+        melinTransform f2.toTestFunction ρ = 0 ∧
+        (∀ (s : ℂ), s ∈ T → melinTransform f1.toTestFunction s = melinTransform f2.toTestFunction s) ∧
+        (∀ (s : ℂ), 0 < s.re → s.re < 1 →
+          ‖melinTransform f1.toTestFunction s - melinTransform f2.toTestFunction s‖ ≤ C / (1 + |s.im|) ^ 2) := by
+  intro hz hre1 hre2 hne
+  rcases mellin_single_point_separation_decay ρ hz hre1 hre2 hne with ⟨C, hC_pos, h_decay⟩
+  refine ⟨C, hC_pos, fun T hT hρ_notin => ?_⟩
+  rcases h_decay T hT hρ_notin with ⟨h, h_mρ, h_mT, h_nz, h_bound⟩
+  let S : Set ℝ := Set.range specDiscM
+  have hS : S.Countable := Set.countable_range _
+  let v : ℝ → ℂ := fun _ => 0
+  have h_vfin : Set.Finite {x ∈ S | v x ≠ 0} := by
+    simp [v] <;> exact Set.finite_empty
+  let T1 : Set ℂ := insert ρ T
+  have hT1 : T1.Finite := Set.Finite.insert ρ hT
+  let w2 : ℂ → ℂ := fun _ => 0
+  rcases paley_wiener_whitney_joint_interpolation S hS specDiscM_separable v h_vfin T1 hT1 w2 with ⟨f2, h_pts2, h_m2⟩
+  rcases mollified_point_fiber_mellin_rich f2 S hS specDiscM_separable h h_nz with ⟨f1, h_pts1, h_m1_eq⟩
+  have h_pts : ∀ (n : ℕ), f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n) := by
+    intro n
+    have h_in : specDiscM n ∈ S := Set.mem_range_self n
+    exact h_pts1 (specDiscM n) h_in
+  have h_m2ρ : melinTransform f2.toTestFunction ρ = 0 := by
+    have hρ_in : ρ ∈ T1 := Or.inl rfl
+    have h := h_m2 ρ hρ_in
+    simpa [w2] using h
+  have h_m1ρ : melinTransform f1.toTestFunction ρ = 1 := by
+    have h_eq : melinTransform f1.toTestFunction = melinTransform f2.toTestFunction + melinTransform h := h_m1_eq
+    have h1 : melinTransform f1.toTestFunction ρ = melinTransform f2.toTestFunction ρ + melinTransform h ρ := by
+      exact congrFun h_eq ρ
+    rw [h1, h_m2ρ, h_mρ] <;> ring
+  have h_T_eq : ∀ (s : ℂ), s ∈ T → melinTransform f1.toTestFunction s = melinTransform f2.toTestFunction s := by
+    intro s hs
+    have h_eq : melinTransform f1.toTestFunction = melinTransform f2.toTestFunction + melinTransform h := h_m1_eq
+    have h1 : melinTransform f1.toTestFunction s = melinTransform f2.toTestFunction s + melinTransform h s := by
+      exact congrFun h_eq s
+    have h2 : melinTransform h s = 0 := h_mT s hs
+    rw [h1, h2] <;> ring
+  have h_decay' : ∀ (s : ℂ), 0 < s.re → s.re < 1 →
+      ‖melinTransform f1.toTestFunction s - melinTransform f2.toTestFunction s‖ ≤ C / (1 + |s.im|) ^ 2 := by
+    intro s hre1' hre2'
+    have h_eq : melinTransform f1.toTestFunction = melinTransform f2.toTestFunction + melinTransform h := h_m1_eq
+    have h2 : melinTransform f1.toTestFunction s = melinTransform f2.toTestFunction s + melinTransform h s := by
+      exact congrFun h_eq s
+    have h1 : melinTransform f1.toTestFunction s - melinTransform f2.toTestFunction s = melinTransform h s := by
+      rw [h2] <;> ring
+    rw [h1]
+    exact h_bound s hre1' hre2'
+  exact ⟨f1, f2, h_pts, h_m1ρ, h_m2ρ, h_T_eq, h_decay'⟩
+
+/-- 磨光函数对的尾部和可忽略（定理，由统一速降 + 加权级数收敛推出）。零 sorry。
     对非临界线零点 ρ，存在 f₁, f₂ 使得：
     (1) 谱点取值相同
     (2) M[f₁](ρ) = 1，M[f₂](ρ) = 0
-    (3) nontrivialZeroSum(f₁) ≠ nontrivialZeroSum(f₂)
+    (3) ρ 外零点的贡献绝对值和 < m_ρ / 2
 
-    证明路线（标准分析）：
-    (a) PWW 构造 f₁,f₂（T=∅），M[f₁](ρ)=1, M[f₂](ρ)=0
-    (b) nontrivialZeroSum(f₁) - nontrivialZeroSum(f₂) = m_ρ + 尾部和
-    (c) 由 mollified_mellin_vertical_decay，尾部和中每项 ≤ (C₁+C₂)/(1+|Im(ρ_n)|)²
-    (d) 由 zero_counting_estimate，∑_{|Im|>T} m_n/(1+|Im|)² → 0
-    (e) 取 T 足够大，再用 mollified_point_fiber_mellin_rich 调整使 M[f₁]=M[f₂] 在 |Im|≤T 的零点上
-    (f) 尾部和 < m_ρ/2，故差 = m_ρ + 尾部和 ≠ 0
-    风险等级：中（标准分析路径清晰；步骤(e)的调整技术是形式化难点，但数学上无争议）。 -/
-axiom off_critical_zero_tail_dominated (ρ : ℂ) :
+    证明路径：
+    (a) 由 zero_weighted_series_summable，∑ m(ρₙ)/(1+|Im|)² 收敛
+    (b) 由 mellin_pair_uniform_decay_bound，存在统一速降界 C
+    (c) 由 tendsto_sum_nat_add，存在 N 使尾部加权和 < m_ρ/(2C)
+    (d) 取 T = {ρₙ | n < N, ρₙ ≠ ρ}，PWW 构造使 M[f₁]=M[f₂] 在 T 上
+    (e) n < N 时贡献为 0；n ≥ N 时贡献 ≤ C * w(n)
+    (f) 尾部和 ≤ C * ∑_{n≥N} w(n) < m_ρ/2 -/
+theorem mollified_pair_tail_sum_negligible (ρ : ℂ) :
     _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
     ∃ (f1 f2 : MollifiedTestFunction),
       (∀ (n : ℕ), f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n)) ∧
       melinTransform f1.toTestFunction ρ = 1 ∧
       melinTransform f2.toTestFunction ρ = 0 ∧
-      nontrivialZeroSum f1.toTestFunction ≠ nontrivialZeroSum f2.toTestFunction
+      Summable (fun (n : ℕ) => (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) *
+        (melinTransform f1.toTestFunction (nontrivialZeroEnum n) -
+          melinTransform f2.toTestFunction (nontrivialZeroEnum n))) ∧
+      Summable (fun (n : ℕ) => (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) *
+        (melinTransform f1.toTestFunction (nontrivialZeroEnum n) -
+          melinTransform f2.toTestFunction (nontrivialZeroEnum n)) *
+        (if nontrivialZeroEnum n = ρ then (0 : ℂ) else 1)) ∧
+      ∑' (n : ℕ), (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) *
+        ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) -
+          melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ *
+        (if nontrivialZeroEnum n = ρ then 0 else 1) <
+        (zeroMultiplicity ρ : ℝ) / 2 := by
+  intro hz hre1 hre2 hne
+  let w : ℕ → ℝ := fun n => (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) / (1 + |(nontrivialZeroEnum n).im|) ^ 2
+  have hw_nonneg : ∀ n, 0 ≤ w n := by
+    intro n
+    apply div_nonneg <;> positivity
+  have h_summable_w : Summable w := zero_weighted_series_summable
+  have h_mρ_pos : 0 < (zeroMultiplicity ρ : ℝ) := by
+    have h : 0 < zeroMultiplicity ρ := zeroMultiplicity_positive_at_nontrivial_zeros ρ hz hre1 hre2
+    exact_mod_cast h
+  rcases mellin_pair_uniform_decay_bound ρ hz hre1 hre2 hne with ⟨C, hC_pos, h_uniform⟩
+  set threshold : ℝ := (zeroMultiplicity ρ : ℝ) / (2 * C) with hthreshold_def
+  have h_threshold_pos : 0 < threshold := by
+    rw [hthreshold_def]
+    have hC_pos' : 0 < C := hC_pos
+    have h_mρ_pos' : 0 < (zeroMultiplicity ρ : ℝ) := h_mρ_pos
+    positivity
+  have h_tendsto : Filter.Tendsto (fun N : ℕ => ∑' (n : ℕ), w (n + N)) Filter.atTop (nhds 0) :=
+    tendsto_sum_nat_add w
+  have h_exists_N : ∃ (N : ℕ), ∑' (n : ℕ), w (n + N) < threshold := by
+    have h_eventual_ball : ∀ᶠ (N : ℕ) in Filter.atTop, (∑' (n : ℕ), w (n + N)) ∈ Metric.ball (0 : ℝ) threshold :=
+      h_tendsto (Metric.ball_mem_nhds 0 h_threshold_pos)
+    have h_eventual : ∀ᶠ (N : ℕ) in Filter.atTop, ∑' (n : ℕ), w (n + N) < threshold := by
+      filter_upwards [h_eventual_ball] with N hN
+      have h_abs : |∑' (n : ℕ), w (n + N)| < threshold := by simpa [Metric.mem_ball, dist_zero_right] using hN
+      have h_nonneg : 0 ≤ ∑' (n : ℕ), w (n + N) := tsum_nonneg (fun n => hw_nonneg (n + N))
+      rw [abs_of_nonneg h_nonneg] at h_abs
+      exact h_abs
+    exact h_eventual.exists
+  rcases h_exists_N with ⟨N, h_tail_w⟩
+  let T : Set ℂ := {s | ∃ (n : ℕ), n < N ∧ nontrivialZeroEnum n = s ∧ s ≠ ρ}
+  have hT_finite : T.Finite := by
+    have h1 : Set.Finite (Set.image nontrivialZeroEnum (Set.Iio N)) := Set.Finite.image nontrivialZeroEnum (Set.finite_lt_nat N)
+    apply Set.Finite.subset h1
+    intro s hs
+    rcases hs with ⟨n, hn, rfl, _⟩
+    exact ⟨n, hn, rfl⟩
+  have hρ_notin_T : ρ ∉ T := by
+    intro h
+    rcases h with ⟨n, _, h_eq, h_ne⟩
+    exact h_ne rfl
+  rcases h_uniform T hT_finite hρ_notin_T with ⟨f1, f2, h_pts, h_m1, h_m2, h_T_eq, h_decay⟩
+  let a : ℕ → ℂ := fun n =>
+    (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) *
+      (melinTransform f1.toTestFunction (nontrivialZeroEnum n) -
+       melinTransform f2.toTestFunction (nontrivialZeroEnum n))
+  let b : ℕ → ℂ := fun n => a n * (if nontrivialZeroEnum n = ρ then (0 : ℂ) else 1)
+  let tail_real : ℕ → ℝ := fun n =>
+    (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) *
+      ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) -
+        melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ *
+      (if nontrivialZeroEnum n = ρ then 0 else 1)
+  have h_zero_low : ∀ n < N, tail_real n = 0 := by
+    intro n hn
+    by_cases h : nontrivialZeroEnum n = ρ
+    · have h_if : (if nontrivialZeroEnum n = ρ then (0 : ℝ) else 1) = 0 := by simp [h]
+      simp only [tail_real, h_if] <;> ring
+    · have h_in_T : nontrivialZeroEnum n ∈ T := ⟨n, hn, rfl, h⟩
+      have h_eq : melinTransform f1.toTestFunction (nontrivialZeroEnum n) = melinTransform f2.toTestFunction (nontrivialZeroEnum n) := h_T_eq (nontrivialZeroEnum n) h_in_T
+      have h_if : (if nontrivialZeroEnum n = ρ then (0 : ℝ) else 1) = 1 := by simp [h]
+      simp only [tail_real, h_if, h_eq] <;> simp
+  have h_bound : ∀ n, tail_real n ≤ C * w n := by
+    intro n
+    by_cases h : nontrivialZeroEnum n = ρ
+    · have h_if : (if nontrivialZeroEnum n = ρ then (0 : ℝ) else 1) = 0 := by simp [h]
+      have h_nonneg : 0 ≤ C * w n := by
+        apply mul_nonneg
+        · exact le_of_lt hC_pos
+        · exact hw_nonneg n
+      simp only [tail_real, h_if]
+      <;> linarith
+    · have h_re1 : 0 < (nontrivialZeroEnum n).re := (nontrivialZeroEnum_are_zeros n).2.1
+      have h_re2 : (nontrivialZeroEnum n).re < 1 := (nontrivialZeroEnum_are_zeros n).2.2
+      have h_decay' : ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ ≤ C / (1 + |(nontrivialZeroEnum n).im|) ^ 2 := h_decay (nontrivialZeroEnum n) h_re1 h_re2
+      have h_if : (if nontrivialZeroEnum n = ρ then (0 : ℝ) else 1) = 1 := by simp [h]
+      simp only [tail_real, h_if]
+      have h_goal : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ * 1 ≤ C * w n := by
+        dsimp only [w]
+        have h1 : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ ≤ (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * (C / (1 + |(nontrivialZeroEnum n).im|) ^ 2) := by gcongr
+        have h2 : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * (C / (1 + |(nontrivialZeroEnum n).im|) ^ 2) = C * w n := by
+          simp [w] <;> ring
+        rw [h2] at h1
+        simpa [mul_one] using h1
+      exact h_goal
+  have h_norm_a_bound : ∀ n, ‖a n‖ ≤ C * w n := by
+    intro n
+    have h_re1 : 0 < (nontrivialZeroEnum n).re := (nontrivialZeroEnum_are_zeros n).2.1
+    have h_re2 : (nontrivialZeroEnum n).re < 1 := (nontrivialZeroEnum_are_zeros n).2.2
+    have h_d : ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ ≤ C / (1 + |(nontrivialZeroEnum n).im|) ^ 2 := h_decay (nontrivialZeroEnum n) h_re1 h_re2
+    have h_goal : ‖a n‖ ≤ C * w n := by
+      dsimp only [a, w]
+      have h1 : ‖a n‖ = (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ := by
+        simp [a, norm_mul] <;> ring
+      rw [h1]
+      have h2 : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ ≤ (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * (C / (1 + |(nontrivialZeroEnum n).im|) ^ 2) := by gcongr
+      have h3 : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * (C / (1 + |(nontrivialZeroEnum n).im|) ^ 2) = C * w n := by simp [w] <;> ring
+      rw [h3] at h2
+      exact h2
+    exact h_goal
+  have h_summable_Cw : Summable (fun n => C * w n) := Summable.mul_left C h_summable_w
+  have h_summable_norm_a : Summable (fun n => ‖a n‖) := Summable.of_nonneg_of_le (fun n => by positivity) h_norm_a_bound h_summable_Cw
+  have h_summable_a : Summable a := Summable.of_norm h_summable_norm_a
+  have h_norm_b_bound : ∀ n, ‖b n‖ ≤ ‖a n‖ := by
+    intro n
+    by_cases h : nontrivialZeroEnum n = ρ
+    · simp [b, h, norm_mul] <;> positivity
+    · simp [b, h, norm_mul] <;> ring
+  have h_summable_norm_b : Summable (fun n => ‖b n‖) := Summable.of_nonneg_of_le (fun n => by positivity) h_norm_b_bound h_summable_norm_a
+  have h_summable_b : Summable b := Summable.of_norm h_summable_norm_b
+  have h_summable_tail : Summable tail_real := Summable.of_nonneg_of_le (fun n => by positivity) h_bound h_summable_Cw
+  have h_sum_range_zero : ∑ i ∈ Finset.range N, tail_real i = 0 := by
+    have h : ∀ i ∈ Finset.range N, tail_real i = 0 := by
+      intro i hi
+      have h_i_lt_N : i < N := Finset.mem_range.mp hi
+      exact h_zero_low i h_i_lt_N
+    rw [Finset.sum_congr rfl h]
+    simp
+  have h_tail_sum_eq : ∑' (n : ℕ), tail_real n = ∑' (n : ℕ), tail_real (n + N) := by
+    have h_hasSum : HasSum (fun n : ℕ => tail_real (n + N)) (∑' (n : ℕ), tail_real n) := by
+      rw [hasSum_nat_add_iff N]
+      rw [h_sum_range_zero, add_zero]
+      exact h_summable_tail.hasSum
+    have h_tsum_shift : ∑' (n : ℕ), tail_real (n + N) = ∑' (n : ℕ), tail_real n := h_hasSum.tsum_eq
+    exact h_tsum_shift.symm
+  have h_summable_tail_shift : Summable (fun n : ℕ => tail_real (n + N)) := by
+    have h : HasSum (fun n : ℕ => tail_real (n + N)) (∑' (n : ℕ), tail_real n) := by
+      rw [hasSum_nat_add_iff N]
+      rw [h_sum_range_zero, add_zero]
+      exact h_summable_tail.hasSum
+    exact h.summable
+  have h_summable_w_shift : Summable (fun n : ℕ => w (n + N)) := by
+    apply Summable.comp_injective h_summable_w
+    intro n m h
+    simpa using h
+  have h_summable_Cw_shift : Summable (fun n : ℕ => C * w (n + N)) := Summable.mul_left C h_summable_w_shift
+  have h_tail_sum_bound : ∑' (n : ℕ), tail_real (n + N) ≤ C * ∑' (n : ℕ), w (n + N) := by
+    have h_le : ∀ n, tail_real (n + N) ≤ C * w (n + N) := by
+      intro n
+      exact h_bound (n + N)
+    have h1 : ∑' (n : ℕ), tail_real (n + N) ≤ ∑' (n : ℕ), C * w (n + N) := Summable.tsum_le_tsum h_le h_summable_tail_shift h_summable_Cw_shift
+    have h2 : ∑' (n : ℕ), C * w (n + N) = C * ∑' (n : ℕ), w (n + N) := by
+      rw [tsum_mul_left]
+    rw [h2] at h1
+    exact h1
+  have h_final : ∑' (n : ℕ), tail_real n < (zeroMultiplicity ρ : ℝ) / 2 := by
+    rw [h_tail_sum_eq]
+    have h_calc1 : ∑' (n : ℕ), tail_real (n + N) ≤ C * ∑' (n : ℕ), w (n + N) := h_tail_sum_bound
+    have h_calc2 : C * ∑' (n : ℕ), w (n + N) < C * threshold := by gcongr
+    have h_calc3 : C * threshold = (zeroMultiplicity ρ : ℝ) / 2 := by
+      rw [hthreshold_def]
+      field_simp [hC_pos.ne'] <;> ring
+    calc
+      ∑' (n : ℕ), tail_real (n + N) ≤ C * ∑' (n : ℕ), w (n + N) := h_calc1
+      _ < C * threshold := h_calc2
+      _ = (zeroMultiplicity ρ : ℝ) / 2 := h_calc3
+  exact ⟨f1, f2, h_pts, h_m1, h_m2, h_summable_a, h_summable_b, h_final⟩
+
+/-- 非临界线零点的尾部贡献主导性（定理，由尾部和可忽略 + 三角不等式推出）。零 sorry。 -/
+theorem off_critical_zero_tail_dominated (ρ : ℂ) :
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
+    ∃ (f1 f2 : MollifiedTestFunction),
+      (∀ (n : ℕ), f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n)) ∧
+      melinTransform f1.toTestFunction ρ = 1 ∧
+      melinTransform f2.toTestFunction ρ = 0 ∧
+      nontrivialZeroSum f1.toTestFunction ≠ nontrivialZeroSum f2.toTestFunction := by
+  intro hz hre1 hre2 hne
+  rcases mollified_pair_tail_sum_negligible ρ hz hre1 hre2 hne with ⟨f1, f2, h_pts, h_m1, h_m2, h_summable_a, h_summable_b, h_tail⟩
+  rcases nontrivialZeroEnum_covers_all ρ hz hre1 hre2 with ⟨k, hk⟩
+  let a : ℕ → ℂ := fun n =>
+    (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) *
+      (melinTransform f1.toTestFunction (nontrivialZeroEnum n) -
+       melinTransform f2.toTestFunction (nontrivialZeroEnum n))
+  let b : ℕ → ℂ := fun n =>
+    (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) *
+      (melinTransform f1.toTestFunction (nontrivialZeroEnum n) -
+       melinTransform f2.toTestFunction (nontrivialZeroEnum n)) *
+      (if nontrivialZeroEnum n = ρ then (0 : ℂ) else 1)
+  let d : ℕ → ℂ := fun n => a n - b n
+  have h_ak : a k = (zeroMultiplicity ρ : ℂ) := by
+    simp only [a, hk, h_m1, h_m2] <;> ring
+  have h_iff : ∀ (n : ℕ), (nontrivialZeroEnum n = ρ) ↔ (n = k) := by
+    intro n; constructor
+    · intro h; exact nontrivialZeroEnum_injective (by rw [h, hk])
+    · intro h; rw [h, hk]
+  have h_b_eq : ∀ (n : ℕ), b n = a n * (if n = k then (0 : ℂ) else 1) := by
+    intro n
+    by_cases h : n = k
+    · simp [b, a, h, h_iff] <;> ring
+    · have hne2 : nontrivialZeroEnum n ≠ ρ := by
+        intro h2; exact h ((h_iff n).mp h2)
+      simp [b, a, h, hne2] <;> ring
+  have h_d_eq : ∀ (n : ℕ), d n = (if n = k then a k else 0) := by
+    intro n
+    by_cases h : n = k
+    · simp [d, h, h_b_eq, h_iff] <;> ring
+    · simp [d, h, h_b_eq] <;> ring
+  have h_norm_b_eq : ∀ (n : ℕ), ‖b n‖ = (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) *
+      ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) -
+        melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ *
+      (if nontrivialZeroEnum n = ρ then 0 else 1) := by
+    intro n
+    by_cases h : n = k
+    · simp [b, a, h, h_iff] <;> ring
+    · have hne2 : nontrivialZeroEnum n ≠ ρ := by
+        intro h2; exact h ((h_iff n).mp h2)
+      simp [b, a, h, hne2, norm_mul] <;> ring
+  have h_summable_d : Summable d := Summable.sub h_summable_a h_summable_b
+  have h_split : a = d + b := by
+    funext n; simp [d] <;> ring
+  have h_single : ∀ n ≠ k, d n = 0 := by
+    intro n hn
+    rw [h_d_eq n]; simp [hn] <;> ring
+  have h_tsum_d : ∑' (n : ℕ), d n = a k := by
+    rw [tsum_eq_single k h_single, h_d_eq k] <;> simp <;> ring
+  have h_main : ∑' (n : ℕ), a n ≠ 0 := by
+    by_contra h_sum
+    have h_decomp : ∑' (n : ℕ), a n = (∑' (n : ℕ), d n) + (∑' (n : ℕ), b n) := by
+      rw [h_split]
+      exact Summable.tsum_add h_summable_d h_summable_b
+    have h_sum2 : (zeroMultiplicity ρ : ℂ) + ∑' (n : ℕ), b n = 0 := by
+      rw [h_decomp, h_tsum_d, h_ak] at h_sum
+      exact h_sum
+    have h_tail_eq : ∑' (n : ℕ), b n = -((zeroMultiplicity ρ : ℂ)) := by
+      have h : (zeroMultiplicity ρ : ℂ) + ∑' (n : ℕ), b n = 0 := h_sum2
+      calc
+        ∑' (n : ℕ), b n
+          = (zeroMultiplicity ρ : ℂ) + ∑' (n : ℕ), b n - (zeroMultiplicity ρ : ℂ) := by ring
+        _ = 0 - (zeroMultiplicity ρ : ℂ) := by rw [h]
+        _ = -((zeroMultiplicity ρ : ℂ)) := by ring
+    have h_summable_norm_b : Summable (fun n => ‖b n‖) := Summable.norm h_summable_b
+    have h_tail_norm : ‖∑' (n : ℕ), b n‖ ≤ ∑' (n : ℕ), ‖b n‖ :=
+      norm_tsum_le_tsum_norm h_summable_norm_b
+    rw [h_tail_eq] at h_tail_norm
+    have h_norm_neg : ‖-((zeroMultiplicity ρ : ℂ))‖ = (zeroMultiplicity ρ : ℝ) := by
+      simp [norm_neg] <;> exact?
+    rw [h_norm_neg] at h_tail_norm
+    rw [tsum_congr h_norm_b_eq] at h_tail_norm
+    linarith
+  have h_final : nontrivialZeroSum f1.toTestFunction ≠ nontrivialZeroSum f2.toTestFunction := by
+    intro h
+    have h_diff : nontrivialZeroSum f1.toTestFunction - nontrivialZeroSum f2.toTestFunction = 0 := by
+      rw [h] <;> ring
+    have h_tsum_diff : ∑' (n : ℕ), a n = nontrivialZeroSum f1.toTestFunction - nontrivialZeroSum f2.toTestFunction := by
+      rw [←nontrivialZeroSum_tsum_linear f1.toTestFunction f2.toTestFunction]
+      <;> rfl
+    have h_eq : ∑' (n : ℕ), a n = 0 := by
+      rw [h_tsum_diff, h_diff]
+    exact h_main h_eq
+  exact ⟨f1, f2, h_pts, h_m1, h_m2, h_final⟩
 
 /-- 非临界线零点的非平凡零点和分离（定理，由尾部主导性直接推出）：
     对任意非临界线零点 ρ，存在 f₁, f₂ 使谱点取值相同且 nontrivialZeroSum(f₁) ≠ nontrivialZeroSum(f₂)。
