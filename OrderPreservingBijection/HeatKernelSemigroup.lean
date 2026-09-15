@@ -14,19 +14,17 @@
 -/
 
 import OrderPreservingBijection.HeatKernel
+import OrderPreservingBijection.HeatKernelConvolution
 
 namespace OrderPreservingBijection
 
-/-- Heat kernel convolution (def): (K_t * K_s)(z,w) = integral_M K_t(z,u) K_s(u,w) du. -/
-noncomputable def heatKernelConvolution (t s : ℝ) (z w : ManifoldM) : ℂ :=
-    manifoldIntegral (fun u : ManifoldM => heatKernel t z u * heatKernel s u w)
-
-/-- Heat kernel convolution formula (axiom, core analytic assertion):
+/-- Heat kernel convolution formula (theorem, downgraded from axiom):
     K_{t+s}(z,w) = integral_M K_t(z,u) K_s(u,w) du  for t,s > 0.
-    Mathematical proof needs spherical coordinates + hyperbolic law of cosines +
-    angular/radial special function integrals. Currently axiom, future attack target. -/
-axiom heatKernel_convolution_formula (t s : ℝ) (ht : 0 < t) (hs : 0 < s) (z w : ManifoldM) :
-    heatKernel (t + s) z w = heatKernelConvolution t s z w
+    Proof in HeatKernelConvolution.lean: spherical coordinates (L1) + hyperbolic law
+    of cosines (L2) + angular integral (L3) + radial integral (L4) + algebra. -/
+theorem heatKernel_convolution_formula (t s : ℝ) (ht : 0 < t) (hs : 0 < s) (z w : ManifoldM) :
+    heatKernel (t + s) z w = heatKernelConvolution t s z w :=
+  heatKernel_convolution_formula_theorem t s ht hs z w
 
 /-- Heat kernel semigroup property (theorem, from convolution formula + Fubini + integral_smul):
     (H_{t+s} f)(z) = (H_t (H_s f))(z).

@@ -276,4 +276,9 @@ axiom heatKernel_commutes_laplacian :
       ∀ (f : L2Function ManifoldM),
         heatOperator t (laplacian_M f) = laplacian_M (heatOperator t f)
 
+
+/-- Heat kernel convolution (def): (K_t * K_s)(z,w) = integral_M K_t(z,u) K_s(u,w) du. -/
+noncomputable def heatKernelConvolution (t s : ℝ) (z w : ManifoldM) : ℂ :=
+    manifoldIntegral (fun u : ManifoldM => heatKernel t z u * heatKernel s u w)
+
 end OrderPreservingBijection

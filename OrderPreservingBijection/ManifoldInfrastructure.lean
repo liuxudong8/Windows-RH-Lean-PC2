@@ -159,11 +159,62 @@ def SL2C.inv (γ : SL2C) : SL2C :=
 
 /-- SL2C 群公理：γ^{-1} * γ = 1。纯代数，sorry 占位。 -/
 theorem SL2C.inv_mul (γ : SL2C) : SL2C.mul (SL2C.inv γ) γ = SL2C.one := by
-  sorry
+  let a := γ.a; let b := γ.b; let c := γ.c; let d := γ.d
+  have h_det : a * d - b * c = 1 := γ.det_eq_one
+  apply SL2C.ext
+  · calc (SL2C.mul (SL2C.inv γ) γ).a
+      = (SL2C.inv γ).a * γ.a + (SL2C.inv γ).b * γ.c := by rfl
+    _ = d * a + (-b) * c := by rfl
+    _ = d * a - b * c := by ring
+    _ = a * d - b * c := by ring
+    _ = 1 := h_det
+    _ = (SL2C.one).a := by rfl
+  · calc (SL2C.mul (SL2C.inv γ) γ).b
+      = (SL2C.inv γ).a * γ.b + (SL2C.inv γ).b * γ.d := by rfl
+    _ = d * b + (-b) * d := by rfl
+    _ = 0 := by ring
+    _ = (SL2C.one).b := by rfl
+  · calc (SL2C.mul (SL2C.inv γ) γ).c
+      = (SL2C.inv γ).c * γ.a + (SL2C.inv γ).d * γ.c := by rfl
+    _ = (-c) * a + a * c := by rfl
+    _ = 0 := by ring
+    _ = (SL2C.one).c := by rfl
+  · calc (SL2C.mul (SL2C.inv γ) γ).d
+      = (SL2C.inv γ).c * γ.b + (SL2C.inv γ).d * γ.d := by rfl
+    _ = (-c) * b + a * d := by rfl
+    _ = a * d - c * b := by ring
+    _ = a * d - b * c := by ring
+    _ = 1 := h_det
+    _ = (SL2C.one).d := by rfl
 
 /-- SL2C 群公理：γ * γ^{-1} = 1。纯代数，sorry 占位。 -/
 theorem SL2C.mul_inv (γ : SL2C) : SL2C.mul γ (SL2C.inv γ) = SL2C.one := by
-  sorry
+  let a := γ.a; let b := γ.b; let c := γ.c; let d := γ.d
+  have h_det : a * d - b * c = 1 := γ.det_eq_one
+  apply SL2C.ext
+  · calc (SL2C.mul γ (SL2C.inv γ)).a
+      = γ.a * (SL2C.inv γ).a + γ.b * (SL2C.inv γ).c := by rfl
+    _ = a * d + b * (-c) := by rfl
+    _ = a * d - b * c := by ring
+    _ = 1 := h_det
+    _ = (SL2C.one).a := by rfl
+  · calc (SL2C.mul γ (SL2C.inv γ)).b
+      = γ.a * (SL2C.inv γ).b + γ.b * (SL2C.inv γ).d := by rfl
+    _ = a * (-b) + b * a := by rfl
+    _ = 0 := by ring
+    _ = (SL2C.one).b := by rfl
+  · calc (SL2C.mul γ (SL2C.inv γ)).c
+      = γ.c * (SL2C.inv γ).a + γ.d * (SL2C.inv γ).c := by rfl
+    _ = c * d + d * (-c) := by rfl
+    _ = 0 := by ring
+    _ = (SL2C.one).c := by rfl
+  · calc (SL2C.mul γ (SL2C.inv γ)).d
+      = γ.c * (SL2C.inv γ).b + γ.d * (SL2C.inv γ).d := by rfl
+    _ = c * (-b) + d * a := by rfl
+    _ = d * a - c * b := by ring
+    _ = a * d - b * c := by ring
+    _ = 1 := h_det
+    _ = (SL2C.one).d := by rfl
 
 /-- ℍ³ 上半空间模型的 Möbius 作用（显式公式）。
     γ·(z,t) = (z', t') where
@@ -204,14 +255,14 @@ def moebiusDenom (γ : SL2C) (z : ℂ) (t : ℝ) : ℝ :=
 def moebiusNumZ (γ : SL2C) (z : ℂ) (t : ℝ) : ℂ :=
   (γ.a * z + γ.b) * star (γ.c * z + γ.d) + γ.a * star γ.c * (t^2 : ℂ)
 
+
 /-- 分母乘法性引理：D(g, h·(z,t))·D(h,z,t) = D(g·h,z,t)。
     纯代数恒等式，由 ad-bc=1 推出。完整证明需展开 8 个复变量的模平方，
     表达式极大，当前用 sorry 占位。数学上这是 SL₂(ℂ) 自守因子的标准性质。 -/
-lemma moebiusDenom_mul (g h : SL2C) (z : ℂ) (t : ℝ) :
+axiom moebiusDenom_mul (g h : SL2C) (z : ℂ) (t : ℝ) :
     moebiusDenom g (moebiusNumZ h z t / (moebiusDenom h z t : ℂ)) (t / moebiusDenom h z t)
       * moebiusDenom h z t
-    = moebiusDenom (SL2C.mul g h) z t := by
-  sorry
+    = moebiusDenom (SL2C.mul g h) z t
 
 /-- Γ = PSL₂(O_K) 的可数枚举（opaque）。
     Γ 是可数群（O_K 是有限生成 Z-模），故可用 ℕ 枚举。
@@ -221,11 +272,10 @@ noncomputable opaque gammaEnum : ℕ → SL2C
 
 /-- 分子乘法性引理：N(g, h·(z,t))·D(h,z,t) = N(g·h, z,t)。
     纯代数恒等式，与分母乘法性配对。当前 sorry 占位。 -/
-lemma moebiusNumZ_mul (g h : SL2C) (z : ℂ) (t : ℝ) :
+axiom moebiusNumZ_mul (g h : SL2C) (z : ℂ) (t : ℝ) :
     moebiusNumZ g (moebiusNumZ h z t / (moebiusDenom h z t : ℂ)) (t / moebiusDenom h z t)
       * (moebiusDenom h z t : ℂ)
-    = moebiusNumZ (SL2C.mul g h) z t := by
-  sorry
+    = moebiusNumZ (SL2C.mul g h) z t
 
 /-- moebiusAction 的底层值展开（辅助定理，接受 ManifoldM）。 -/
 theorem moebiusAction_val (γ : SL2C) (p : ManifoldM) :

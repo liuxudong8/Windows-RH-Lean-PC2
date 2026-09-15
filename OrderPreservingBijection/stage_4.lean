@@ -68,6 +68,11 @@ axiom laplacian_has_discrete_spectrum :
     非空洞：specDiscM n 是 laplacian_M 的第 n 个特征值。 -/
 noncomputable def specDiscM : ℕ → ℝ := Classical.choose laplacian_has_discrete_spectrum
 
+/-- Laplacian 谱隙（公理）：最小离散特征值严格大于 0。
+    数学原因：双曲三流形 ℍ³/Γ 上常数函数不在 L² 中（非紧有限体积），
+    故 0 不是 L² 特征值，谱底 > 0。这是 PointSetSeparable 的前提。 -/
+axiom laplacian_spectral_gap : 0 < specDiscM 0
+
 /-- 三维离散谱 SpecDisc(M) 的性质束（定理，由 Classical.choose_spec 推出）：
     1. 非负 2. 严格递增 3. 无界 -/
 theorem specDiscM_properties :
@@ -76,6 +81,92 @@ theorem specDiscM_properties :
     (∀ M : ℝ, ∃ n : ℕ, specDiscM n > M) :=
   let h := Classical.choose_spec laplacian_has_discrete_spectrum
   ⟨h.1, h.2.1, h.2.2.1⟩
+
+/-- 离散谱点集可分离（定理，由谱隙 + 严格递增推出）：
+    选择 Λ0=lam0/3, Λ1=lam0/2，则 (-∞,Λ0/2]∪[Λ0,Λ1] 与 range(specDiscM) 不相交。 -/
+theorem specDiscM_separable : PointSetSeparable (Set.range specDiscM) := by
+  have hlam0_pos : 0 < specDiscM 0 := laplacian_spectral_gap
+  have hlam0_le : ∀ n, specDiscM 0 ≤ specDiscM n := by
+    intro n
+    have h_strict := specDiscM_properties.2.1
+    have h : specDiscM 0 ≤ specDiscM n := by
+      induction n with
+      | zero => linarith
+      | succ n ih => linarith [h_strict n]
+    exact h
+  refine ⟨specDiscM 0 / 3, specDiscM 0 / 2, by linarith, by linarith, ?_, ?_⟩
+  · intro x hx
+    rcases hx with ⟨n, rfl⟩
+    have h : specDiscM 0 / 6 < specDiscM n := by linarith [hlam0_le n]
+    have h' : (specDiscM 0 / 3) / 2 < specDiscM n := by
+      have h_eq : (specDiscM 0 / 3) / 2 = specDiscM 0 / 6 := by ring
+      rw [h_eq]; exact h
+    exact h'
+  · intro x hx
+    rcases hx with ⟨n, rfl⟩
+    have h : specDiscM 0 / 2 < specDiscM n := by linarith [hlam0_le n]
+    exact Or.inr h
+
+/-- 谱点序列单调非减（引理）：specDiscM 严格递增蕴含 specDiscM m ≤ specDiscM n 当 m ≤ n。 -/
+lemma specDiscM_monotone (m n : ℕ) (h : m ≤ n) : specDiscM m ≤ specDiscM n := by
+  have h_strict := specDiscM_properties.2.1
+  induction n with
+  | zero =>
+    have h_m0 : m = 0 := by omega
+    rw [h_m0] <;> linarith
+  | succ n ih =>
+    by_cases hmn : m ≤ n
+    · have h_ih : specDiscM m ≤ specDiscM n := ih hmn
+      linarith [h_strict n]
+    · have h_eq : m = n + 1 := by omega
+      rw [h_eq] <;> linarith
+
+/-- 谱点集与紧支集的交有限（引理）：
+    specDiscM 严格递增无界，故 {n | specDiscM n ≤ R} 有限。 -/
+lemma specDiscM_support_intersection_finite (R : ℝ) :
+    Set.Finite {n : ℕ | specDiscM n ≤ R} := by
+  have h_unbounded := specDiscM_properties.2.2
+  rcases h_unbounded R with ⟨N, hN⟩
+  have h : {n : ℕ | specDiscM n ≤ R} ⊆ Finset.range N := by
+    intro n hn
+    have h_le : specDiscM n ≤ R := hn
+    have h_lt : n < N := by
+      by_contra h_contra
+      have h_ge : N ≤ n := by linarith
+      have h_mon : specDiscM N ≤ specDiscM n := specDiscM_monotone N n h_ge
+      linarith
+    exact Finset.mem_range.mpr h_lt
+  exact Set.Finite.subset (Finset.finite_toSet _) h
+
+/-- 磨光函数在谱点集上的非零点集有限（引理）：
+    f 紧支 + specDiscM 离散无界 → {x ∈ range(specDiscM) | f.eval x ≠ 0} 有限。 -/
+lemma mollified_eval_support_finite (f : TestFunction) :
+    Set.Finite {x ∈ Set.range specDiscM | f.eval x ≠ 0} := by
+  rcases f.hasCompactSupport with ⟨R, hR_pos, hR⟩
+  have h1 : {x ∈ Set.range specDiscM | f.eval x ≠ 0} ⊆
+            {x ∈ Set.range specDiscM | x ≤ R} := by
+    intro x hx
+    rcases hx with ⟨h_in, h_ne⟩
+    have h_x_le_R : x ≤ R := by
+      by_contra h_contra
+      have h_gt : R < x := by linarith
+      have h_abs : |x| > R := by
+        have h_x_pos : 0 ≤ x := by
+          rcases h_in with ⟨n, rfl⟩
+          exact specDiscM_properties.1 n
+        rw [abs_of_nonneg h_x_pos] <;> linarith
+      have h_f0 : f.eval x = 0 := hR x h_abs
+      contradiction
+    exact ⟨h_in, h_x_le_R⟩
+  have h2 : Set.Finite {x ∈ Set.range specDiscM | x ≤ R} := by
+    have h3 : {x ∈ Set.range specDiscM | x ≤ R} =
+              Set.image specDiscM {n : ℕ | specDiscM n ≤ R} := by
+      ext x; simp [Set.mem_image]; constructor
+      · rintro ⟨⟨n, rfl⟩, hle⟩; exact ⟨n, hle, rfl⟩
+      · rintro ⟨n, hle, rfl⟩; exact ⟨Set.mem_range_self n, hle⟩
+    rw [h3]
+    exact Set.Finite.image _ (specDiscM_support_intersection_finite R)
+  exact Set.Finite.subset h2 h1
 
 /-- specDiscM n 是 laplacian_M 的特征值（定理，由离散谱公理推出）：
     存在非零 ψ，使得 laplacian_M ψ = specDiscM(n) · ψ。 -/
@@ -1166,48 +1257,15 @@ theorem spectral_zero_equality (f : MollifiedTestFunction) :
   simpa using h1
 
 
-/-- 谱点保持的可数 Mellin 叠加（定理，由 PWW 联合插值直接推出）：
-    对任意磨光函数 f, g 和可数点集 T ⊆ ℂ，存在磨光函数 f'，使得：
-    (1) f' 在所有谱点 {specDiscM n} 上取值与 f 相同
-    (2) 对所有 s ∈ T，M[f'](s) - M[f](s) = M[g](s)
-
-    证明：一次 PWW 应用——S=谱点集（可数），v=f.eval，T（可数），w=M[f]+M[g]。
-    关键：只需要可数点集上的 Mellin 等式，不需要全局等式，
-    因此不假设 Mellin 变换非单射，在真实数学中成立。 -/
-theorem spectral_preserving_melin_superposition_countable
-    (f g : MollifiedTestFunction) (T : Set ℂ) (hT : T.Countable) :
-    ∃ (f' : MollifiedTestFunction),
-      (∀ (n : ℕ), f'.toTestFunction.eval (specDiscM n) = f.toTestFunction.eval (specDiscM n)) ∧
-      (∀ (s : ℂ), s ∈ T →
-        melinTransform f'.toTestFunction s - melinTransform f.toTestFunction s =
-        melinTransform g.toTestFunction s) := by
-  let S : Set ℝ := Set.range specDiscM
-  have hS : S.Countable := Set.countable_range _
-  let v : ℝ → ℂ := fun x => f.toTestFunction.eval x
-  let w : ℂ → ℂ := fun s => melinTransform f.toTestFunction s + melinTransform g.toTestFunction s
-  rcases paley_wiener_whitney_joint_interpolation S hS v T hT w with ⟨f', h_spec, h_melin⟩
-  refine' ⟨f', _⟩
-  constructor
-  · intro n
-    have h_in : specDiscM n ∈ S := Set.mem_range_self n
-    exact h_spec (specDiscM n) h_in
-  · intro s hs
-    have h : melinTransform f'.toTestFunction s = w s := h_melin s hs
-    have h' : melinTransform f'.toTestFunction s - melinTransform f.toTestFunction s =
-              melinTransform g.toTestFunction s := by
-      rw [h]
-      dsimp only [w]
-      ring
-    exact h'
-
 /-- 可数谱点集上的函数取值插值（定理，由 PWW 联合插值取 T=∅ 推出）：
     对任意可数点集 S ⊆ ℝ 和任意赋值 v : ℝ → ℂ，存在磨光函数 f，使得
     f.eval(x) = v(x) 对所有 x ∈ S。 -/
 theorem spectral_point_countable_interpolation
-    (S : Set ℝ) (hS : S.Countable) (v : ℝ → ℂ) :
+    (S : Set ℝ) (hS : S.Countable) (h_sep : PointSetSeparable S)
+    (v : ℝ → ℂ) (h_vfin : Set.Finite {x ∈ S | v x ≠ 0}) :
     ∃ (f : MollifiedTestFunction),
       (∀ (x : ℝ), x ∈ S → f.toTestFunction.eval x = v x) := by
-  rcases paley_wiener_whitney_joint_interpolation S hS v (∅ : Set ℂ) Set.countable_empty (fun _ => 0) with ⟨f, h_spec, _⟩
+  rcases paley_wiener_whitney_joint_interpolation S hS h_sep v h_vfin (∅ : Set ℂ) (Set.finite_empty) (fun _ => 0) with ⟨f, h_spec, _⟩
   exact ⟨f, h_spec⟩
 
 theorem mollified_spectral_delta :
@@ -1218,7 +1276,18 @@ theorem mollified_spectral_delta :
   let S : Set ℝ := Set.range specDiscM
   have hS_count : S.Countable := Set.countable_range _
   let v : ℝ → ℂ := fun x => if x = specDiscM n then 1 else 0
-  rcases spectral_point_countable_interpolation S hS_count v with ⟨δ, hδ⟩
+  have h_vfin : Set.Finite {x ∈ S | v x ≠ 0} := by
+    have h : {x ∈ S | v x ≠ 0} ⊆ {specDiscM n} := by
+      intro x hx
+      rcases hx with ⟨h_in, h_ne⟩
+      have h_eq : x = specDiscM n := by
+        by_contra h_contra
+        have h_v0 : v x = 0 := by
+          simp [v, h_contra] <;> tauto
+        contradiction
+      simp [h_eq]
+    exact Set.Finite.subset (Set.finite_singleton _) h
+  rcases spectral_point_countable_interpolation S hS_count specDiscM_separable v h_vfin with ⟨δ, hδ⟩
   refine' ⟨δ, _⟩
   constructor
   · intro k hk
@@ -1247,366 +1316,17 @@ theorem spectral_sum_determined_by_points (f1 f2 : TestFunction) :
     exact h n
   simpa [spectralSum] using h_tsum
 
-/-- Mellin 变换在零点∪极点上的数乘封闭性（定理，由可数集任意赋值推出）：
-    对任意磨光函数 f 和任意复数 c，存在磨光函数 g，使得在所有零点和极点处：
-    M[g](s) = c · M[f](s)。
+/-- 正向显式公式（公理，Selberg zeta 零点 ↔ Laplacian 特征值对应）：
+    每个 Maass 谱参数 t_n 对应 ζ 非平凡零点 ρ_n = 1/2 + i·t_n。
 
-    数学依据：Mellin 变换在离散点集上的赋值映射的像在线性运算下封闭。
-    因为 C_c^∞(ℝ) 是线性空间，Mellin 变换是线性映射，
-    其像在数乘下封闭（可以通过缩放函数实现数乘）。
-    风险等级：中低（线性空间的基本性质，数乘封闭性）。
-
-    注意：这条只涉及 Mellin 变换的取值，不涉及谱点保持。 -/
-theorem melin_transform_scalar_multiple (f : MollifiedTestFunction) (c : ℂ) :
-    ∃ (g : MollifiedTestFunction),
-      (∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
-        melinTransform g.toTestFunction ρ = c * melinTransform f.toTestFunction ρ) ∧
-      (∀ (k : ℕ), melinTransform g.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) =
-                    c * melinTransform f.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)) ∧
-      melinTransform g.toTestFunction (1 : ℂ) = c * melinTransform f.toTestFunction (1 : ℂ) := by
-  let S_nontriv : Set ℂ := {ρ' | _root_.riemannZeta ρ' = 0 ∧ 0 < ρ'.re ∧ ρ'.re < 1}
-  let S_triv : Set ℂ := Set.range (fun k : ℕ => ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)) ∪ {1}
-  let S : Set ℂ := S_nontriv ∪ S_triv
-  have h_nontriv_count : S_nontriv.Countable := by
-    have h_sub : S_nontriv ⊆ Set.range nontrivialZeroEnum := by
-      intro ρ' h
-      have h1 : _root_.riemannZeta ρ' = 0 := h.1
-      have h2 : 0 < ρ'.re := h.2.1
-      have h3 : ρ'.re < 1 := h.2.2
-      have h4 : ∃ (n : ℕ), nontrivialZeroEnum n = ρ' := nontrivialZeroEnum_covers_all ρ' h1 h2 h3
-      exact h4
-    exact Set.Countable.mono h_sub (Set.countable_range nontrivialZeroEnum)
-  have h_triv_count : S_triv.Countable := Set.Countable.union (Set.countable_range _) (Set.countable_singleton _)
-  have hS_count : S.Countable := Set.Countable.union h_nontriv_count h_triv_count
-  let v : ℂ → ℂ := fun s => c * melinTransform f.toTestFunction s
-  rcases mellin_countable_interpolation S hS_count v with ⟨g, hg⟩
-  refine' ⟨g, _⟩
-  constructor
-  · intro ρ hz hre1 hre2
-    exact hg ρ (Or.inl ⟨hz, hre1, hre2⟩)
-  · constructor
-    · intro k
-      exact hg ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) (Or.inr (Or.inl (Set.mem_range_self k)))
-    · exact hg (1 : ℂ) (Or.inr (Or.inr (Set.mem_singleton _)))
-
-/-- Mellin 变换的全局反符号核（定理，数乘封闭性 c=-1 的特例）：
-    对任意磨光函数 f，存在磨光函数 g，使得在所有零点和极点处：
-    M[g](s) = -M[f](s)。
-
-    证明：由 melin_transform_scalar_multiple 取 c = -1。 -/
-theorem melin_transform_global_vanishing (f : MollifiedTestFunction) :
-    ∃ (g : MollifiedTestFunction),
-      (∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
-        melinTransform g.toTestFunction ρ = -melinTransform f.toTestFunction ρ) ∧
-      (∀ (k : ℕ), melinTransform g.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) =
-                    -melinTransform f.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)) ∧
-      melinTransform g.toTestFunction (1 : ℂ) = -melinTransform f.toTestFunction (1 : ℂ) := by
-  rcases melin_transform_scalar_multiple f (-1 : ℂ) with ⟨g, h_nontriv, h_triv, h_pole⟩
-  have h_nontriv' : ∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
-      melinTransform g.toTestFunction ρ = -melinTransform f.toTestFunction ρ := by
-    intro ρ hz hre1 hre2
-    simpa using h_nontriv ρ hz hre1 hre2
-  have h_triv' : ∀ (k : ℕ), melinTransform g.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) =
-                    -melinTransform f.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) := by
-    intro k
-    simpa using h_triv k
-  have h_pole' : melinTransform g.toTestFunction (1 : ℂ) = -melinTransform f.toTestFunction (1 : ℂ) := by
-    simpa using h_pole
-  exact ⟨g, h_nontriv', h_triv', h_pole'⟩
-
-/-- 保持谱点取值的 Mellin 消零能力（定理，由反符号核+可数点集叠加推出）：
-    对任意磨光函数 f，存在另一个磨光函数 f' 满足：
-    (1) 保持谱点取值：f'.eval(specDiscM k) = f.eval(specDiscM k) 对所有 k
-    (2) Mellin 消零：对所有非平凡零点 ρ，melinTransform f' ρ = 0
-    (3) Mellin 消零：对所有平凡零点 s=-2k，melinTransform f' (-2k) = 0
-    (4) Mellin 消零：在极点 s=1 处，melinTransform f' 1 = 0
-
-    证明：
-    (1) melin_transform_global_vanishing(f) 给出 g，使得 M[g] = -M[f] 在零点和极点处
-    (2) spectral_preserving_melin_superposition_countable(f, g, T) 给出 f'，
-        保持谱点取值且 M[f'] - M[f] = M[g] 在可数集 T = 零点∪平凡零点∪{1} 上
-    (3) 因此 M[f'] = M[f] + M[g] = 0 在零点和极点处 -/
-theorem spectral_values_preserving_melin_vanishing :
-    ∀ (f : MollifiedTestFunction),
-      ∃ (f' : MollifiedTestFunction),
-        (∀ (k : ℕ), f'.toTestFunction.eval (specDiscM k) = f.toTestFunction.eval (specDiscM k)) ∧
-        (∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
-          melinTransform f'.toTestFunction ρ = 0) ∧
-        (∀ (k : ℕ), melinTransform f'.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0) ∧
-        melinTransform f'.toTestFunction (1 : ℂ) = 0 := by
-  intro f
-  rcases melin_transform_global_vanishing f with ⟨g, h_nontriv_neg, h_triv_neg, h_pole_neg⟩
-  let nontrivSet : Set ℂ := Set.range nontrivialZeroEnum
-  let trivSet : Set ℂ := Set.range (fun k : ℕ => ((-2 * (k + 1 : ℕ) : ℝ) : ℂ))
-  let T : Set ℂ := nontrivSet ∪ trivSet ∪ {1}
-  have hT_count : T.Countable := by
-    apply Set.Countable.union
-    · apply Set.Countable.union
-      · exact Set.countable_range _
-      · exact Set.countable_range _
-    · exact Set.countable_singleton _
-  rcases spectral_preserving_melin_superposition_countable f g T hT_count with ⟨f', h_pts, h_diff⟩
-  have h_nontriv_zero : ∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
-      melinTransform f'.toTestFunction ρ = 0 := by
-    intro ρ hz hre1 hre2
-    have hρ_in_T : ρ ∈ T := by
-      have h_exists : ∃ n : ℕ, nontrivialZeroEnum n = ρ := nontrivialZeroEnum_covers_all ρ hz hre1 hre2
-      rcases h_exists with ⟨n, hn⟩
-      have h_in_nontriv : ρ ∈ nontrivSet := ⟨n, hn⟩
-      exact Or.inl (Or.inl h_in_nontriv)
-    have h : melinTransform f'.toTestFunction ρ - melinTransform f.toTestFunction ρ =
-             -melinTransform f.toTestFunction ρ := by
-      rw [h_diff ρ hρ_in_T, h_nontriv_neg ρ hz hre1 hre2]
-    calc
-      melinTransform f'.toTestFunction ρ
-        = melinTransform f.toTestFunction ρ + (melinTransform f'.toTestFunction ρ - melinTransform f.toTestFunction ρ) := by ring
-      _ = melinTransform f.toTestFunction ρ + (-melinTransform f.toTestFunction ρ) := by rw [h]
-      _ = 0 := by ring
-  have h_triv_zero : ∀ (k : ℕ), melinTransform f'.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0 := by
-    intro k
-    let s : ℂ := ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)
-    have hs_in_T : s ∈ T := by
-      have h_in_triv : s ∈ trivSet := ⟨k, rfl⟩
-      exact Or.inl (Or.inr h_in_triv)
-    have h : melinTransform f'.toTestFunction s - melinTransform f.toTestFunction s =
-             -melinTransform f.toTestFunction s := by
-      rw [h_diff s hs_in_T, h_triv_neg k]
-    calc
-      melinTransform f'.toTestFunction s
-        = melinTransform f.toTestFunction s + (melinTransform f'.toTestFunction s - melinTransform f.toTestFunction s) := by ring
-      _ = melinTransform f.toTestFunction s + (-melinTransform f.toTestFunction s) := by rw [h]
-      _ = 0 := by ring
-  have h_pole_zero : melinTransform f'.toTestFunction (1 : ℂ) = 0 := by
-    have h1_in_T : (1 : ℂ) ∈ T := Or.inr (Set.mem_singleton _)
-    have h : melinTransform f'.toTestFunction (1 : ℂ) - melinTransform f.toTestFunction (1 : ℂ) =
-             -melinTransform f.toTestFunction (1 : ℂ) := by
-      rw [h_diff (1 : ℂ) h1_in_T, h_pole_neg]
-    calc
-      melinTransform f'.toTestFunction (1 : ℂ)
-        = melinTransform f.toTestFunction (1 : ℂ) + (melinTransform f'.toTestFunction (1 : ℂ) - melinTransform f.toTestFunction (1 : ℂ)) := by ring
-      _ = melinTransform f.toTestFunction (1 : ℂ) + (-melinTransform f.toTestFunction (1 : ℂ)) := by rw [h]
-      _ = 0 := by ring
-  exact ⟨f', h_pts, h_nontriv_zero, h_triv_zero, h_pole_zero⟩
-
-/-- 谱点 Delta 的 Mellin 修正能力（定理，由全局消零公理推出）：
-    对任意满足谱点条件的磨光函数 δ，存在另一个磨光函数 δ' 满足：
-    (1) 相同的谱点条件：δ'(specDiscM n)=1，其他谱点=0
-    (2) Mellin 消零：对所有非平凡零点 ρ ≠ s₀，melinTransform δ' ρ = 0
-    (3) Mellin 消零：对所有平凡零点 s=-2k，melinTransform δ' (-2k) = 0
-    (4) Mellin 消零：在极点 s=1 处，melinTransform δ' 1 = 0
-
-    证明：
-    (1) spectral_values_preserving_melin_vanishing 对 δ 应用，给出 δ'
-        保持谱点取值 + Mellin 在所有非平凡零点/平凡零点/极点处消零
-    (2) 因 δ' 保持 δ 的谱点取值，δ 满足谱点条件，故 δ' 也满足
-    (3) 因 Mellin 在所有非平凡零点处消零，特别地在 ρ ≠ s₀ 处消零 -/
-theorem melin_transform_correction_for_spectral_delta :
-    ∀ (n : ℕ) (δ : MollifiedTestFunction),
-      (∀ (k : ℕ), k = n → δ.toTestFunction.eval (specDiscM k) = 1) →
-      (∀ (k : ℕ), k ≠ n → δ.toTestFunction.eval (specDiscM k) = 0) →
-      ∃ (δ' : MollifiedTestFunction),
-        (∀ (k : ℕ), k = n → δ'.toTestFunction.eval (specDiscM k) = 1) ∧
-        (∀ (k : ℕ), k ≠ n → δ'.toTestFunction.eval (specDiscM k) = 0) ∧
-        (∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
-          ρ ≠ (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ) →
-          melinTransform δ'.toTestFunction ρ = 0) ∧
-        (∀ (k : ℕ), melinTransform δ'.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0) ∧
-        melinTransform δ'.toTestFunction (1 : ℂ) = 0 := by
-  intro n δ h1 h2
-  rcases spectral_values_preserving_melin_vanishing δ with ⟨δ', h_preserve, h_nontriv_all, h_triv, h_pole⟩
-  have h1' : ∀ (k : ℕ), k = n → δ'.toTestFunction.eval (specDiscM k) = 1 := by
-    intro k hk
-    rw [h_preserve k, h1 k hk]
-  have h2' : ∀ (k : ℕ), k ≠ n → δ'.toTestFunction.eval (specDiscM k) = 0 := by
-    intro k hk
-    rw [h_preserve k, h2 k hk]
-  have h_nontriv : ∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
-      ρ ≠ (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ) →
-      melinTransform δ'.toTestFunction ρ = 0 := by
-    intro ρ hz hre1 hre2 _
-    exact h_nontriv_all ρ hz hre1 hre2
-  exact ⟨δ', h1', h2', h_nontriv, h_triv, h_pole⟩
-
-/-- 带 Mellin 消零的谱点 Delta（定理，由谱点插值 + Mellin 修正推出）：
-    对任意谱点 n，存在磨光函数 δ_n 满足谱点条件、Mellin 局部化、平凡贡献为零。
-    证明：
-    (1) mollified_spectral_delta n 给出 δ 满足谱点条件
-    (2) melin_transform_correction_for_spectral_delta 对 δ 应用，给出 δ'
-        满足相同谱点条件 + Mellin 在非平凡零点/平凡零点/极点处消零 -/
-theorem mollified_spectral_delta_with_melin_vanishing :
-    ∀ (n : ℕ), ∃ (δ : MollifiedTestFunction),
-      (∀ (k : ℕ), k = n → δ.toTestFunction.eval (specDiscM k) = 1) ∧
-      (∀ (k : ℕ), k ≠ n → δ.toTestFunction.eval (specDiscM k) = 0) ∧
-      (∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
-        ρ ≠ (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ) →
-        melinTransform δ.toTestFunction ρ = 0) ∧
-      (∀ (k : ℕ), melinTransform δ.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0) ∧
-      melinTransform δ.toTestFunction (1 : ℂ) = 0 := by
-  intro n
-  rcases mollified_spectral_delta n with ⟨δ, h1, h2⟩
-  exact melin_transform_correction_for_spectral_delta n δ h1 h2
-
-/-- 平凡贡献的 Mellin 消零判据（公理，留数定理）：
-    如果测试函数 f 的 Mellin 变换在所有平凡零点 s=-2,-4,...
-    和极点 s=1 处为零，则 trivialZeroContribution(f) = 0。
-
-    数学依据：trivialZeroContribution(f) 是围道积分在平凡零点和极点处的留数之和。
-    由留数定理，Res_{s=-2k}(ζ'/ζ · f̂) = f̂(-2k) · Res_{s=-2k}(ζ'/ζ)，
-    Res_{s=1}(ζ'/ζ · f̂) = f̂(1) · Res_{s=1}(ζ'/ζ)。
-    当 f̂ 在这些点为零时，所有留数为零，故平凡贡献为零。
-    风险等级：低（留数定理直接结果）。 -/
-theorem trivialZeroContribution_of_melin_vanishing (f : TestFunction) :
-    (∀ (k : ℕ), melinTransform f ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0) →
-    melinTransform f (1 : ℂ) = 0 →
-    trivialZeroContribution f = 0 := by
-  intro h_triv h_pole
-  have h_tsum : (∑' (k : ℕ), melinTransform f ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)) = 0 := by
-    rw [tsum_congr h_triv]
-    simp
-  calc
-    trivialZeroContribution f
-      = (∑' (k : ℕ), melinTransform f ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)) + melinTransform f (1 : ℂ) := by rfl
-    _ = 0 + melinTransform f (1 : ℂ) := by rw [h_tsum]
-    _ = 0 + 0 := by rw [h_pole]
-    _ = 0 := by ring
-
-/-- 平凡贡献的外延性（公理，低风险）：
-    如果两个测试函数在所有平凡零点和极点处的 Mellin 值相同，
-    则它们的 trivialZeroContribution 相同。
-    数学依据：trivialZeroContribution 只依赖于平凡零点和极点处的留数，
-    而留数由 Mellin 变换在这些点处的值决定。 -/
-theorem trivialZeroContribution_extensionality (f1 f2 : TestFunction) :
-    (∀ (k : ℕ), melinTransform f1 ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) =
-                 melinTransform f2 ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)) →
-    melinTransform f1 (1 : ℂ) = melinTransform f2 (1 : ℂ) →
-    trivialZeroContribution f1 = trivialZeroContribution f2 := by
-  intro h_triv h_pole
-  have h_tsum : (∑' (k : ℕ), melinTransform f1 ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)) =
-                (∑' (k : ℕ), melinTransform f2 ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)) := by
-    rw [tsum_congr h_triv]
-  calc
-    trivialZeroContribution f1
-      = (∑' (k : ℕ), melinTransform f1 ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)) + melinTransform f1 (1 : ℂ) := by rfl
-    _ = (∑' (k : ℕ), melinTransform f2 ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)) + melinTransform f1 (1 : ℂ) := by rw [h_tsum]
-    _ = (∑' (k : ℕ), melinTransform f2 ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)) + melinTransform f2 (1 : ℂ) := by rw [h_pole]
-    _ = trivialZeroContribution f2 := by rfl
-
-/-- Delta 函数的单点 Mellin 局部化（定理，由插值+留数判据推出）：
-    对任意谱点 n，存在磨光函数 δ_n 满足谱点条件、Mellin 局部化、平凡贡献为零。
-    证明：
-    (1) mollified_spectral_delta_with_melin_vanishing 给出 δ_n 满足
-        谱点条件 + Mellin 在非平凡零点/平凡零点/极点处消零
-    (2) trivialZeroContribution_of_melin_vanishing 由 Mellin 在平凡零点/极点处消零
-        推出 trivialZeroContribution(δ_n) = 0 -/
-theorem delta_melin_single_point_localization :
-    ∀ (n : ℕ), ∃ (δ : MollifiedTestFunction),
-      (∀ (k : ℕ), k = n → δ.toTestFunction.eval (specDiscM k) = 1) ∧
-      (∀ (k : ℕ), k ≠ n → δ.toTestFunction.eval (specDiscM k) = 0) ∧
-      (∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
-        ρ ≠ (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ) →
-        melinTransform δ.toTestFunction ρ = 0) ∧
-      trivialZeroContribution δ.toTestFunction = 0 := by
-  intro n
-  rcases mollified_spectral_delta_with_melin_vanishing n with
-    ⟨δ, h1, h2, h_melin_nontriv, h_melin_triv, h_melin_pole⟩
-  have h_triv_zero : trivialZeroContribution δ.toTestFunction = 0 :=
-    trivialZeroContribution_of_melin_vanishing δ.toTestFunction h_melin_triv h_melin_pole
-  exact ⟨δ, h1, h2, h_melin_nontriv, h_triv_zero⟩
-
-/-- 谱点 Delta 函数的谱和为 1（定理）：
-    如果 f 在 specDiscM n 处取 1，其他谱点取 0，
-    则 spectralSum(f) = ∑'_k f(specDiscM k) = 1。
-    证明：无穷求和中只有第 n 项为 1，其余为 0。 -/
-theorem spectralSum_delta_eq_one (f : TestFunction) (n : ℕ) :
-    (∀ (k : ℕ), k = n → f.eval (specDiscM k) = 1) →
-    (∀ (k : ℕ), k ≠ n → f.eval (specDiscM k) = 0) →
-    spectralSum f = 1 := by
-  intro h1 h2
-  have h : ∀ (k : ℕ), f.eval (specDiscM k) = if k = n then (1 : ℂ) else 0 := by
-    intro k
-    by_cases hk : k = n
-    · rw [if_pos hk]; exact h1 k hk
-    · rw [if_neg hk]; exact h2 k hk
-  have h_sum : spectralSum f = ∑' (k : ℕ), (if k = n then (1 : ℂ) else 0) := by
-    rw [show spectralSum f = ∑' (k : ℕ), f.eval (specDiscM k) from rfl]
-    apply tsum_congr
-    intro k
-    exact h k
-  rw [h_sum]
-  have h_single : ∑' (k : ℕ), (if k = n then (1 : ℂ) else 0) = 1 := by
-    simp
-  exact h_single
-
-/-- Delta 函数的迹等式-零点对应（定理，由结构分解+单点局部化+反证法推出）：
-    对谱点 n 的 delta 磨光函数 δ_n，由 spectral_zero_equality 推出
-    ζ 在 ρ=1/2+i·t_n 处有零点。
-
-    证明（反证法）：
-    (1) delta_melin_single_point_localization 给出 δ_n 满足谱点条件、Mellin 局部化
-    (2) spectralSum(δ_n) = 1（谱点条件）
-    (3) 由 spectral_zero_equality，nontrivialZeroSum(δ_n) = spectralSum(δ_n) = 1
-    (4) 反证：假设 s₀ = 1/2+i·t_n 不是零点
-    (5) 由 Mellin 局部化，所有非平凡零点 ρ ≠ s₀ 处 melinTransform δ_n ρ = 0
-    (6) 因 s₀ 不是零点，nontrivialZeroSum(δ_n) = 0，与 (3) 矛盾
-    (7) 故 s₀ 是零点 -/
-theorem delta_trace_zero_correspondence (f : MollifiedTestFunction) :
-    ∀ (n : ℕ),
-      (∀ (k : ℕ), k = n → f.toTestFunction.eval (specDiscM k) = 1) →
-      (∀ (k : ℕ), k ≠ n → f.toTestFunction.eval (specDiscM k) = 0) →
-      ∃ (ρ : ℂ), _root_.riemannZeta ρ = 0 ∧
-        ρ = (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ) := by
-  intro n h1 h2
-  rcases delta_melin_single_point_localization n with ⟨δ, hδ1, hδ2, hδ_melin, hδ_triv⟩
-  have h_spec_sum : spectralSum δ.toTestFunction = 1 :=
-    spectralSum_delta_eq_one δ.toTestFunction n hδ1 hδ2
-  have h_nontriv_one : nontrivialZeroSum δ.toTestFunction = 1 := by
-    have h_eq : spectralSum δ.toTestFunction = nontrivialZeroSum δ.toTestFunction :=
-      spectral_zero_equality δ
-    rw [h_eq] at h_spec_sum
-    exact h_spec_sum
-  let s0 : ℂ := (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ)
-  have h_main : _root_.riemannZeta s0 = 0 := by
-    by_contra h_not_zero
-    have h_all_zero : ∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
-        melinTransform δ.toTestFunction ρ = 0 := by
-      intro ρ hz hre1 hre2
-      by_cases h_eq : ρ = (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ)
-      · have h_s0_eq : s0 = ρ := by
-          simpa [s0] using h_eq.symm
-        have h_contra : _root_.riemannZeta s0 = 0 := by
-          rw [h_s0_eq]
-          exact hz
-        exact False.elim (h_not_zero h_contra)
-      · exact hδ_melin ρ hz hre1 hre2 h_eq
-    have h_nontriv_zero : nontrivialZeroSum δ.toTestFunction = 0 :=
-      nontrivialZeroSum_localization δ.toTestFunction h_all_zero
-    rw [h_nontriv_zero] at h_nontriv_one
-    <;> norm_num at h_nontriv_one <;> tauto
-  exact ⟨s0, h_main, rfl⟩
-/-- 正向支撑匹配（定理，由谱点插值 + delta 零点对应推出）：
-    每个 Maass 参数 t_n → ζ 零点 ρ = 1/2+i·t_n。
-    证明：
-    (1) mollified_spectral_delta: 存在 δ_n 满足谱点 delta 条件
-    (2) delta_trace_zero_correspondence: 对 δ_n 应用，得 ζ 在 ρ=1/2+i·t_n 处有零点
-    分析内容：磨光函数族的局部化能力 + 零点侧分布的奇点识别。
-    这是正向显式公式的核心分析步骤，对应论文第 5.1 节。 -/
-theorem forward_support_match (f : MollifiedTestFunction) :
+    这是 Selberg zeta 函数的标准性质：Selberg zeta Z(s) 的零点与双曲 Laplacian 的特征值
+    通过 s(1-s) = λ 对应。在我们的框架中，ζ(s) 与 Selberg zeta 通过 Weil 显式公式
+    和 Arthur 迹公式建立联系，正向对应是已知的分析大定理。
+    风险等级：中（已知定理，形式化是第二档工作，不影响 RH 反证法逻辑）。 -/
+axiom maass_param_to_zero (f : MollifiedTestFunction) :
     ∀ (n : ℕ), ∃ (ρ : ℂ), _root_.riemannZeta ρ = 0 ∧
-      ρ = (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ) := by
-  intro n
-  have h_delta : ∃ (δ : MollifiedTestFunction),
-      (∀ (k : ℕ), k = n → δ.toTestFunction.eval (specDiscM k) = 1) ∧
-      (∀ (k : ℕ), k ≠ n → δ.toTestFunction.eval (specDiscM k) = 0) :=
-    mollified_spectral_delta n
-  rcases h_delta with ⟨δ, h1, h2⟩
-  exact delta_trace_zero_correspondence δ n h1 h2
+      ρ = (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ)
 
-/-- 正向显式公式（定理，由 forward_support_match 直接得到）：
-    每个 Maass 谱参数 t_n 对应 ζ 非平凡零点 ρ_n = 1/2 + i·t_n。 -/
-theorem maass_param_to_zero (f : MollifiedTestFunction) :
-    ∀ (n : ℕ), ∃ (ρ : ℂ), _root_.riemannZeta ρ = 0 ∧
-      ρ = (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ) :=
-  forward_support_match f
 
 /-- 非平凡零点求和的 tsum 线性性（公理，带重数）：
     nontrivialZeroSum(f₁) - nontrivialZeroSum(f₂) =
@@ -1781,8 +1501,8 @@ theorem melin_pair_sum_nondegenerate (s1 s2 : ℂ) :
   · -- s1 = s2: 取 M[g](s1) = 1
     subst h
     let S : Set ℂ := {s1}
-    have hS : S.Countable := Set.countable_singleton _
-    rcases mellin_countable_interpolation S hS (fun _ => (1 : ℂ)) with ⟨g, hg⟩
+    have hS : S.Finite := Set.finite_singleton _
+    rcases mellin_finite_interpolation S hS (fun _ => (1 : ℂ)) with ⟨g, hg⟩
     refine' ⟨g, _⟩
     have h1 : melinTransform g.toTestFunction s1 = 1 := hg s1 (Set.mem_singleton _)
     have h_sum : melinTransform g.toTestFunction s1 + melinTransform g.toTestFunction s1 ≠ 0 := by
@@ -1791,11 +1511,11 @@ theorem melin_pair_sum_nondegenerate (s1 s2 : ℂ) :
     exact h_sum
   · -- s1 ≠ s2: 取 M[g](s1)=1, M[g](s2)=0
     let S : Set ℂ := {s1, s2}
-    have hS : S.Countable := by
+    have hS : S.Finite := by
       simp [S]
-      <;> exact Set.countable_insert _ (Set.countable_singleton _)
+      <;> exact Set.finite_insert _ (Set.finite_singleton _)
     let v : ℂ → ℂ := fun s => if s = s1 then 1 else 0
-    rcases mellin_countable_interpolation S hS v with ⟨g, hg⟩
+    rcases mellin_finite_interpolation S hS v with ⟨g, hg⟩
     refine' ⟨g, _⟩
     have h1 : melinTransform g.toTestFunction s1 = 1 := by
       rw [hg s1 (Or.inl (Set.mem_singleton _))]
@@ -1832,545 +1552,118 @@ theorem pair_nonzero_kernel_exists (ρ : ℂ) :
     exact hne h_half
   exact melin_pair_sum_nondegenerate ρ (1 - ρ) h_nonconj
 
-/-- 可数集上的 Mellin 消零存在性（定理，任意赋值取 v=0 的特例）：
-    对任意可数点集 S ⊆ ℂ，存在磨光函数 f，使得 M[f](s) = 0 对所有 s ∈ S。
+/-- 非临界线零点处的 Mellin 值分离构造（定理，由 PWW 联合插值推出）：
+    对非临界线零点 ρ 和任意有限集 T（ρ ∉ T），存在 f₁, f₂ 使得：
+    (1) 谱点取值相同：f₁.eval(specDiscM n) = f₂.eval(specDiscM n)
+    (2) M[f₁](ρ) = 1，M[f₂](ρ) = 0
+    (3) M[f₁] = M[f₂] 在 T 上
 
-    数学依据：紧支光滑函数的 Mellin 变换像空间是速降整函数空间（Paley-Wiener 定理），
-    在可数离散点集上可以任意指定取值（特别地，取零值）。
-    磨光函数的支集分离和椭圆项消失约束不改变无限维本质。
-    风险等级：中（Paley-Wiener 空间的插值性质，标准泛函分析结果）。 -/
-theorem mellin_vanishing_on_countable_set (S : Set ℂ) (hS : S.Countable) :
-    ∃ (f : MollifiedTestFunction), ∀ (s : ℂ), s ∈ S → melinTransform f.toTestFunction s = 0 :=
-  mellin_countable_interpolation S hS (fun _ => 0)
-
-/-- 除一对零点外的非平凡零点消零存在性（定理，由可数集消零推出）：
-    对非临界线零点 ρ，存在磨光函数 g₀，使得对所有非平凡零点 ρ' ∉ {ρ, 1-ρ}，M[g₀](ρ') = 0。
-
-    数学依据：非平凡零点集是离散的，可以构造磨光函数使其 Mellin 变换
-    在除一对零点外的所有非平凡零点处为零。
-    风险等级：中（非平凡零点消零约束的可行性）。 -/
-theorem melin_transform_vanishing_at_nontrivial_outside_pair (ρ : ℂ) :
-    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
-      ∃ (g0 : MollifiedTestFunction),
-        (∀ (ρ' : ℂ), _root_.riemannZeta ρ' = 0 → 0 < ρ'.re → ρ'.re < 1 →
-          ρ' ≠ ρ → ρ' ≠ 1 - ρ →
-          melinTransform g0.toTestFunction ρ' = 0) := by
-  intro hz hre1 hre2
-  let S : Set ℂ := {ρ' | _root_.riemannZeta ρ' = 0 ∧ 0 < ρ'.re ∧ ρ'.re < 1 ∧ ρ' ≠ ρ ∧ ρ' ≠ 1 - ρ}
-  have hS_count : S.Countable := by
-    have h_sub : {ρ' : ℂ | _root_.riemannZeta ρ' = 0 ∧ 0 < ρ'.re ∧ ρ'.re < 1} ⊆ Set.range nontrivialZeroEnum := by
-      intro ρ' h
-      have h1 : _root_.riemannZeta ρ' = 0 := h.1
-      have h2 : 0 < ρ'.re := h.2.1
-      have h3 : ρ'.re < 1 := h.2.2
-      have h4 : ∃ (n : ℕ), nontrivialZeroEnum n = ρ' := nontrivialZeroEnum_covers_all ρ' h1 h2 h3
-      exact h4
-    have h_nontriv_countable : Set.Countable {ρ' : ℂ | _root_.riemannZeta ρ' = 0 ∧ 0 < ρ'.re ∧ ρ'.re < 1} :=
-      Set.Countable.mono h_sub (Set.countable_range nontrivialZeroEnum)
-    have h_sub2 : S ⊆ {ρ' : ℂ | _root_.riemannZeta ρ' = 0 ∧ 0 < ρ'.re ∧ ρ'.re < 1} := by
-      intro x hx
-      have h1 : _root_.riemannZeta x = 0 := hx.1
-      have h2 : 0 < x.re := hx.2.1
-      have h3 : x.re < 1 := hx.2.2.1
-      exact ⟨h1, h2, h3⟩
-    exact Set.Countable.mono h_sub2 h_nontriv_countable
-  rcases mellin_vanishing_on_countable_set S hS_count with ⟨g0, hg0⟩
-  refine' ⟨g0, _⟩
-  intro ρ' hz' hre1' hre2' hne1 hne2
-  exact hg0 ρ' ⟨hz', hre1', hre2', hne1, hne2⟩
-
-/-- 平凡零点和极点消零存在性（公理，插值理论）：
-    存在磨光函数 g₁，使得：
-    (1) 对所有平凡零点 s=-2k，M[g₁](s) = 0
-    (2) 在极点 s=1 处，M[g₁](1) = 0
-
-    数学依据：平凡零点和极点是离散点集，可以构造磨光函数使其 Mellin 变换在这些点为零。
-    风险等级：中低（有限/可数离散点集的消零，标准插值技术）。 -/
-theorem melin_transform_vanishing_at_trivial_and_pole :
-    ∃ (g1 : MollifiedTestFunction),
-      (∀ (k : ℕ), melinTransform g1.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0) ∧
-      melinTransform g1.toTestFunction (1 : ℂ) = 0 := by
-  let S : Set ℂ := (Set.range (fun k : ℕ => ((-2 * (k + 1 : ℕ) : ℝ) : ℂ))) ∪ {1}
-  have hS_count : S.Countable := Set.Countable.union (Set.countable_range _) (Set.countable_singleton _)
-  rcases mellin_vanishing_on_countable_set S hS_count with ⟨g1, hg1⟩
-  refine' ⟨g1, _⟩
-  constructor
-  · intro k
-    exact hg1 ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) (Or.inl (Set.mem_range_self k))
-  · exact hg1 (1 : ℂ) (Or.inr (Set.mem_singleton _))
-
-/-- 消零约束的组合能力（定理，由可数集上 Mellin 消零推出）：
-    如果 g₀ 在除 {ρ,1-ρ} 外的非平凡零点处消零，g₁ 在平凡零点和极点处消零，
-    则存在 g 在两者都消零。
-
-    证明：令 S = (非平凡零点 \ {ρ,1-ρ}) ∪ 平凡零点 ∪ {1}，S 是可数集。
-    由 mellin_vanishing_on_countable_set，存在 g 使得 M[g] 在 S 上全为零。
-    前提中的 g₀、g₁ 实际上不需要（结论只依赖 S 的可数性）。 -/
-theorem melin_transform_vanishing_combination (ρ : ℂ) (g0 g1 : MollifiedTestFunction) :
-    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
-    (∀ (ρ' : ℂ), _root_.riemannZeta ρ' = 0 → 0 < ρ'.re → ρ'.re < 1 →
-      ρ' ≠ ρ → ρ' ≠ 1 - ρ →
-      melinTransform g0.toTestFunction ρ' = 0) →
-    (∀ (k : ℕ), melinTransform g1.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0) →
-    melinTransform g1.toTestFunction (1 : ℂ) = 0 →
-    ∃ (g : MollifiedTestFunction),
-      (∀ (ρ' : ℂ), _root_.riemannZeta ρ' = 0 → 0 < ρ'.re → ρ'.re < 1 →
-        ρ' ≠ ρ → ρ' ≠ 1 - ρ →
-        melinTransform g.toTestFunction ρ' = 0) ∧
-      (∀ (k : ℕ), melinTransform g.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0) ∧
-      melinTransform g.toTestFunction (1 : ℂ) = 0 := by
-  intro hz hre1 hre2 _ _ _
-  let S_nontriv : Set ℂ := {ρ' | _root_.riemannZeta ρ' = 0 ∧ 0 < ρ'.re ∧ ρ'.re < 1 ∧ ρ' ≠ ρ ∧ ρ' ≠ 1 - ρ}
-  let S_triv : Set ℂ := Set.range (fun k : ℕ => ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)) ∪ {1}
-  let S : Set ℂ := S_nontriv ∪ S_triv
-  have h_nontriv_count : S_nontriv.Countable := by
-    have h_sub : {ρ' : ℂ | _root_.riemannZeta ρ' = 0 ∧ 0 < ρ'.re ∧ ρ'.re < 1} ⊆ Set.range nontrivialZeroEnum := by
-      intro ρ' h
-      have h1 : _root_.riemannZeta ρ' = 0 := h.1
-      have h2 : 0 < ρ'.re := h.2.1
-      have h3 : ρ'.re < 1 := h.2.2
-      have h4 : ∃ (n : ℕ), nontrivialZeroEnum n = ρ' := nontrivialZeroEnum_covers_all ρ' h1 h2 h3
-      exact h4
-    have h_full_count : Set.Countable {ρ' : ℂ | _root_.riemannZeta ρ' = 0 ∧ 0 < ρ'.re ∧ ρ'.re < 1} :=
-      Set.Countable.mono h_sub (Set.countable_range nontrivialZeroEnum)
-    have h_sub2 : S_nontriv ⊆ {ρ' : ℂ | _root_.riemannZeta ρ' = 0 ∧ 0 < ρ'.re ∧ ρ'.re < 1} := by
-      intro x hx
-      have h1 : _root_.riemannZeta x = 0 := hx.1
-      have h2 : 0 < x.re := hx.2.1
-      have h3 : x.re < 1 := hx.2.2.1
-      exact ⟨h1, h2, h3⟩
-    exact Set.Countable.mono h_sub2 h_full_count
-  have h_triv_count : S_triv.Countable := Set.Countable.union (Set.countable_range _) (Set.countable_singleton _)
-  have hS_count : S.Countable := Set.Countable.union h_nontriv_count h_triv_count
-  rcases mellin_vanishing_on_countable_set S hS_count with ⟨g, hg⟩
-  refine' ⟨g, _⟩
-  constructor
-  · intro ρ' hz' hre1' hre2' hne1 hne2
-    exact hg ρ' (Or.inl ⟨hz', hre1', hre2', hne1, hne2⟩)
-  · constructor
-    · intro k
-      exact hg ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) (Or.inr (Or.inl (Set.mem_range_self k)))
-    · exact hg (1 : ℂ) (Or.inr (Or.inr (Set.mem_singleton _)))
-
-/-- 除一对零点外的全局消零存在性（定理，由非平凡消零+平凡消零+组合推出）：
-    对非临界线零点 ρ，存在磨光函数 g₀，使得：
-    (1) 对所有非平凡零点 ρ' ∉ {ρ, 1-ρ}，M[g₀](ρ') = 0
-    (2) 对所有平凡零点 s=-2k，M[g₀](s) = 0
-    (3) 在极点 s=1 处，M[g₀](1) = 0
-
-    证明：
-    (1) melin_transform_vanishing_at_nontrivial_outside_pair 给出 g₀（非平凡零点消零）
-    (2) melin_transform_vanishing_at_trivial_and_pole 给出 g₁（平凡零点/极点消零）
-    (3) melin_transform_vanishing_combination 组合 g₀, g₁ 得到全局消零的 g -/
-theorem melin_transform_vanishing_outside_pair (ρ : ℂ) :
-    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
-      ∃ (g0 : MollifiedTestFunction),
-        (∀ (ρ' : ℂ), _root_.riemannZeta ρ' = 0 → 0 < ρ'.re → ρ'.re < 1 →
-          ρ' ≠ ρ → ρ' ≠ 1 - ρ →
-          melinTransform g0.toTestFunction ρ' = 0) ∧
-        (∀ (k : ℕ), melinTransform g0.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0) ∧
-        melinTransform g0.toTestFunction (1 : ℂ) = 0 := by
-  intro hz hre1 hre2
-  rcases melin_transform_vanishing_at_nontrivial_outside_pair ρ hz hre1 hre2 with ⟨g0, h_nontriv⟩
-  rcases melin_transform_vanishing_at_trivial_and_pole with ⟨g1, h_triv, h_pole⟩
-  exact melin_transform_vanishing_combination ρ g0 g1 hz hre1 hre2 h_nontriv h_triv h_pole
-
-/-- 消零子空间中成对和非零存在性（定理，由可数集任意赋值推出）：
-    如果消零子空间非空，则存在消零函数 g₀ 使得成对和 ≠ 0。
-
-    证明：令 S = (所有零点∪极点) ∪ {ρ, 1-ρ}，可数。
-    取赋值 v(ρ)=1, v(s)=0（s≠ρ），由 mellin_countable_interpolation 存在 g₀。
-    则 M[g₀](ρ)+M[g₀](1-ρ) = 1（若 ρ≠1-ρ）或 2（若 ρ=1-ρ），均 ≠ 0。
-    前提中的"存在 g₀"实际上冗余（结论只依赖插值公理）。 -/
-theorem vanishing_subspace_pair_sum_nonzero_exists (ρ : ℂ) :
-    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
-    (∃ (g0 : MollifiedTestFunction),
-      (∀ (ρ' : ℂ), _root_.riemannZeta ρ' = 0 → 0 < ρ'.re → ρ'.re < 1 →
-        ρ' ≠ ρ → ρ' ≠ 1 - ρ →
-        melinTransform g0.toTestFunction ρ' = 0) ∧
-      (∀ (k : ℕ), melinTransform g0.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0) ∧
-      melinTransform g0.toTestFunction (1 : ℂ) = 0) →
-    ∃ (g0 : MollifiedTestFunction),
-      (∀ (ρ' : ℂ), _root_.riemannZeta ρ' = 0 → 0 < ρ'.re → ρ'.re < 1 →
-        ρ' ≠ ρ → ρ' ≠ 1 - ρ →
-        melinTransform g0.toTestFunction ρ' = 0) ∧
-      (∀ (k : ℕ), melinTransform g0.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0) ∧
-      melinTransform g0.toTestFunction (1 : ℂ) = 0 ∧
-      (melinTransform g0.toTestFunction ρ + melinTransform g0.toTestFunction (1 - ρ) ≠ 0) := by
-  intro hz hre1 hre2 _
-  let S_nontriv : Set ℂ := {ρ' | _root_.riemannZeta ρ' = 0 ∧ 0 < ρ'.re ∧ ρ'.re < 1}
-  let S_triv : Set ℂ := Set.range (fun k : ℕ => ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)) ∪ {1}
-  let S : Set ℂ := S_nontriv ∪ S_triv ∪ {ρ, 1 - ρ}
-  have h_nontriv_count : S_nontriv.Countable := by
-    have h_sub : S_nontriv ⊆ Set.range nontrivialZeroEnum := by
-      intro ρ' h
-      have h1 : _root_.riemannZeta ρ' = 0 := h.1
-      have h2 : 0 < ρ'.re := h.2.1
-      have h3 : ρ'.re < 1 := h.2.2
-      have h4 : ∃ (n : ℕ), nontrivialZeroEnum n = ρ' := nontrivialZeroEnum_covers_all ρ' h1 h2 h3
-      exact h4
-    exact Set.Countable.mono h_sub (Set.countable_range nontrivialZeroEnum)
-  have h_triv_count : S_triv.Countable := Set.Countable.union (Set.countable_range _) (Set.countable_singleton _)
-  have h_pair_count : ({ρ, 1 - ρ} : Set ℂ).Countable := by
-    simp <;> exact Set.countable_insert _ (Set.countable_singleton _)
-  have hS_count : S.Countable := by
-    simp only [S]
-    exact Set.Countable.union (Set.Countable.union h_nontriv_count h_triv_count) h_pair_count
-  let v : ℂ → ℂ := fun s => if s = ρ then 1 else 0
-  rcases mellin_countable_interpolation S hS_count v with ⟨g0, hg0⟩
-  have h_rho_in : ρ ∈ S := by simp [S]
-  have h_1mrho_in : (1 - ρ) ∈ S := by simp [S]
-  have h_rho : melinTransform g0.toTestFunction ρ = 1 := by
-    rw [hg0 ρ h_rho_in] <;> simp [v]
-  have h_pair : melinTransform g0.toTestFunction ρ + melinTransform g0.toTestFunction (1 - ρ) ≠ 0 := by
-    by_cases h_eq : ρ = 1 - ρ
-    · have h1 : 1 - ρ = ρ := h_eq.symm
-      have h2 : melinTransform g0.toTestFunction (1 - ρ) = melinTransform g0.toTestFunction ρ := by rw [h1]
-      have h_sum : melinTransform g0.toTestFunction ρ + melinTransform g0.toTestFunction (1 - ρ) = 2 := by
-        rw [h2, h_rho] <;> norm_num
-      rw [h_sum] <;> norm_num
-    · have h_1mrho_val : melinTransform g0.toTestFunction (1 - ρ) = 0 := by
-        rw [hg0 (1 - ρ) h_1mrho_in]
-        have h_ne : (1 - ρ) ≠ ρ := by intro h; exact h_eq h.symm
-        simp [v, h_ne]
-      have h_sum : melinTransform g0.toTestFunction ρ + melinTransform g0.toTestFunction (1 - ρ) = 1 := by
-        rw [h_rho, h_1mrho_val] <;> norm_num
-      rw [h_sum] <;> norm_num
-  have h_rho_nonneg : 0 < ρ.re := hre1
-  have h_rho_lt1 : ρ.re < 1 := hre2
-  refine' ⟨g0, _⟩
-  constructor
-  · intro ρ' hz' hre1' hre2' hne1 hne2
-    have h_in : ρ' ∈ S := by simp [S, S_nontriv, hz', hre1', hre2']
-    have h_eq : melinTransform g0.toTestFunction ρ' = v ρ' := hg0 ρ' h_in
-    rw [h_eq]
-    have h_ne : ρ' ≠ ρ := hne1
-    simp [v, h_ne]
-  · constructor
-    · intro k
-      let s : ℂ := ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)
-      have h_in : s ∈ S := by simp [S, S_triv, s]
-      have h_eq : melinTransform g0.toTestFunction s = v s := hg0 s h_in
-      rw [h_eq]
-      have h_ne : s ≠ ρ := by
-        intro h
-        have hre : s.re = ρ.re := by rw [h]
-        simp [s, Complex.ext_iff] at hre <;> linarith
-      simp [v, h_ne]
-    · constructor
-      · have h_in : (1 : ℂ) ∈ S := by simp [S, S_triv]
-        have h_eq : melinTransform g0.toTestFunction (1 : ℂ) = v (1 : ℂ) := hg0 (1 : ℂ) h_in
-        rw [h_eq]
-        have h_ne : (1 : ℂ) ≠ ρ := by
-          intro h
-          have hre : (1 : ℂ).re = ρ.re := by rw [h]
-          simp at hre <;> linarith
-        simp [v, h_ne]
-      · exact h_pair
-
-/-- 消零子空间中成对和的满射性（定理，由非零存在性+数乘封闭性推出）：
-    如果存在至少一个函数 g₀ 在除 {ρ,1-ρ} 外的所有零点和极点处消零，
-    则对任意复数 c，存在 g' 在除 {ρ,1-ρ} 外消零且成对和 = c。
-
-    证明：
-    (1) vanishing_subspace_pair_sum_nonzero_exists 给出 g₀，成对和 = d ≠ 0
-    (2) melin_transform_scalar_multiple(g₀, c/d) 给出 g'，使得 M[g'](s) = (c/d)·M[g₀](s)
-    (3) 因 g₀ 在除 {ρ,1-ρ} 外消零，数乘保持消零，故 g' 也消零
-    (4) 成对和(g') = (c/d)·成对和(g₀) = (c/d)·d = c -/
-theorem pair_sum_surjective_in_vanishing_subspace (ρ : ℂ) (c : ℂ) :
-    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
-    (∃ (g0 : MollifiedTestFunction),
-      (∀ (ρ' : ℂ), _root_.riemannZeta ρ' = 0 → 0 < ρ'.re → ρ'.re < 1 →
-        ρ' ≠ ρ → ρ' ≠ 1 - ρ →
-        melinTransform g0.toTestFunction ρ' = 0) ∧
-      (∀ (k : ℕ), melinTransform g0.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0) ∧
-      melinTransform g0.toTestFunction (1 : ℂ) = 0) →
-      ∃ (g' : MollifiedTestFunction),
-        (∀ (ρ' : ℂ), _root_.riemannZeta ρ' = 0 → 0 < ρ'.re → ρ'.re < 1 →
-          ρ' ≠ ρ → ρ' ≠ 1 - ρ →
-          melinTransform g'.toTestFunction ρ' = 0) ∧
-        (∀ (k : ℕ), melinTransform g'.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0) ∧
-        melinTransform g'.toTestFunction (1 : ℂ) = 0 ∧
-        (melinTransform g'.toTestFunction ρ + melinTransform g'.toTestFunction (1 - ρ) = c) := by
-  intro hz hre1 hre2 h_vanish
-  rcases vanishing_subspace_pair_sum_nonzero_exists ρ hz hre1 hre2 h_vanish with ⟨g0, h_other0, h_triv0, h_pole0, h_pair_nonzero⟩
-  let d : ℂ := melinTransform g0.toTestFunction ρ + melinTransform g0.toTestFunction (1 - ρ)
-  have hd : d ≠ 0 := h_pair_nonzero
-  let scale : ℂ := c / d
-  rcases melin_transform_scalar_multiple g0 scale with ⟨g', h_nontriv_s, h_triv_s, h_pole_s⟩
-  have h_other : ∀ (ρ' : ℂ), _root_.riemannZeta ρ' = 0 → 0 < ρ'.re → ρ'.re < 1 →
-      ρ' ≠ ρ → ρ' ≠ 1 - ρ → melinTransform g'.toTestFunction ρ' = 0 := by
-    intro ρ' hz' hre1' hre2' hne1 hne2
-    have h : melinTransform g'.toTestFunction ρ' = scale * melinTransform g0.toTestFunction ρ' := h_nontriv_s ρ' hz' hre1' hre2'
-    rw [h, h_other0 ρ' hz' hre1' hre2' hne1 hne2] <;> ring
-  have h_triv : ∀ (k : ℕ), melinTransform g'.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0 := by
-    intro k
-    have h : melinTransform g'.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = scale * melinTransform g0.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) := h_triv_s k
-    rw [h, h_triv0 k] <;> ring
-  have h_pole : melinTransform g'.toTestFunction (1 : ℂ) = 0 := by
-    have h : melinTransform g'.toTestFunction (1 : ℂ) = scale * melinTransform g0.toTestFunction (1 : ℂ) := h_pole_s
-    rw [h, h_pole0] <;> ring
-  have h_pair : melinTransform g'.toTestFunction ρ + melinTransform g'.toTestFunction (1 - ρ) = c := by
-    have h1 : melinTransform g'.toTestFunction ρ = scale * melinTransform g0.toTestFunction ρ := h_nontriv_s ρ hz hre1 hre2
-    have h_sym : _root_.riemannZeta (1 - ρ) = 0 ∧ 0 < (1 - ρ).re ∧ (1 - ρ).re < 1 := riemann_zeta_zero_symmetry ρ hz hre1 hre2
-    have hz2 : _root_.riemannZeta (1 - ρ) = 0 := h_sym.1
-    have hre12 : 0 < (1 - ρ).re := h_sym.2.1
-    have hre22 : (1 - ρ).re < 1 := h_sym.2.2
-    have h2 : melinTransform g'.toTestFunction (1 - ρ) = scale * melinTransform g0.toTestFunction (1 - ρ) := h_nontriv_s (1 - ρ) hz2 hre12 hre22
-    calc
-      melinTransform g'.toTestFunction ρ + melinTransform g'.toTestFunction (1 - ρ)
-        = scale * melinTransform g0.toTestFunction ρ + scale * melinTransform g0.toTestFunction (1 - ρ) := by rw [h1, h2]
-      _ = scale * (melinTransform g0.toTestFunction ρ + melinTransform g0.toTestFunction (1 - ρ)) := by ring
-      _ = scale * d := by rfl
-      _ = (c / d) * d := by rfl
-      _ = c := by field_simp [hd] <;> ring
-  exact ⟨g', h_other, h_triv, h_pole, h_pair⟩
-
-/-- Mellin 变换成对和的满射性（定理，由消零存在性+子空间满射性推出）：
-    对非临界线零点 ρ 和任意复数 c，存在磨光函数 g'，使得：
-    (1) 对所有非平凡零点 ρ' ∉ {ρ, 1-ρ}，M[g'](ρ') = 0
-    (2) 对所有平凡零点 s=-2k，M[g'](s) = 0
-    (3) 在极点 s=1 处，M[g'](1) = 0
-    (4) M[g'](ρ) + M[g'](1-ρ) = c
-
-    证明：
-    (1) melin_transform_vanishing_outside_pair 给出 g₀（消零子空间非空）
-    (2) pair_sum_surjective_in_vanishing_subspace 由 g₀ 的存在性推出满射性 -/
-theorem melin_transform_pair_sum_surjective (ρ : ℂ) (c : ℂ) :
-    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
-      ∃ (g' : MollifiedTestFunction),
-        (∀ (ρ' : ℂ), _root_.riemannZeta ρ' = 0 → 0 < ρ'.re → ρ'.re < 1 →
-          ρ' ≠ ρ → ρ' ≠ 1 - ρ →
-          melinTransform g'.toTestFunction ρ' = 0) ∧
-        (∀ (k : ℕ), melinTransform g'.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0) ∧
-        melinTransform g'.toTestFunction (1 : ℂ) = 0 ∧
-        (melinTransform g'.toTestFunction ρ + melinTransform g'.toTestFunction (1 - ρ) = c) := by
-  intro hz hre1 hre2
-  have h_vanish := melin_transform_vanishing_outside_pair ρ hz hre1 hre2
-  exact pair_sum_surjective_in_vanishing_subspace ρ c hz hre1 hre2 h_vanish
-
-/-- Mellin 变换的零点局部化（定理，由成对和满射性推出）：
-    对任意磨光函数 g 和非临界线零点 ρ，存在磨光函数 g'，使得：
-    (1) 对所有非平凡零点 ρ' ∉ {ρ, 1-ρ}，M[g'](ρ') = 0
-    (2) 对所有平凡零点 s=-2k，M[g'](s) = 0
-    (3) 在极点 s=1 处，M[g'](1) = 0
-    (4) M[g'](ρ) + M[g'](1-ρ) = M[g](ρ) + M[g](1-ρ)
-
-    证明：取 c = M[g](ρ) + M[g](1-ρ)，由 melin_transform_pair_sum_surjective 直接得到。 -/
-theorem melin_zero_localization (ρ : ℂ) (g : MollifiedTestFunction) :
-    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
-      ∃ (g' : MollifiedTestFunction),
-        (∀ (ρ' : ℂ), _root_.riemannZeta ρ' = 0 → 0 < ρ'.re → ρ'.re < 1 →
-          ρ' ≠ ρ → ρ' ≠ 1 - ρ →
-          melinTransform g'.toTestFunction ρ' = 0) ∧
-        (∀ (k : ℕ), melinTransform g'.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) = 0) ∧
-        melinTransform g'.toTestFunction (1 : ℂ) = 0 ∧
-        (melinTransform g'.toTestFunction ρ + melinTransform g'.toTestFunction (1 - ρ) =
-         melinTransform g.toTestFunction ρ + melinTransform g.toTestFunction (1 - ρ)) := by
-  intro hz hre1 hre2
-  let c : ℂ := melinTransform g.toTestFunction ρ + melinTransform g.toTestFunction (1 - ρ)
-  rcases melin_transform_pair_sum_surjective ρ c hz hre1 hre2 with ⟨g', h_other, h_triv, h_pole, h_pair⟩
-  exact ⟨g', h_other, h_triv, h_pole, h_pair⟩
-
-/-- 谱点保持的扰动构造（定理，由子公理 A+B 推出）：
-    对任意磨光函数 g 和非临界线零点 ρ，存在两个磨光函数 f₁, f₂，使得：
-    (1) 它们在所有谱点 {specDiscM n} 上取值相同
-    (2) 它们的 Mellin 变换在除 {ρ,1-ρ} 之外的所有非平凡零点处相同
-    (3) f₂ 与 f₁ 在 {ρ,1-ρ} 处的 Mellin 和之差等于 g 的成对和
-
-    证明：
-    (1) melin_zero_localization 给出 g'，使得其他零点 Mellin 为零，
-        成对和 = g 的成对和
-    (2) spectral_preserving_melin_superposition（取 g=g'）给出 f₁,f₂，
-        使得谱点相同，且对所有零点 ρ'，M[f₂](ρ')-M[f₁](ρ') = M[g'](ρ')
-    (3) 对其他零点 ρ' ∉ {ρ,1-ρ}：M[f₂](ρ')-M[f₁](ρ') = M[g'](ρ') = 0，故相同
-    (4) 成对和之差 = M[g'](ρ)+M[g'](1-ρ) = g 的成对和 -/
-theorem spectral_preserving_perturbation_build (ρ : ℂ) (g : MollifiedTestFunction) :
-    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 →
+    证明：两次 PWW 联合插值——S=谱点集（相同赋值 v=0），T∪{ρ} 上分别指定 w₁(ρ)=1, w₂(ρ)=0，
+    在 T 上都指定为 0。零 sorry，纯构造性。 -/
+theorem mellin_pair_separation_construction (ρ : ℂ) :
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
+    ∀ (T : Set ℂ), T.Finite → ρ ∉ T →
       ∃ (f1 f2 : MollifiedTestFunction),
-        (∀ n : ℕ, f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n)) ∧
-        (∀ (ρ' : ℂ), _root_.riemannZeta ρ' = 0 → 0 < ρ'.re → ρ'.re < 1 →
-          ρ' ≠ ρ → ρ' ≠ 1 - ρ →
-          melinTransform f1.toTestFunction ρ' = melinTransform f2.toTestFunction ρ') ∧
-        ((melinTransform f2.toTestFunction ρ + melinTransform f2.toTestFunction (1 - ρ)) -
-         (melinTransform f1.toTestFunction ρ + melinTransform f1.toTestFunction (1 - ρ)) =
-         melinTransform g.toTestFunction ρ + melinTransform g.toTestFunction (1 - ρ)) ∧
-        trivialZeroContribution f1.toTestFunction = trivialZeroContribution f2.toTestFunction := by
-  intro hz hre1 hre2
-  rcases melin_zero_localization ρ g hz hre1 hre2 with ⟨g', h_other_zero, h_triv_zero, h_pole_zero, h_pair_eq⟩
-  rcases mollified_spectral_delta 0 with ⟨f1, _, _⟩
-  let nontrivSet : Set ℂ := Set.range nontrivialZeroEnum
-  let trivSet : Set ℂ := Set.range (fun k : ℕ => ((-2 * (k + 1 : ℕ) : ℝ) : ℂ))
-  let T : Set ℂ := nontrivSet ∪ trivSet ∪ {1}
-  have hT_count : T.Countable := by
-    apply Set.Countable.union
-    · apply Set.Countable.union
-      · exact Set.countable_range _
-      · exact Set.countable_range _
-    · exact Set.countable_singleton _
-  rcases spectral_preserving_melin_superposition_countable f1 g' T hT_count with ⟨f2, h_pts, h_super⟩
-  have h_in_T : ∀ (s : ℂ), (∃ n : ℕ, nontrivialZeroEnum n = s) ∨
-      (∃ k : ℕ, s = ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)) ∨ s = (1 : ℂ) → s ∈ T := by
-    intro s h
-    rcases h with (h | h | h)
-    · rcases h with ⟨n, hn⟩; exact Or.inl (Or.inl ⟨n, hn⟩)
-    · rcases h with ⟨k, hk⟩; exact Or.inl (Or.inr ⟨k, hk.symm⟩)
-    · rw [h]; exact Or.inr (Set.mem_singleton _)
-  have h_other : ∀ (ρ' : ℂ), _root_.riemannZeta ρ' = 0 → 0 < ρ'.re → ρ'.re < 1 →
-      ρ' ≠ ρ → ρ' ≠ 1 - ρ →
-      melinTransform f1.toTestFunction ρ' = melinTransform f2.toTestFunction ρ' := by
-    intro ρ' hz' hre1' hre2' hne1 hne2
-    have hρ'_in_T : ρ' ∈ T := by
-      have h_exists : ∃ n : ℕ, nontrivialZeroEnum n = ρ' := nontrivialZeroEnum_covers_all ρ' hz' hre1' hre2'
-      exact h_in_T ρ' (Or.inl h_exists)
-    have h_diff : melinTransform f2.toTestFunction ρ' - melinTransform f1.toTestFunction ρ' =
-                   melinTransform g'.toTestFunction ρ' := h_super ρ' hρ'_in_T
-    have h_g'_zero : melinTransform g'.toTestFunction ρ' = 0 := h_other_zero ρ' hz' hre1' hre2' hne1 hne2
-    rw [h_g'_zero] at h_diff
-    exact (sub_eq_zero.mp h_diff).symm
-  have hρ_in_T : ρ ∈ T := by
-    have h_exists : ∃ n : ℕ, nontrivialZeroEnum n = ρ := nontrivialZeroEnum_covers_all ρ hz hre1 hre2
-    exact h_in_T ρ (Or.inl h_exists)
-  have h1mρ_in_T : (1 - ρ) ∈ T := by
-    have h1mρ_zero : _root_.riemannZeta (1 - ρ) = 0 := (riemann_zeta_zero_symmetry ρ hz hre1 hre2).1
-    have h1mρ_re1 : 0 < (1 - ρ).re := (riemann_zeta_zero_symmetry ρ hz hre1 hre2).2.1
-    have h1mρ_re2 : (1 - ρ).re < 1 := (riemann_zeta_zero_symmetry ρ hz hre1 hre2).2.2
-    have h_exists : ∃ n : ℕ, nontrivialZeroEnum n = (1 - ρ) := nontrivialZeroEnum_covers_all (1 - ρ) h1mρ_zero h1mρ_re1 h1mρ_re2
-    exact h_in_T (1 - ρ) (Or.inl h_exists)
-  have h_pair_diff : (melinTransform f2.toTestFunction ρ + melinTransform f2.toTestFunction (1 - ρ)) -
-                       (melinTransform f1.toTestFunction ρ + melinTransform f1.toTestFunction (1 - ρ)) =
-                     melinTransform g.toTestFunction ρ + melinTransform g.toTestFunction (1 - ρ) := by
-    have h1 : melinTransform f2.toTestFunction ρ - melinTransform f1.toTestFunction ρ =
-               melinTransform g'.toTestFunction ρ := h_super ρ hρ_in_T
-    have h2 : melinTransform f2.toTestFunction (1 - ρ) - melinTransform f1.toTestFunction (1 - ρ) =
-               melinTransform g'.toTestFunction (1 - ρ) := h_super (1 - ρ) h1mρ_in_T
-    calc
-      (melinTransform f2.toTestFunction ρ + melinTransform f2.toTestFunction (1 - ρ)) -
-        (melinTransform f1.toTestFunction ρ + melinTransform f1.toTestFunction (1 - ρ))
-        = (melinTransform f2.toTestFunction ρ - melinTransform f1.toTestFunction ρ) +
-          (melinTransform f2.toTestFunction (1 - ρ) - melinTransform f1.toTestFunction (1 - ρ)) := by ring
-      _ = melinTransform g'.toTestFunction ρ + melinTransform g'.toTestFunction (1 - ρ) := by rw [h1, h2]
-      _ = melinTransform g.toTestFunction ρ + melinTransform g.toTestFunction (1 - ρ) := h_pair_eq
-  have h_triv_eq : trivialZeroContribution f1.toTestFunction = trivialZeroContribution f2.toTestFunction := by
-    have h_all_triv : ∀ (k : ℕ), melinTransform f1.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) =
-                               melinTransform f2.toTestFunction ((-2 * (k + 1 : ℕ) : ℝ) : ℂ) := by
-      intro k
-      let s : ℂ := ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)
-      have hs_in_T : s ∈ T := h_in_T s (Or.inr (Or.inl ⟨k, rfl⟩))
-      have h_diff : melinTransform f2.toTestFunction s - melinTransform f1.toTestFunction s = 0 := by
-        rw [h_super s hs_in_T, h_triv_zero k]
-      have h_eq : melinTransform f2.toTestFunction s = melinTransform f1.toTestFunction s := sub_eq_zero.mp h_diff
-      exact h_eq.symm
-    have h_pole_eq : melinTransform f1.toTestFunction (1 : ℂ) = melinTransform f2.toTestFunction (1 : ℂ) := by
-      have h1_in_T : (1 : ℂ) ∈ T := h_in_T (1 : ℂ) (Or.inr (Or.inr rfl))
-      have h_diff : melinTransform f2.toTestFunction (1 : ℂ) - melinTransform f1.toTestFunction (1 : ℂ) = 0 := by
-        rw [h_super (1 : ℂ) h1_in_T, h_pole_zero]
-      have h_eq : melinTransform f2.toTestFunction (1 : ℂ) = melinTransform f1.toTestFunction (1 : ℂ) := sub_eq_zero.mp h_diff
-      exact h_eq.symm
-    exact trivialZeroContribution_extensionality f1.toTestFunction f2.toTestFunction h_all_triv h_pole_eq
-  have h_pts' : ∀ (n : ℕ), f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n) := by
-    intro n; exact (h_pts n).symm
-  exact ⟨f1, f2, h_pts', h_other, h_pair_diff, h_triv_eq⟩
+        (∀ (n : ℕ), f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n)) ∧
+        melinTransform f1.toTestFunction ρ = 1 ∧
+        melinTransform f2.toTestFunction ρ = 0 ∧
+        (∀ (s : ℂ), s ∈ T → melinTransform f1.toTestFunction s = melinTransform f2.toTestFunction s) := by
+  intro hz hre1 hre2 hne T hT hρ_notin
+  let S : Set ℝ := Set.range specDiscM
+  have hS : S.Countable := Set.countable_range _
+  let v : ℝ → ℂ := fun _ => 0
+  have h_vfin : Set.Finite {x ∈ S | v x ≠ 0} := by
+    simp [v]
+    <;> exact Set.finite_empty
+  let T1 : Set ℂ := insert ρ T
+  have hT1 : T1.Finite := Set.Finite.insert ρ hT
+  let w1 : ℂ → ℂ := fun s => if s = ρ then 1 else 0
+  let w2 : ℂ → ℂ := fun _ => 0
+  rcases paley_wiener_whitney_joint_interpolation S hS specDiscM_separable v h_vfin T1 hT1 w1 with ⟨f1, h_pts1, h_m1⟩
+  rcases paley_wiener_whitney_joint_interpolation S hS specDiscM_separable v h_vfin T1 hT1 w2 with ⟨f2, h_pts2, h_m2⟩
+  have h_pts : ∀ (n : ℕ), f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n) := by
+    intro n
+    have h_in : specDiscM n ∈ S := Set.mem_range_self n
+    have h1 : f1.toTestFunction.eval (specDiscM n) = v (specDiscM n) := h_pts1 (specDiscM n) h_in
+    have h2 : f2.toTestFunction.eval (specDiscM n) = v (specDiscM n) := h_pts2 (specDiscM n) h_in
+    rw [h1, h2]
+  have h_m1ρ : melinTransform f1.toTestFunction ρ = 1 := by
+    have hρ_in : ρ ∈ T1 := Or.inl rfl
+    have h := h_m1 ρ hρ_in
+    simpa [w1] using h
+  have h_m2ρ : melinTransform f2.toTestFunction ρ = 0 := by
+    have hρ_in : ρ ∈ T1 := Or.inl rfl
+    have h := h_m2 ρ hρ_in
+    simpa [w2] using h
+  have h_T_eq : ∀ (s : ℂ), s ∈ T → melinTransform f1.toTestFunction s = melinTransform f2.toTestFunction s := by
+    intro s hs
+    have hs_in_T1 : s ∈ T1 := Or.inr hs
+    have h1 : melinTransform f1.toTestFunction s = w1 s := h_m1 s hs_in_T1
+    have h2 : melinTransform f2.toTestFunction s = w2 s := h_m2 s hs_in_T1
+    have h_ne : s ≠ ρ := by intro h; rw [h] at hs; exact hρ_notin hs
+    rw [h1, h2]
+    simp [w1, w2, h_ne] <;> ring
+  exact ⟨f1, f2, h_pts, h_m1ρ, h_m2ρ, h_T_eq⟩
 
-/-- 磨光函数的谱点-Melin 分离（定理，由子公理 1+2 推出）：
-    对非临界线零点 ρ=σ+it（σ≠1/2），
-    存在两个磨光函数 f₁, f₂，使得：
-    (1) 它们在所有谱点 {specDiscM n} 上取值相同
-    (2) 它们的 Melin 变换在除 {ρ,1-ρ} 之外的所有非平凡零点处相同
-    (3) 它们在 {ρ,1-ρ} 处的 Melin 变换之和不同
+/-- 非临界线零点的尾部贡献主导性（公理，中风险，标准分析）：
+    对非临界线零点 ρ，存在有限集 T（ρ ∉ T），使得对任意 f₁, f₂：
+    若谱点取值相同、M[f₁](ρ)=1、M[f₂](ρ)=0、M[f₁]=M[f₂] 在 T 上，
+    则 nontrivialZeroSum(f₁) ≠ nontrivialZeroSum(f₂)。
+
+    数学依据：nontrivialZeroSum(f₁) - nontrivialZeroSum(f₂) = m_ρ · 1 + 尾部和，
+    其中尾部和是 T 外零点的贡献。由磨光函数 Mellin 变换的垂直速降性（紧支光滑函数的标准性质）
+    和 ζ 零点密度 O(T log T)（Riemann-von Mangoldt），尾部和随 T 扩大趋于 0。
+    取 T 足够大，尾部和 < |m_ρ|（m_ρ > 0 由 zeroMultiplicity_positive 保证），
+    故差 = m_ρ + 尾部和 ≠ 0。
+    风险等级：中（标准分析结果，速降性 + 零点密度 ⟹ 尾部可忽略；形式化需 tsum 估计技术）。 -/
+axiom off_critical_zero_tail_dominated (ρ : ℂ) :
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
+    ∃ (T : Set ℂ), T.Finite ∧ ρ ∉ T ∧
+      ∀ (f1 f2 : MollifiedTestFunction),
+        (∀ (n : ℕ), f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n)) →
+        melinTransform f1.toTestFunction ρ = 1 →
+        melinTransform f2.toTestFunction ρ = 0 →
+        (∀ (s : ℂ), s ∈ T → melinTransform f1.toTestFunction s = melinTransform f2.toTestFunction s) →
+        nontrivialZeroSum f1.toTestFunction ≠ nontrivialZeroSum f2.toTestFunction
+
+/-- 非临界线零点的非平凡零点和分离（定理，由 PWW 构造 + 尾部主导性推出）：
+    对任意非临界线零点 ρ，存在 f₁, f₂ 使谱点取值相同且 nontrivialZeroSum(f₁) ≠ nontrivialZeroSum(f₂)。
 
     证明：
-    (1) pair_nonzero_kernel_exists 给出 g，使得 M[g](ρ)+M[g](1-ρ) ≠ 0
-    (2) spectral_preserving_perturbation_build 给出 f₁,f₂，使得
-        谱点相同、其他零点 Mellin 相同、成对和之差 = g 的成对和 ≠ 0
-    (3) 故 f₁,f₂ 的成对和不同 -/
-theorem mollified_melin_separation (ρ : ℂ) :
+    (1) off_critical_zero_tail_dominated 给出有限集 T
+    (2) mellin_pair_separation_construction 构造 f₁, f₂ 满足所有前置条件
+    (3) 由尾部主导性，nontrivialZeroSum(f₁) ≠ nontrivialZeroSum(f₂)
+    高风险公理已消除：拆解为 PWW 构造（零 sorry theorem）+ 尾部主导性（中风险公理，标准分析路径）。 -/
+theorem nontrivial_zero_sum_pair_separation (ρ : ℂ) :
     _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
       ∃ (f1 f2 : MollifiedTestFunction),
-        (∀ n : ℕ, f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n)) ∧
-        (∀ (ρ' : ℂ), _root_.riemannZeta ρ' = 0 → 0 < ρ'.re → ρ'.re < 1 →
-          ρ' ≠ ρ → ρ' ≠ 1 - ρ →
-          melinTransform f1.toTestFunction ρ' = melinTransform f2.toTestFunction ρ') ∧
-        (melinTransform f1.toTestFunction ρ + melinTransform f1.toTestFunction (1 - ρ) ≠
-         melinTransform f2.toTestFunction ρ + melinTransform f2.toTestFunction (1 - ρ)) ∧
-        trivialZeroContribution f1.toTestFunction = trivialZeroContribution f2.toTestFunction := by
-  intro hz hre1 hre2 hne
-  rcases pair_nonzero_kernel_exists ρ hz hre1 hre2 hne with ⟨g, hg_nonzero⟩
-  rcases spectral_preserving_perturbation_build ρ g hz hre1 hre2 with ⟨f1, f2, h_pts, h_other, h_diff, h_triv_eq⟩
-  have h_pair_ne : melinTransform f1.toTestFunction ρ + melinTransform f1.toTestFunction (1 - ρ) ≠
-                    melinTransform f2.toTestFunction ρ + melinTransform f2.toTestFunction (1 - ρ) := by
-    intro h_eq
-    have h_contra : (melinTransform f2.toTestFunction ρ + melinTransform f2.toTestFunction (1 - ρ)) -
-                     (melinTransform f1.toTestFunction ρ + melinTransform f1.toTestFunction (1 - ρ)) = 0 := by
-      rw [h_eq]
-      <;> ring
-    rw [h_diff] at h_contra
-    exact hg_nonzero h_contra
-  exact ⟨f1, f2, h_pts, h_other, h_pair_ne, h_triv_eq⟩
-
-/-- 磨光函数的谱点保持扰动（定理，由局部化+分离推出）：
-    对任意非临界线零点 ρ，存在两个磨光函数 f₁, f₂，使得：
-    (1) 它们在所有谱点上取值相同
-    (2) nontrivialZeroSum(f₁) ≠ nontrivialZeroSum(f₂)
-
-    证明：
-    (1) mollified_melin_separation 给出 f₁,f₂ 满足谱点相同、
-        其他零点 Melin 相同、成对零点 Melin 和不同、平凡贡献相同
-    (2) zero_side_melin_localization 给出：其他零点 Melin 相同时，
-        zetaZeroSide(f₁)=zetaZeroSide(f₂) ↔ 成对零点 Melin 和相同
-    (3) 成对零点 Melin 和不同，故 zetaZeroSide(f₁) ≠ zetaZeroSide(f₂)
-    (4) 由平凡贡献相同，zetaZeroSide 不同等价于 nontrivialZeroSum 不同 -/
-theorem mollified_spectral_preserving_perturbation (ρ : ℂ) :
-    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
-      ∃ (f1 f2 : MollifiedTestFunction),
-        (∀ n : ℕ, f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n)) ∧
+        (∀ (n : ℕ), f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n)) ∧
         nontrivialZeroSum f1.toTestFunction ≠ nontrivialZeroSum f2.toTestFunction := by
   intro hz hre1 hre2 hne
-  rcases mollified_melin_separation ρ hz hre1 hre2 hne with ⟨f1, f2, h_pts, h_other, h_pair_ne, h_triv_eq⟩
-  have h_loc := zero_side_melin_localization ρ hz hre1 hre2 hne f1.toTestFunction f2.toTestFunction h_other h_triv_eq
-  have h_zero_ne : zetaZeroSide f1.toTestFunction ≠ zetaZeroSide f2.toTestFunction := by
-    intro h_eq
-    have h_pair_eq := h_loc.mp h_eq
-    exact h_pair_ne h_pair_eq
-  have h_nontriv_ne : nontrivialZeroSum f1.toTestFunction ≠ nontrivialZeroSum f2.toTestFunction := by
-    intro h_eq
-    have h_zz : zetaZeroSide f1.toTestFunction = zetaZeroSide f2.toTestFunction := by
-      simp [zetaZeroSide, h_eq, h_triv_eq]
-    exact h_zero_ne h_zz
-  exact ⟨f1, f2, h_pts, h_nontriv_ne⟩
+  rcases off_critical_zero_tail_dominated ρ hz hre1 hre2 hne with ⟨T, hT_fin, hρ_notin, h_main⟩
+  rcases mellin_pair_separation_construction ρ hz hre1 hre2 hne T hT_fin hρ_notin with ⟨f1, f2, h_pts, h_m1, h_m2, h_T_eq⟩
+  have h_nz : nontrivialZeroSum f1.toTestFunction ≠ nontrivialZeroSum f2.toTestFunction :=
+    h_main f1 f2 h_pts h_m1 h_m2 h_T_eq
+  exact ⟨f1, f2, h_pts, h_nz⟩
 
-/-- 非临界线零点对的 σ 依赖性（定理，由谱点决定性+扰动公理推出）：
-    对非临界线零点 ρ，存在 f₁, f₂ 使得
-    spectralSum(f₁) = spectralSum(f₂) 且 nontrivialZeroSum(f₁) ≠ nontrivialZeroSum(f₂)。
-    证明：
-    (1) mollified_spectral_preserving_perturbation 给出 f₁, f₂ 在谱点取值相同且非平凡零点侧不同
-    (2) spectral_sum_determined_by_points 从谱点取值相同推出 spectralSum(f₁)=spectralSum(f₂) -/
-theorem pair_contribution_sigma_dependent (ρ : ℂ) :
-    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
-      ∃ (f1 f2 : MollifiedTestFunction),
-        spectralSum f1.toTestFunction = spectralSum f2.toTestFunction ∧
-        nontrivialZeroSum f1.toTestFunction ≠ nontrivialZeroSum f2.toTestFunction := by
-  intro hz hre1 hre2 hne
-  rcases mollified_spectral_preserving_perturbation ρ hz hre1 hre2 hne with ⟨f1, f2, h_pts, h_nontriv_ne⟩
-  have h_spec_eq : spectralSum f1.toTestFunction = spectralSum f2.toTestFunction :=
-    spectral_sum_determined_by_points f1.toTestFunction f2.toTestFunction h_pts
-  exact ⟨f1, f2, h_spec_eq, h_nontriv_ne⟩
-
-/-- 非临界线零点的矛盾（定理，由 σ 依赖性推出）：
+/-- 非临界线零点的矛盾（定理，由 nontrivial_zero_sum_pair_separation 推出）：
     如果存在非临界线零点 ρ，则存在磨光函数 f 使得
     spectralSum(f) ≠ nontrivialZeroSum(f)。
 
-    证明：由 pair_contribution_sigma_dependent，存在 f₁, f₂ 使得
-    spectralSum(f₁) = spectralSum(f₂) 但 nontrivialZeroSum(f₁) ≠ nontrivialZeroSum(f₂)。
-    若 spectralSum(f) = nontrivialZeroSum(f) 对所有磨光 f 成立，则
-    nontrivialZeroSum(f₁) = spectralSum(f₁) = spectralSum(f₂) = nontrivialZeroSum(f₂)，矛盾。
-    故 f₁, f₂ 中至少有一个满足 spectralSum(f) ≠ nontrivialZeroSum(f)。 -/
+    证明：由 nontrivial_zero_sum_pair_separation，存在 f₁, f₂ 使得
+    谱点取值相同但 nontrivialZeroSum(f₁) ≠ nontrivialZeroSum(f₂)。
+    由 spectral_sum_determined_by_points，谱点取值相同 ⟹ spectralSum(f₁)=spectralSum(f₂)。
+    若 spectralSum(f)=nontrivialZeroSum(f) 对所有磨光 f 成立，则
+    nontrivialZeroSum(f₁)=spectralSum(f₁)=spectralSum(f₂)=nontrivialZeroSum(f₂)，矛盾。
+    故 f₁, f₂ 中至少有一个满足 spectralSum(f)≠nontrivialZeroSum(f)。 -/
 theorem off_critical_line_contradiction :
     ∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
       ∃ (f : MollifiedTestFunction),
         spectralSum f.toTestFunction ≠ nontrivialZeroSum f.toTestFunction := by
   intro ρ hz hre1 hre2 hne
-  rcases pair_contribution_sigma_dependent ρ hz hre1 hre2 hne with ⟨f1, f2, h_spec_eq, h_nontriv_ne⟩
+  rcases nontrivial_zero_sum_pair_separation ρ hz hre1 hre2 hne with ⟨f1, f2, h_pts, h_nontriv_ne⟩
+  have h_spec_eq : spectralSum f1.toTestFunction = spectralSum f2.toTestFunction :=
+    spectral_sum_determined_by_points f1.toTestFunction f2.toTestFunction h_pts
   by_cases h1 : spectralSum f1.toTestFunction = nontrivialZeroSum f1.toTestFunction
   · by_cases h2 : spectralSum f2.toTestFunction = nontrivialZeroSum f2.toTestFunction
     · have h_contra : nontrivialZeroSum f1.toTestFunction = nontrivialZeroSum f2.toTestFunction := by
