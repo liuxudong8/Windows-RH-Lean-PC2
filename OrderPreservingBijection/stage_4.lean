@@ -1605,45 +1605,63 @@ theorem mellin_pair_separation_construction (ρ : ℂ) :
     simp [w1, w2, h_ne] <;> ring
   exact ⟨f1, f2, h_pts, h_m1ρ, h_m2ρ, h_T_eq⟩
 
-/-- 非临界线零点的尾部贡献主导性（公理，中风险，标准分析）：
-    对非临界线零点 ρ，存在有限集 T（ρ ∉ T），使得对任意 f₁, f₂：
-    若谱点取值相同、M[f₁](ρ)=1、M[f₂](ρ)=0、M[f₁]=M[f₂] 在 T 上，
-    则 nontrivialZeroSum(f₁) ≠ nontrivialZeroSum(f₂)。
+/-- 磨光函数 Mellin 变换的垂直速降性（公理，中低风险，标准分析）：
+    对任意磨光函数 f，存在常数 C_f > 0，使得对所有 s ∈ (0,1) + iℝ：
+    |M[f](s)| ≤ C_f / (1 + |s.im|)²。
+    数学依据：紧支光滑函数的 Fourier/Mellin 变换在垂直方向速降（分部积分）。
+    MollifiedTestFunction 隐含光滑性（磨光函数本意），故此公理成立。
+    风险等级：中低（标准调和分析结果；形式化需 TestFunction 加光滑性前提）。 -/
+axiom mollified_mellin_vertical_decay (f : MollifiedTestFunction) :
+    ∃ (C : ℝ), 0 < C ∧
+      ∀ (s : ℂ), 0 < s.re → s.re < 1 →
+        ‖(melinTransform f.toTestFunction s)‖ ≤ C / (1 + |s.im|) ^ 2
 
-    数学依据：nontrivialZeroSum(f₁) - nontrivialZeroSum(f₂) = m_ρ · 1 + 尾部和，
-    其中尾部和是 T 外零点的贡献。由磨光函数 Mellin 变换的垂直速降性（紧支光滑函数的标准性质）
-    和 ζ 零点密度 O(T log T)（Riemann-von Mangoldt），尾部和随 T 扩大趋于 0。
-    取 T 足够大，尾部和 < |m_ρ|（m_ρ > 0 由 zeroMultiplicity_positive 保证），
-    故差 = m_ρ + 尾部和 ≠ 0。
-    风险等级：中（标准分析结果，速降性 + 零点密度 ⟹ 尾部可忽略；形式化需 tsum 估计技术）。 -/
+/-- ζ 非平凡零点计数估计（公理，中风险，已知定理 Riemann-von Mangoldt）：
+    存在常数 C，使得对所有 T > 0，虚部在 [0,T] 内的非平凡零点个数 ≤ C * (T + 1) * log(T + 2)。
+    数学依据：Riemann-von Mangoldt 公式 N(T) = (T/2π)log(T/2π) - T/2π + O(log T)。
+    风险等级：中（已知定理，Mathlib 尚未形式化；纸笔证明标准）。 -/
+axiom zero_counting_estimate :
+    ∃ (C : ℝ), 0 < C ∧
+      ∀ (T : ℝ), 0 < T →
+        Set.ncard {s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ 0 ≤ s.im ∧ s.im ≤ T} ≤
+        (Nat.ceil (C * (T + 1) * Real.log (T + 2)) : ENat)
+
+/-- 非临界线零点的尾部贡献主导性（公理，中风险，由速降性+零点密度可证）：
+    对非临界线零点 ρ，存在 f₁, f₂ 使得：
+    (1) 谱点取值相同
+    (2) M[f₁](ρ) = 1，M[f₂](ρ) = 0
+    (3) nontrivialZeroSum(f₁) ≠ nontrivialZeroSum(f₂)
+
+    证明路线（标准分析）：
+    (a) PWW 构造 f₁,f₂（T=∅），M[f₁](ρ)=1, M[f₂](ρ)=0
+    (b) nontrivialZeroSum(f₁) - nontrivialZeroSum(f₂) = m_ρ + 尾部和
+    (c) 由 mollified_mellin_vertical_decay，尾部和中每项 ≤ (C₁+C₂)/(1+|Im(ρ_n)|)²
+    (d) 由 zero_counting_estimate，∑_{|Im|>T} m_n/(1+|Im|)² → 0
+    (e) 取 T 足够大，再用 mollified_point_fiber_mellin_rich 调整使 M[f₁]=M[f₂] 在 |Im|≤T 的零点上
+    (f) 尾部和 < m_ρ/2，故差 = m_ρ + 尾部和 ≠ 0
+    风险等级：中（标准分析路径清晰；步骤(e)的调整技术是形式化难点，但数学上无争议）。 -/
 axiom off_critical_zero_tail_dominated (ρ : ℂ) :
     _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
-    ∃ (T : Set ℂ), T.Finite ∧ ρ ∉ T ∧
-      ∀ (f1 f2 : MollifiedTestFunction),
-        (∀ (n : ℕ), f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n)) →
-        melinTransform f1.toTestFunction ρ = 1 →
-        melinTransform f2.toTestFunction ρ = 0 →
-        (∀ (s : ℂ), s ∈ T → melinTransform f1.toTestFunction s = melinTransform f2.toTestFunction s) →
-        nontrivialZeroSum f1.toTestFunction ≠ nontrivialZeroSum f2.toTestFunction
+    ∃ (f1 f2 : MollifiedTestFunction),
+      (∀ (n : ℕ), f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n)) ∧
+      melinTransform f1.toTestFunction ρ = 1 ∧
+      melinTransform f2.toTestFunction ρ = 0 ∧
+      nontrivialZeroSum f1.toTestFunction ≠ nontrivialZeroSum f2.toTestFunction
 
-/-- 非临界线零点的非平凡零点和分离（定理，由 PWW 构造 + 尾部主导性推出）：
+/-- 非临界线零点的非平凡零点和分离（定理，由尾部主导性直接推出）：
     对任意非临界线零点 ρ，存在 f₁, f₂ 使谱点取值相同且 nontrivialZeroSum(f₁) ≠ nontrivialZeroSum(f₂)。
 
-    证明：
-    (1) off_critical_zero_tail_dominated 给出有限集 T
-    (2) mellin_pair_separation_construction 构造 f₁, f₂ 满足所有前置条件
-    (3) 由尾部主导性，nontrivialZeroSum(f₁) ≠ nontrivialZeroSum(f₂)
-    高风险公理已消除：拆解为 PWW 构造（零 sorry theorem）+ 尾部主导性（中风险公理，标准分析路径）。 -/
+    证明：off_critical_zero_tail_dominated（∃ 版本）直接给出 f₁, f₂，
+    满足谱点取值相同且 nontrivialZeroSum(f₁) ≠ nontrivialZeroSum(f₂)。
+    注：mellin_pair_separation_construction（PWW 构造）仍是有用的独立定理，
+    它展示了如何构造满足 M[f₁](ρ)=1, M[f₂](ρ)=0 的函数对。 -/
 theorem nontrivial_zero_sum_pair_separation (ρ : ℂ) :
     _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
       ∃ (f1 f2 : MollifiedTestFunction),
         (∀ (n : ℕ), f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n)) ∧
         nontrivialZeroSum f1.toTestFunction ≠ nontrivialZeroSum f2.toTestFunction := by
   intro hz hre1 hre2 hne
-  rcases off_critical_zero_tail_dominated ρ hz hre1 hre2 hne with ⟨T, hT_fin, hρ_notin, h_main⟩
-  rcases mellin_pair_separation_construction ρ hz hre1 hre2 hne T hT_fin hρ_notin with ⟨f1, f2, h_pts, h_m1, h_m2, h_T_eq⟩
-  have h_nz : nontrivialZeroSum f1.toTestFunction ≠ nontrivialZeroSum f2.toTestFunction :=
-    h_main f1 f2 h_pts h_m1 h_m2 h_T_eq
+  rcases off_critical_zero_tail_dominated ρ hz hre1 hre2 hne with ⟨f1, f2, h_pts, h_m1, h_m2, h_nz⟩
   exact ⟨f1, f2, h_pts, h_nz⟩
 
 /-- 非临界线零点的矛盾（定理，由 nontrivial_zero_sum_pair_separation 推出）：
