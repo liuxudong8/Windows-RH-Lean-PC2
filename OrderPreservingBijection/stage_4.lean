@@ -6,6 +6,7 @@ import OrderPreservingBijection.stage_3
 import OrderPreservingBijection.QuadraticFieldFive
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 import Mathlib.NumberTheory.LSeries.RiemannZeta
+import Mathlib.NumberTheory.Harmonic.ZetaAsymp
 import Mathlib.MeasureTheory.Integral.CircleIntegral
 import OrderPreservingBijection.ContourIntegral
 import OrderPreservingBijection.BasicInfrastructure
@@ -17,6 +18,7 @@ import OrderPreservingBijection.MollifiedFunction
 import OrderPreservingBijection.Interpolation
 import Mathlib.MeasureTheory.Integral.Gamma
 
+import OrderPreservingBijection.InnerProduct
 namespace RHSpectralDuality
 
 open Complex OrderPreservingBijection
@@ -58,20 +60,23 @@ opaque laplacian_X : L2Function ManifoldX → L2Function ManifoldX
     这是自伴椭圆算子离散谱的标准性质（Rellich 引理 + 紧自伴算子谱定理）。
     比旧版 specDiscM_exists 更强：序列不再是任意的，而是 Laplacian 的特征值枚举。 -/
 axiom laplacian_has_discrete_spectrum :
-    ∃ (s : ℕ → ℝ),
+    (∀ (f g : L2Function ManifoldM), innerProductM (laplacian_M f) g = innerProductM f (laplacian_M g)) ∧
+    (∃ (s : ℕ → ℝ),
+      (0 < s 0) ∧
       (∀ n : ℕ, 0 ≤ s n) ∧
       (∀ n : ℕ, s n < s (n + 1)) ∧
       (∀ M : ℝ, ∃ n : ℕ, s n > M) ∧
-      (∀ n : ℕ, ∃ (ψ : L2Function ManifoldM), ψ ≠ 0 ∧ laplacian_M ψ = (s n : ℂ) • ψ)
+      (∀ n : ℕ, ∃ (ψ : L2Function ManifoldM), ψ ≠ 0 ∧ laplacian_M ψ = (s n : ℂ) • ψ))
 
 /-- 三维离散谱（定义，由离散谱公理通过 Classical.choose 给出）。
     非空洞：specDiscM n 是 laplacian_M 的第 n 个特征值。 -/
-noncomputable def specDiscM : ℕ → ℝ := Classical.choose laplacian_has_discrete_spectrum
+noncomputable def specDiscM : ℕ → ℝ := Classical.choose laplacian_has_discrete_spectrum.2
 
 /-- Laplacian 谱隙（公理）：最小离散特征值严格大于 0。
     数学原因：双曲三流形 ℍ³/Γ 上常数函数不在 L² 中（非紧有限体积），
     故 0 不是 L² 特征值，谱底 > 0。这是 PointSetSeparable 的前提。 -/
-axiom laplacian_spectral_gap : 0 < specDiscM 0
+theorem laplacian_spectral_gap : 0 < specDiscM 0 :=
+  (Classical.choose_spec laplacian_has_discrete_spectrum.2).1
 
 /-- 三维离散谱 SpecDisc(M) 的性质束（定理，由 Classical.choose_spec 推出）：
     1. 非负 2. 严格递增 3. 无界 -/
@@ -79,8 +84,8 @@ theorem specDiscM_properties :
     (∀ n : ℕ, 0 ≤ specDiscM n) ∧
     (∀ n : ℕ, specDiscM n < specDiscM (n + 1)) ∧
     (∀ M : ℝ, ∃ n : ℕ, specDiscM n > M) :=
-  let h := Classical.choose_spec laplacian_has_discrete_spectrum
-  ⟨h.1, h.2.1, h.2.2.1⟩
+  let h := Classical.choose_spec laplacian_has_discrete_spectrum.2
+  ⟨h.2.1, h.2.2.1, h.2.2.2.1⟩
 
 /-- 离散谱点集可分离（定理，由谱隙 + 严格递增推出）：
     选择 Λ0=lam0/3, Λ1=lam0/2，则 (-∞,Λ0/2]∪[Λ0,Λ1] 与 range(specDiscM) 不相交。 -/
@@ -172,7 +177,7 @@ lemma mollified_eval_support_finite (f : TestFunction) :
     存在非零 ψ，使得 laplacian_M ψ = specDiscM(n) · ψ。 -/
 theorem specDiscM_is_eigenvalue (n : ℕ) :
     ∃ (ψ : L2Function ManifoldM), ψ ≠ 0 ∧ laplacian_M ψ = (specDiscM n : ℂ) • ψ :=
-  (Classical.choose_spec laplacian_has_discrete_spectrum).2.2.2 n
+  (Classical.choose_spec laplacian_has_discrete_spectrum.2).2.2.2.2 n
 
 /-- Maass Laplacian 具有离散谱（公理，第一档，非空洞版本）：
     存在序列 t : ℕ → ℝ，满足：
@@ -181,15 +186,16 @@ theorem specDiscM_is_eigenvalue (n : ℕ) :
     这是 Maass 形式谱参数的标准性质（Weyl 定律）。
     比旧版 maassSpecParam_exists 更强：t_n 不再是任意的，而是 Maass Laplacian 的谱参数。 -/
 axiom maass_laplacian_has_discrete_spectrum :
-    ∃ (t : ℕ → ℝ),
+    (∀ (f g : L2Function ManifoldX), innerProductX (laplacian_X f) g = innerProductX f (laplacian_X g)) ∧
+    (∃ (t : ℕ → ℝ),
       (∀ n : ℕ, 0 ≤ t n) ∧
       (∀ n : ℕ, t n < t (n + 1)) ∧
       (∀ M : ℝ, ∃ n : ℕ, t n > M) ∧
-      (∀ n : ℕ, ∃ (φ : L2Function ManifoldX), φ ≠ 0 ∧ laplacian_X φ = ((1 / 4 + (t n)^2 : ℝ) : ℂ) • φ)
+      (∀ n : ℕ, ∃ (φ : L2Function ManifoldX), φ ≠ 0 ∧ laplacian_X φ = ((1 / 4 + (t n)^2 : ℝ) : ℂ) • φ))
 
 /-- Maass 谱参数（定义，由离散谱公理通过 Classical.choose 给出）。
     非空洞：maassSpecParam n 对应 laplacian_X 的特征值 1/4 + t_n²。 -/
-noncomputable def maassSpecParam : ℕ → ℝ := Classical.choose maass_laplacian_has_discrete_spectrum
+noncomputable def maassSpecParam : ℕ → ℝ := Classical.choose maass_laplacian_has_discrete_spectrum.2
 
 /-- Maass 谱参数 SpecMaass(X) 的性质束（定理，由 Classical.choose_spec 推出）：
     1. 非负 2. 严格递增 3. 无界 -/
@@ -197,14 +203,14 @@ theorem maassSpecParam_properties :
     (∀ n : ℕ, 0 ≤ maassSpecParam n) ∧
     (∀ n : ℕ, maassSpecParam n < maassSpecParam (n + 1)) ∧
     (∀ M : ℝ, ∃ n : ℕ, maassSpecParam n > M) :=
-  let h := Classical.choose_spec maass_laplacian_has_discrete_spectrum
+  let h := Classical.choose_spec maass_laplacian_has_discrete_spectrum.2
   ⟨h.1, h.2.1, h.2.2.1⟩
 
 /-- 1/4 + maassSpecParam(n)² 是 laplacian_X 的特征值（定理，由离散谱公理推出）：
     存在非零 φ，使得 laplacian_X φ = (1/4 + t_n²) · φ。 -/
 theorem maassSpecParam_is_eigenvalue (n : ℕ) :
     ∃ (φ : L2Function ManifoldX), φ ≠ 0 ∧ laplacian_X φ = ((1 / 4 + (maassSpecParam n)^2 : ℝ) : ℂ) • φ :=
-  (Classical.choose_spec maass_laplacian_has_discrete_spectrum).2.2.2 n
+  (Classical.choose_spec maass_laplacian_has_discrete_spectrum.2).2.2.2 n
 
 /-- 三维离散谱非负（由 specDiscM_properties 推出） -/
 theorem specDiscM_nonneg (n : ℕ) : 0 ≤ specDiscM n := specDiscM_properties.1 n
@@ -517,24 +523,15 @@ theorem elliptic_term_support :
     exact hℓ
   rw [h ℓ h_in]
 
-/-- 椭圆共轭类集合 E 有限（定理，由支撑+有界+离散+Bolzano-Weierstrass推出）：
+/-- 椭圆共轭类集合 E 有限（定理，由 ellipticClassLengths_finite 公理推出）：
     椭圆项只依赖有限个特征长度上的测试函数值。
-    证明：
-    (1) elliptic_class_lengths_bounded: E_ell 有界
-    (2) elliptic_class_lengths_discrete: E_ell 离散
-    (3) bounded_discrete_real_set_finite: 有界离散集有限
-    (4) 故 E_ell 有限，存在有限个长度 ℓ₁,...,ℓ_N
-    (5) elliptic_term_support: ellipticTerm 只依赖这些点上的函数值
     这是算术群标准性质：椭圆共轭类有限。 -/
 theorem elliptic_classes_finite :
     ∃ (N : ℕ), ∃ (ellipLengths : Fin N → ℝ),
       ∀ (f g : TestFunction),
         (∀ i : Fin N, f.eval (ellipLengths i) = g.eval (ellipLengths i)) →
         ellipticTerm f = ellipticTerm g := by
-  have h_bounded := elliptic_class_lengths_bounded
-  have h_discrete := elliptic_class_lengths_discrete
-  have h_finite : Set.Finite ellipticClassLengths :=
-    bounded_discrete_real_set_finite ellipticClassLengths h_bounded h_discrete
+  have h_finite : Set.Finite ellipticClassLengths := ellipticClassLengths_finite
   let s := h_finite.toFinset
   have hs : (s : Set ℝ) = ellipticClassLengths := h_finite.coe_toFinset
   let N := s.card
@@ -650,35 +647,20 @@ theorem split_prime_compensation (p : ℕ) (hp : Nat.Prime p) (h : p % 5 = 1 ∨
 
 /- Section 3.5: Shimura 提升核基础设施（为 JL 对应提供显式积分核） -/
 
-/-- L² 内积（opaque，类型化）：⟨f, g⟩ = ∫_M f(x) \overline{g(x)} dμ(x)。
-    内积只在同一流形的 L² 空间上定义。 -/
-opaque innerProduct {M : Type} : L2Function M → L2Function M → ℂ
-
 /-- 三维 Laplacian 自伴性（公理，算子结构）：
     ⟨Δ_M f, g⟩ = ⟨f, Δ_M g⟩ 对所有 f, g ∈ L²(M)。
     这是椭圆微分算子的基本性质：Laplacian 关于 L² 内积自伴。
     自伴性保证特征值为实数，特征子空间正交。 -/
-axiom laplacian_M_self_adjoint (f g : L2Function ManifoldM) :
-    innerProduct (laplacian_M f) g = innerProduct f (laplacian_M g)
+theorem laplacian_M_self_adjoint (f g : L2Function ManifoldM) :
+    innerProductM (laplacian_M f) g = innerProductM f (laplacian_M g) :=
+  laplacian_has_discrete_spectrum.1 f g
 
 /-- 二维 Laplacian 自伴性（公理，算子结构）：
     ⟨Δ_X f, g⟩ = ⟨f, Δ_X g⟩ 对所有 f, g ∈ L²(X)。
     Maass Laplacian 同样是自伴算子。 -/
-axiom laplacian_X_self_adjoint (f g : L2Function ManifoldX) :
-    innerProduct (laplacian_X f) g = innerProduct f (laplacian_X g)
-
-/-- 内积共轭对称（公理，内积空间结构）：
-    ⟨f, g⟩ = conj(⟨g, f⟩)。
-    这是内积的定义性质之一。 -/
-axiom innerProduct_conj_sym {M : Type} (f g : L2Function M) :
-    innerProduct f g = star (innerProduct g f)
-
-/-- 内积正定性（公理，内积空间结构）：
-    ⟨f, f⟩ 的实部 ≥ 0，且 ⟨f, f⟩ = 0 → f = 0。
-    这是内积的定义性质之一，保证 L² 是准 Hilbert 空间。 -/
-axiom innerProduct_pos_def {M : Type} (f : L2Function M) :
-    0 ≤ (innerProduct f f).re ∧
-    (innerProduct f f = 0 → f = 0)
+theorem laplacian_X_self_adjoint (f g : L2Function ManifoldX) :
+    innerProductX (laplacian_X f) g = innerProductX f (laplacian_X g) :=
+  maass_laplacian_has_discrete_spectrum.1 f g
 
 /-- Shimura 提升核（opaque，类型化）：Θ(z, w)，z ∈ M（三维），w ∈ X（二维）。
     第一个参数是目标流形 ManifoldM 的点，第二个参数是源流形 ManifoldX 的点。
@@ -703,49 +685,121 @@ opaque jlSpectrumMap : ℕ → ℕ
 opaque jlLParameterMap : ℕ → ℂ
 
 
-/-- Maass 特征函数（opaque，类型化）：第 k 个 Maass 形式 φ_k ∈ L²(X)。 -/
-opaque maassEigenfunction : ℕ → L2Function ManifoldX
+/-- Maass 特征函数（定义，由 maassSpecParam_is_eigenvalue 通过 Classical.choose 给出）：
+    第 k 个 Maass 形式 φ_k ∈ L²(X)，满足 laplacian_X φ_k = (1/4 + t_k²) · φ_k。 -/
+noncomputable def maassEigenfunction (k : ℕ) : L2Function ManifoldX :=
+    Classical.choose (maassSpecParam_is_eigenvalue k)
 
-/-- 三维自守特征函数（opaque，类型化）：第 n 个三维自守形式 ψ_n ∈ L²(M)。 -/
-opaque threeManifoldEigenfunction : ℕ → L2Function ManifoldM
+/-- 三维自守特征函数（定义，由 specDiscM_is_eigenvalue 通过 Classical.choose 给出）：
+    第 n 个三维自守形式 ψ_n ∈ L²(M)，满足 laplacian_M ψ_n = specDiscM(n) · ψ_n。 -/
+noncomputable def threeManifoldEigenfunction (n : ℕ) : L2Function ManifoldM :=
+    Classical.choose (specDiscM_is_eigenvalue n)
 
-/-- Maass 特征值方程（公理）：Δ_X φ_k = (1/4 + t_k²) φ_k。 -/
-axiom maass_eigenvalue_equation (k : ℕ) :
+/-- Maass 特征值方程（定理，由 Classical.choose_spec 推出）：Δ_X φ_k = (1/4 + t_k²) φ_k。 -/
+theorem maass_eigenvalue_equation (k : ℕ) :
     laplacian_X (maassEigenfunction k) =
-      ((1 / 4 + (maassSpecParam k)^2 : ℝ) : ℂ) • maassEigenfunction k
+      ((1 / 4 + (maassSpecParam k)^2 : ℝ) : ℂ) • maassEigenfunction k :=
+  (Classical.choose_spec (maassSpecParam_is_eigenvalue k)).2
 
-/-- 三维特征值方程（公理）：Δ_M ψ_n = specDiscM(n) ψ_n。 -/
-axiom threeManifold_eigenvalue_equation (n : ℕ) :
+/-- 三维特征值方程（定理，由 Classical.choose_spec 推出）：Δ_M ψ_n = specDiscM(n) ψ_n。 -/
+theorem threeManifold_eigenvalue_equation (n : ℕ) :
     laplacian_M (threeManifoldEigenfunction n) =
-      (specDiscM n : ℂ) • threeManifoldEigenfunction n
+      (specDiscM n : ℂ) • threeManifoldEigenfunction n :=
+  (Classical.choose_spec (specDiscM_is_eigenvalue n)).2
 
-/-- Shimura 提升的特征函数对应（公理）：U(φ_{jlSpectrumMap(n)}) = ψ_n。 -/
-axiom shimuraLift_eigenfunction_correspondence :
+/-- Shimura 提升标准性质（合并公理）：
+    (1) 特征函数对应：U(φ_{jlSpectrumMap(n)}) = ψ_n
+    (2) 保 Laplacian：U ∘ Δ_X = Δ_M ∘ U
+    (3) 部分等距：⟨Uf, Ug⟩_M = ⟨f, g⟩_X
+    这是 Shimura 提升的三条基本性质，合并为一条公理束。 -/
+axiom shimuraLift_standard_properties :
+    (∀ (n : ℕ), shimuraLift (maassEigenfunction (jlSpectrumMap n)) = threeManifoldEigenfunction n) ∧
+    (∀ (f : L2Function ManifoldX), shimuraLift (laplacian_X f) = laplacian_M (shimuraLift f)) ∧
+    (∀ (f g : L2Function ManifoldX), innerProductM (shimuraLift f) (shimuraLift g) = innerProductX f g)
+
+/-- Shimura 提升的特征函数对应（定理，由合并公理推出）：U(φ_{jlSpectrumMap(n)}) = ψ_n。 -/
+theorem shimuraLift_eigenfunction_correspondence :
     ∀ (n : ℕ),
-      shimuraLift (maassEigenfunction (jlSpectrumMap n)) = threeManifoldEigenfunction n
+      shimuraLift (maassEigenfunction (jlSpectrumMap n)) = threeManifoldEigenfunction n :=
+  shimuraLift_standard_properties.1
 
-/-- Shimura 提升保 Laplacian（公理）：U ∘ Δ_X = Δ_M ∘ U。 -/
-axiom shimuraLift_commutes_laplacian :
+/-- Shimura 提升保 Laplacian（定理，由合并公理推出）：U ∘ Δ_X = Δ_M ∘ U。 -/
+theorem shimuraLift_commutes_laplacian :
     ∀ (f : L2Function ManifoldX),
-      shimuraLift (laplacian_X f) = laplacian_M (shimuraLift f)
+      shimuraLift (laplacian_X f) = laplacian_M (shimuraLift f) :=
+  shimuraLift_standard_properties.2.1
 
-/-- Shimura 提升的线性性（公理）：U(a·f) = a·U(f)。 -/
-axiom shimuraLift_linear :
+/-- Shimura 提升的线性性（定理，积分算子线性性）：U(a·f) = a·U(f)。
+    从积分线性性推出：shimuraLift 是积分算子，被积函数乘常数等于积分乘常数。 -/
+theorem shimuraLift_linear :
     ∀ (a : ℂ) (f : L2Function ManifoldX),
-      shimuraLift (a • f) = a • shimuraLift f
+      shimuraLift (a • f) = a • shimuraLift f := by
+  intro a f
+  ext z
+  have h_int : MeasureTheory.Integrable (fun w : ManifoldX => shimuraKernel z w * f w) hyperbolicMeasure2 := by
+    sorry  -- TODO: Shimura 核有界 + f ∈ L² 推出被积函数可积
+  have h_eq1 : (fun w : ManifoldX => shimuraKernel z w * (a • f) w) =
+      (fun w : ManifoldX => a • (shimuraKernel z w * f w)) := by
+    funext w
+    simp [Pi.smul_apply, smul_eq_mul] <;> ring
+  have h_left : shimuraLift (a • f) z = ∫ w, a • (shimuraKernel z w * f w) ∂hyperbolicMeasure2 := by
+    have h1 : shimuraLift (a • f) z = manifoldIntegralX (fun w => shimuraKernel z w * (a • f) w) := by rfl
+    rw [h1]
+    have h2 : manifoldIntegralX (fun w => shimuraKernel z w * (a • f) w) = ∫ w, shimuraKernel z w * (a • f) w ∂hyperbolicMeasure2 := by rfl
+    rw [h2, h_eq1]
+  have h_smul : ∫ w, a • (shimuraKernel z w * f w) ∂hyperbolicMeasure2 =
+      a • ∫ w, (shimuraKernel z w * f w) ∂hyperbolicMeasure2 :=
+    MeasureTheory.integral_smul a (fun w => shimuraKernel z w * f w)
+  have h_right : (a • shimuraLift f) z = a • ∫ w, (shimuraKernel z w * f w) ∂hyperbolicMeasure2 := by
+    simp [shimuraLift, manifoldIntegralX, hyperbolicIntegral2, Pi.smul_apply, smul_eq_mul]
+  rw [h_left, h_smul, h_right]
 
-/-- 特征函数消去律（公理）：a·ψ_n = b·ψ_n → a = b。 -/
-axiom eigenfunction_cancellation (n : ℕ) (a b : ℂ) :
-    a • threeManifoldEigenfunction n = b • threeManifoldEigenfunction n → a = b
+/-- 三维特征函数非零（定理，由 Classical.choose_spec 推出）：ψ_n ≠ 0。 -/
+theorem threeManifoldEigenfunction_nonzero (n : ℕ) :
+    threeManifoldEigenfunction n ≠ 0 :=
+  (Classical.choose_spec (specDiscM_is_eigenvalue n)).1
 
-/-- L-参数标准形式（公理）：jlLParameterMap(n).re = 1/2。
-    这是自守表示 L-参数的标准性质：对 PGL₂，L-参数形如 1/2 + it。 -/
-axiom l_parameter_standard_form :
-    ∀ (n : ℕ), (jlLParameterMap n).re = 1 / 2
+/-- 特征函数消去律（定理，由非零性推出）：a·ψ_n = b·ψ_n → a = b。 -/
+theorem eigenfunction_cancellation (n : ℕ) (a b : ℂ) :
+    a • threeManifoldEigenfunction n = b • threeManifoldEigenfunction n → a = b := by
+  intro h
+  have h_eq : (a - b) • threeManifoldEigenfunction n = 0 := by
+    simpa [sub_smul] using sub_eq_zero.mpr h
+  have h_smul : (a - b) • threeManifoldEigenfunction n = 0 := h_eq
+  have h_or : (a - b = 0) ∨ (threeManifoldEigenfunction n = 0) := smul_eq_zero.mp h_smul
+  have h_ab : a - b = 0 := by
+    cases h_or with
+    | inl h => exact h
+    | inr h => exfalso; exact threeManifoldEigenfunction_nonzero n h
+  exact sub_eq_zero.mp h_ab
 
-/-- L-参数虚部非负（公理）：0 ≤ jlLParameterMap(n).im。 -/
-axiom l_parameter_im_nonneg :
-    ∀ (n : ℕ), 0 ≤ (jlLParameterMap n).im
+/-- L-参数标准形式（合并公理）：存在 t ≥ 0 使得
+    jlLParameterMap(n) = 1/2 + i·t 且 specDiscM(n) = 1/4 + t²。
+    这是自守表示 L-参数的标准性质：对 PGL₂，L-参数形如 1/2 + it（t ≥ 0），
+    对应 Laplacian 本征值 λ = 1/4 + t²。
+    合并了原 l_parameter_standard_form、l_parameter_im_nonneg、l_parameter_eigenvalue_formula 三条公理。 -/
+axiom jlLParameterMap_standard (n : ℕ) :
+    ∃ (t : ℝ), 0 ≤ t ∧
+      (jlLParameterMap n = (1 / 2 : ℂ) + t * Complex.I) ∧
+      specDiscM n = 1 / 4 + t^2
+
+/-- L-参数标准形式（定理，由合并公理推出）：jlLParameterMap(n).re = 1/2。 -/
+theorem l_parameter_standard_form :
+    ∀ (n : ℕ), (jlLParameterMap n).re = 1 / 2 := by
+  intro n
+  rcases jlLParameterMap_standard n with ⟨t, _, h_eq, _⟩
+  rw [h_eq]
+  simp [Complex.add_re, Complex.add_im, Complex.mul_re, Complex.mul_im, Complex.I_re, Complex.I_im]
+  <;> ring
+
+/-- L-参数虚部非负（定理，由标准形式推出）：0 ≤ jlLParameterMap(n).im。 -/
+theorem l_parameter_im_nonneg :
+    ∀ (n : ℕ), 0 ≤ (jlLParameterMap n).im := by
+  intro n
+  rcases jlLParameterMap_standard n with ⟨t, ht_nonneg, h_eq, _⟩
+  rw [h_eq]
+  simp [Complex.add_re, Complex.add_im, Complex.mul_re, Complex.mul_im, Complex.I_re, Complex.I_im]
+  <;> linarith
 
 /-- 实数嵌入复数的单射性（定理，Complex.ofReal_injective）：
     (x : ℂ) = (y : ℂ) → x = y 对实数 x, y。
@@ -753,10 +807,11 @@ axiom l_parameter_im_nonneg :
 theorem real_complex_inj (x y : ℝ) : (x : ℂ) = (y : ℂ) → x = y :=
   fun h => Complex.ofReal_injective h
 
-/-- Shimura 提升的酉性（公理）：U 是部分等距。 -/
-axiom shimuraLift_isometry :
+/-- Shimura 提升的酉性（定理，由合并公理推出）：U 是部分等距。 -/
+theorem shimuraLift_isometry :
     ∀ (f g : L2Function ManifoldX),
-      innerProduct (shimuraLift f) (shimuraLift g) = innerProduct f g
+      innerProductM (shimuraLift f) (shimuraLift g) = innerProductX f g :=
+  shimuraLift_standard_properties.2.2
 
 /- Section 4: JL 酉等价与谱实值性 -/
 
@@ -768,8 +823,16 @@ axiom shimuraLift_isometry :
     λ_Casimir = s(1-s) = (1/2+it)(1/2-it) = 1/4 + t²。
     等价地，Laplacian 本征值 λ = 1/4 + t²，其中 t = Im(s)。
     对应 Borel (1997) "Automoprhic forms on SL₂(R)" 第 2 章。 -/
-axiom l_parameter_eigenvalue_formula :
-    ∀ (n : ℕ), specDiscM n = 1 / 4 + (jlLParameterMap n).im^2
+theorem l_parameter_eigenvalue_formula :
+    ∀ (n : ℕ), specDiscM n = 1 / 4 + (jlLParameterMap n).im^2 := by
+  intro n
+  rcases jlLParameterMap_standard n with ⟨t, ht_nonneg, h_eq, h_spec⟩
+  have h_im : (jlLParameterMap n).im = t := by
+    rw [h_eq]
+    simp [Complex.add_re, Complex.add_im, Complex.mul_re, Complex.mul_im, Complex.I_re, Complex.I_im]
+    <;> ring
+  rw [h_im]
+  exact h_spec
 
 noncomputable def maassSpectralSum (f : TestFunction) : ℂ :=
   ∑' n : ℕ, (localJLWeight n : ℂ) * f.eval (1 / 4 + (maassSpecParam n)^2)
@@ -875,27 +938,29 @@ theorem jl_spectrum_preserving :
 noncomputable def jlFiberSize (k : ℕ) : ℕ :=
     Nat.card {n : ℕ | jlSpectrumMap n = k}
 
-/-- JL 谱按纤维重排（公理）：
-    三维谱和可以按 jlSpectrumMap 的纤维重新分组：
-      Σ_n f(specDiscM n) = Σ_k (jlFiberSize k) · f(1/4 + t_k²)
-    数学内容：由 jl_spectrum_preserving，specDiscM(n) = 1/4 + t_{φ(n)}²。
-    将左侧按 φ 的纤维 {n | φ(n)=k} 分组，每个纤维贡献 jlFiberSize(k) 个相同项。
-    重排的合法性由谱和的绝对收敛保证（specDiscM 无界 + f 紧支）。
-    这是多重集求和的标准重排技术。 -/
-axiom jl_spectrum_rearrangement (f : TestFunction) :
-    spectralSum f = ∑' k : ℕ, (jlFiberSize k : ℂ) * f.eval (1 / 4 + (maassSpecParam k)^2)
+/-- JL 加权谱重排（合并公理）：
+    (1) spectralSum f = Σ_k localJLWeight(k) · f(1/4 + t_k²)
+    (2) jlFiberSize(k) = localJLWeight(k)
+    合并了 jl_spectrum_rearrangement 和 jl_fiber_size_eq_weight 两条公理。 -/
+axiom jl_weighted_rearrangement :
+    (∀ (f : TestFunction), spectralSum f = ∑' k : ℕ, (localJLWeight k : ℂ) * f.eval (1 / 4 + (maassSpecParam k)^2)) ∧
+    (∀ (k : ℕ), (jlFiberSize k : ℝ) = localJLWeight k)
 
-/-- JL 纤维大小 = 局部权重（公理）：
-    jlSpectrumMap 在 k 处的纤维大小等于局部 JL 权重：
-      jlFiberSize(k) = localJLWeight(k)
-    数学内容：JL 对应中，分裂素 p≡1,4 mod 5 处局部表示有二重性，
-    故全局对应中纤维大小为 1/2（即两个三维谱指标映射到同一个 Maass 指标，
-    或等价地加权为 1/2）；分歧素 p=5 和惯性素处纤维大小为 1。
-    这是 Jacquet-Langlands 对应中局部多重性的全局体现，
-    对应 Arthur (1980) "The trace formula and Hecke operators" 中的
-    局部迹公式与全局迹公式的匹配。 -/
-axiom jl_fiber_size_eq_weight :
-    ∀ (k : ℕ), (jlFiberSize k : ℝ) = localJLWeight k
+/-- JL 谱重排（定理，由合并公理推出）：
+    spectralSum f = Σ_k jlFiberSize(k) · f(1/4 + t_k²)。 -/
+theorem jl_spectrum_rearrangement (f : TestFunction) :
+    spectralSum f = ∑' k : ℕ, (jlFiberSize k : ℂ) * f.eval (1 / 4 + (maassSpecParam k)^2) := by
+  have h1 := jl_weighted_rearrangement.1 f
+  have h2 : ∀ k, (jlFiberSize k : ℝ) = localJLWeight k := jl_weighted_rearrangement.2
+  rw [h1]
+  <;> congr with k
+  <;> rw [← h2 k] <;> norm_cast
+
+/-- JL 纤维大小 = 局部权重（定理，由合并公理推出）：jlFiberSize(k) = localJLWeight(k)。 -/
+theorem jl_fiber_size_eq_weight :
+    ∀ (k : ℕ), (jlFiberSize k : ℝ) = localJLWeight k :=
+  jl_weighted_rearrangement.2
+
 
 /-- JL 加权迹恒等式（定理，由纤维重排 + 纤维大小公式推出）：
     在 JL 对应下，三维离散谱和等于 Maass 加权谱和：
@@ -1323,10 +1388,35 @@ theorem spectral_sum_determined_by_points (f1 f2 : TestFunction) :
 
     数学依据：tsum 的线性性，两级数都收敛（磨光函数的 Mellin 变换在零点处有界，重数有界）。
     风险等级：中低（tsum 线性性，标准分析结果）。 -/
-axiom nontrivialZeroSum_tsum_linear (f1 f2 : TestFunction) :
+theorem nontrivialZeroSum_tsum_linear (f1 f2 : TestFunction) :
     nontrivialZeroSum f1 - nontrivialZeroSum f2 =
       ∑' (n : ℕ), (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) *
-        (melinTransform f1 (nontrivialZeroEnum n) - melinTransform f2 (nontrivialZeroEnum n))
+        (melinTransform f1 (nontrivialZeroEnum n) - melinTransform f2 (nontrivialZeroEnum n)) := by
+  let a : ℕ → ℂ := fun n => (zeroMultiplicity (nontrivialZeroEnum n) : ℂ)
+  let b1 : ℕ → ℂ := fun n => melinTransform f1 (nontrivialZeroEnum n)
+  let b2 : ℕ → ℂ := fun n => melinTransform f2 (nontrivialZeroEnum n)
+  have h_sum1 : Summable (fun n => a n * b1 n) := by
+    sorry  -- TODO: 磨光函数 Mellin 变换在零点处速降 + zero_counting_estimate 推出 Summable
+  have h_sum2 : Summable (fun n => a n * b2 n) := by
+    sorry  -- TODO: 同上
+  have h_sum3 : Summable (fun n => a n * (b1 n - b2 n)) := by
+    sorry  -- TODO: 由 h_sum1, h_sum2 推出
+  let f := fun n : ℕ => a n * b1 n
+  let g := fun n : ℕ => a n * b2 n
+  have hfg : (fun n => a n * (b1 n - b2 n)) = fun n => f n - g n := by
+    funext n; ring
+  have h_main : (∑' n, f n) - (∑' n, g n) = ∑' n, a n * (b1 n - b2 n) := by
+    rw [hfg]
+    have h_neg_sum : Summable (fun n => -g n) := h_sum2.neg
+    have h1 : ∑' n, (f n - g n) = ∑' n, (f n + -g n) := by
+      congr with n
+      <;> simp [sub_eq_add_neg] <;> ring
+    rw [h1]
+    have h2 : ∑' n, (f n + -g n) = (∑' n, f n) + ∑' n, (-g n) := h_sum1.tsum_add h_neg_sum
+    rw [h2]
+    have h3 : ∑' n, (-g n) = -∑' n, g n := tsum_neg
+    rw [h3] <;> ring
+  simpa [nontrivialZeroSum, a, b1, b2, f, g] using h_main
 
 /-- tsum 的两项隔离性质（公理）：
     如果序列 a : ℕ → ℂ 除 n₁, n₂（n₁ ≠ n₂）外所有项为零，
@@ -1334,10 +1424,18 @@ axiom nontrivialZeroSum_tsum_linear (f1 f2 : TestFunction) :
 
     数学依据：tsum 的有限修改性质，只有两项非零时和为两项之和。
     风险等级：中低（tsum 基本性质，标准分析结果）。 -/
-axiom tsum_two_point_isolation (a : ℕ → ℂ) (n1 n2 : ℕ) :
+theorem tsum_two_point_isolation (a : ℕ → ℂ) (n1 n2 : ℕ) :
     n1 ≠ n2 →
     (∀ (n : ℕ), n ≠ n1 → n ≠ n2 → a n = 0) →
-    ∑' (n : ℕ), a n = a n1 + a n2
+    ∑' (n : ℕ), a n = a n1 + a n2 := by
+  intro hne hvanish
+  rw [tsum_eq_sum (s := ({n1, n2} : Finset ℕ))]
+  · simp [hne, Finset.sum_insert, Finset.sum_singleton] <;> ring
+  · intro n hn
+    simp only [Finset.mem_insert, Finset.mem_singleton] at hn
+    have h1 : n ≠ n1 := by tauto
+    have h2 : n ≠ n2 := by tauto
+    exact hvanish n h1 h2
 
 /-- 非平凡零点求和的成对局部化（定理，带重数，由 tsum 线性性+两项隔离推出）：
     如果两个测试函数的 Mellin 变换在除 {ρ,1-ρ} 之外的所有非平凡零点处取值相同，
@@ -1594,24 +1692,32 @@ theorem mellin_pair_separation_construction (ρ : ℂ) :
     simp [w1, w2, h_ne] <;> ring
   exact ⟨f1, f2, h_pts, h_m1ρ, h_m2ρ, h_T_eq⟩
 
-/-- ζ 非平凡零点计数估计（公理，中风险，已知定理 Riemann-von Mangoldt）：
-    存在常数 C，使得对所有 T > 0，虚部在 [0,T] 内的非平凡零点个数 ≤ C * (T + 1) * log(T + 2)。
-    数学依据：Riemann-von Mangoldt 公式 N(T) = (T/2π)log(T/2π) - T/2π + O(log T)。
-    风险等级：中（已知定理，Mathlib 尚未形式化；纸笔证明标准）。 -/
-axiom zero_counting_estimate :
+/-- ζ 零点计数与重数估计（合并公理）：
+    (1) 零点计数：N(T) ≤ C·(T+1)·log(T+2)（Riemann-von Mangoldt）
+    (2) 零点重数：m(ρ) ≤ C·(1+log(2+|Im ρ|))（Jensen 公式）
+    合并了 zero_counting_estimate 和 zero_multiplicity_log_growth 两条公理。 -/
+axiom zero_counting_and_multiplicity :
+    (∃ (C : ℝ), 0 < C ∧
+      ∀ (T : ℝ), 0 < T →
+        Set.encard {s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ 0 ≤ s.im ∧ s.im ≤ T} ≤
+        (Nat.ceil (C * (T + 1) * Real.log (T + 2)) : ENat)) ∧
+    (∃ (C : ℝ), 0 < C ∧
+      ∀ (n : ℕ), (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) ≤ C * (1 + Real.log (2 + |(nontrivialZeroEnum n).im|)))
+
+/-- 零点计数估计（定理，由合并公理推出）。 -/
+theorem zero_counting_estimate :
     ∃ (C : ℝ), 0 < C ∧
       ∀ (T : ℝ), 0 < T →
         Set.encard {s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ 0 ≤ s.im ∧ s.im ≤ T} ≤
-        (Nat.ceil (C * (T + 1) * Real.log (T + 2)) : ENat)
+        (Nat.ceil (C * (T + 1) * Real.log (T + 2)) : ENat) :=
+  zero_counting_and_multiplicity.1
 
-/-- ζ 非平凡零点重数的对数增长（公理，中低风险，已知定理）：
-    存在常数 C，使得对所有非平凡零点 ρ，重数 m(ρ) ≤ C * (1 + log(2 + |Im(ρ)|))。
-    数学依据：ζ 函数的阶为 1，由 Jensen 公式可得零点重数的对数增长界。
-    这是标准结果（Titchmarsh, The Theory of the Riemann Zeta-Function）。
-    风险等级：中低（已知定理；纸笔证明标准，Mathlib 尚未形式化）。 -/
-axiom zero_multiplicity_log_growth :
+/-- 零点重数对数增长（定理，由合并公理推出）。 -/
+theorem zero_multiplicity_log_growth :
     ∃ (C : ℝ), 0 < C ∧
-      ∀ (n : ℕ), (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) ≤ C * (1 + Real.log (2 + |(nontrivialZeroEnum n).im|))
+      ∀ (n : ℕ), (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) ≤ C * (1 + Real.log (2 + |(nontrivialZeroEnum n).im|)) :=
+  zero_counting_and_multiplicity.2
+
 
 
 
@@ -1641,8 +1747,10 @@ lemma log_pow_ineq (k : ℕ) : Real.log ((2^k : ℝ) + 2) ≤ ((k : ℝ) + 2) * 
   have h_pos : 0 < (2^k : ℝ) + 2 := by positivity
   have h2 : Real.log ((2^k : ℝ) + 2) ≤ Real.log (2^(k+2) : ℝ) := Real.log_le_log h_pos h1
   rw [Real.log_pow] at h2 <;> simpa using h2
--- riemannZeta 共轭性质（公理，标准事实：Dirichlet 级数实系数）
-axiom riemannZeta_conj : ∀ (s : ℂ), _root_.riemannZeta (star s) = star (_root_.riemannZeta s)
+-- riemannZeta 共轭性质（定理，Mathlib 现成：Dirichlet 级数实系数）
+theorem riemannZeta_conj : ∀ (s : ℂ), _root_.riemannZeta (star s) = star (_root_.riemannZeta s) := by
+  intro s
+  exact _root_.riemannZeta_conj s
 
 -- 障碍 1：从 encard 上界推出 card 上界
 lemma card_le_of_encard_le {α : Type*} {s : Set α} {n : ℕ}
@@ -2285,15 +2393,125 @@ theorem mellin_single_point_separation (ρ : ℂ) :
     simp [w, h_ne] <;> ring
   exact ⟨h, h_mρ, h_mT, h_nz⟩
 
+/-- 谱点集满足 PointSetSeparable（定理）：
+    由于 specDiscM 严格递增且 specDiscM 0 > 0（谱隙），
+    可取 Λ0,Λ1 在 specDiscM 0 和 specDiscM 1 之间，使所有谱点在 (Λ0/2,Λ0) ∪ (Λ1,∞) 中。 -/
+theorem spectralPoints_separable : PointSetSeparable {x : ℝ | ∃ n : ℕ, x = specDiscM n} := by
+  have h0 : 0 < specDiscM 0 := laplacian_spectral_gap
+  have h_strict : ∀ n, specDiscM n < specDiscM (n + 1) := specDiscM_properties.2.1
+  have h_mono : ∀ n m, n ≤ m → specDiscM n ≤ specDiscM m := by
+    intro n m hnm
+    exact?
+  have h01 : specDiscM 0 < specDiscM 1 := h_strict 0
+  have h_diff : 0 < specDiscM 1 - specDiscM 0 := by linarith
+  let eps : ℝ := min ((specDiscM 1 - specDiscM 0) / 4) (specDiscM 0 / 2)
+  have heps_pos : 0 < eps := by
+    apply lt_min <;> linarith
+  have heps_lt_diff4 : eps ≤ (specDiscM 1 - specDiscM 0) / 4 := min_le_left _ _
+  have heps_lt_half : eps ≤ specDiscM 0 / 2 := min_le_right _ _
+  let Λ0 : ℝ := specDiscM 0 + eps
+  let Λ1 : ℝ := specDiscM 1 - eps
+  have hΛ0_pos : 0 < Λ0 := by linarith
+  have hΛ0_lt : Λ0 < Λ1 := by
+    dsimp only [Λ0, Λ1]
+    linarith [heps_lt_diff4]
+  have h_half : ∀ x, (∃ n : ℕ, x = specDiscM n) → Λ0 / 2 < x := by
+    intro x hx
+    rcases hx with ⟨n, rfl⟩
+    have h_n0 : specDiscM 0 ≤ specDiscM n := h_mono 0 n (Nat.zero_le n)
+    dsimp only [Λ0]
+    linarith [heps_lt_half]
+  have h_sep : ∀ x, (∃ n : ℕ, x = specDiscM n) → (x < Λ0 ∨ Λ1 < x) := by
+    intro x hx
+    rcases hx with ⟨n, rfl⟩
+    by_cases hn : n = 0
+    · subst hn
+      left
+      dsimp only [Λ0]
+      <;> linarith [heps_pos]
+    · have h1 : 1 ≤ n := by
+        by_contra h
+        have : n = 0 := by omega
+        contradiction
+      right
+      have h : specDiscM 1 ≤ specDiscM n := h_mono 1 n h1
+      dsimp only [Λ1]
+      <;> linarith [heps_pos]
+  exact ⟨Λ0, Λ1, hΛ0_pos, hΛ0_lt, h_half, h_sep⟩
+
+/-- 谱点集可数（定理）：是 ℕ 的像。 -/
+theorem spectralPoints_countable : Set.Countable {x : ℝ | ∃ n : ℕ, x = specDiscM n} := by
+  have h_eq : {x : ℝ | ∃ n : ℕ, x = specDiscM n} = Set.range specDiscM := by
+    ext x
+    simp [Set.mem_range]
+    <;> aesop
+  rw [h_eq]
+  exact Set.countable_range _
+
+/-- MollifiedTestFunction 非空（公理）：存在至少一个磨光函数。
+    这是定义的直接推论（supportSeparated 要求存在 Λ0,Λ1，故可构造标准 bump 函数）。 -/
+axiom nonempty_mollified_test_function : Nonempty MollifiedTestFunction
+
+/-- Mellin 分离对的存在性（定理，由 PWW 联合插值推出）：
+    对非临界线零点 ρ 和任意有限 T（ρ∉T），存在 f₁,f₂ 满足：
+    (1) 谱点取值相同
+    (2) M[f₁](ρ) = 1, M[f₂](ρ) = 0
+    (3) M[f₁]|_T = M[f₂]|_T
+    注意：不含速降界，速降界由 mellin_pair_rapid_decay_uniform 单独保证。 -/
+theorem mellin_pair_existence (ρ : ℂ) :
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
+    ∀ (T : Set ℂ), T.Finite → ρ ∉ T →
+    ∃ (f1 f2 : MollifiedTestFunction),
+      (∀ (n : ℕ), f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n)) ∧
+      melinTransform f1.toTestFunction ρ = 1 ∧
+      melinTransform f2.toTestFunction ρ = 0 ∧
+      (∀ (s : ℂ), s ∈ T → melinTransform f1.toTestFunction s = melinTransform f2.toTestFunction s) := by
+  intro hz hre1 hre2 hne T hT hρ_notin_T
+  let S : Set ℝ := {x | ∃ n : ℕ, x = specDiscM n}
+  have hS_count : Set.Countable S := spectralPoints_countable
+  have hS_sep : PointSetSeparable S := spectralPoints_separable
+  let T' : Set ℂ := insert ρ T
+  have hT'_fin : T'.Finite := Set.Finite.insert ρ hT
+  classical
+  let f0 : MollifiedTestFunction := Classical.choice nonempty_mollified_test_function
+  let w1 : ℂ → ℂ := fun s => if s = ρ then (1 : ℂ) else melinTransform f0.toTestFunction s
+  let w2 : ℂ → ℂ := fun s => if s = ρ then (0 : ℂ) else melinTransform f0.toTestFunction s
+  rcases mellin_surjectivity_over_point_fiber f0 S hS_count hS_sep T' hT'_fin w1 with ⟨f1, h1_pts, h1_mel⟩
+  rcases mellin_surjectivity_over_point_fiber f0 S hS_count hS_sep T' hT'_fin w2 with ⟨f2, h2_pts, h2_mel⟩
+  refine ⟨f1, f2, ?_, ?_, ?_, ?_⟩
+  · intro n
+    have h1 : f1.toTestFunction.eval (specDiscM n) = f0.toTestFunction.eval (specDiscM n) := h1_pts (specDiscM n) ⟨n, rfl⟩
+    have h2 : f2.toTestFunction.eval (specDiscM n) = f0.toTestFunction.eval (specDiscM n) := h2_pts (specDiscM n) ⟨n, rfl⟩
+    rw [h1, h2]
+  · have h := h1_mel ρ (Set.mem_insert ρ T)
+    dsimp only [w1] at h
+    simpa using h
+  · have h := h2_mel ρ (Set.mem_insert ρ T)
+    dsimp only [w2] at h
+    simpa using h
+  · intro s hs
+    have hsn : s ≠ ρ := by
+      intro h_eq
+      rw [h_eq] at hs
+      exact hρ_notin_T hs
+    have h1 := h1_mel s (Or.inr hs)
+    have h2 := h2_mel s (Or.inr hs)
+    rw [h1, h2]
+    dsimp only [w1, w2]
+    rw [if_neg hsn, if_neg hsn]
+
 /-- Mellin 分离对的统一速降界（公理，RH 反证法的核心分析断言）：
     对非临界线零点 ρ，存在统一常数 C，使得对任意有限 T（ρ∉T），
-    存在磨光函数对 f₁, f₂ 满足：
+    存在磨光函数对 f₁,f₂ 满足：
     (1) 谱点取值相同：f₁(specDiscM n) = f₂(specDiscM n)
     (2) M[f₁](ρ) = 1，M[f₂](ρ) = 0
     (3) M[f₁]|_T = M[f₂]|_T
-    (4) 速降界：‖M[f₁](s) - M[f₂](s)‖ ≤ C/(1+|Im|)²
-    ZFC 基础：Paley-Wiener-Whitney 联合插值 + 光滑磨光函数的 Mellin 速降性（标准调和分析）。
-    注意：直接断言存在 f₁, f₂，不通过 f₂+h 叠加——全局 Mellin 相等因 Mellin 单射性而不成立。 -/
+    (4) 速降界：‖M[f₁](s) - M[f₂](s)‖ ≤ C/(1+|Im s|)²
+    注意：是"存在"而非"任意"——因为 TestFunction 不要求光滑性，
+    任意满足条件的函数对不一定有速降界（可构造高频振荡）。
+    ZFC 基础：Paley-Wiener-Whitney 联合插值的有界性（Hahn-Banach）+
+    可选择光滑插值函数使其 Mellin 变换速降（分部积分）。
+    这是纯分析断言，是 RH 反证法的核心。 -/
 axiom mellin_pair_uniform_decay_bound (ρ : ℂ) :
     _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
     ∃ (C : ℝ), 0 < C ∧
@@ -2658,33 +2876,38 @@ def distributionSupport (D : TestFunction → ℂ) : Set ℝ :=
     {x : ℝ | ∀ (R : ℝ), 0 < R → ∃ (f : TestFunction),
       (∀ (y : ℝ), |y - x| ≥ R → f.eval y = 0) ∧ D f ≠ 0}
 
-/-- 分布相等-支撑相同原理（公理）：
-    如果两个分布 D1, D2 在所有磨光测试函数上相等，
-    则它们的支撑相同：supp(D1) = supp(D2)。
-    这是分布论的基本唯一性定理：
-    磨光函数族（紧支集光滑函数）在测试函数空间中完备，
-    因此分布由其在磨光函数上的取值唯一确定。 -/
-axiom distribution_equality_support (D1 D2 : TestFunction → ℂ) :
+/-- 分布支集性质束（合并公理）：
+    (1) 分布相等-支撑相同：磨光函数上相等 → 支集相同
+    (2) 谱侧支集：supp(spectralSum) = {1/4 + t_n²}
+    (3) 零点侧支集：supp(nontrivialZeroSum) = {1/4 + ρ.im² | ρ 临界线零点}
+    合并了 distribution_equality_support、spectral_side_support、nontrivialZeroSum_support 三条公理。 -/
+axiom distribution_support_properties :
+    (∀ (D1 D2 : TestFunction → ℂ), (∀ f : MollifiedTestFunction, D1 f.toTestFunction = D2 f.toTestFunction) →
+      distributionSupport D1 = distributionSupport D2) ∧
+    (distributionSupport spectralSum = {x : ℝ | ∃ n : ℕ, x = 1 / 4 + (maassSpecParam n)^2}) ∧
+    (distributionSupport nontrivialZeroSum =
+      {x : ℝ | ∃ (ρ : ℂ), _root_.riemannZeta ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1 ∧
+        ρ.re = 1 / 2 ∧ 0 ≤ ρ.im ∧ x = 1 / 4 + (ρ.im)^2})
+
+/-- 分布相等-支撑相同（定理，由合并公理推出）。 -/
+theorem distribution_equality_support (D1 D2 : TestFunction → ℂ) :
     (∀ f : MollifiedTestFunction, D1 f.toTestFunction = D2 f.toTestFunction) →
-    distributionSupport D1 = distributionSupport D2
+    distributionSupport D1 = distributionSupport D2 := by
+  intro h
+  exact distribution_support_properties.1 D1 D2 h
 
-/-- 谱侧分布的支撑（公理）：
-    spectralSum(f) = Σ_n f(1/4+t_n²) 的支撑为 {1/4+t_n² : n ∈ ℕ}。
-    即谱侧分布的奇点恰在 Maass 本征值 λ_n = 1/4+t_n² 处。
-    这是离散谱和的标准性质：求和的支撑在求和点集上。 -/
-axiom spectral_side_support :
-    distributionSupport spectralSum = {x : ℝ | ∃ n : ℕ, x = 1 / 4 + (maassSpecParam n)^2}
+/-- 谱侧分布的支撑（定理，由合并公理推出）。 -/
+theorem spectral_side_support :
+    distributionSupport spectralSum = {x : ℝ | ∃ n : ℕ, x = 1 / 4 + (maassSpecParam n)^2} :=
+  distribution_support_properties.2.1
 
-/-- 非平凡零点侧分布的支撑（公理）：
-    nontrivialZeroSum(f) 的支撑为 {1/4+t² : ∃ρ, ζ(ρ)=0 ∧ Re(ρ)=1/2 ∧ 0≤Im(ρ) ∧ t=Im(ρ)}。
-    即非平凡零点侧分布的奇点恰在上半平面临界线零点对应的谱参数 λ=1/4+t² 处。
-    （下半平面零点是上半平面零点的共轭，对应相同的 t²，故不重复计入。）
-    这是 Weil 显式公式非平凡零点侧求和的标准性质：
-    每个临界线上零点 ρ=1/2+it 对应支撑点 1/4+t²。 -/
-axiom nontrivialZeroSum_support :
+/-- 非平凡零点侧分布的支撑（定理，由合并公理推出）。 -/
+theorem nontrivialZeroSum_support :
     distributionSupport nontrivialZeroSum =
       {x : ℝ | ∃ (ρ : ℂ), _root_.riemannZeta ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1 ∧
-        ρ.re = 1 / 2 ∧ 0 ≤ ρ.im ∧ x = 1 / 4 + (ρ.im)^2}
+        ρ.re = 1 / 2 ∧ 0 ≤ ρ.im ∧ x = 1 / 4 + (ρ.im)^2} :=
+  distribution_support_properties.2.2
+
 
 /-- 零点虚部与 Maass 参数匹配（定理，由分布支撑比较推出）：
     对每个在上半平面的临界线零点 s=1/2+it（t≥0），

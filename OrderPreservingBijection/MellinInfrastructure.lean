@@ -23,17 +23,20 @@ noncomputable def melinTransform (f : TestFunction) (s : ℂ) : ℂ :=
     这是 Paley-Wiener 理论和磨光函数插值的基础。 -/
 theorem melinTransform_linear (f1 f2 : TestFunction) (c1 c2 : ℂ) (s : ℂ) :
     melinTransform (c1 • f1 + c2 • f2) s = c1 * melinTransform f1 s + c2 * melinTransform f2 s := by
+  let h1 := fun x : ℝ => if 0 < x then f1.eval x * Complex.exp ((s - 1) * (Real.log x : ℂ)) else 0
+  let h2 := fun x : ℝ => if 0 < x then f2.eval x * Complex.exp ((s - 1) * (Real.log x : ℂ)) else 0
   have h_integrand : (fun x : ℝ => if 0 < x then (c1 • f1 + c2 • f2).eval x * Complex.exp ((s - 1) * (Real.log x : ℂ)) else 0) =
-      (fun x : ℝ => c1 * (if 0 < x then f1.eval x * Complex.exp ((s - 1) * (Real.log x : ℂ)) else 0) +
-                        c2 * (if 0 < x then f2.eval x * Complex.exp ((s - 1) * (Real.log x : ℂ)) else 0)) := by
+      (fun x : ℝ => c1 * h1 x + c2 * h2 x) := by
     funext x
     by_cases hx : 0 < x
-    · rw [if_pos hx, if_pos hx, if_pos hx]
-      have h_eval : (c1 • f1 + c2 • f2).eval x = c1 * f1.eval x + c2 * f2.eval x := by rfl
-      rw [h_eval] <;> ring
-    · rw [if_neg hx, if_neg hx, if_neg hx] <;> ring
+    · have h_eval : (c1 • f1 + c2 • f2).eval x = c1 * f1.eval x + c2 * f2.eval x := by rfl
+      simp only [h1, h2, h_eval, if_pos hx] <;> ring
+    · simp only [h1, h2, if_neg hx] <;> ring
   rw [melinTransform, melinTransform, melinTransform, h_integrand]
-  rw [realIntegral_linear]
+  -- TODO: 证明 h1, h2 可积（TestFunction 紧支集 + 适当条件下 Mellin 被积函数可积）
+  have h1_int : MeasureTheory.Integrable h1 (MeasureTheory.volume.restrict (Set.Ioi (0 : ℝ))) := by sorry
+  have h2_int : MeasureTheory.Integrable h2 (MeasureTheory.volume.restrict (Set.Ioi (0 : ℝ))) := by sorry
+  rw [realIntegral_linear h1 h2 c1 c2 h1_int h2_int]
   <;> ring
 
 end OrderPreservingBijection

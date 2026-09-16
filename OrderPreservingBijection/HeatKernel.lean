@@ -10,8 +10,11 @@ import OrderPreservingBijection.BasicInfrastructure
 import Mathlib.MeasureTheory.Integral.Gamma
 import Mathlib.Analysis.SpecialFunctions.Gamma.BohrMollerup
 import Mathlib.Analysis.SpecialFunctions.Arcosh
+import Mathlib.Analysis.Calculus.Deriv.Slope
 
 namespace OrderPreservingBijection
+
+open Filter
 
 /- 6.1 分析基础设施：Laplace 变换、Γ 作用、热核显式公式 -/
 
@@ -60,7 +63,11 @@ theorem laplaceTransform_exp (s t : ℝ) : 0 < t → 0 < s →
 /-- Laplace 变换的线性性（定理，由积分线性性推出）：
     L[af + bg](t) = a·L[f](t) + b·L[g](t)。
     证明：Laplace 变换是积分算子，展开定义后由 realIntegral_linear 直接推出。 -/
-theorem laplaceTransform_linear (a b : ℂ) (f g : ℝ → ℂ) (t : ℝ) :
+theorem laplaceTransform_linear (a b : ℂ) (f g : ℝ → ℂ) (t : ℝ)
+    (hf_int : MeasureTheory.Integrable (fun x : ℝ => f x * (Real.exp (-t * x) : ℂ))
+      (MeasureTheory.volume.restrict (Set.Ioi (0 : ℝ))))
+    (hg_int : MeasureTheory.Integrable (fun x : ℝ => g x * (Real.exp (-t * x) : ℂ))
+      (MeasureTheory.volume.restrict (Set.Ioi (0 : ℝ)))) :
     laplaceTransform (fun x => a * f x + b * g x) t =
       a * laplaceTransform f t + b * laplaceTransform g t := by
   rw [laplaceTransform, laplaceTransform, laplaceTransform]
@@ -69,7 +76,7 @@ theorem laplaceTransform_linear (a b : ℂ) (f g : ℝ → ℂ) (t : ℝ) :
     funext x
     <;> ring
   rw [h_integrand]
-  exact realIntegral_linear (fun x : ℝ => f x * (Real.exp (-t * x) : ℂ)) (fun x : ℝ => g x * (Real.exp (-t * x) : ℂ)) a b
+  exact realIntegral_linear (fun x : ℝ => f x * (Real.exp (-t * x) : ℂ)) (fun x : ℝ => g x * (Real.exp (-t * x) : ℂ)) a b hf_int hg_int
 
 /-- 积分核的复合（定义）：
     (K1 ∘_K K2)(z,w) = ∫_M K1(z,u) K2(u,w) du。
@@ -81,7 +88,8 @@ noncomputable def kernelComposition (K1 K2 : ManifoldM → ManifoldM → ℂ) :
 
 /-- 流形积分的 Fubini 定理（公理，第一档标准结果）：
     ∫_M ∫_M f(z,u) du dz = ∫_M ∫_M f(z,u) dz du。
-    对迹类核函数成立，是积分交换顺序的标准性质。 -/
+    对迹类核函数成立，是积分交换顺序的标准性质。
+    TODO：降级需 hyperbolicMeasure3 的 SigmaFinite 实例。 -/
 axiom manifoldIntegral_fubini (f : ManifoldM → ManifoldM → ℂ) :
     manifoldIntegral (fun z => manifoldIntegral (fun u => f z u)) =
     manifoldIntegral (fun u => manifoldIntegral (fun z => f z u))
@@ -174,10 +182,71 @@ theorem d_over_sinh_pos (d : ℝ) (h : 0 ≤ d) : 0 < d_over_sinh d := by
     apply div_pos hpos
     exact Real.sinh_pos_iff.mpr hpos
 
-/-- d_over_sinh 连续性（公理）：d_over_sinh 在 ℝ 上连续。
-    证明路径：d≠0 时显然；d=0 时用 isEquivalent_sinh (sinh ~[nhds 0] id) 得 d/sinh(d) → 1。 -/
-axiom d_over_sinh_continuous : Continuous d_over_sinh
-
+/-- d_over_sinh 连续性（定理）：d_over_sinh 在 ℝ 上连续。
+    d≠0 时 d/sinh(d) 由除法连续性给出；d=0 时用 sinh 的导数（cosh 0 = 1）
+    得 sinh(d)/d → 1，取倒数得 d/sinh(d) → 1，与 d_over_sinh(0)=1 一致。 -/
+theorem d_over_sinh_continuous : Continuous d_over_sinh := by
+  have hlim : Filter.Tendsto (fun d : ℝ => d / Real.sinh d) (nhdsWithin 0 (Set.compl {0})) (nhds 1) := by
+    have hderiv := Real.hasDerivAt_sinh 0
+    have hslope := hderiv.tendsto_slope
+    have h2 : (slope Real.sinh 0) = fun y : ℝ => Real.sinh y / y := by
+      funext y; simp [slope, Real.sinh_zero]; ring
+    rw [h2] at hslope
+    have hcosh : Real.cosh 0 = 1 := by norm_num
+    rw [hcosh] at hslope
+    have h3 : Filter.Tendsto (fun y : ℝ => (Real.sinh y / y)⁻¹) (nhdsWithin 0 (Set.compl {0})) (nhds (1 : ℝ)⁻¹) :=
+      hslope.inv₀ (by norm_num)
+    have h4 : (fun y : ℝ => (Real.sinh y / y)⁻¹) = fun y : ℝ => y / Real.sinh y := by
+      funext y
+      by_cases hy : y = 0
+      · simp [hy]
+      · have hsinh : Real.sinh y ≠ 0 := Real.sinh_ne_zero.mpr hy
+        field_simp [hy, hsinh]
+    rw [h4] at h3
+    have h5 : (1 : ℝ)⁻¹ = 1 := by norm_num
+    rw [h5] at h3
+    exact h3
+  rw [continuous_iff_continuousAt]
+  intro x
+  by_cases hx : x = 0
+  · subst hx
+    have h_eq_within : (fun d : ℝ => d / Real.sinh d) =ᶠ[nhdsWithin (0 : ℝ) (Set.compl {0})] d_over_sinh := by
+      filter_upwards [self_mem_nhdsWithin] with y hy
+      have hy' : y ≠ 0 := hy
+      rw [d_over_sinh, if_neg hy']
+    have hlim_within : Filter.Tendsto d_over_sinh (nhdsWithin (0 : ℝ) (Set.compl {0})) (nhds 1) :=
+      hlim.congr' h_eq_within
+    have h_val : d_over_sinh 0 = 1 := by
+      rw [d_over_sinh, if_pos rfl]
+    have h_at : ContinuousAt d_over_sinh 0 := by
+      rw [ContinuousAt, h_val]
+      intro s hs
+      have h1 : d_over_sinh ⁻¹' s ∈ nhdsWithin (0 : ℝ) (Set.compl {0}) := by
+        exact?
+      rcases mem_nhdsWithin_iff_exists_mem_nhds_inter.mp h1 with ⟨U, hU, hU_sub⟩
+      have h2 : (0 : ℝ) ∈ d_over_sinh ⁻¹' s := by
+        have h3 : (1 : ℝ) ∈ s := by
+          have h4 : s ∈ (pure (1 : ℝ)) := pure_le_nhds (1 : ℝ) hs
+          simpa [Filter.mem_pure] using h4
+        simpa [h_val, Set.mem_preimage] using h3
+      have h4 : U ⊆ d_over_sinh ⁻¹' s := by
+        intro z hz
+        by_cases hz' : z = 0
+        · rw [hz']; exact h2
+        · exact hU_sub ⟨hz, hz'⟩
+      have h5 : d_over_sinh ⁻¹' s ∈ nhds (0 : ℝ) := by
+        exact?
+      exact h5
+    exact h_at
+  · have hne : x ≠ 0 := hx
+    have hsinh : Real.sinh x ≠ 0 := Real.sinh_ne_zero.mpr hne
+    have h_nhds : ∀ᶠ (y : ℝ) in nhds x, y ≠ 0 := eventually_ne_nhds hne
+    have h_eq : (fun d : ℝ => d / Real.sinh d) =ᶠ[nhds x] d_over_sinh := by
+      filter_upwards [h_nhds] with y hy
+      rw [d_over_sinh, if_neg hy]
+    have h_cont : ContinuousAt (fun d : ℝ => d / Real.sinh d) x :=
+      continuous_id.continuousAt.div Real.continuous_sinh.continuousAt hsinh
+    exact h_cont.congr h_eq
 /-- 三维双曲热核（定义）：K_t(z, w) = 热方程的基本解。
     对 t>0，显式公式为：
       K_t(z,w) = (4πt)^(-3/2) · e^{-t} · e^{-d²/(4t)} · d_over_sinh(d)

@@ -13,31 +13,11 @@ namespace OrderPreservingBijection
     即算术群 Γ 中所有椭圆元素的共轭类对应的特征长度（旋转角）集合。 -/
 opaque ellipticClassLengths : Set ℝ
 
-/-- 椭圆类特征长度有界（公理）：
-    椭圆共轭类的特征长度集合 ellipticClassLengths 是有界的。
-    数学原因：椭圆元素的特征值在单位圆上，故旋转角（特征长度）有界。 -/
-axiom elliptic_class_lengths_bounded :
-    ∃ (M : ℝ), 0 < M ∧ ∀ (ℓ : ℝ), ℓ ∈ ellipticClassLengths → |ℓ| ≤ M
-
-/-- 椭圆类特征长度离散（公理）：
-    椭圆共轭类的特征长度集合 ellipticClassLengths 是离散的。
-    数学原因：算术群 Γ 在 G 中离散，椭圆共轭类的特征长度只能取离散的值。 -/
-axiom elliptic_class_lengths_discrete :
-    ∀ (ℓ : ℝ), ℓ ∈ ellipticClassLengths →
-      ∃ (ε : ℝ), 0 < ε ∧ ∀ (ℓ' : ℝ), ℓ' ∈ ellipticClassLengths → |ℓ' - ℓ| < ε → ℓ' = ℓ
-
-/-- 实数中有界离散子集有限（公理，Bolzano-Weierstrass 推论）：
-    如果 S ⊆ ℝ 有界且离散，则 S 有限。 -/
-axiom bounded_discrete_real_set_finite (S : Set ℝ)
-    (h_bounded : ∃ (M : ℝ), 0 < M ∧ ∀ (ℓ : ℝ), ℓ ∈ S → |ℓ| ≤ M)
-    (h_discrete : ∀ (ℓ : ℝ), ℓ ∈ S →
-      ∃ (ε : ℝ), 0 < ε ∧ ∀ (ℓ' : ℝ), ℓ' ∈ S → |ℓ' - ℓ| < ε → ℓ' = ℓ) :
-    Set.Finite S
-
-/-- 椭圆类特征长度集合有限（引理，由有界+离散+Bolzano-Weierstrass推出）：
-    ellipticClassLengths 是有限集。 -/
-lemma ellipticClassLengths_finite : Set.Finite ellipticClassLengths :=
-    bounded_discrete_real_set_finite ellipticClassLengths elliptic_class_lengths_bounded elliptic_class_lengths_discrete
+/-- 椭圆类特征长度集合有限（公理，数论事实）：
+    ellipticClassLengths 是有限集。
+    数学原因：算术群 Γ 中椭圆元素的阶有界，故旋转角只能取有限个值。
+    注意：不能通过"有界+离散→有限"推出，反例 {1/n}。 -/
+axiom ellipticClassLengths_finite : Set.Finite ellipticClassLengths
 
 /-- 椭圆类权重（opaque）：w(ℓ) 是特征长度为 ℓ 的椭圆共轭类的权重。
     由椭圆共轭类的几何（旋转角、中心化子体积）决定。 -/
