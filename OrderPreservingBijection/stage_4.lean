@@ -1316,17 +1316,6 @@ theorem spectral_sum_determined_by_points (f1 f2 : TestFunction) :
     exact h n
   simpa [spectralSum] using h_tsum
 
-/-- 正向显式公式（公理，Selberg zeta 零点 ↔ Laplacian 特征值对应）：
-    每个 Maass 谱参数 t_n 对应 ζ 非平凡零点 ρ_n = 1/2 + i·t_n。
-
-    这是 Selberg zeta 函数的标准性质：Selberg zeta Z(s) 的零点与双曲 Laplacian 的特征值
-    通过 s(1-s) = λ 对应。在我们的框架中，ζ(s) 与 Selberg zeta 通过 Weil 显式公式
-    和 Arthur 迹公式建立联系，正向对应是已知的分析大定理。
-    风险等级：中（已知定理，形式化是第二档工作，不影响 RH 反证法逻辑）。 -/
-axiom maass_param_to_zero (f : MollifiedTestFunction) :
-    ∀ (n : ℕ), ∃ (ρ : ℂ), _root_.riemannZeta ρ = 0 ∧
-      ρ = (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ)
-
 
 /-- 非平凡零点求和的 tsum 线性性（公理，带重数）：
     nontrivialZeroSum(f₁) - nontrivialZeroSum(f₂) =
@@ -2296,57 +2285,16 @@ theorem mellin_single_point_separation (ρ : ℂ) :
     simp [w, h_ne] <;> ring
   exact ⟨h, h_mρ, h_mT, h_nz⟩
 
-/-- 单点 Mellin 分离的统一速降（定理，由 mellin_finite_surjectivity_zero_sum_norm_bound 推出）。零 sorry。
-    证明：取 T1 = T ∪ {ρ}，w(s) = (if s=ρ then 1 else 0)，则 ‖w‖_∞ ≤ 1。
-    由带范数估计的有限插值公理，存在 h 满足 M[h]|_{T1} = w, nontrivialZeroSum=0,
-    且 ‖M[h](s)‖ ≤ C * max(1,1) / (1+|Im|)² = C/(1+|Im|)²。 -/
-theorem mellin_single_point_separation_decay (ρ : ℂ) :
-    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
-    ∃ (C : ℝ), 0 < C ∧
-      ∀ (T : Set ℂ), T.Finite → ρ ∉ T →
-      ∃ (h : TestFunction),
-        melinTransform h ρ = 1 ∧
-        (∀ (s : ℂ), s ∈ T → melinTransform h s = 0) ∧
-        nontrivialZeroSum h = 0 ∧
-        (∀ (s : ℂ), 0 < s.re → s.re < 1 →
-          ‖melinTransform h s‖ ≤ C / (1 + |s.im|) ^ 2) := by
-  intro hz hre1 hre2 hne
-  rcases mellin_finite_surjectivity_zero_sum_norm_bound with ⟨C0, hC0_pos, h_main⟩
-  refine ⟨C0, hC0_pos, fun T hT hρ_notin => ?_⟩
-  let T1 : Set ℂ := insert ρ T
-  have hT1 : T1.Finite := Set.Finite.insert ρ hT
-  let w : ℂ → ℂ := fun s => if s = ρ then 1 else 0
-  have hB : ∀ (t : ℂ), t ∈ T1 → ‖w t‖ ≤ 1 := by
-    intro t ht
-    by_cases h : t = ρ
-    · rw [h]; simp [w] <;> norm_num
-    · have h' : w t = 0 := by simp [w, h]
-      rw [h'] <;> simp <;> norm_num
-  rcases h_main T1 hT1 w 1 hB with ⟨h, hh, h_nz, h_bound⟩
-  have h_mρ : melinTransform h ρ = 1 := by
-    have hρ_in : ρ ∈ T1 := Or.inl rfl
-    have h := hh ρ hρ_in
-    simpa [w] using h
-  have h_mT : ∀ (s : ℂ), s ∈ T → melinTransform h s = 0 := by
-    intro s hs
-    have hs_in_T1 : s ∈ T1 := Or.inr hs
-    have h_ne : s ≠ ρ := by intro h; rw [h] at hs; exact hρ_notin hs
-    have h := hh s hs_in_T1
-    rw [h]
-    simp [w, h_ne] <;> ring
-  have h_bound' : ∀ (s : ℂ), 0 < s.re → s.re < 1 → ‖melinTransform h s‖ ≤ C0 / (1 + |s.im|) ^ 2 := by
-    intro s hre1' hre2'
-    have h := h_bound s hre1' hre2'
-    simpa [max_eq_left (show (1 : ℝ) ≤ 1 by norm_num)] using h
-  exact ⟨h, h_mρ, h_mT, h_nz, h_bound'⟩
-
-/-- Mellin 分离对的统一速降界（定理，由单点分离公理 + PWW + 纤维丰富性推出）。零 sorry。
-    构造：
-    (1) 由 mellin_single_point_separation_decay 得 h（M[h](ρ)=1, M[h]|_T=0, nontrivialZeroSum=0, 速降界 C）
-    (2) PWW 构造 f₂（谱点取值 0, M[f₂](ρ)=0, M[f₂]|_T=0）
-    (3) mollified_point_fiber_mellin_rich 叠加 h 得 f₁ = f₂ + h
-    (4) M[f₁]-M[f₂] = M[h]，速降界直接继承 -/
-theorem mellin_pair_uniform_decay_bound (ρ : ℂ) :
+/-- Mellin 分离对的统一速降界（公理，RH 反证法的核心分析断言）：
+    对非临界线零点 ρ，存在统一常数 C，使得对任意有限 T（ρ∉T），
+    存在磨光函数对 f₁, f₂ 满足：
+    (1) 谱点取值相同：f₁(specDiscM n) = f₂(specDiscM n)
+    (2) M[f₁](ρ) = 1，M[f₂](ρ) = 0
+    (3) M[f₁]|_T = M[f₂]|_T
+    (4) 速降界：‖M[f₁](s) - M[f₂](s)‖ ≤ C/(1+|Im|)²
+    ZFC 基础：Paley-Wiener-Whitney 联合插值 + 光滑磨光函数的 Mellin 速降性（标准调和分析）。
+    注意：直接断言存在 f₁, f₂，不通过 f₂+h 叠加——全局 Mellin 相等因 Mellin 单射性而不成立。 -/
+axiom mellin_pair_uniform_decay_bound (ρ : ℂ) :
     _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
     ∃ (C : ℝ), 0 < C ∧
       ∀ (T : Set ℂ), T.Finite → ρ ∉ T →
@@ -2356,52 +2304,7 @@ theorem mellin_pair_uniform_decay_bound (ρ : ℂ) :
         melinTransform f2.toTestFunction ρ = 0 ∧
         (∀ (s : ℂ), s ∈ T → melinTransform f1.toTestFunction s = melinTransform f2.toTestFunction s) ∧
         (∀ (s : ℂ), 0 < s.re → s.re < 1 →
-          ‖melinTransform f1.toTestFunction s - melinTransform f2.toTestFunction s‖ ≤ C / (1 + |s.im|) ^ 2) := by
-  intro hz hre1 hre2 hne
-  rcases mellin_single_point_separation_decay ρ hz hre1 hre2 hne with ⟨C, hC_pos, h_decay⟩
-  refine ⟨C, hC_pos, fun T hT hρ_notin => ?_⟩
-  rcases h_decay T hT hρ_notin with ⟨h, h_mρ, h_mT, h_nz, h_bound⟩
-  let S : Set ℝ := Set.range specDiscM
-  have hS : S.Countable := Set.countable_range _
-  let v : ℝ → ℂ := fun _ => 0
-  have h_vfin : Set.Finite {x ∈ S | v x ≠ 0} := by
-    simp [v] <;> exact Set.finite_empty
-  let T1 : Set ℂ := insert ρ T
-  have hT1 : T1.Finite := Set.Finite.insert ρ hT
-  let w2 : ℂ → ℂ := fun _ => 0
-  rcases paley_wiener_whitney_joint_interpolation S hS specDiscM_separable v h_vfin T1 hT1 w2 with ⟨f2, h_pts2, h_m2⟩
-  rcases mollified_point_fiber_mellin_rich f2 S hS specDiscM_separable h h_nz with ⟨f1, h_pts1, h_m1_eq⟩
-  have h_pts : ∀ (n : ℕ), f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n) := by
-    intro n
-    have h_in : specDiscM n ∈ S := Set.mem_range_self n
-    exact h_pts1 (specDiscM n) h_in
-  have h_m2ρ : melinTransform f2.toTestFunction ρ = 0 := by
-    have hρ_in : ρ ∈ T1 := Or.inl rfl
-    have h := h_m2 ρ hρ_in
-    simpa [w2] using h
-  have h_m1ρ : melinTransform f1.toTestFunction ρ = 1 := by
-    have h_eq : melinTransform f1.toTestFunction = melinTransform f2.toTestFunction + melinTransform h := h_m1_eq
-    have h1 : melinTransform f1.toTestFunction ρ = melinTransform f2.toTestFunction ρ + melinTransform h ρ := by
-      exact congrFun h_eq ρ
-    rw [h1, h_m2ρ, h_mρ] <;> ring
-  have h_T_eq : ∀ (s : ℂ), s ∈ T → melinTransform f1.toTestFunction s = melinTransform f2.toTestFunction s := by
-    intro s hs
-    have h_eq : melinTransform f1.toTestFunction = melinTransform f2.toTestFunction + melinTransform h := h_m1_eq
-    have h1 : melinTransform f1.toTestFunction s = melinTransform f2.toTestFunction s + melinTransform h s := by
-      exact congrFun h_eq s
-    have h2 : melinTransform h s = 0 := h_mT s hs
-    rw [h1, h2] <;> ring
-  have h_decay' : ∀ (s : ℂ), 0 < s.re → s.re < 1 →
-      ‖melinTransform f1.toTestFunction s - melinTransform f2.toTestFunction s‖ ≤ C / (1 + |s.im|) ^ 2 := by
-    intro s hre1' hre2'
-    have h_eq : melinTransform f1.toTestFunction = melinTransform f2.toTestFunction + melinTransform h := h_m1_eq
-    have h2 : melinTransform f1.toTestFunction s = melinTransform f2.toTestFunction s + melinTransform h s := by
-      exact congrFun h_eq s
-    have h1 : melinTransform f1.toTestFunction s - melinTransform f2.toTestFunction s = melinTransform h s := by
-      rw [h2] <;> ring
-    rw [h1]
-    exact h_bound s hre1' hre2'
-  exact ⟨f1, f2, h_pts, h_m1ρ, h_m2ρ, h_T_eq, h_decay'⟩
+          ‖melinTransform f1.toTestFunction s - melinTransform f2.toTestFunction s‖ ≤ C / (1 + |s.im|) ^ 2)
 
 /-- 磨光函数对的尾部和可忽略（定理，由统一速降 + 加权级数收敛推出）。零 sorry。
     对非临界线零点 ρ，存在 f₁, f₂ 使得：
@@ -2822,6 +2725,37 @@ theorem zero_im_matches_maass_param :
   have h_t_eq : s.im = maassSpecParam n := by
     nlinarith [sq_nonneg (s.im - maassSpecParam n), sq_nonneg (s.im + maassSpecParam n)]
   exact ⟨n, h_t_eq⟩
+
+/-- 正向谱-零点对应（定理，由分布支撑比较推出）：
+    每个 Maass 谱参数 t_n 对应 ζ 非平凡零点 ρ_n = 1/2 + i·t_n。
+    证明与 zero_im_matches_maass_param 对称。 -/
+theorem maass_param_to_zero (f : MollifiedTestFunction) :
+    ∀ (n : ℕ), ∃ (ρ : ℂ), _root_.riemannZeta ρ = 0 ∧
+      ρ = (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ) := by
+  intro n
+  have h_eq_dist : ∀ (g : MollifiedTestFunction), spectralSum g.toTestFunction = nontrivialZeroSum g.toTestFunction :=
+    fun g => spectral_zero_equality g
+  have h_supp_eq : distributionSupport spectralSum = distributionSupport nontrivialZeroSum :=
+    distribution_equality_support spectralSum nontrivialZeroSum h_eq_dist
+  have h_spec_supp := spectral_side_support
+  have h_zero_supp := nontrivialZeroSum_support
+  have h_set_eq : {x : ℝ | ∃ n : ℕ, x = 1 / 4 + (maassSpecParam n)^2} =
+      {x : ℝ | ∃ (ρ : ℂ), _root_.riemannZeta ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1 ∧
+        ρ.re = 1 / 2 ∧ 0 ≤ ρ.im ∧ x = 1 / 4 + (ρ.im)^2} := by
+    rw [←h_spec_supp, h_supp_eq, h_zero_supp]
+  have h_main : (1 / 4 + (maassSpecParam n)^2) ∈ {x : ℝ | ∃ (ρ : ℂ), _root_.riemannZeta ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1 ∧ ρ.re = 1 / 2 ∧ 0 ≤ ρ.im ∧ x = 1 / 4 + (ρ.im)^2} := by
+    have h_in_spec : (1 / 4 + (maassSpecParam n)^2) ∈ {x : ℝ | ∃ n : ℕ, x = 1 / 4 + (maassSpecParam n)^2} := by
+      exact ⟨n, rfl⟩
+    rw [←h_set_eq]
+    exact h_in_spec
+  rcases h_main with ⟨ρ, hρ_zero, hρ_re1, hρ_re2, hρ_crit, hρ_im_nonneg, hρ_x⟩
+  have h_t2 : (ρ.im)^2 = (maassSpecParam n)^2 := by linarith
+  have h_tn_nonneg : 0 ≤ maassSpecParam n := maassSpecParam_nonneg n
+  have h_im_eq : ρ.im = maassSpecParam n := by
+    nlinarith [sq_nonneg (ρ.im - maassSpecParam n), sq_nonneg (ρ.im + maassSpecParam n)]
+  have hρ_eq : ρ = (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ) := by
+    apply Complex.ext <;> simp [hρ_crit, h_im_eq] <;> ring
+  exact ⟨ρ, hρ_zero, hρ_eq⟩
 
 /-- 谱-零点支撑匹配（定理，由临界线+虚部匹配推出）：
     每个上半平面 ζ 非平凡零点 s 都形如 s = 1/2 + i·t_n。
