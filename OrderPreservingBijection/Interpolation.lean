@@ -27,7 +27,18 @@ noncomputable def intervalIndicator (a b : ℝ) (ha : 0 < a) (hab : a < b) : Tes
           intro h; linarith [h.2]
         · have h_neg : x < 0 := by linarith
           intro h; have h1 : 0 ≤ x := le_of_lt (lt_of_lt_of_le ha h.1); linarith
-      simp only [h_notin, if_false] }
+      simp only [h_notin, if_false]
+    isBounded := ⟨1, by norm_num, fun x => by
+      by_cases h : a ≤ x ∧ x ≤ b <;> simp [h] <;> norm_num⟩
+    vanishesNearZero := ⟨a / 2, by linarith, fun x hx => by
+      have h_lt : x < a := by linarith
+      have h_notin : ¬(a ≤ x ∧ x ≤ b) := by intro h; linarith [h.1]
+      simp [h_notin]⟩
+    measurable := by
+      have h : (fun x : ℝ => if a ≤ x ∧ x ≤ b then (1 : ℂ) else 0) = Set.indicator (Set.Icc a b) (fun _ => (1 : ℂ)) := by
+        funext x; simp [Set.indicator] <;> by_cases h : a ≤ x ∧ x ≤ b <;> simp [h]
+      rw [h]
+      exact Measurable.indicator measurable_const measurableSet_Icc }
 
 /-- 点集可分离性（定义）：存在 Λ0<Λ1 使得 S 与 (-∞,Λ0/2]∪[Λ0,Λ1] 不相交。 -/
 def PointSetSeparable (S : Set ℝ) : Prop :=
@@ -116,7 +127,41 @@ theorem elliptic_term_adjustment (S : Set ℝ)
         have h5 : R0 ≤ R := le_max_left R0 (|l0| + 1)
         linarith
       exact hR0 x h_x_gt_R0
-    let f : TestFunction := ⟨f_fun, h_compact⟩
+    have h_bounded : ∃ (B : ℝ), 0 < B ∧ ∀ (x : ℝ), ‖f_fun x‖ ≤ B := by
+      rcases f0.isBounded with ⟨B0, hB0_pos, hB0⟩
+      refine ⟨max B0 ‖c‖ + 1, by positivity, fun x => ?_⟩
+      by_cases h : x = l0
+      · have hf : f_fun x = c := by simp [f_fun, h]
+        rw [hf] <;> linarith [le_max_right B0 ‖c‖]
+      · have h' : f_fun x = f0.eval x := by simp [f_fun, if_neg h]
+        rw [h']
+        have hle1 : ‖f0.eval x‖ ≤ B0 := hB0 x
+        have hle2 : B0 ≤ max B0 ‖c‖ := le_max_left B0 ‖c‖
+        have hle3 : ‖f0.eval x‖ ≤ max B0 ‖c‖ + 1 := by linarith
+        exact hle3
+    have h_l0_pos' : 0 < l0 := by
+      cases hl0_pos with
+      | inl h => linarith [hΛ0_pos]
+      | inr h => linarith [hΛ0_pos, hΛ0_lt]
+    have h_vanish : ∃ (ε : ℝ), 0 < ε ∧ ∀ (x : ℝ), x < ε → f_fun x = 0 := by
+      rcases f0.vanishesNearZero with ⟨ε0, hε0_pos, hε0⟩
+      let ε : ℝ := min ε0 (l0 / 2)
+      have hε_pos : 0 < ε := by positivity
+      refine ⟨ε, hε_pos, fun x hx => ?_⟩
+      have h_x_lt_ε0 : x < ε0 := lt_of_lt_of_le hx (min_le_left ε0 (l0 / 2))
+      have h_x_lt_l0 : x < l0 := by
+        have h1 : x < l0 / 2 := lt_of_lt_of_le hx (min_le_right ε0 (l0 / 2))
+        linarith
+      have hne : x ≠ l0 := by linarith
+      have h' : f_fun x = f0.eval x := by simp [f_fun, if_neg hne]
+      rw [h']; exact hε0 x h_x_lt_ε0
+    have h_meas : Measurable f_fun := by
+      have h : f_fun = Set.indicator {l0} (fun _ => c) + Set.indicator ({l0}ᶜ) f0.eval := by
+        funext x; simp [f_fun, Set.indicator] <;> by_cases h : x = l0 <;> simp [h] <;> ring
+      rw [h]
+      exact (Measurable.indicator measurable_const (measurableSet_singleton l0)).add
+        (Measurable.indicator f0.measurable (measurableSet_singleton l0).compl)
+    let f : TestFunction := ⟨f_fun, h_compact, h_bounded, h_vanish, h_meas⟩
     have h_f_eval : ∀ (x : ℝ), x ≠ l0 → f.eval x = f0.eval x := by
       intro x hne; simp only [f, TestFunction.eval, f_fun, if_neg hne]
     have h_interp : ∀ x ∈ S, f.eval x = f0.eval x := by
@@ -198,7 +243,71 @@ theorem whitney_mollified_point_interpolation
       simp only [f0_fun]; rw [if_pos h_le]
   have h_compact : ∃ (R' : ℝ), 0 < R' ∧ ∀ (x : ℝ), |x| > R' → f0_fun x = 0 :=
     ⟨R, hR_pos, hR_main⟩
-  let f0 : TestFunction := ⟨f0_fun, h_compact⟩
+  have hF_img_fin : Set.Finite (F.image (fun x => ‖v x‖)) := hF_fin.image _
+  rcases hF_img_fin.bddAbove with ⟨Bv, hBv⟩
+  have hBv' : ∀ (x : ℝ), x ∈ F → ‖v x‖ ≤ Bv := by
+    intro x hx
+    have h_in : ‖v x‖ ∈ F.image (fun x => ‖v x‖) := ⟨x, hx, rfl⟩
+    exact hBv h_in
+  have hF_bdd : ∃ (Bv' : ℝ), 0 < Bv' ∧ ∀ (x : ℝ), x ∈ F → ‖v x‖ ≤ Bv' :=
+    ⟨max Bv 1 + 1, by positivity, fun x hx => by
+      have hle : ‖v x‖ ≤ Bv := hBv' x hx
+      linarith [le_max_left Bv 1]⟩
+  rcases hF_bdd with ⟨Bv, hBv_pos, hBv⟩
+  have h_norm0 : ‖(0 : ℂ)‖ = 0 := by norm_num
+  have h_norm1 : ‖(1 : ℂ)‖ = 1 := by norm_num
+  have h0_bounded : ∃ (B : ℝ), 0 < B ∧ ∀ (x : ℝ), ‖f0_fun x‖ ≤ B :=
+    ⟨max Bv 1 + 1, by positivity, fun x => by
+      change ‖(if x ≤ Λ0 / 2 then (0 : ℂ) else if Λ0 ≤ x ∧ x ≤ Λ1 then (1 : ℂ) else if x ∈ F then v x else (0 : ℂ))‖ ≤ max Bv 1 + 1
+      by_cases h1 : x ≤ Λ0 / 2
+      · rw [if_pos h1, h_norm0]; positivity
+      · by_cases h2 : Λ0 ≤ x ∧ x ≤ Λ1
+        · rw [if_neg h1, if_pos h2, h_norm1]
+          have hle : 1 ≤ max Bv 1 := le_max_right Bv 1
+          linarith
+        · by_cases h3 : x ∈ F
+          · rw [if_neg h1, if_neg h2, if_pos h3]
+            have hle : ‖v x‖ ≤ Bv := hBv x h3
+            have hle2 : Bv ≤ max Bv 1 := le_max_left Bv 1
+            linarith
+          · rw [if_neg h1, if_neg h2, if_neg h3, h_norm0]; positivity⟩
+  have h0_vanish : ∃ (ε : ℝ), 0 < ε ∧ ∀ (x : ℝ), x < ε → f0_fun x = 0 :=
+    ⟨Λ0 / 2, by linarith [hΛ0_pos], fun x hx => by
+      have h_le : x ≤ Λ0 / 2 := by linarith
+      simp [f0_fun, h_le]⟩
+  have h0_meas : Measurable f0_fun := by
+    have h1_meas : MeasurableSet {x : ℝ | x ≤ Λ0 / 2} := measurableSet_Iic
+    have h2_meas : MeasurableSet {x : ℝ | Λ0 ≤ x ∧ x ≤ Λ1} :=
+      measurableSet_Ici.inter measurableSet_Iic
+    have hF_meas : MeasurableSet (F : Set ℝ) := hF_fin.measurableSet
+    -- 有限集上的函数 if x ∈ F then v x else 0 是简单函数，可测
+    let F' := hF_fin.toFinset
+    have h_v_on_F : Measurable (fun x : ℝ => if x ∈ F then v x else (0 : ℂ)) := by
+      have h_eq : (fun x : ℝ => if x ∈ F then v x else (0 : ℂ)) =
+          ∑ y ∈ F', (v y) • (fun x : ℝ => if x = y then (1 : ℂ) else 0) := by
+        funext x
+        by_cases hx : x ∈ F
+        · have hx' : x ∈ F' := by exact?
+          simp [hx, hx', Finset.sum_ite_eq', F']
+          <;> aesop
+        · have hx' : x ∉ F' := by simpa [F'] using hx
+          simp [hx, hx', Finset.sum_ite_eq', F'] <;> aesop
+      rw [h_eq]
+      induction F' using Finset.induction_on with
+      | empty =>
+        change Measurable (fun x : ℝ => (0 : ℂ))
+        exact measurable_const
+      | @insert y s hy ih =>
+        rw [Finset.sum_insert hy]
+        apply Measurable.add
+        · apply Measurable.smul measurable_const
+          apply Measurable.ite (measurableSet_singleton y) measurable_const measurable_const
+        · exact ih
+    have h_inner : Measurable (fun x : ℝ =>
+        if Λ0 ≤ x ∧ x ≤ Λ1 then (1 : ℂ) else if x ∈ F then v x else (0 : ℂ)) :=
+      Measurable.ite h2_meas measurable_const h_v_on_F
+    exact Measurable.ite h1_meas measurable_const h_inner
+  let f0 : TestFunction := ⟨f0_fun, h_compact, h0_bounded, h0_vanish, h0_meas⟩
   have h_zero : ∀ x, x ≤ Λ0 / 2 → f0.eval x = 0 := by
     intro x hx; simp only [f0, TestFunction.eval, f0_fun]; rw [if_pos hx]
   have h_one : ∀ x, Λ0 ≤ x ∧ x ≤ Λ1 → f0.eval x = 1 := by

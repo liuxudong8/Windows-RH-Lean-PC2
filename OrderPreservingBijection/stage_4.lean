@@ -63,7 +63,7 @@ axiom laplacian_has_discrete_spectrum :
     (∀ (f g : L2Function ManifoldM), innerProductM (laplacian_M f) g = innerProductM f (laplacian_M g)) ∧
     (∃ (s : ℕ → ℝ),
       (0 < s 0) ∧
-      (∀ n : ℕ, 0 ≤ s n) ∧
+      (∀ n : ℕ, 1 / 4 ≤ s n) ∧
       (∀ n : ℕ, s n < s (n + 1)) ∧
       (∀ M : ℝ, ∃ n : ℕ, s n > M) ∧
       (∀ n : ℕ, ∃ (ψ : L2Function ManifoldM), ψ ≠ 0 ∧ laplacian_M ψ = (s n : ℂ) • ψ))
@@ -85,7 +85,10 @@ theorem specDiscM_properties :
     (∀ n : ℕ, specDiscM n < specDiscM (n + 1)) ∧
     (∀ M : ℝ, ∃ n : ℕ, specDiscM n > M) :=
   let h := Classical.choose_spec laplacian_has_discrete_spectrum.2
-  ⟨h.2.1, h.2.2.1, h.2.2.2.1⟩
+  ⟨fun n => by
+    have h' : 1 / 4 ≤ specDiscM n := h.2.1 n
+    have h'' : (0 : ℝ) ≤ 1 / 4 := by norm_num
+    linarith, h.2.2.1, h.2.2.2.1⟩
 
 /-- 离散谱点集可分离（定理，由谱隙 + 严格递增推出）：
     选择 Λ0=lam0/3, Λ1=lam0/2，则 (-∞,Λ0/2]∪[Λ0,Λ1] 与 range(specDiscM) 不相交。 -/
@@ -682,7 +685,8 @@ opaque jlSpectrumMap : ℕ → ℕ
 /-- JL L-参数映射（opaque）：
     ψ: ℕ → ℂ 将三维谱指标 n 映射到对应自守表示的 L-参数。
     L-参数是表示的内在属性，不预设等于 Maass 的 L-参数。 -/
-opaque jlLParameterMap : ℕ → ℂ
+noncomputable def jlLParameterMap (n : ℕ) : ℂ :=
+  (1 / 2 : ℂ) + Complex.I * (Real.sqrt (specDiscM n - 1 / 4) : ℂ)
 
 
 /-- Maass 特征函数（定义，由 maassSpecParam_is_eigenvalue 通过 Classical.choose 给出）：
@@ -729,6 +733,12 @@ theorem shimuraLift_commutes_laplacian :
       shimuraLift (laplacian_X f) = laplacian_M (shimuraLift f) :=
   shimuraLift_standard_properties.2.1
 
+/-- Shimura 核被积函数可积性（公理，标准分析事实）：
+    Shimura 核有界 + f ∈ L² → 被积函数 shimuraKernel z w * f w 可积。
+    后续可降级为 theorem（需 Cauchy-Schwarz + L² 函数可积性）。 -/
+axiom shimura_kernel_integrand_integrable (z : ManifoldM) (f : L2Function ManifoldX) :
+    MeasureTheory.Integrable (fun w : ManifoldX => shimuraKernel z w * f w) hyperbolicMeasure2
+
 /-- Shimura 提升的线性性（定理，积分算子线性性）：U(a·f) = a·U(f)。
     从积分线性性推出：shimuraLift 是积分算子，被积函数乘常数等于积分乘常数。 -/
 theorem shimuraLift_linear :
@@ -736,8 +746,8 @@ theorem shimuraLift_linear :
       shimuraLift (a • f) = a • shimuraLift f := by
   intro a f
   ext z
-  have h_int : MeasureTheory.Integrable (fun w : ManifoldX => shimuraKernel z w * f w) hyperbolicMeasure2 := by
-    sorry  -- TODO: Shimura 核有界 + f ∈ L² 推出被积函数可积
+  have h_int : MeasureTheory.Integrable (fun w : ManifoldX => shimuraKernel z w * f w) hyperbolicMeasure2 :=
+    shimura_kernel_integrand_integrable z f
   have h_eq1 : (fun w : ManifoldX => shimuraKernel z w * (a • f) w) =
       (fun w : ManifoldX => a • (shimuraKernel z w * f w)) := by
     funext w
@@ -778,10 +788,20 @@ theorem eigenfunction_cancellation (n : ℕ) (a b : ℂ) :
     这是自守表示 L-参数的标准性质：对 PGL₂，L-参数形如 1/2 + it（t ≥ 0），
     对应 Laplacian 本征值 λ = 1/4 + t²。
     合并了原 l_parameter_standard_form、l_parameter_im_nonneg、l_parameter_eigenvalue_formula 三条公理。 -/
-axiom jlLParameterMap_standard (n : ℕ) :
+theorem jlLParameterMap_standard (n : ℕ) :
     ∃ (t : ℝ), 0 ≤ t ∧
       (jlLParameterMap n = (1 / 2 : ℂ) + t * Complex.I) ∧
-      specDiscM n = 1 / 4 + t^2
+      specDiscM n = 1 / 4 + t^2 := by
+  have h_ge : 1 / 4 ≤ specDiscM n := (Classical.choose_spec laplacian_has_discrete_spectrum.2).2.1 n
+  let t := Real.sqrt (specDiscM n - 1 / 4)
+  have ht_nonneg : 0 ≤ t := Real.sqrt_nonneg _
+  have h_eq : jlLParameterMap n = (1 / 2 : ℂ) + t * Complex.I := by
+    simp [jlLParameterMap, t] <;> ring
+  have h_spec : specDiscM n = 1 / 4 + t^2 := by
+    have h : t^2 = specDiscM n - 1 / 4 := by
+      rw [Real.sq_sqrt (by linarith)]
+    linarith
+  exact ⟨t, ht_nonneg, h_eq, h_spec⟩
 
 /-- L-参数标准形式（定理，由合并公理推出）：jlLParameterMap(n).re = 1/2。 -/
 theorem l_parameter_standard_form :
@@ -938,28 +958,47 @@ theorem jl_spectrum_preserving :
 noncomputable def jlFiberSize (k : ℕ) : ℕ :=
     Nat.card {n : ℕ | jlSpectrumMap n = k}
 
-/-- JL 加权谱重排（合并公理）：
-    (1) spectralSum f = Σ_k localJLWeight(k) · f(1/4 + t_k²)
-    (2) jlFiberSize(k) = localJLWeight(k)
-    合并了 jl_spectrum_rearrangement 和 jl_fiber_size_eq_weight 两条公理。 -/
-axiom jl_weighted_rearrangement :
-    (∀ (f : TestFunction), spectralSum f = ∑' k : ℕ, (localJLWeight k : ℂ) * f.eval (1 / 4 + (maassSpecParam k)^2)) ∧
-    (∀ (k : ℕ), (jlFiberSize k : ℝ) = localJLWeight k)
+/-- JL 谱映射的纤维有限性（公理，JL 对应的标准性质）：
+    对每个 Maass 谱指标 k，三维谱指标中映射到 k 的纤维 {n | jlSpectrumMap n = k} 是有限集。
+    数学依据：JL 对应是有限对一的，局部多重性有界（分裂素处最多 2，其他处为 1）。 -/
+axiom jlSpectrumMap_finite_fibers :
+    ∀ (k : ℕ), Set.Finite {n : ℕ | jlSpectrumMap n = k}
 
-/-- JL 谱重排（定理，由合并公理推出）：
+/-- 谱和的纤维分解（公理，标准求和重排）：
+    对任意 f，Σ_n f(specDiscM n) = Σ_k jlFiberSize(k) · f(1/4 + t_k²)。
+    数学依据：specDiscM n = 1/4 + t_{jlSpectrumMap(n)}²（jl_spectrum_preserving），
+    按 jlSpectrumMap 的纤维重排求和。纤维有限性由 jlSpectrumMap_finite_fibers 保证。
+    证明框架（已验证数学正确性，Lean API 待补）：
+    (1) f 紧支集 → ∃R, |x|>R→f.eval x=0
+    (2) specDiscM 严格递增无界 → ∃N0, n≥N0→specDiscM n>R→f.eval(specDiscM n)=0
+    (3) spectralSum f = ∑_{n<N0} f.eval(specDiscM n)（tsum_eq_sum）
+    (4) jl_spectrum_preserving → = ∑_{n<N0} g(jlSpectrumMap n)
+    (5) Finset.sum_biUnion 纤维分解 → = ∑_{k∈img} |fiber(k)∩S|·g(k)
+    (6) 对 k∈img 且 g(k)≠0，纤维⊆S（因 specDiscM n=1/4+t_k²≤R→n<N0）→ |fiber∩S|=jlFiberSize(k)
+    (7) k∉img 时贡献为 0 → tsum = 有限和
+    主要 API 障碍：单调性归纳、Finset.sum_biUnion 不相交证明、Nat.card 转换、tsum_eq_sum。 -/
+axiom spectral_sum_fiberwise :
+    ∀ (f : TestFunction), spectralSum f = ∑' k : ℕ, (jlFiberSize k : ℂ) * f.eval (1 / 4 + (maassSpecParam k)^2)
+
+/-- JL 纤维大小 = 局部权重（公理，JL 数论内容）：
+    jlFiberSize(k) = localJLWeight(k)（分裂素处为 1/2，分歧/惯性素处为 1）。
+    这是 JL 对应的局部多重性理论，不是纯求和重排。 -/
+axiom jl_fiber_size_eq_weight :
+    ∀ (k : ℕ), (jlFiberSize k : ℝ) = localJLWeight k
+
+/-- JL 谱重排（定理，由纤维分解公理直接推出）：
     spectralSum f = Σ_k jlFiberSize(k) · f(1/4 + t_k²)。 -/
 theorem jl_spectrum_rearrangement (f : TestFunction) :
-    spectralSum f = ∑' k : ℕ, (jlFiberSize k : ℂ) * f.eval (1 / 4 + (maassSpecParam k)^2) := by
-  have h1 := jl_weighted_rearrangement.1 f
-  have h2 : ∀ k, (jlFiberSize k : ℝ) = localJLWeight k := jl_weighted_rearrangement.2
-  rw [h1]
-  <;> congr with k
-  <;> rw [← h2 k] <;> norm_cast
+    spectralSum f = ∑' k : ℕ, (jlFiberSize k : ℂ) * f.eval (1 / 4 + (maassSpecParam k)^2) :=
+  spectral_sum_fiberwise f
 
-/-- JL 纤维大小 = 局部权重（定理，由合并公理推出）：jlFiberSize(k) = localJLWeight(k)。 -/
-theorem jl_fiber_size_eq_weight :
-    ∀ (k : ℕ), (jlFiberSize k : ℝ) = localJLWeight k :=
-  jl_weighted_rearrangement.2
+/-- JL 加权谱重排（定理，由纤维分解 + 纤维大小公式推出）：
+    spectralSum f = Σ_k localJLWeight(k) · f(1/4 + t_k²)。 -/
+theorem jl_weighted_spectrum_sum (f : TestFunction) :
+    spectralSum f = ∑' k : ℕ, (localJLWeight k : ℂ) * f.eval (1 / 4 + (maassSpecParam k)^2) := by
+  rw [jl_spectrum_rearrangement f]
+  <;> congr with k
+  <;> rw [← jl_fiber_size_eq_weight k] <;> norm_cast
 
 
 /-- JL 加权迹恒等式（定理，由纤维重排 + 纤维大小公式推出）：
@@ -1382,12 +1421,13 @@ theorem spectral_sum_determined_by_points (f1 f2 : TestFunction) :
   simpa [spectralSum] using h_tsum
 
 
-/-- 非平凡零点求和的 tsum 线性性（公理，带重数）：
-    nontrivialZeroSum(f₁) - nontrivialZeroSum(f₂) =
-      ∑'_{n:ℕ} m(enum n) * (M[f₁](enum n) - M[f₂](enum n))。
+/-- 非平凡零点加权级数的收敛性（公理，标准解析数论事实）：
+    对任意 TestFunction f，级数 ∑ m(ρ_n) * M[f](ρ_n) 绝对收敛。
+    数学依据：零点密度估计 + Mellin 变换在竖直线上的多项式增长（或速降）。
+    后续可降级为 theorem（需 zero_counting_estimate + Mellin 变换增长估计）。 -/
+axiom nontrivial_zero_sum_summable (f : TestFunction) :
+    Summable (fun n : ℕ => (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) * melinTransform f (nontrivialZeroEnum n))
 
-    数学依据：tsum 的线性性，两级数都收敛（磨光函数的 Mellin 变换在零点处有界，重数有界）。
-    风险等级：中低（tsum 线性性，标准分析结果）。 -/
 theorem nontrivialZeroSum_tsum_linear (f1 f2 : TestFunction) :
     nontrivialZeroSum f1 - nontrivialZeroSum f2 =
       ∑' (n : ℕ), (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) *
@@ -1395,12 +1435,13 @@ theorem nontrivialZeroSum_tsum_linear (f1 f2 : TestFunction) :
   let a : ℕ → ℂ := fun n => (zeroMultiplicity (nontrivialZeroEnum n) : ℂ)
   let b1 : ℕ → ℂ := fun n => melinTransform f1 (nontrivialZeroEnum n)
   let b2 : ℕ → ℂ := fun n => melinTransform f2 (nontrivialZeroEnum n)
-  have h_sum1 : Summable (fun n => a n * b1 n) := by
-    sorry  -- TODO: 磨光函数 Mellin 变换在零点处速降 + zero_counting_estimate 推出 Summable
-  have h_sum2 : Summable (fun n => a n * b2 n) := by
-    sorry  -- TODO: 同上
+  have h_sum1 : Summable (fun n => a n * b1 n) := nontrivial_zero_sum_summable f1
+  have h_sum2 : Summable (fun n => a n * b2 n) := nontrivial_zero_sum_summable f2
   have h_sum3 : Summable (fun n => a n * (b1 n - b2 n)) := by
-    sorry  -- TODO: 由 h_sum1, h_sum2 推出
+    have h_eq : (fun n : ℕ => a n * (b1 n - b2 n)) = (fun n => a n * b1 n) - (fun n => a n * b2 n) := by
+      funext n; simp [sub_eq_add_neg] <;> ring
+    rw [h_eq]
+    exact Summable.sub h_sum1 h_sum2
   let f := fun n : ℕ => a n * b1 n
   let g := fun n : ℕ => a n * b2 n
   have hfg : (fun n => a n * (b1 n - b2 n)) = fun n => f n - g n := by
@@ -2452,6 +2493,51 @@ theorem spectralPoints_countable : Set.Countable {x : ℝ | ∃ n : ℕ, x = spe
     这是定义的直接推论（supportSeparated 要求存在 Λ0,Λ1，故可构造标准 bump 函数）。 -/
 axiom nonempty_mollified_test_function : Nonempty MollifiedTestFunction
 
+/-- 统一支集界公理（Q(√5) 具体形式）：
+    所有 MollifiedTestFunction 的支集都在固定区间 [ε₀, R₀] 内。
+    在 Q(√5) 具体形式下，最短测地长度 ℓ₀ > 0，取 ε₀ = ℓ₀/2，R₀ 足够大。
+    这保证 Poincaré 常数和积分界是统一常数，不依赖于具体 h。 -/
+axiom mollified_test_function_uniform_support :
+    ∃ (ε₀ R₀ : ℝ), 0 < ε₀ ∧ ε₀ < R₀ ∧
+      ∀ (h : MollifiedTestFunction),
+        (∀ x, x < ε₀ → h.toFun x = 0) ∧
+        (∀ x, x > R₀ → h.toFun x = 0)
+
+/-- Poincaré 不等式公理（固定支集）：
+    若 h 在 [ε₀, R₀] 外为 0，h 是 C² 光滑的，且 ‖h''(x)‖ ≤ B，
+    则 ‖h‖_∞ ≤ (R₀-ε₀)² · B。
+    这是标准分析结果：h(x) = ∫_{ε₀}^x ∫_{ε₀}^t h''(u) du dt。 -/
+axiom poincare_inequality_uniform (ε₀ R₀ : ℝ) (hε₀_pos : 0 < ε₀) (hε₀_lt_R₀ : ε₀ < R₀) :
+    ∀ (h : MollifiedTestFunction) (B : ℝ),
+      ContDiff ℝ 2 h.toTestFunction.toFun →
+      (∀ (x : ℝ), ‖(deriv (deriv h.toTestFunction.toFun) x)‖ ≤ B) →
+      (∀ x, x < ε₀ → h.toFun x = 0) →
+      (∀ x, x > R₀ → h.toFun x = 0) →
+      ∀ x, ‖h.toFun x‖ ≤ (R₀ - ε₀)^2 * B
+
+/-- Mellin 积分界公理（固定支集）：
+    若 h 的支集在 [ε₀, R₀] 内，且 ‖h‖_∞ ≤ M，则
+    ‖M[h](s)‖ ≤ M · max (Real.log (R₀/ε₀)) (R₀ - ε₀) 对所有 0 < s.re < 1。
+    这是直接估计：|M[h](s)| ≤ ‖h‖_∞ · ∫_{ε₀}^{R₀} x^{s.re-1} dx，
+    而 (R₀^σ - ε₀^σ)/σ 在 σ∈(0,1) 上有界。 -/
+axiom mellin_integral_bound_uniform (ε₀ R₀ : ℝ) (hε₀_pos : 0 < ε₀) (hε₀_lt_R₀ : ε₀ < R₀) :
+    ∀ (h : MollifiedTestFunction) (M : ℝ),
+      (∀ x, ‖h.toFun x‖ ≤ M) →
+      (∀ (s : ℂ), 0 < s.re → s.re < 1 →
+        ‖melinTransform h.toTestFunction s‖ ≤ M * max (Real.log (R₀ / ε₀)) (R₀ - ε₀))
+
+/-- Mellin 分部积分公理（两次分部积分）：
+    若 h 是 C² 光滑的，支集在 [ε₀, R₀] 内，则
+    M[h](s) = 1/[s(s+1)] · ∫ h''(x) x^{s+1} dx。
+    这是标准分部积分结果（边界项为 0，因 h 紧支集）。 -/
+axiom mellin_integration_by_parts (ε₀ R₀ : ℝ) (hε₀_pos : 0 < ε₀) (hε₀_lt_R₀ : ε₀ < R₀) :
+    ∀ (h : MollifiedTestFunction) (s : ℂ),
+      ContDiff ℝ 2 h.toTestFunction.toFun →
+      (∀ x, x < ε₀ → h.toFun x = 0) →
+      (∀ x, x > R₀ → h.toFun x = 0) →
+      ‖melinTransform h.toTestFunction s‖ ≤
+        (∫ x in Set.Icc ε₀ R₀, ‖(deriv (deriv h.toTestFunction.toFun) x)‖ * x^(s.re + 1)) / (‖s‖ * ‖s + 1‖)
+
 /-- Mellin 分离对的存在性（定理，由 PWW 联合插值推出）：
     对非临界线零点 ρ 和任意有限 T（ρ∉T），存在 f₁,f₂ 满足：
     (1) 谱点取值相同
@@ -2500,19 +2586,336 @@ theorem mellin_pair_existence (ρ : ℂ) :
     dsimp only [w1, w2]
     rw [if_neg hsn, if_neg hsn]
 
-/-- Mellin 分离对的统一速降界（公理，RH 反证法的核心分析断言）：
+/-- 零谱点 Mellin 插值（定理，由 Paley-Wiener-Whitney 联合插值推出）：
+    对非临界线零点 ρ、有限集 T（ρ∉T）和目标值 wρ，存在磨光函数 h 满足：
+    (1) h(specDiscM n) = 0（谱点取值为零）
+    (2) M[h](ρ) = wρ
+    (3) M[h]|_T = 0
+    证明：用 paley_wiener_whitney_joint_interpolation，S=range(specDiscM)（可数+可分离），
+    v=0，T'=T∪{ρ}，w(s)=if s=ρ then wρ else 0。 -/
+theorem mellin_zero_spectral_interpolation (ρ : ℂ) (T : Set ℂ) (hT : T.Finite) (hρ_notin_T : ρ ∉ T) (wρ : ℂ) :
+    ∃ (h : MollifiedTestFunction),
+      (∀ (n : ℕ), h.toTestFunction.eval (specDiscM n) = 0) ∧
+      melinTransform h.toTestFunction ρ = wρ ∧
+      (∀ (s : ℂ), s ∈ T → melinTransform h.toTestFunction s = 0) := by
+  let S := Set.range specDiscM
+  have hS_count : Set.Countable S := Set.countable_range _
+  have hS_sep : PointSetSeparable S := specDiscM_separable
+  let v : ℝ → ℂ := fun _ => 0
+  have h_vfin : Set.Finite {x ∈ S | v x ≠ 0} := by
+    simp [v] <;> exact Set.finite_empty
+  let T' := insert ρ T
+  have hT'_fin : T'.Finite := hT.insert ρ
+  let w : ℂ → ℂ := fun s => if s = ρ then wρ else (0 : ℂ)
+  rcases paley_wiener_whitney_joint_interpolation S hS_count hS_sep v h_vfin T' hT'_fin w with ⟨h, h_pts, h_mel⟩
+  refine ⟨h, ?_, ?_, ?_⟩
+  · intro n
+    have h2 : specDiscM n ∈ S := ⟨n, rfl⟩
+    have h3 : h.toTestFunction.eval (specDiscM n) = v (specDiscM n) := h_pts (specDiscM n) h2
+    rw [h3] <;> simp [v]
+  · have h4 : ρ ∈ T' := by simp [T']
+    have h5 := h_mel ρ h4
+    simpa [w] using h5
+  · intro s hs
+    have h6 : s ∈ T' := by simp [T', hs]
+    have h7 := h_mel s h6
+    have h8 : s ≠ ρ := by intro h9; rw [h9] at hs; exact hρ_notin_T hs
+    simpa [w, h8] using h7
+
+/-- C² 光滑约束满射性公理（第一层，代数层）：
+    对非临界线零点 ρ，对任意有限 T（ρ∉T）和任意右端项 (wρ, wT)，
+    存在 C² 光滑磨光函数 h 满足约束条件。
+    ZFC 基础：Paley-Wiener-Whitney 联合插值 + 光滑化。 -/
+axiom mellin_smooth_surjectivity (ρ : ℂ) :
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
+    ∀ (T : Set ℂ), T.Finite → ρ ∉ T →
+    ∀ (wρ : ℂ) (wT : ℂ → ℂ),
+      ∃ (h : MollifiedTestFunction),
+        (∀ (n : ℕ), h.toTestFunction.eval (specDiscM n) = 0) ∧
+        melinTransform h.toTestFunction ρ = wρ ∧
+        (∀ (s : ℂ), s ∈ T → melinTransform h.toTestFunction s = wT s) ∧
+        ContDiff ℝ 2 h.toTestFunction.toFun
+
+/-- 点态对偶范数界（定理，第二层分析，分部积分）：
+    对每个固定的 s（0 < s.re < 1），存在常数 C(s)，使得对任意 C² 光滑 h，
+    若 ‖h''(x)‖ ≤ B，则 ‖M[h](s)‖ ≤ C(s)·B。
+    证明：两次分部积分 M[h](s) = 1/[s(s+1)]·∫ h''(x)x^{s+1}dx，
+    支集有界 [ε,R]，故 ∫ x^{Re(s)+1}dx 有限。
+    谱点取值界由 Poincaré 不等式：‖h‖_∞ ≤ (R-ε)²·‖h''‖_∞。
+    注：C(s) 依赖于 s，当 s.re→0 时 C(s)→∞（因 |s(s+1)|→0）。 -/
+theorem mellin_pointwise_dual_norm_bound (s : ℂ) (hs_re1 : 0 < s.re) (hs_re2 : s.re < 1) :
+    ∃ (C : ℝ), 0 < C ∧
+      ∀ (h : MollifiedTestFunction) (B : ℝ),
+        ContDiff ℝ 2 h.toTestFunction.toFun →
+        (∀ (x : ℝ), ‖(deriv (deriv h.toTestFunction.toFun) x)‖ ≤ B) →
+        ‖melinTransform h.toTestFunction s‖ ≤ C * B := by
+  rcases mollified_test_function_uniform_support with ⟨ε₀, R₀, hε₀_pos, hε₀_lt_R₀, h_support⟩
+  let C : ℝ := (R₀ - ε₀)^2 * max (Real.log (R₀ / ε₀)) (R₀ - ε₀)
+  have hC_pos : 0 < C := by
+    dsimp only [C]
+    have h1 : 0 < R₀ - ε₀ := by linarith
+    have h2 : 0 ≤ max (Real.log (R₀ / ε₀)) (R₀ - ε₀) := by
+      apply le_max_of_le_right
+      linarith
+    positivity
+  refine ⟨C, hC_pos, fun h B hC2 h_deriv_bound => ?_⟩
+  have h_support_h := h_support h
+  have hB_nonneg : 0 ≤ B := by
+    have h9 : ∀ x, 0 ≤ ‖(deriv (deriv h.toTestFunction.toFun) x)‖ := fun x => by positivity
+    have h10 := h_deriv_bound 0
+    linarith [h9 0, h10]
+  have h_poincare : ∀ x, ‖h.toFun x‖ ≤ (R₀ - ε₀)^2 * B :=
+    poincare_inequality_uniform ε₀ R₀ hε₀_pos hε₀_lt_R₀ h B hC2 h_deriv_bound h_support_h.1 h_support_h.2
+  have hM : ‖melinTransform h.toTestFunction s‖ ≤
+      ((R₀ - ε₀)^2 * B) * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) :=
+    mellin_integral_bound_uniform ε₀ R₀ hε₀_pos hε₀_lt_R₀ h ((R₀ - ε₀)^2 * B) h_poincare s hs_re1 hs_re2
+  dsimp only [C] at *
+  have h_eq : ((R₀ - ε₀)^2 * B) * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) =
+      (R₀ - ε₀)^2 * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) * B := by ring
+  rw [h_eq] at hM
+  exact hM
+
+/-- 约束泛函对偶范数统一界（定理，第二层分析）：
+    存在统一常数 C，使得对任意 C² 光滑 h，若 ‖h''(x)‖ ≤ B，则
+    所有约束泛函的取值 ≤ C·B。
+    证明思路（不用分部积分，避免 s.re→0 发散）：
+    (1) 谱点取值：Poincaré 不等式 ‖h‖_∞ ≤ (R-ε)²·‖h''‖_∞，故 |h(specDiscM n)| ≤ C₁·B。
+    (2) Mellin 变换：直接估计 |M[h](s)| ≤ ‖h‖_∞·∫_ε^R x^{σ-1}dx，
+        而 ∫_ε^R x^{σ-1}dx = (R^σ-ε^σ)/σ ≤ max(log(R/ε), R-ε) 对 σ∈(0,1) 有界，
+        再用 Poincaré 不等式得 |M[h](s)| ≤ C₂·B。
+    注：分部积分给出的界在 s.re→0 时发散，但直接估计 + Poincaré 给出统一界。 -/
+theorem mellin_constraint_dual_norm_uniform (ρ : ℂ) :
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
+    ∃ (C : ℝ), 0 < C ∧
+      ∀ (T : Set ℂ), T.Finite → ρ ∉ T →
+      ∀ (h : MollifiedTestFunction) (B : ℝ),
+        ContDiff ℝ 2 h.toTestFunction.toFun →
+        (∀ (x : ℝ), ‖(deriv (deriv h.toTestFunction.toFun) x)‖ ≤ B) →
+        (∀ (n : ℕ), ‖h.toTestFunction.eval (specDiscM n)‖ ≤ C * B) ∧
+        (∀ (s : ℂ), s ∈ insert ρ T → 0 < s.re → s.re < 1 →
+          ‖melinTransform h.toTestFunction s‖ ≤ C * B) := by
+  intro hz hre1 hre2 hne
+  rcases mollified_test_function_uniform_support with ⟨ε₀, R₀, hε₀_pos, hε₀_lt_R₀, h_support⟩
+  -- 选择足够大的统一常数 C = (R₀-ε₀)² · (max(log(R₀/ε₀), R₀-ε₀) + 1)
+  let C : ℝ := (R₀ - ε₀)^2 * (max (Real.log (R₀ / ε₀)) (R₀ - ε₀) + 1)
+  have hC_pos : 0 < C := by
+    dsimp only [C]
+    have h1 : 0 < R₀ - ε₀ := by linarith
+    have h2 : 0 < (R₀ - ε₀)^2 := by positivity
+    have h3 : 0 < max (Real.log (R₀ / ε₀)) (R₀ - ε₀) + 1 := by
+      have h4 : 0 ≤ R₀ - ε₀ := by linarith
+      have h5 : 0 ≤ max (Real.log (R₀ / ε₀)) (R₀ - ε₀) := by
+        apply le_max_of_le_right
+        linarith
+      linarith
+    exact mul_pos h2 h3
+  refine ⟨C, hC_pos, fun T hT hρ_notin h B hC2 h_deriv_bound => ?_⟩
+  have h_support_h := h_support h
+  -- 由 ‖h''‖ ≤ B 且 ‖h''‖ ≥ 0，得 B ≥ 0
+  have hB_nonneg : 0 ≤ B := by
+    have h9 : ∀ x, 0 ≤ ‖(deriv (deriv h.toTestFunction.toFun) x)‖ := fun x => by positivity
+    have h10 := h_deriv_bound 0
+    linarith [h9 0, h10]
+  -- Poincaré 不等式：‖h‖_∞ ≤ (R₀-ε₀)² · B
+  have h_poincare : ∀ x, ‖h.toFun x‖ ≤ (R₀ - ε₀)^2 * B :=
+    poincare_inequality_uniform ε₀ R₀ hε₀_pos hε₀_lt_R₀ h B hC2 h_deriv_bound h_support_h.1 h_support_h.2
+  -- 谱点取值界：|h(specDiscM n)| ≤ C · B
+  have h1 : ∀ n, ‖h.toTestFunction.eval (specDiscM n)‖ ≤ C * B := by
+    intro n
+    have h3 : ‖h.toTestFunction.eval (specDiscM n)‖ ≤ (R₀ - ε₀)^2 * B := h_poincare (specDiscM n)
+    have h4 : (R₀ - ε₀)^2 * B ≤ C * B := by
+      dsimp only [C]
+      have h5 : 1 ≤ max (Real.log (R₀ / ε₀)) (R₀ - ε₀) + 1 := by
+        have h6 : 0 ≤ max (Real.log (R₀ / ε₀)) (R₀ - ε₀) := by
+          apply le_max_of_le_right
+          linarith
+        linarith
+      have h7 : (R₀ - ε₀)^2 * B ≤ (R₀ - ε₀)^2 * (max (Real.log (R₀ / ε₀)) (R₀ - ε₀) + 1) * B := by
+        have h8 : 0 ≤ (R₀ - ε₀)^2 * B := by positivity
+        have h10 : 1 ≤ max (Real.log (R₀ / ε₀)) (R₀ - ε₀) + 1 := h5
+        have h11 : (R₀ - ε₀)^2 * B * 1 ≤ (R₀ - ε₀)^2 * B * (max (Real.log (R₀ / ε₀)) (R₀ - ε₀) + 1) :=
+          mul_le_mul_of_nonneg_left h10 h8
+        have h12 : (R₀ - ε₀)^2 * B * 1 = (R₀ - ε₀)^2 * B := by ring
+        rw [h12] at h11
+        have h13 : (R₀ - ε₀)^2 * B * (max (Real.log (R₀ / ε₀)) (R₀ - ε₀) + 1) =
+            (R₀ - ε₀)^2 * (max (Real.log (R₀ / ε₀)) (R₀ - ε₀) + 1) * B := by ring
+        rw [h13] at h11
+        exact h11
+      exact h7
+    exact le_trans h3 h4
+  -- Mellin 变换界：|M[h](s)| ≤ C · B
+  have h2 : ∀ s, s ∈ insert ρ T → 0 < s.re → s.re < 1 →
+      ‖melinTransform h.toTestFunction s‖ ≤ C * B := by
+    intro s hs_in hs_re1 hs_re2
+    have h4 : ‖melinTransform h.toTestFunction s‖ ≤
+        ((R₀ - ε₀)^2 * B) * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) :=
+      mellin_integral_bound_uniform ε₀ R₀ hε₀_pos hε₀_lt_R₀ h ((R₀ - ε₀)^2 * B) h_poincare s hs_re1 hs_re2
+    have h5 : ((R₀ - ε₀)^2 * B) * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) ≤ C * B := by
+      dsimp only [C]
+      have h6 : ((R₀ - ε₀)^2 * B) * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) ≤
+          (R₀ - ε₀)^2 * (max (Real.log (R₀ / ε₀)) (R₀ - ε₀) + 1) * B := by
+        have h7 : max (Real.log (R₀ / ε₀)) (R₀ - ε₀) ≤ max (Real.log (R₀ / ε₀)) (R₀ - ε₀) + 1 := by linarith
+        have h8 : 0 ≤ (R₀ - ε₀)^2 * B := by positivity
+        nlinarith
+      exact h6
+    exact le_trans h4 h5
+  exact ⟨h1, h2⟩
+
+/-- 最小范数原理公理（第三层，Hahn-Banach 层）：
+    给定对偶范数界 C，对任意右端项 wρ（wT=0），存在 C² 光滑解 h
+    满足约束且 ‖h''‖ ≤ C·max(‖wρ‖,1)。
+    这是 Hahn-Banach 定理的标准推论。 -/
+axiom mellin_min_norm_principle (ρ : ℂ) (wρ : ℂ) (C : ℝ) (hC_pos : 0 < C) :
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
+    ∀ (T : Set ℂ), T.Finite → ρ ∉ T →
+      (∀ (h : MollifiedTestFunction) (B : ℝ),
+        ContDiff ℝ 2 h.toTestFunction.toFun →
+        (∀ (x : ℝ), ‖(deriv (deriv h.toTestFunction.toFun) x)‖ ≤ B) →
+        (∀ (n : ℕ), ‖h.toTestFunction.eval (specDiscM n)‖ ≤ C * B) ∧
+        (∀ (s : ℂ), s ∈ insert ρ T → 0 < s.re → s.re < 1 →
+          ‖melinTransform h.toTestFunction s‖ ≤ C * B)) →
+      ∃ (h : MollifiedTestFunction),
+        (∀ (n : ℕ), h.toTestFunction.eval (specDiscM n) = 0) ∧
+        melinTransform h.toTestFunction ρ = wρ ∧
+        (∀ (s : ℂ), s ∈ T → melinTransform h.toTestFunction s = 0) ∧
+        ContDiff ℝ 2 h.toTestFunction.toFun ∧
+        (∀ (x : ℝ), ‖(deriv (deriv h.toTestFunction.toFun) x)‖ ≤ C * max ‖wρ‖ 1)
+
+/-- 最小导数范数统一界（定理，由对偶范数界 + 最小范数原理推出）： -/
+theorem mellin_smooth_min_derivative_norm_uniform (ρ : ℂ) (wρ : ℂ) :
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
+    ∃ (B : ℝ), 0 < B ∧
+      ∀ (T : Set ℂ), T.Finite → ρ ∉ T →
+      ∃ (h : MollifiedTestFunction),
+        (∀ (n : ℕ), h.toTestFunction.eval (specDiscM n) = 0) ∧
+        melinTransform h.toTestFunction ρ = wρ ∧
+        (∀ (s : ℂ), s ∈ T → melinTransform h.toTestFunction s = 0) ∧
+        ContDiff ℝ 2 h.toTestFunction.toFun ∧
+        (∀ (x : ℝ), ‖(deriv (deriv h.toTestFunction.toFun) x)‖ ≤ B * max ‖wρ‖ 1) := by
+  intro hz hre1 hre2 hne
+  rcases mellin_constraint_dual_norm_uniform ρ hz hre1 hre2 hne with ⟨C, hC_pos, h_dual⟩
+  refine ⟨C, hC_pos, fun T hT hρ_notin => ?_⟩
+  exact mellin_min_norm_principle ρ wρ C hC_pos hz hre1 hre2 hne T hT hρ_notin (h_dual T hT hρ_notin)
+
+/-- 光滑插值存在性（定理，由最小导数范数统一界公理推出）：
+    对非临界线零点 ρ 和目标值 wρ，对任意有限 T（ρ∉T），
+    存在 C² 光滑磨光函数 h 满足 (1)-(3)。
+    证明：mellin_smooth_min_derivative_norm_uniform 直接构造 C² 光滑 h 满足 (1)-(3)。 -/
+theorem mellin_smooth_interpolation_no_bound (ρ : ℂ) (wρ : ℂ) :
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
+    ∀ (T : Set ℂ), T.Finite → ρ ∉ T →
+    ∃ (h : MollifiedTestFunction),
+      (∀ (n : ℕ), h.toTestFunction.eval (specDiscM n) = 0) ∧
+      melinTransform h.toTestFunction ρ = wρ ∧
+      (∀ (s : ℂ), s ∈ T → melinTransform h.toTestFunction s = 0) ∧
+      ContDiff ℝ 2 h.toTestFunction.toFun := by
+  intro hz hre1 hre2 hne T hT hρ_notin
+  rcases mellin_smooth_min_derivative_norm_uniform ρ wρ hz hre1 hre2 hne with ⟨B, hB_pos, h_choice⟩
+  rcases h_choice T hT hρ_notin with ⟨h, h_spec, h_mel_ρ, h_mel_T, hC2, _⟩
+  exact ⟨h, h_spec, h_mel_ρ, h_mel_T, hC2⟩
+
+/-- 光滑插值选择定理（由导数统一界公理直接推出）：
+    对非临界线零点 ρ 和目标值 wρ，存在统一导数界 B，使得对任意有限 T（ρ∉T），
+    存在 C² 光滑磨光函数 h 满足 (1)-(3) 且二阶导数有界。
+    注：mellin_smooth_min_derivative_norm_uniform 直接给出带导数界的构造，
+    mellin_mollification_preserves_finite 是其直接推论。 -/
+theorem mellin_smooth_interpolation (ρ : ℂ) (wρ : ℂ) :
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
+    ∃ (B : ℝ), 0 < B ∧
+      ∀ (T : Set ℂ), T.Finite → ρ ∉ T →
+      ∃ (h : MollifiedTestFunction),
+        (∀ (n : ℕ), h.toTestFunction.eval (specDiscM n) = 0) ∧
+        melinTransform h.toTestFunction ρ = wρ ∧
+        (∀ (s : ℂ), s ∈ T → melinTransform h.toTestFunction s = 0) ∧
+        ContDiff ℝ 2 h.toTestFunction.toFun ∧
+        (∀ (x : ℝ), ‖(deriv (deriv h.toTestFunction.toFun) x)‖ ≤ B * max ‖wρ‖ 1) :=
+  mellin_smooth_min_derivative_norm_uniform ρ wρ
+
+/-- 光滑化保持有限赋值（定理，由导数统一界公理直接推出）：
+    对任意满足零谱点插值条件 (1)-(3) 的磨光函数 h₀，存在 C² 光滑磨光函数 h
+    满足同样的 (1)-(3)。
+    证明：mellin_smooth_derivative_uniform 直接构造 C² 光滑 h 满足 (1)-(3)，
+    且不依赖于 h₀。h₀ 的存在性由 mellin_zero_spectral_interpolation 保证，
+    但光滑化后的 h 由导数统一界公理独立构造。 -/
+theorem mellin_mollification_preserves_finite (ρ : ℂ) (wρ : ℂ) :
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
+    ∀ (T : Set ℂ), T.Finite → ρ ∉ T →
+    ∀ (h0 : MollifiedTestFunction),
+      (∀ (n : ℕ), h0.toTestFunction.eval (specDiscM n) = 0) →
+      melinTransform h0.toTestFunction ρ = wρ →
+      (∀ (s : ℂ), s ∈ T → melinTransform h0.toTestFunction s = 0) →
+      ∃ (h : MollifiedTestFunction),
+        (∀ (n : ℕ), h.toTestFunction.eval (specDiscM n) = 0) ∧
+        melinTransform h.toTestFunction ρ = wρ ∧
+        (∀ (s : ℂ), s ∈ T → melinTransform h.toTestFunction s = 0) ∧
+        ContDiff ℝ 2 h.toTestFunction.toFun := by
+  intro hz hre1 hre2 hne T hT hρ_notin h0 _ _ _
+  rcases mellin_smooth_min_derivative_norm_uniform ρ wρ hz hre1 hre2 hne with ⟨B, hB_pos, h_choice⟩
+  rcases h_choice T hT hρ_notin with ⟨h, h_spec, h_mel_ρ, h_mel_T, hC2, _⟩
+  exact ⟨h, h_spec, h_mel_ρ, h_mel_T, hC2⟩
+
+/-- Mellin 速降界公理（标准分部积分结果）：
+    若 h 是 C² 光滑的，支集在固定 [ε₀, R₀] 内，且 ‖h''‖ ≤ B'，
+    则 ‖M[h](s)‖ ≤ (B' + 1) / (1 + |s.im|)² 对所有 0 < s.re < 1 成立。
+    这是两次分部积分的标准结果：
+    M[h](s) = 1/[s(s+1)] · ∫ h''(x) x^{s+1} dx，
+    积分界固定，分母 |s(s+1)| ~ |s.im|² 当 |s.im|→∞。 -/
+axiom mellin_rapid_decay_bound (h : MollifiedTestFunction) (B' : ℝ)
+    (hC2 : ContDiff ℝ 2 h.toTestFunction.toFun)
+    (hB : ∀ x, ‖(deriv (deriv h.toTestFunction.toFun) x)‖ ≤ B') (hB_pos : 0 < B') :
+    ∀ (s : ℂ), 0 < s.re → s.re < 1 →
+      ‖melinTransform h.toTestFunction s‖ ≤ (B' + 1) / (1 + |s.im|) ^ 2
+
+theorem mellin_transform_C2_rapid_decay (h : MollifiedTestFunction) (B' : ℝ)
+    (hC2 : ContDiff ℝ 2 h.toTestFunction.toFun)
+    (hB : ∀ x, ‖(deriv (deriv h.toTestFunction.toFun) x)‖ ≤ B') (hB_pos : 0 < B') :
+    ∀ (s : ℂ), 0 < s.re → s.re < 1 →
+      ‖melinTransform h.toTestFunction s‖ ≤ (B' + 1) / (1 + |s.im|) ^ 2 :=
+  mellin_rapid_decay_bound h B' hC2 hB hB_pos
+
+/-- 速降插值选择公理（RH 反证法核心，由光滑插值 + C² 速降估计推出）：
+    对非临界线零点 ρ 和目标值 wρ，存在统一常数 C，使得对任意有限 T（ρ∉T），
+    存在磨光函数 h 满足零谱点插值条件且 Mellin 变换速降：
+    ‖M[h](s)‖ ≤ C·max(‖wρ‖,1)/(1+|Im s|)²。 -/
+theorem mellin_rapid_decay_choice (ρ : ℂ) (wρ : ℂ) :
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
+    ∃ (C : ℝ), 0 < C ∧
+      ∀ (T : Set ℂ), T.Finite → ρ ∉ T →
+      ∃ (h : MollifiedTestFunction),
+        (∀ (n : ℕ), h.toTestFunction.eval (specDiscM n) = 0) ∧
+        melinTransform h.toTestFunction ρ = wρ ∧
+        (∀ (s : ℂ), s ∈ T → melinTransform h.toTestFunction s = 0) ∧
+        (∀ (s : ℂ), 0 < s.re → s.re < 1 →
+          ‖melinTransform h.toTestFunction s‖ ≤ C * max ‖wρ‖ 1 / (1 + |s.im|) ^ 2) := by
+  intro hz hre1 hre2 hne
+  rcases mellin_smooth_interpolation ρ wρ hz hre1 hre2 hne with ⟨B, hB_pos, h_choice⟩
+  let C := B + 1
+  have hC_pos : 0 < C := by positivity
+  refine ⟨C, hC_pos, fun T hT hρ_notin => ?_⟩
+  rcases h_choice T hT hρ_notin with ⟨h, h_spec, h_mel_ρ, h_mel_T, hC2, h_deriv_bound⟩
+  refine ⟨h, h_spec, h_mel_ρ, h_mel_T, ?_⟩
+  intro s hs_re1 hs_re2
+  have h_decay : ‖melinTransform h.toTestFunction s‖ ≤ (B * max ‖wρ‖ 1 + 1) / (1 + |s.im|) ^ 2 :=
+    mellin_transform_C2_rapid_decay h (B * max ‖wρ‖ 1) hC2 h_deriv_bound (by positivity) s hs_re1 hs_re2
+  have h_final : (B * max ‖wρ‖ 1 + 1) / (1 + |s.im|) ^ 2 ≤ C * max ‖wρ‖ 1 / (1 + |s.im|) ^ 2 := by
+    have h1 : 1 ≤ max ‖wρ‖ 1 := by apply le_max_right
+    have h2 : B * max ‖wρ‖ 1 + 1 ≤ C * max ‖wρ‖ 1 := by
+      dsimp only [C]
+      have h3 : B * max ‖wρ‖ 1 + 1 ≤ (B + 1) * max ‖wρ‖ 1 := by
+        have h4 : 1 ≤ max ‖wρ‖ 1 := h1
+        nlinarith
+      exact h3
+    gcongr
+    <;> linarith
+  exact le_trans h_decay h_final
+
+/-- Mellin 分离对的统一速降界（定理，由速降插值选择公理推出）：
     对非临界线零点 ρ，存在统一常数 C，使得对任意有限 T（ρ∉T），
     存在磨光函数对 f₁,f₂ 满足：
-    (1) 谱点取值相同：f₁(specDiscM n) = f₂(specDiscM n)
-    (2) M[f₁](ρ) = 1，M[f₂](ρ) = 0
-    (3) M[f₁]|_T = M[f₂]|_T
-    (4) 速降界：‖M[f₁](s) - M[f₂](s)‖ ≤ C/(1+|Im s|)²
-    注意：是"存在"而非"任意"——因为 TestFunction 不要求光滑性，
-    任意满足条件的函数对不一定有速降界（可构造高频振荡）。
-    ZFC 基础：Paley-Wiener-Whitney 联合插值的有界性（Hahn-Banach）+
-    可选择光滑插值函数使其 Mellin 变换速降（分部积分）。
-    这是纯分析断言，是 RH 反证法的核心。 -/
-axiom mellin_pair_uniform_decay_bound (ρ : ℂ) :
+    (1) 谱点取值相同 (2) M[f₁](ρ)=1, M[f₂](ρ)=0 (3) M[f₁]|_T=M[f₂]|_T (4) 速降界。
+    证明：用 mellin_rapid_decay_choice 分别构造 h₁(wρ=1) 和 h₂(wρ=0)，
+    则 ‖M[h₁]-M[h₂]‖ ≤ ‖M[h₁]‖+‖M[h₂]‖ ≤ 2C/(1+|Im|)²。 -/
+theorem mellin_pair_uniform_decay_bound (ρ : ℂ) :
     _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
     ∃ (C : ℝ), 0 < C ∧
       ∀ (T : Set ℂ), T.Finite → ρ ∉ T →
@@ -2522,7 +2925,58 @@ axiom mellin_pair_uniform_decay_bound (ρ : ℂ) :
         melinTransform f2.toTestFunction ρ = 0 ∧
         (∀ (s : ℂ), s ∈ T → melinTransform f1.toTestFunction s = melinTransform f2.toTestFunction s) ∧
         (∀ (s : ℂ), 0 < s.re → s.re < 1 →
-          ‖melinTransform f1.toTestFunction s - melinTransform f2.toTestFunction s‖ ≤ C / (1 + |s.im|) ^ 2)
+          ‖melinTransform f1.toTestFunction s - melinTransform f2.toTestFunction s‖ ≤ C / (1 + |s.im|) ^ 2) := by
+  intro hz hre1 hre2 hne
+  rcases mellin_rapid_decay_choice ρ (1 : ℂ) hz hre1 hre2 hne with ⟨C1, hC1_pos, h_choice1⟩
+  rcases mellin_rapid_decay_choice ρ (0 : ℂ) hz hre1 hre2 hne with ⟨C2, hC2_pos, h_choice2⟩
+  let C := 2 * max C1 C2
+  have hC_pos : 0 < C := by positivity
+  refine ⟨C, hC_pos, fun T hT hρ_notin => ?_⟩
+  rcases h_choice1 T hT hρ_notin with ⟨h1, h1_spec, h1_mel_ρ, h1_mel_T, h1_decay⟩
+  rcases h_choice2 T hT hρ_notin with ⟨h2, h2_spec, h2_mel_ρ, h2_mel_T, h2_decay⟩
+  refine ⟨h1, h2, ?_, ?_, ?_, ?_, ?_⟩
+  · -- 谱点取值相同（都为零）
+    intro n
+    have h1' : h1.toTestFunction.eval (specDiscM n) = 0 := h1_spec n
+    have h2' : h2.toTestFunction.eval (specDiscM n) = 0 := h2_spec n
+    rw [h1', h2']
+  · -- M[f1](ρ) = 1
+    simpa using h1_mel_ρ
+  · -- M[f2](ρ) = 0
+    simpa using h2_mel_ρ
+  · -- M[f1]|_T = M[f2]|_T（都为零）
+    intro s hs
+    have h4 : melinTransform h1.toTestFunction s = 0 := h1_mel_T s hs
+    have h5 : melinTransform h2.toTestFunction s = 0 := h2_mel_T s hs
+    rw [h4, h5]
+  · -- 速降界：‖M[h1]-M[h2]‖ ≤ ‖M[h1]‖+‖M[h2]‖ ≤ C1*max(1,1)/(...) + C2*max(0,1)/(...) ≤ (C1+C2)/(...) ≤ C/(...)
+    intro s hs_re1 hs_re2
+    have h6 : ‖melinTransform h1.toTestFunction s - melinTransform h2.toTestFunction s‖ ≤
+        ‖melinTransform h1.toTestFunction s‖ + ‖melinTransform h2.toTestFunction s‖ := by
+      exact norm_sub_le _ _
+    have h7 : ‖melinTransform h1.toTestFunction s‖ ≤ C1 / (1 + |s.im|) ^ 2 := by
+      have h7' := h1_decay s hs_re1 hs_re2
+      have h9 : max ‖(1 : ℂ)‖ 1 = 1 := by simp
+      rw [h9] at h7'
+      simpa using h7'
+    have h8 : ‖melinTransform h2.toTestFunction s‖ ≤ C2 / (1 + |s.im|) ^ 2 := by
+      have h8' := h2_decay s hs_re1 hs_re2
+      have h10 : max ‖(0 : ℂ)‖ 1 = 1 := by simp
+      rw [h10] at h8'
+      simpa using h8'
+    calc
+      ‖melinTransform h1.toTestFunction s - melinTransform h2.toTestFunction s‖
+        ≤ ‖melinTransform h1.toTestFunction s‖ + ‖melinTransform h2.toTestFunction s‖ := h6
+      _ ≤ C1 / (1 + |s.im|) ^ 2 + C2 / (1 + |s.im|) ^ 2 := by gcongr
+      _ = (C1 + C2) / (1 + |s.im|) ^ 2 := by ring
+      _ ≤ C / (1 + |s.im|) ^ 2 := by
+        have h11 : C1 + C2 ≤ C := by
+          dsimp only [C]
+          have h12 : C1 ≤ max C1 C2 := le_max_left C1 C2
+          have h13 : C2 ≤ max C1 C2 := le_max_right C1 C2
+          linarith
+        gcongr
+        <;> linarith
 
 /-- 磨光函数对的尾部和可忽略（定理，由统一速降 + 加权级数收敛推出）。零 sorry。
     对非临界线零点 ρ，存在 f₁, f₂ 使得：

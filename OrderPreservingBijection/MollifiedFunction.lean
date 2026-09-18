@@ -38,7 +38,7 @@ structure MollifiedTestFunction extends TestFunction where
   supportSeparated : ∃ (Λ0 Λ1 : ℝ), 0 < Λ0 ∧ Λ0 < Λ1 ∧
     (∀ x, x ≤ Λ0 / 2 → toFun x = 0) ∧
     (∀ x, Λ0 ≤ x ∧ x ≤ Λ1 → toFun x = 1)
-  ellipticVanishes : ellipticTerm (⟨toFun, hasCompactSupport⟩) = 0
+  ellipticVanishes : ellipticTerm (⟨toFun, hasCompactSupport, isBounded, vanishesNearZero, measurable⟩) = 0
 
 /-- 磨光函数的椭圆项为零（定理，由定义直接推出）。 -/
 theorem mollified_elliptic_zero (f : MollifiedTestFunction) :
