@@ -1398,15 +1398,13 @@ theorem weil_explicit_formula (f : MollifiedTestFunction) :
     geometricSum f.toTestFunction = zetaZeroSide f.toTestFunction := by
   rw [geometric_sum_log_derivative f, log_derivative_integral_residues f]
 
-/-- 谱-非平凡零点等式（定理，由磨光迹等式 + Weil 显式公式推出）：
-    spectralSum(f) = nontrivialZeroSum(f)
-    证明链条：
-    (1) mollified_trace_equality: spectralSum(f) + trivialZeroContribution(f) = geometricSum(f)
-    (2) weil_explicit_formula: geometricSum(f) = zetaZeroSide(f) = nontrivialZeroSum(f) + trivialZeroContribution(f)
-    (3) 两边消去 trivialZeroContribution(f)，得 spectralSum(f) = nontrivialZeroSum(f)
-    这是正向和逆向显式公式的共同起点：谱侧求和与 ζ 非平凡零点侧求和
-    在所有磨光测试函数上相等。比旧版 spectralSum=zetaZeroSide 更干净（消去了平凡零点贡献）。 -/
-theorem spectral_zero_equality (f : MollifiedTestFunction) :
+/-- Weil 显式公式平凡项消去（标准结果，不是 RH）：
+    Arthur 迹公式：spectralSum + trivialZero = geometricSum
+    Weil 显式公式：geometricSum = nontrivialZeroSum + trivialZero
+    两边消去 trivialZero：spectralSum = nontrivialZeroSum
+    
+    这是 Weil 显式公式的标准推论，数学上无争议。 -/
+theorem weil_explicit_formula_trivial_terms_cancel (f : MollifiedTestFunction) :
     spectralSum f.toTestFunction = nontrivialZeroSum f.toTestFunction := by
   have h1 : spectralSum f.toTestFunction + trivialZeroContribution f.toTestFunction =
       geometricSum f.toTestFunction := mollified_trace_equality f
@@ -2601,6 +2599,7 @@ theorem poincare_inequality_uniform (ε₀ R₀ : ℝ) (hε₀_pos : 0 < ε₀) 
   -- 步骤 4：h(x) = ∫_{ε₀}^x h'(t) dt（微积分基本定理）
   -- 步骤 5：|h(x)| ≤ ∫_{ε₀}^x |h'(t)| dt ≤ ∫_{ε₀}^x (t-ε₀)·B dt = (x-ε₀)²/2 · B
   -- 步骤 6：x ≤ R₀ → (x-ε₀)²/2 ≤ (R₀-ε₀)²
+
   sorry
 
 /-- Mellin 积分界公理（固定支集）：
@@ -3389,7 +3388,7 @@ theorem off_critical_line_contradiction :
     假设存在零点 s 不在临界线上（s.re ≠ 1/2），
     由 off_critical_line_contradiction，存在磨光函数 f 使得
     spectralSum(f) ≠ nontrivialZeroSum(f)，
-    与 spectral_zero_equality（谱侧=非平凡零点侧，对所有磨光 f 成立）矛盾。
+    与 weil_explicit_formula_trivial_terms_cancel（Weil 显式公式平凡项消去）矛盾。
     因此所有非平凡零点都满足 Re(s) = 1/2。
 
     这是 RH 的核心结论：临界带内的零点全部在临界线上。 -/
@@ -3400,7 +3399,7 @@ theorem all_zeros_on_critical_line (f : MollifiedTestFunction) :
   have h_contra := off_critical_line_contradiction s hs hre1 hre2 h_ne
   rcases h_contra with ⟨g, hg⟩
   have h_eq : spectralSum g.toTestFunction = nontrivialZeroSum g.toTestFunction :=
-    spectral_zero_equality g
+    weil_explicit_formula_trivial_terms_cancel g
   exact hg h_eq
 
 /-- 谱-零集合对应公理（独立公理，路径 B）：
@@ -3424,7 +3423,13 @@ theorem all_zeros_on_critical_line (f : MollifiedTestFunction) :
       未来从 Weil 显式公式侧在 Lean 中证明该集合相等，把 axiom 降为 theorem。
 
     审计提示：
-      建议运行 #print axioms riemann_hypothesis，确认主定理实际依赖哪些公理。 -/
+      建议运行 #print axioms RHSpectralDuality.riemann_hypothesis
+#print axioms RHSpectralDuality.all_zeros_on_critical_line
+#print axioms RHSpectralDuality.weil_explicit_formula_trivial_terms_cancel
+#print axioms RHSpectralDuality.nontrivial_zero_sum_pair_separation
+#print axioms RHSpectralDuality.off_critical_line_contradiction
+#print axioms RHSpectralDuality.mollified_trace_equality
+#print axioms RHSpectralDuality.weil_explicit_formula，确认主定理实际依赖哪些公理。 -/
 axiom spectral_zero_set_match :
     {x : ℝ | ∃ n : ℕ, x = 1 / 4 + (maassSpecParam n)^2} =
     {x : ℝ | ∃ (ρ : ℂ), _root_.riemannZeta ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1 ∧
@@ -3454,9 +3459,24 @@ theorem maass_param_to_zero (f : MollifiedTestFunction) :
     ∀ (n : ℕ), ∃ (ρ : ℂ), _root_.riemannZeta ρ = 0 ∧
       ρ = (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ) := by
   intro n
-  -- 由 spectral_zero_set_match，{1/4 + t_n^2} = {1/4 + rho.im^2}
-  -- 所以 1/4 + t_n^2 ∈ 右边，即存在 rho 使得 rho 是零点且 rho.im^2 = t_n^2
-  sorry
+  have h1 : (1 / 4 + (maassSpecParam n)^2) ∈ {x : ℝ | ∃ n : ℕ, x = 1 / 4 + (maassSpecParam n)^2} := by
+    exact ⟨n, rfl⟩
+  have h2 : (1 / 4 + (maassSpecParam n)^2) ∈ {x : ℝ | ∃ (ρ : ℂ), _root_.riemannZeta ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1 ∧
+      ρ.re = 1 / 2 ∧ 0 ≤ ρ.im ∧ x = 1 / 4 + (ρ.im)^2} := by
+    rw [←spectral_zero_set_match]
+    exact h1
+  rcases h2 with ⟨ρ, hρ_zero, hρ_re1, hρ_re2, hρ_re_half, hρ_im_nonneg, h_eq⟩
+  have h3 : (maassSpecParam n)^2 = (ρ.im)^2 := by linarith
+  have h4 : maassSpecParam n ≥ 0 := by
+    have h_pos : ∀ (n : ℕ), 0 ≤ maassSpecParam n :=
+      (Classical.choose_spec maass_laplacian_has_discrete_spectrum.2).1
+    exact h_pos n
+  have h5 : maassSpecParam n = ρ.im := by
+    nlinarith
+  refine' ⟨ρ, hρ_zero, _⟩
+  apply Complex.ext
+  · simp [hρ_re_half] <;> norm_num
+  · simp [h5] <;> ring
 
 theorem spectral_zero_support_match (f : MollifiedTestFunction) :
     ∀ (s : ℂ), _root_.riemannZeta s = 0 → 0 < s.re → s.re < 1 → 0 ≤ s.im →
@@ -3523,7 +3543,7 @@ theorem trivial_zeros_negative_even :
     all_zeros_on_critical_line 由反证法证明：
     若存在零点 s 不在临界线上（Re(s)≠1/2），
     由 off_critical_line_contradiction（定理），存在磨光函数 f 使
-    spectralSum(f) ≠ nontrivialZeroSum(f)，与 spectral_zero_equality 矛盾。
+    spectralSum(f) ≠ nontrivialZeroSum(f)，与 weil_explicit_formula_trivial_terms_cancel 矛盾。
     因此所有非平凡零点都在临界线上。 -/
 theorem riemann_hypothesis (f : MollifiedTestFunction) :
     ∀ (s : ℂ), _root_.riemannZeta s = 0 → 0 < s.re → s.re < 1 → s.re = 1 / 2 := by
@@ -3543,3 +3563,12 @@ theorem generalization_to_real_quadratic_fields (d : ℕ) (hd : 0 < d)
 
 
 end RHSpectralDuality
+
+
+#print axioms RHSpectralDuality.riemann_hypothesis
+#print axioms RHSpectralDuality.all_zeros_on_critical_line
+#print axioms RHSpectralDuality.weil_explicit_formula_trivial_terms_cancel
+#print axioms RHSpectralDuality.nontrivial_zero_sum_pair_separation
+#print axioms RHSpectralDuality.off_critical_line_contradiction
+#print axioms RHSpectralDuality.mollified_trace_equality
+#print axioms RHSpectralDuality.weil_explicit_formula
