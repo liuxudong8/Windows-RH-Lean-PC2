@@ -1,4 +1,4 @@
-# Stage 4 Summary — RH Spectral Duality Framework
+﻿# Stage 4 Summary — RH Spectral Duality Framework
 
 ## Table of Contents
 
@@ -443,3 +443,4 @@ This is the third time formalization has uncovered a hidden flaw in the paper pr
 | Spectral-zero correspondence | ⚠️ 1 core axiom (`spectral_zero_set_match`) |
 
 **Conclusion: stage_4.lean has only 1 core axiom (`spectral_zero_set_match`). The remaining 23 sorry are all known big theorems, mathematically uncontroversial, requiring massive infrastructure to formalize.**
+

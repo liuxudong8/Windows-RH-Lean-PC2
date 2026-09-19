@@ -1,4 +1,4 @@
-# Stage 4 总结 — RH 谱对偶论证框架
+﻿# Stage 4 总结 — RH 谱对偶论证框架
 
 ## 目录
 
@@ -18,7 +18,7 @@
 
 | 项目 | 状态 |
 |------|------|
-| 核心文件 | stage_4.lean（编译通过，**35 个 sorry** 定理证明体） |
+| 核心文件 | stage_4.lean（编译通过，**27 个 sorry** 定理证明体） |
 | 核心公理 | **1 条**（`spectral_zero_set_match`，RH 主定理不依赖） |
 | 模块 | 13 个独立 Lean 文件 + 6 个新文件夹 |
 | 目标 | 在 ZFC 内条件导出黎曼猜想（RH） |
@@ -584,3 +584,7 @@ axiom spectral_zero_set_match :
 | 谱-零对应 | ⚠️ 1 条核心公理（`spectral_zero_set_match`） |
 
 **结论：stage_4.lean 内仅 1 条核心公理（`spectral_zero_set_match`）。剩余的 36 个 sorry 都是已知大定理，数学上无争议，形式化需要大量基础设施。**
+
+
+
+
