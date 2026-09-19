@@ -1,10 +1,22 @@
 # Stage 4 Summary — RH Spectral Duality Framework
 
+## Table of Contents
+
+- [Project Status](#project-status)
+- [`#print axioms riemann_hypothesis` Audit Result](#print-axioms-riemann_hypothesis-audit-result)
+- [Core Mathematical Insight: Why ATF and Weil Explicit Formula Connect?](#core-mathematical-insight-why-atf-and-weil-explicit-formula-connect)
+- [Major Breakthroughs in This Round](#major-breakthroughs-in-this-round)
+- [RH Proof Chain](#rh-proof-chain)
+- [Remaining sorry Count](#remaining-sorry-count)
+- [Next Steps](#next-steps)
+
+---
+
 ## Project Status
 
 | Item | Status |
 |------|--------|
-| Core file | `stage_4.lean` (~3600 lines, compiles, 23 sorry theorem proofs) |
+| Core file | `stage_4.lean` (~3600 lines, compiles, 35 sorry theorem proofs) |
 | Core axioms | **1** (`spectral_zero_set_match`, not used by RH main theorem) |
 | Modules | 13 standalone Lean files |
 | Goal | Conditional derivation of the Riemann Hypothesis (RH) within ZFC |
@@ -177,7 +189,34 @@ This is the core insight of our theory.
 
 ## Major Breakthrough
 
-### Distribution Support Route Restructuring (This Round)
+### 7-Step Framework for `mellin_integral_bound_uniform` (This Round)
+
+We successfully built the complete 7-step proof framework for `mellin_integral_bound_uniform`:
+
+**Theorem**: If h is a `MollifiedTestFunction` with support in [ε₀, R₀], then for all s ∈ ℂ (0 < Re(s) < 1):
+```
+‖M[h](s)‖ ≤ M · max(log(R₀/ε₀), R₀ - ε₀)
+```
+where M = sup |h(x)|.
+
+### Filled sorry
+
+| sorry | Content | Status |
+|-------|---------|--------|
+| h1 | `(x : ℂ)^(s-1) = exp((s-1) * log(x : ℂ))` (cpow definition) | ✅ Proved (using `Complex.cpow_def_of_ne_zero`) |
+
+### Attempted Step 2b (Integral Reduction)
+
+We attempted to hard-crack Step 2b (integral reduction), but encountered many API issues:
+
+1. **First attempt**: using `∀ᵐ ∂volume` → `Unknown identifier volume`
+2. **Second attempt**: using `MeasureTheory.integral_eq_integral_of_forall_compl_eq_zero` → `Unknown identifier`
+3. **Third attempt**: using `integral_indicator` → `Unknown constant Set.indicator_of_not_mem` and `Unknown identifier integral_indicator`
+4. **Fourth attempt**: following PDF suggestions to fix → type mismatch
+
+Given the complexity of these API issues, we restored the original sorry.
+
+### Distribution Support Route Restructuring (Earlier)
 
 **Deleted**:
 - `distributionSupport` definition

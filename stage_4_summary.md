@@ -1,10 +1,24 @@
 # Stage 4 总结 — RH 谱对偶论证框架
 
+## 目录
+
+- [项目状态](#项目状态)
+- [最新进展：模块化拆分完成](#最新进展模块化拆分完成)
+- [最新进展：`mellin_integral_bound_uniform` 7 步框架搭建完成](#最新进展mellin_integral_bound_uniform-7-步框架搭建完成)
+- [`#print axioms riemann_hypothesis` 审计结果](#print-axioms-riemann_hypothesis-审计结果)
+- [核心数学洞察：为什么 Arthur 迹公式与 Weil 显式公式能连接？](#核心数学洞察为什么-arthur-迹公式与-weil-显式公式能连接)
+- [本轮重大突破](#本轮重大突破)
+- [RH 证明链](#rh-证明链)
+- [剩余 sorry 统计](#剩余-sorry-统计)
+- [下一步方向](#下一步方向)
+
+---
+
 ## 项目状态
 
 | 项目 | 状态 |
 |------|------|
-| 核心文件 | stage_4.lean（编译通过，**36 个 sorry** 定理证明体） |
+| 核心文件 | stage_4.lean（编译通过，**35 个 sorry** 定理证明体） |
 | 核心公理 | **1 条**（`spectral_zero_set_match`，RH 主定理不依赖） |
 | 模块 | 13 个独立 Lean 文件 + 6 个新文件夹 |
 | 目标 | 在 ZFC 内条件导出黎曼猜想（RH） |
@@ -117,6 +131,17 @@ OrderPreservingBijection/
 | h_integral_power Case 1 | ∫_{ε₀}^{R₀} x⁻¹ dx = log(R₀/ε₀) | 中（标准积分，API 不匹配） |
 | h_integral_power Case 2 | ∫_{ε₀}^{R₀} x^{σ-1} dx = (R₀^σ - ε₀^σ)/σ | 中（标准积分，API 不匹配） |
 | h_integral_power 估计 | (R₀^σ - ε₀^σ)/σ ≤ max(log(R₀/ε₀), R₀ - ε₀) | 中（标准估计） |
+
+### 尝试硬啃 Step 2b（积分缩限）
+
+我们尝试硬啃 Step 2b（积分缩限），但是遇到了很多 API 问题：
+
+1. **第一次尝试**：用 `∀ᵐ ∂volume` → `Unknown identifier volume`
+2. **第二次尝试**：用 `MeasureTheory.integral_eq_integral_of_forall_compl_eq_zero` → `Unknown identifier`
+3. **第三次尝试**：用 `integral_indicator` → `Unknown constant Set.indicator_of_not_mem` 和 `Unknown identifier integral_indicator`
+4. **第四次尝试**：按照 PDF 的建议修复 → 类型不匹配
+
+考虑到这些 API 问题比较复杂，我们先恢复了原来的 sorry。
 
 ### 关键发现
 
