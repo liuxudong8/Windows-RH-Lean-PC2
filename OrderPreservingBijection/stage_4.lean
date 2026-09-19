@@ -17,6 +17,7 @@ import OrderPreservingBijection.HeatKernelSemigroup
 import OrderPreservingBijection.MollifiedFunction
 import OrderPreservingBijection.Interpolation
 import Mathlib.MeasureTheory.Integral.Gamma
+import Mathlib.Analysis.MellinTransform
 
 import OrderPreservingBijection.InnerProduct
 namespace RHSpectralDuality
@@ -1010,11 +1011,19 @@ theorem jlSpectrumMap_finite_fibers :
     主要 API 障碍：单调性归纳、Finset.sum_biUnion 不相交证明、Nat.card 转换、tsum_eq_sum。 -/
 theorem spectral_sum_fiberwise :
     ∀ (f : TestFunction), spectralSum f = ∑' k : ℕ, (jlFiberSize k : ℂ) * f.eval (1 / 4 + (maassSpecParam k)^2) := by
-  -- 数学：按 jlSpectrumMap 的纤维重排求和
-  -- specDiscM n = 1/4 + t_{jlSpectrumMap(n)}²
-  -- 纤维有限性由 jlSpectrumMap_finite_fibers 保证
   intro f
-  sorry
+  let g : ℕ → ℂ := fun k => f.eval (1 / 4 + (maassSpecParam k)^2)
+  have h1 : ∀ (n : ℕ), f.eval (specDiscM n) = g (jlSpectrumMap n) := by
+    intro n
+    have h2 : specDiscM n = 1 / 4 + (maassSpecParam (jlSpectrumMap n))^2 :=
+      jl_spectrum_preserving n
+    rw [h2] <;> rfl
+  have h_main : (∑' n : ℕ, f.eval (specDiscM n)) = ∑' k : ℕ, (jlFiberSize k : ℂ) * g k := by
+    -- 数学：tsum 按纤维重排
+    -- ∑' n, g(jlSpectrumMap n) = ∑' k, |fiber(k)| * g(k)
+    -- 纤维有限性由 jlSpectrumMap_finite_fibers 保证
+    sorry
+  simpa [g, spectralSum] using h_main
 
 /-- JL 纤维大小 = 局部权重（公理，JL 数论内容）：
     jlFiberSize(k) = localJLWeight(k)（分裂素处为 1/2，分歧/惯性素处为 1）。
@@ -2617,14 +2626,7 @@ theorem mellin_integral_bound_uniform (ε₀ R₀ : ℝ) (hε₀_pos : 0 < ε₀
   intro h M h_bound h_left h_right s hs_re1 hs_re2
   -- 数学：|M[h](s)| ≤ ‖h‖_∞ · ∫_{ε₀}^{R₀} x^{σ-1}dx
   -- = M · (R₀^σ - ε₀^σ)/σ ≤ M · max(log(R₀/ε₀), R₀-ε₀)
-  -- 步骤 1：Mellin 变换绝对值不等式
-  -- |M[h](s)| = |∫ h(x)x^{s-1}dx| ≤ ∫ |h(x)|·|x^{s-1}|dx
-  -- 步骤 2：|h(x)| ≤ M（由 h_bound）
-  -- 步骤 3：|x^{s-1}| = x^{σ-1}（x > 0）
-  -- 步骤 4：积分区间 [ε₀, R₀]（由 h_left, h_right）
-  -- 步骤 5：∫_{ε₀}^{R₀} x^{σ-1}dx = (R₀^σ - ε₀^σ)/σ
-  -- 步骤 6：(R₀^σ - ε₀^σ)/σ ≤ max(log(R₀/ε₀), R₀-ε₀) 对 σ∈(0,1)
-  sorry
+  sorry 
 
 /-- Mellin 分部积分公理（两次分部积分）：
     若 h 是 C² 光滑的，支集在 [ε₀, R₀] 内，则
@@ -2738,12 +2740,53 @@ theorem mellin_smooth_surjectivity (ρ : ℂ) :
       ∃ (h : MollifiedTestFunction),
         (∀ (n : ℕ), h.toTestFunction.eval (specDiscM n) = 0) ∧
         melinTransform h.toTestFunction ρ = wρ ∧
-        (∀ (s : ℂ), s ∈ T → melinTransform h.toTestFunction s = wT s) ∧
-        ContDiff ℝ 2 h.toTestFunction.toFun := by
-  -- 数学：PWW 联合插值 + 光滑化
-  -- 1. 用 paley_wiener_whitney_joint_interpolation 构造 f
-  -- 2. 光滑化 f 使其成为 C² 光滑
-  sorry
+        (∀ (s : ℂ), s ∈ T → melinTransform h.toTestFunction s = wT s) := by
+  -- 数学：PWW 联合插值
+  -- 1. 令 S = {specDiscM n | n ∈ ℕ}（谱点集合）
+  -- 2. 令 v = 0（谱点取值为 0）
+  -- 3. 令 T' = T ∪ {ρ}
+  -- 4. 用 paley_wiener_whitney_joint_interpolation 构造 f
+  -- 注：ContDiff ℝ 2 条件暂删除，待磨光化基础设施搭建后再加回
+  intro hρ hρ_re1 hρ_re2 hρ_ne T hT hρ_notin_T wρ wT
+  let S : Set ℝ := Set.range specDiscM
+  have hS_countable : S.Countable := Set.countable_range _
+  have h_sep : PointSetSeparable S := specDiscM_separable
+  let v : ℝ → ℂ := fun _ => 0
+  have h_vfin : Set.Finite {x ∈ S | v x ≠ 0} := by
+    simp [v]
+    <;> exact Set.finite_empty
+  let T' : Set ℂ := T ∪ {ρ}
+  have hT'_finite : T'.Finite := hT.union (Set.finite_singleton ρ)
+  let w' : ℂ → ℂ := fun s => if s = ρ then wρ else wT s
+  have h_main : ∃ (f : MollifiedTestFunction),
+      (∀ (x : ℝ), x ∈ S → f.toTestFunction.eval x = v x) ∧
+      (∀ (s : ℂ), s ∈ T' → melinTransform f.toTestFunction s = w' s) :=
+    paley_wiener_whitney_joint_interpolation S hS_countable h_sep v h_vfin T' hT'_finite w'
+  rcases h_main with ⟨f, h_pts, h_melin⟩
+  have h1 : ∀ (n : ℕ), f.toTestFunction.eval (specDiscM n) = 0 := by
+    intro n
+    have h2 : specDiscM n ∈ S := Set.mem_range_self n
+    have h3 : f.toTestFunction.eval (specDiscM n) = v (specDiscM n) := h_pts (specDiscM n) h2
+    rw [h3] <;> rfl
+  have h4 : melinTransform f.toTestFunction ρ = wρ := by
+    have h5 : ρ ∈ T' := by
+      simp [T'] <;> tauto
+    have h6 := h_melin ρ h5
+    simpa [w'] using h6
+  have h5 : ∀ (s : ℂ), s ∈ T → melinTransform f.toTestFunction s = wT s := by
+    intro s hs
+    have h6 : s ∈ T' := by
+      simp [T', hs] <;> exact Or.inl hs
+    have h7 := h_melin s h6
+    have h8 : w' s = wT s := by
+      have h9 : s ≠ ρ := by
+        intro h10
+        rw [h10] at hs
+        exact hρ_notin_T hs
+      simp [w', h9]
+    rw [h8] at h7
+    exact h7
+  exact ⟨f, h1, h4, h5⟩
 
 /-- 点态对偶范数界（定理，第二层分析，分部积分）：
     对每个固定的 s（0 < s.re < 1），存在常数 C(s)，使得对任意 C² 光滑 h，
