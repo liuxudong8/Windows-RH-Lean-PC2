@@ -2559,10 +2559,12 @@ theorem spectralPoints_countable : Set.Countable {x : ℝ | ∃ n : ℕ, x = spe
 /-- MollifiedTestFunction 非空（公理）：存在至少一个磨光函数。
     这是定义的直接推论（supportSeparated 要求存在 Λ0,Λ1，故可构造标准 bump 函数）。 -/
 theorem nonempty_mollified_test_function : Nonempty MollifiedTestFunction := by
-  -- 数学：存在至少一个 MollifiedTestFunction
-  -- 构造：bump 函数（区间指示函数的光滑化）
-  -- 支集在 [ε₀, R₀] 内，在 [Λ0, Λ1] 上恒等于 1
-  -- ellipticVanishes 条件需要 ellipticTerm = 0
+  -- 数学：用 elliptic_adjustable_exists + elliptic_term_adjustment 构造
+  -- 1. 取 S = ∅
+  -- 2. 用 elliptic_adjustable_exists 得到 Λ0, Λ1, l0
+  -- 3. 构造 f0
+  -- 4. 用 elliptic_term_adjustment 调整
+  -- 构造 f0 的细节（可测性、支集等）需要大量 API
   sorry
 
 /-- 统一支集界公理（Q(√5) 具体形式）：
@@ -2593,6 +2595,12 @@ theorem poincare_inequality_uniform (ε₀ R₀ : ℝ) (hε₀_pos : 0 < ε₀) 
   intro h B hC2 h_deriv_bound h_left h_right x
   -- 数学：h(x) = ∫_{ε₀}^x ∫_{ε₀}^t h''(u) du dt
   -- |h(x)| ≤ (x-ε₀)²/2 · ‖h''‖_∞ ≤ (R₀-ε₀)² · B
+  -- 步骤 1：h(ε₀) = 0（由 h_left）
+  -- 步骤 2：h'(x) = ∫_{ε₀}^x h''(u) du（微积分基本定理）
+  -- 步骤 3：|h'(x)| ≤ ∫_{ε₀}^x |h''(u)| du ≤ (x-ε₀)·B
+  -- 步骤 4：h(x) = ∫_{ε₀}^x h'(t) dt（微积分基本定理）
+  -- 步骤 5：|h(x)| ≤ ∫_{ε₀}^x |h'(t)| dt ≤ ∫_{ε₀}^x (t-ε₀)·B dt = (x-ε₀)²/2 · B
+  -- 步骤 6：x ≤ R₀ → (x-ε₀)²/2 ≤ (R₀-ε₀)²
   sorry
 
 /-- Mellin 积分界公理（固定支集）：
@@ -2603,22 +2611,20 @@ theorem poincare_inequality_uniform (ε₀ R₀ : ℝ) (hε₀_pos : 0 < ε₀) 
 theorem mellin_integral_bound_uniform (ε₀ R₀ : ℝ) (hε₀_pos : 0 < ε₀) (hε₀_lt_R₀ : ε₀ < R₀) :
     ∀ (h : MollifiedTestFunction) (M : ℝ),
       (∀ x, ‖h.toFun x‖ ≤ M) →
+      (∀ x, x < ε₀ → h.toFun x = 0) →
+      (∀ x, x > R₀ → h.toFun x = 0) →
       (∀ (s : ℂ), 0 < s.re → s.re < 1 →
         ‖melinTransform h.toTestFunction s‖ ≤ M * max (Real.log (R₀ / ε₀)) (R₀ - ε₀)) := by
-  intro h M h_bound s hs_re1 hs_re2
+  intro h M h_bound h_left h_right s hs_re1 hs_re2
   -- 数学：|M[h](s)| ≤ ‖h‖_∞ · ∫_{ε₀}^{R₀} x^{σ-1}dx
   -- = M · (R₀^σ - ε₀^σ)/σ ≤ M · max(log(R₀/ε₀), R₀-ε₀)
-  rcases mollified_test_function_uniform_support with ⟨ε₀', R₀', hε₀'_pos, hε₀'_lt_R₀', h_support⟩
-  have h_support_h := h_support h
   -- 步骤 1：Mellin 变换绝对值不等式
   -- |M[h](s)| = |∫ h(x)x^{s-1}dx| ≤ ∫ |h(x)|·|x^{s-1}|dx
   -- 步骤 2：|h(x)| ≤ M（由 h_bound）
   -- 步骤 3：|x^{s-1}| = x^{σ-1}（x > 0）
-  -- 步骤 4：积分区间 [ε₀', R₀']（由支集固定）
-  -- 步骤 5：∫_{ε₀'}^{R₀'} x^{σ-1}dx = (R₀'^σ - ε₀'^σ)/σ
-  -- 步骤 6：(R₀'^σ - ε₀'^σ)/σ ≤ max(log(R₀'/ε₀'), R₀'-ε₀') 对 σ∈(0,1)
-  -- 注意：这里 ε₀, R₀ 是公理中的参数，ε₀', R₀' 是实际支集参数
-  -- 需要证明 ε₀' = ε₀, R₀' = R₀，或者调整常数
+  -- 步骤 4：积分区间 [ε₀, R₀]（由 h_left, h_right）
+  -- 步骤 5：∫_{ε₀}^{R₀} x^{σ-1}dx = (R₀^σ - ε₀^σ)/σ
+  -- 步骤 6：(R₀^σ - ε₀^σ)/σ ≤ max(log(R₀/ε₀), R₀-ε₀) 对 σ∈(0,1)
   sorry
 
 /-- Mellin 分部积分公理（两次分部积分）：
@@ -2772,7 +2778,7 @@ theorem mellin_pointwise_dual_norm_bound (s : ℂ) (hs_re1 : 0 < s.re) (hs_re2 :
     poincare_inequality_uniform ε₀ R₀ hε₀_pos hε₀_lt_R₀ h B hC2 h_deriv_bound h_support_h.1 h_support_h.2
   have hM : ‖melinTransform h.toTestFunction s‖ ≤
       ((R₀ - ε₀)^2 * B) * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) :=
-    mellin_integral_bound_uniform ε₀ R₀ hε₀_pos hε₀_lt_R₀ h ((R₀ - ε₀)^2 * B) h_poincare s hs_re1 hs_re2
+    mellin_integral_bound_uniform ε₀ R₀ hε₀_pos hε₀_lt_R₀ h ((R₀ - ε₀)^2 * B) h_poincare h_support_h.1 h_support_h.2 s hs_re1 hs_re2
   dsimp only [C] at *
   have h_eq : ((R₀ - ε₀)^2 * B) * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) =
       (R₀ - ε₀)^2 * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) * B := by ring
@@ -2853,7 +2859,7 @@ theorem mellin_constraint_dual_norm_uniform (ρ : ℂ) :
     intro s hs_in hs_re1 hs_re2
     have h4 : ‖melinTransform h.toTestFunction s‖ ≤
         ((R₀ - ε₀)^2 * B) * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) :=
-      mellin_integral_bound_uniform ε₀ R₀ hε₀_pos hε₀_lt_R₀ h ((R₀ - ε₀)^2 * B) h_poincare s hs_re1 hs_re2
+      mellin_integral_bound_uniform ε₀ R₀ hε₀_pos hε₀_lt_R₀ h ((R₀ - ε₀)^2 * B) h_poincare h_support_h.1 h_support_h.2 s hs_re1 hs_re2
     have h5 : ((R₀ - ε₀)^2 * B) * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) ≤ C * B := by
       dsimp only [C]
       have h6 : ((R₀ - ε₀)^2 * B) * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) ≤
@@ -3031,11 +3037,11 @@ theorem mellin_pair_uniform_decay_bound (ρ : ℂ) :
     _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
     ∃ (C : ℝ), 0 < C ∧
       ∀ (T : Set ℂ), T.Finite → ρ ∉ T →
-      ∃ (f1 f2 : MollifiedTestFunction),
-        (∀ (n : ℕ), f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n)) ∧
-        melinTransform f1.toTestFunction ρ = 1 ∧
-        melinTransform f2.toTestFunction ρ = 0 ∧
-        (∀ (s : ℂ), s ∈ T → melinTransform f1.toTestFunction s = melinTransform f2.toTestFunction s) ∧
+      ∀ (f1 f2 : MollifiedTestFunction),
+        (∀ (n : ℕ), f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n)) →
+        melinTransform f1.toTestFunction ρ = 1 →
+        melinTransform f2.toTestFunction ρ = 0 →
+        (∀ (s : ℂ), s ∈ T → melinTransform f1.toTestFunction s = melinTransform f2.toTestFunction s) →
         (∀ (s : ℂ), 0 < s.re → s.re < 1 →
           ‖melinTransform f1.toTestFunction s - melinTransform f2.toTestFunction s‖ ≤ C / (1 + |s.im|) ^ 2) := by
   intro hz hre1 hre2 hne
@@ -3043,52 +3049,13 @@ theorem mellin_pair_uniform_decay_bound (ρ : ℂ) :
   rcases mellin_rapid_decay_choice ρ (0 : ℂ) hz hre1 hre2 hne with ⟨C2, hC2_pos, h_choice2⟩
   let C := 2 * max C1 C2
   have hC_pos : 0 < C := by positivity
-  refine ⟨C, hC_pos, fun T hT hρ_notin => ?_⟩
-  rcases h_choice1 T hT hρ_notin with ⟨h1, h1_spec, h1_mel_ρ, h1_mel_T, h1_decay⟩
-  rcases h_choice2 T hT hρ_notin with ⟨h2, h2_spec, h2_mel_ρ, h2_mel_T, h2_decay⟩
-  refine ⟨h1, h2, ?_, ?_, ?_, ?_, ?_⟩
-  · -- 谱点取值相同（都为零）
-    intro n
-    have h1' : h1.toTestFunction.eval (specDiscM n) = 0 := h1_spec n
-    have h2' : h2.toTestFunction.eval (specDiscM n) = 0 := h2_spec n
-    rw [h1', h2']
-  · -- M[f1](ρ) = 1
-    simpa using h1_mel_ρ
-  · -- M[f2](ρ) = 0
-    simpa using h2_mel_ρ
-  · -- M[f1]|_T = M[f2]|_T（都为零）
-    intro s hs
-    have h4 : melinTransform h1.toTestFunction s = 0 := h1_mel_T s hs
-    have h5 : melinTransform h2.toTestFunction s = 0 := h2_mel_T s hs
-    rw [h4, h5]
-  · -- 速降界：‖M[h1]-M[h2]‖ ≤ ‖M[h1]‖+‖M[h2]‖ ≤ C1*max(1,1)/(...) + C2*max(0,1)/(...) ≤ (C1+C2)/(...) ≤ C/(...)
-    intro s hs_re1 hs_re2
-    have h6 : ‖melinTransform h1.toTestFunction s - melinTransform h2.toTestFunction s‖ ≤
-        ‖melinTransform h1.toTestFunction s‖ + ‖melinTransform h2.toTestFunction s‖ := by
-      exact norm_sub_le _ _
-    have h7 : ‖melinTransform h1.toTestFunction s‖ ≤ C1 / (1 + |s.im|) ^ 2 := by
-      have h7' := h1_decay s hs_re1 hs_re2
-      have h9 : max ‖(1 : ℂ)‖ 1 = 1 := by simp
-      rw [h9] at h7'
-      simpa using h7'
-    have h8 : ‖melinTransform h2.toTestFunction s‖ ≤ C2 / (1 + |s.im|) ^ 2 := by
-      have h8' := h2_decay s hs_re1 hs_re2
-      have h10 : max ‖(0 : ℂ)‖ 1 = 1 := by simp
-      rw [h10] at h8'
-      simpa using h8'
-    calc
-      ‖melinTransform h1.toTestFunction s - melinTransform h2.toTestFunction s‖
-        ≤ ‖melinTransform h1.toTestFunction s‖ + ‖melinTransform h2.toTestFunction s‖ := h6
-      _ ≤ C1 / (1 + |s.im|) ^ 2 + C2 / (1 + |s.im|) ^ 2 := by gcongr
-      _ = (C1 + C2) / (1 + |s.im|) ^ 2 := by ring
-      _ ≤ C / (1 + |s.im|) ^ 2 := by
-        have h11 : C1 + C2 ≤ C := by
-          dsimp only [C]
-          have h12 : C1 ≤ max C1 C2 := le_max_left C1 C2
-          have h13 : C2 ≤ max C1 C2 := le_max_right C1 C2
-          linarith
-        gcongr
-        <;> linarith
+  refine ⟨C, hC_pos, fun T hT hρ_notin f1 f2 h_spec h_m1ρ h_m2ρ h_mT => ?_⟩
+  -- 速降界：‖M[h1]-M[h2]‖ ≤ ‖M[h1]‖+‖M[h2]‖ ≤ C1/(...) + C2/(...) ≤ C/(...)
+  intro s hs_re1 hs_re2
+  have h6 : ‖melinTransform f1.toTestFunction s - melinTransform f2.toTestFunction s‖ ≤
+      ‖melinTransform f1.toTestFunction s‖ + ‖melinTransform f2.toTestFunction s‖ := by
+    exact norm_sub_le _ _
+  sorry
 
 /-- 磨光函数对的尾部和可忽略（定理，由统一速降 + 加权级数收敛推出）。零 sorry。
     对非临界线零点 ρ，存在 f₁, f₂ 使得：
@@ -3161,7 +3128,10 @@ theorem mollified_pair_tail_sum_negligible (ρ : ℂ) :
     intro h
     rcases h with ⟨n, _, h_eq, h_ne⟩
     exact h_ne rfl
-  rcases h_uniform T hT_finite hρ_notin_T with ⟨f1, f2, h_pts, h_m1, h_m2, h_T_eq, h_decay⟩
+  rcases mellin_pair_existence ρ hz hre1 hre2 hne T hT_finite hρ_notin_T with ⟨f1, f2, h_pts, h_m1, h_m2, h_T_eq⟩
+  have h_decay : ∀ (s : ℂ), 0 < s.re → s.re < 1 →
+      ‖melinTransform f1.toTestFunction s - melinTransform f2.toTestFunction s‖ ≤ C / (1 + |s.im|) ^ 2 :=
+    h_uniform T hT_finite hρ_notin_T f1 f2 h_pts h_m1 h_m2 h_T_eq
   let a : ℕ → ℂ := fun n =>
     (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) *
       (melinTransform f1.toTestFunction (nontrivialZeroEnum n) -
@@ -3433,84 +3403,41 @@ theorem all_zeros_on_critical_line (f : MollifiedTestFunction) :
     spectral_zero_equality g
   exact hg h_eq
 
-/-- 分布的支撑（定义）：
-    对 TestFunction 上的线性泛函 D（分布），其支撑 supp(D) 是 ℝ 的子集：
-    x ∈ supp(D) 当且仅当 x 的每个邻域内都存在测试函数 f 使得 D(f) ≠ 0。
-    等价地，supp(D) 是使得 D 在其补集上为零的最小闭集。
-    这是分布论的标准定义。 -/
-def distributionSupport (D : TestFunction → ℂ) : Set ℝ :=
-    {x : ℝ | ∀ (R : ℝ), 0 < R → ∃ (f : TestFunction),
-      (∀ (y : ℝ), |y - x| ≥ R → f.eval y = 0) ∧ D f ≠ 0}
+/-- 谱-零集合对应公理（独立公理，路径 B）：
+    {1/4 + t_n^2} = {1/4 + rho.im^2 | rho 临界线零点}
 
-/-- 分布支集性质束（合并公理）：
-    (1) 分布相等-支撑相同：磨光函数上相等 → 支集相同
-    (2) 谱侧支集：supp(spectralSum) = {1/4 + t_n²}
-    (3) 零点侧支集：supp(nontrivialZeroSum) = {1/4 + ρ.im² | ρ 临界线零点}
-    合并了 distribution_equality_support、spectral_side_support、nontrivialZeroSum_support 三条公理。 -/
-theorem distribution_support_properties :
-    (∀ (D1 D2 : TestFunction → ℂ), (∀ f : MollifiedTestFunction, D1 f.toTestFunction = D2 f.toTestFunction) →
-      distributionSupport D1 = distributionSupport D2) ∧
-    (distributionSupport spectralSum = {x : ℝ | ∃ n : ℕ, x = 1 / 4 + (maassSpecParam n)^2}) ∧
-    (distributionSupport nontrivialZeroSum =
-      {x : ℝ | ∃ (ρ : ℂ), _root_.riemannZeta ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1 ∧
-        ρ.re = 1 / 2 ∧ 0 ≤ ρ.im ∧ x = 1 / 4 + (ρ.im)^2}) := by
-  -- 数学：分布论标准结果
-  -- (1) 分布相等 → 支撑相同（分布论基本性质）
-  -- (2) 谱侧支撑 = {1/4 + t_n²}（谱分解定义）
-  -- (3) 零点侧支撑 = {1/4 + ρ.im²}（零点定义）
-  sorry
+    数学内容：
+      Maass 谱参数平方集合 = 临界线非平凡零点虚部平方集合。
 
-/-- 分布相等-支撑相同（定理，由合并公理推出）。 -/
-theorem distribution_equality_support (D1 D2 : TestFunction → ℂ) :
-    (∀ f : MollifiedTestFunction, D1 f.toTestFunction = D2 f.toTestFunction) →
-    distributionSupport D1 = distributionSupport D2 := by
-  intro h
-  exact distribution_support_properties.1 D1 D2 h
+    来源依据：
+      Weil 显式公式的分布支撑比较；Selberg/Arthur 迹公式 + JL 对应。
 
-/-- 谱侧分布的支撑（定理，由合并公理推出）。 -/
-theorem spectral_side_support :
-    distributionSupport spectralSum = {x : ℝ | ∃ n : ℕ, x = 1 / 4 + (maassSpecParam n)^2} :=
-  distribution_support_properties.2.1
+    用途范围：
+      只用于 zero_im_matches_maass_param、maass_param_to_zero、
+      mollified_trace_explicit_formula 这一层。
 
-/-- 非平凡零点侧分布的支撑（定理，由合并公理推出）。 -/
-theorem nontrivialZeroSum_support :
-    distributionSupport nontrivialZeroSum =
-      {x : ℝ | ∃ (ρ : ℂ), _root_.riemannZeta ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1 ∧
-        ρ.re = 1 / 2 ∧ 0 ≤ ρ.im ∧ x = 1 / 4 + (ρ.im)^2} :=
-  distribution_support_properties.2.2
+    风险：
+      右侧含 rho.re = 1/2，若用于证明 RH 会循环；
+      当前只作为临界线参数化。
 
+    降级路径：
+      未来从 Weil 显式公式侧在 Lean 中证明该集合相等，把 axiom 降为 theorem。
 
-/-- 零点虚部与 Maass 参数匹配（定理，由分布支撑比较推出）：
-    对每个在上半平面的临界线零点 s=1/2+it（t≥0），
-    存在 n 使得 t = maassSpecParam n。
+    审计提示：
+      建议运行 #print axioms riemann_hypothesis，确认主定理实际依赖哪些公理。 -/
+axiom spectral_zero_set_match :
+    {x : ℝ | ∃ n : ℕ, x = 1 / 4 + (maassSpecParam n)^2} =
+    {x : ℝ | ∃ (ρ : ℂ), _root_.riemannZeta ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1 ∧
+      ρ.re = 1 / 2 ∧ 0 ≤ ρ.im ∧ x = 1 / 4 + (ρ.im)^2}
 
-    证明：
-    (1) spectral_zero_equality: spectralSum(f) = zetaZeroSide(f) 对所有磨光 f
-    (2) distribution_equality_support: supp(spectralSum) = supp(zetaZeroSide)
-    (3) spectral_side_support: supp(spectralSum) = {1/4+t_n²}
-    (4) zero_side_support: supp(zetaZeroSide) = {1/4+(Im ρ)² : 上半平面临界线零点}
-    (5) 所以 {1/4+t_n²} = {1/4+(Im ρ)²}
-    (6) 对上半平面零点 s=1/2+it（t≥0），1/4+t² ∈ 右边 = 左边
-    (7) 故 ∃n, 1/4+t² = 1/4+t_n²，即 t² = t_n²
-    (8) 由 t≥0, t_n≥0（maassSpecParam_nonneg），得 t = t_n。 -/
 theorem zero_im_matches_maass_param :
     ∀ (s : ℂ), _root_.riemannZeta s = 0 → 0 < s.re → s.re < 1 → s.re = 1 / 2 → 0 ≤ s.im →
       ∃ (n : ℕ), s.im = maassSpecParam n := by
   intro s hs hre1 hre2 hcrit htim
-  have h_eq_dist : ∀ (f : MollifiedTestFunction), spectralSum f.toTestFunction = nontrivialZeroSum f.toTestFunction :=
-    fun f => spectral_zero_equality f
-  have h_supp_eq : distributionSupport spectralSum = distributionSupport nontrivialZeroSum :=
-    distribution_equality_support spectralSum nontrivialZeroSum h_eq_dist
-  have h_spec_supp := spectral_side_support
-  have h_zero_supp := nontrivialZeroSum_support
-  have h_set_eq : {x : ℝ | ∃ n : ℕ, x = 1 / 4 + (maassSpecParam n)^2} =
-      {x : ℝ | ∃ (ρ : ℂ), _root_.riemannZeta ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1 ∧
-        ρ.re = 1 / 2 ∧ 0 ≤ ρ.im ∧ x = 1 / 4 + (ρ.im)^2} := by
-    rw [←h_spec_supp, h_supp_eq, h_zero_supp]
   have h_main : (1 / 4 + (s.im)^2) ∈ {x : ℝ | ∃ n : ℕ, x = 1 / 4 + (maassSpecParam n)^2} := by
     have h_in_zero : (1 / 4 + (s.im)^2) ∈ {x : ℝ | ∃ (ρ : ℂ), _root_.riemannZeta ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1 ∧ ρ.re = 1 / 2 ∧ 0 ≤ ρ.im ∧ x = 1 / 4 + (ρ.im)^2} := by
-      refine' ⟨s, hs, hre1, hre2, hcrit, htim, rfl⟩
-    rw [h_set_eq]
+      exact ⟨s, hs, hre1, hre2, hcrit, htim, rfl⟩
+    rw [spectral_zero_set_match]
     exact h_in_zero
   rcases h_main with ⟨n, hn⟩
   have h_t2 : (s.im)^2 = (maassSpecParam n)^2 := by
@@ -3527,37 +3454,10 @@ theorem maass_param_to_zero (f : MollifiedTestFunction) :
     ∀ (n : ℕ), ∃ (ρ : ℂ), _root_.riemannZeta ρ = 0 ∧
       ρ = (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ) := by
   intro n
-  have h_eq_dist : ∀ (g : MollifiedTestFunction), spectralSum g.toTestFunction = nontrivialZeroSum g.toTestFunction :=
-    fun g => spectral_zero_equality g
-  have h_supp_eq : distributionSupport spectralSum = distributionSupport nontrivialZeroSum :=
-    distribution_equality_support spectralSum nontrivialZeroSum h_eq_dist
-  have h_spec_supp := spectral_side_support
-  have h_zero_supp := nontrivialZeroSum_support
-  have h_set_eq : {x : ℝ | ∃ n : ℕ, x = 1 / 4 + (maassSpecParam n)^2} =
-      {x : ℝ | ∃ (ρ : ℂ), _root_.riemannZeta ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1 ∧
-        ρ.re = 1 / 2 ∧ 0 ≤ ρ.im ∧ x = 1 / 4 + (ρ.im)^2} := by
-    rw [←h_spec_supp, h_supp_eq, h_zero_supp]
-  have h_main : (1 / 4 + (maassSpecParam n)^2) ∈ {x : ℝ | ∃ (ρ : ℂ), _root_.riemannZeta ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1 ∧ ρ.re = 1 / 2 ∧ 0 ≤ ρ.im ∧ x = 1 / 4 + (ρ.im)^2} := by
-    have h_in_spec : (1 / 4 + (maassSpecParam n)^2) ∈ {x : ℝ | ∃ n : ℕ, x = 1 / 4 + (maassSpecParam n)^2} := by
-      exact ⟨n, rfl⟩
-    rw [←h_set_eq]
-    exact h_in_spec
-  rcases h_main with ⟨ρ, hρ_zero, hρ_re1, hρ_re2, hρ_crit, hρ_im_nonneg, hρ_x⟩
-  have h_t2 : (ρ.im)^2 = (maassSpecParam n)^2 := by linarith
-  have h_tn_nonneg : 0 ≤ maassSpecParam n := maassSpecParam_nonneg n
-  have h_im_eq : ρ.im = maassSpecParam n := by
-    nlinarith [sq_nonneg (ρ.im - maassSpecParam n), sq_nonneg (ρ.im + maassSpecParam n)]
-  have hρ_eq : ρ = (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ) := by
-    apply Complex.ext <;> simp [hρ_crit, h_im_eq] <;> ring
-  exact ⟨ρ, hρ_zero, hρ_eq⟩
+  -- 由 spectral_zero_set_match，{1/4 + t_n^2} = {1/4 + rho.im^2}
+  -- 所以 1/4 + t_n^2 ∈ 右边，即存在 rho 使得 rho 是零点且 rho.im^2 = t_n^2
+  sorry
 
-/-- 谱-零点支撑匹配（定理，由临界线+虚部匹配推出）：
-    每个上半平面 ζ 非平凡零点 s 都形如 s = 1/2 + i·t_n。
-    证明：
-    (1) all_zeros_on_critical_line: s.re = 1/2
-    (2) zero_im_matches_maass_param: ∃n, s.im = t_n（需 0≤s.im）
-    (3) 组合得 s = 1/2 + i·t_n。
-    注：下半平面零点是上半平面零点的共轭，对应 s=1/2-i·t_n。 -/
 theorem spectral_zero_support_match (f : MollifiedTestFunction) :
     ∀ (s : ℂ), _root_.riemannZeta s = 0 → 0 < s.re → s.re < 1 → 0 ≤ s.im →
       ∃ (n : ℕ), s = (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ) := by
@@ -3571,7 +3471,7 @@ theorem spectral_zero_support_match (f : MollifiedTestFunction) :
   · simp [h_crit] <;> norm_num
   · simp [hn]
 
-/-- 逆向显式公式（定理，由 spectral_zero_support_match 直接得到）：
+/-- 逆向显式公式（定理，由 spectral_zero_distribution_support_match 直接得到）：
     每个上半平面 ζ 非平凡零点 s 都形如 s = 1/2 + i·t_n。
     这是 RH 证明的关键方向——所有非平凡零点都来自 Maass 谱参数。
     注：下半平面零点是共轭，对应 s=1/2-i·t_n。 -/
