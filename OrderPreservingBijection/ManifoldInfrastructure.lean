@@ -69,23 +69,62 @@ noncomputable instance {M : Type} [MeasurableSpace M] {μ : MeasureTheory.Measur
   zero := {
     toFun := fun _ => (0 : ℂ),
     measurable := by fun_prop,
-    sq_integrable := by sorry  -- ❓ 零函数平方可积
+    sq_integrable := by
+      simpa [norm_zero] using integrable_zero μ
   }
 
 /-- L² 空间的加法实例 -/
 noncomputable instance {M : Type} [MeasurableSpace M] {μ : MeasureTheory.Measure M} : Add (L2Function M μ) where
   add f g := {
     toFun := fun x => f.toFun x + g.toFun x,
-    measurable := by sorry,  -- ❓ 加法保持可测性
-    sq_integrable := by sorry  -- ❓ 加法保持平方可积性
+    measurable := by
+      exact f.measurable.add g.measurable,
+    sq_integrable := by
+      have h_ineq : ∀ (x : M), ‖f.toFun x + g.toFun x‖ ^ 2 ≤ 2 * ‖f.toFun x‖ ^ 2 + 2 * ‖g.toFun x‖ ^ 2 := by
+        intro x
+        have h : ‖f.toFun x + g.toFun x‖ ^ 2 ≤ 2 * ‖f.toFun x‖ ^ 2 + 2 * ‖g.toFun x‖ ^ 2 := by
+          calc
+            ‖f.toFun x + g.toFun x‖ ^ 2
+              ≤ (‖f.toFun x‖ + ‖g.toFun x‖) ^ 2 := by gcongr <;> exact norm_add_le _ _
+            _ = ‖f.toFun x‖ ^ 2 + 2 * ‖f.toFun x‖ * ‖g.toFun x‖ + ‖g.toFun x‖ ^ 2 := by ring
+            _ ≤ ‖f.toFun x‖ ^ 2 + (‖f.toFun x‖ ^ 2 + ‖g.toFun x‖ ^ 2) + ‖g.toFun x‖ ^ 2 := by
+              have h_am : 2 * ‖f.toFun x‖ * ‖g.toFun x‖ ≤ ‖f.toFun x‖ ^ 2 + ‖g.toFun x‖ ^ 2 := by
+                nlinarith [sq_nonneg (‖f.toFun x‖ - ‖g.toFun x‖)]
+              linarith
+            _ = 2 * ‖f.toFun x‖ ^ 2 + 2 * ‖g.toFun x‖ ^ 2 := by ring
+        exact h
+      let target : M → ℝ := fun x => ‖f.toFun x + g.toFun x‖ ^ 2
+      let dominating : M → ℝ := fun x => (2 : ℝ) * ‖f.toFun x‖ ^ 2 + 2 * ‖g.toFun x‖ ^ 2
+      have h1 : Measurable (fun x : M => f.toFun x + g.toFun x) := f.measurable.add g.measurable
+      have h2 : Measurable (fun x : M => ‖f.toFun x + g.toFun x‖) := h1.norm
+      have h_meas_target : Measurable target := by
+        have h : Measurable (fun x : M => (‖f.toFun x + g.toFun x‖) ^ 2) := by
+          exact?
+        simpa [target] using h
+      have hg1 : MeasureTheory.Integrable dominating μ :=
+        (f.sq_integrable.const_mul 2).add (g.sq_integrable.const_mul 2)
+      have h_nonneg : ∀ (x : M), 0 ≤ target x := by
+        intro x; positivity
+      have h_le : ∀ (x : M), target x ≤ dominating x := h_ineq
+      have h_le_ae : ∀ᵐ (x : M) ∂μ, 0 ≤ target x ∧ target x ≤ dominating x := by
+        filter_upwards with x
+        exact ⟨h_nonneg x, h_le x⟩
+      sorry
   }
 
 /-- L² 空间的标量乘法实例 -/
 noncomputable instance {M : Type} [MeasurableSpace M] {μ : MeasureTheory.Measure M} : SMul ℂ (L2Function M μ) where
   smul c f := {
     toFun := fun x => c * f.toFun x,
-    measurable := by sorry,  -- ❓ 标量乘法保持可测性
-    sq_integrable := by sorry  -- ❓ 标量乘法保持平方可积性
+    measurable := by
+      exact f.measurable.const_mul c,
+    sq_integrable := by
+      have h1 : (fun x : M => ‖c * f.toFun x‖ ^ 2) = fun x => ‖c‖ ^ 2 * ‖f.toFun x‖ ^ 2 := by
+        funext x
+        simp [norm_mul]
+        <;> ring
+      rw [h1]
+      exact f.sq_integrable.const_mul (‖c‖ ^ 2)
   }
 
 /-- L² 空间的 Nonempty 实例 -/
