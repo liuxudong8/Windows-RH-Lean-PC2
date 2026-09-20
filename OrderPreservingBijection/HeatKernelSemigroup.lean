@@ -30,7 +30,7 @@ theorem heatKernel_convolution_formula (t s : ℝ) (ht : 0 < t) (hs : 0 < s) (z 
     (H_{t+s} f)(z) = (H_t (H_s f))(z).
     Previously an axiom, now downgraded to theorem. -/
 theorem heatKernel_semigroup (t s : ℝ) (ht : 0 < t) (hs : 0 < s)
-    (f : L2Function ManifoldM) (z : ManifoldM) :
+    (f : L2ManifoldM) (z : ManifoldM) :
     heatOperator (t + s) f z = heatOperator t (heatOperator s f) z := by
   -- Key identity: pull scalar out of integral via integral_smul (no integrability premise needed)
   have h_smul1 : ∀ (c : ℂ) (g : ManifoldM → ℂ),
@@ -84,3 +84,4 @@ theorem heatKernel_semigroup (t s : ℝ) (ht : 0 < t) (hs : 0 < s)
   simpa [heatOperator] using h_main.symm
 
 end OrderPreservingBijection
+

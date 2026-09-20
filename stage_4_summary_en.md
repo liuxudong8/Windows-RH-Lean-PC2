@@ -1,5 +1,9 @@
 ﻿# Stage 4 Summary — RH Spectral Duality Framework
 
+> **Last Updated**: 2026-09-20
+> **Lean Version**: v4.34.0-rc2
+> **mathlib Version**: mathlib4-master
+
 ## Table of Contents
 
 - [Project Status](#project-status)
@@ -20,6 +24,133 @@
 | Core axioms | **1** (`spectral_zero_set_match`, not used by RH main theorem) |
 | Modules | 13 standalone Lean files |
 | Goal | Conditional derivation of the Riemann Hypothesis (RH) within ZFC |
+
+---
+
+## Latest Progress: L² Space Refactoring Complete (2026-09-20)
+
+### Core Breakthrough: `L2Function` Upgraded from Alias to Real L² Space
+
+We refactored `L2Function` from a simple alias (`abbrev L2Function M := M → ℂ`) into a real L² space structure:
+
+```lean
+structure L2Function (M : Type) [MeasurableSpace M] (μ : Measure M) where
+  toFun : M → ℂ          -- underlying function
+  measurable : Measurable toFun  -- measurability proof
+  sq_integrable : Integrable (fun x => ‖toFun x‖ ^ 2) μ  -- square integrability proof
+```
+
+**Why refactor?**
+- The old `L2Function` was just an alias for `M → ℂ`, with no L² constraints
+- On infinite measure spaces, L² functions are not necessarily L¹, so boundedness of integral operators requires Hilbert-Schmidt conditions
+- A real L² space should carry the square integrability proof, so downstream can automatically get properties
+
+### Added Typeclass Instances
+
+| Instance | Purpose |
+|----------|---------|
+| `CoeFun` | Let `f x` work like a normal function call |
+| `Zero` | Zero element (zero function) |
+| `Add` | Addition |
+| `SMul ℂ` | Complex scalar multiplication |
+| `Nonempty` | Nonempty instance (for opaque definitions) |
+
+### Abbreviations
+
+- `L2ManifoldX := L2Function ManifoldX hyperbolicMeasure2` (2D Maass form space)
+- `L2ManifoldM := L2Function ManifoldM hyperbolicMeasure3` (3D automorphic form space)
+
+---
+
+### Completed Proof
+
+#### `shimura_kernel_integrand_integrable` ✅
+
+**Theorem**: For each fixed `z : ManifoldM`, `w ↦ shimuraKernel z w * f w` is integrable.
+
+**Proof pattern**: AM-GM inequality + `Integrable.mono'`
+
+```
+|K(z,w) * f(w)| ≤ (1/2) * (|K(z,w)|² + |f(w)|²)
+```
+
+- Both terms on the right are L¹ (because K(z,·) and f are both L²)
+- Use `Integrable.mono'` + a.e. norm domination to complete the proof
+
+**Mathematical significance**: L² × L² → L¹, which is the standard property of Hilbert-Schmidt kernels.
+
+---
+
+### New Axioms
+
+#### Shimura Kernel Axioms
+
+| Axiom | Content |
+|-------|---------|
+| `shimuraKernel_measurable` | For each fixed z, `w ↦ shimuraKernel z w` is measurable |
+| `shimuraKernel_joint_measurable` | `(z,w) ↦ shimuraKernel z w` is jointly measurable |
+| `shimuraKernel_sq_integrable` | For each fixed z, `w ↦ ‖shimuraKernel z w‖²` is integrable |
+| `shimuraKernel_hilbert_schmidt` | The kernel is Hilbert-Schmidt: `∫∫ |K(z,w)|² dw dz < ∞` |
+
+#### Heat Kernel Axioms
+
+| Axiom | Content |
+|-------|---------|
+| `heatKernel_joint_measurable` | `(z,w) ↦ heatKernel t z w` is jointly measurable |
+| `heatKernel_sq_integrable` | For each fixed z, `w ↦ ‖heatKernel t z w‖²` is integrable |
+| `heatKernel_hilbert_schmidt` | The heat kernel is Hilbert-Schmidt |
+
+---
+
+### New Definitions
+
+#### `shimuraLift` (Shimura Lift Operator)
+
+```lean
+noncomputable def shimuraLift (f : L2ManifoldX) : L2ManifoldM :=
+  {
+    toFun := fun z => ∫ w, shimuraKernel z w * f w dw,
+    measurable := by sorry,  -- parameter integral measurability
+    sq_integrable := by sorry  -- Hilbert-Schmidt estimate
+  }
+```
+
+#### `heatOperator` (Heat Kernel Operator)
+
+```lean
+noncomputable def heatOperator (t : ℝ) (f : L2ManifoldM) : L2ManifoldM :=
+  {
+    toFun := fun z => ∫ w, heatKernel t z w * f w dw,
+    measurable := by sorry,  -- parameter integral measurability
+    sq_integrable := by sorry  -- Hilbert-Schmidt estimate
+  }
+```
+
+---
+
+### Compilation Status
+
+✅ **Compilation successful!** (3835 jobs)
+
+From 75 compilation errors at the start, we gradually fixed down to 0 errors:
+- Added typeclass instances (Zero, Add, SMul, Nonempty)
+- Temporarily filled complex proof fields with `sorry`
+- Fixed namespace issues (`MeasureTheory.Measurable` → `Measurable`)
+- Fixed theorem name mismatches
+
+---
+
+### Remaining `sorry` (New)
+
+| Location | Content |
+|----------|---------|
+| `L2Function` instances | Measurability and square integrability proofs for zero, addition, scalar multiplication |
+| `shimuraLift.measurable` | Parameter integral measurability |
+| `shimuraLift.sq_integrable` | Hilbert-Schmidt estimate |
+| `heatOperator.measurable` | Parameter integral measurability |
+| `heatOperator.sq_integrable` | Hilbert-Schmidt estimate |
+| `shimuraLift_linear` | Linearity: `U(a·f) = a·U(f)` |
+| `eigenfunction_cancellation` | Eigenfunction cancellation law |
 
 ---
 

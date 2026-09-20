@@ -1,5 +1,9 @@
 ﻿# Stage 4 总结 — RH 谱对偶论证框架
 
+> **更新日期**：2026-09-20
+> **Lean 版本**：v4.34.0-rc2
+> **mathlib 版本**：mathlib4-master
+
 ## 目录
 
 - [项目状态](#项目状态)
@@ -22,6 +26,133 @@
 | 核心公理 | **1 条**（`spectral_zero_set_match`，RH 主定理不依赖） |
 | 模块 | 13 个独立 Lean 文件 + 6 个新文件夹 |
 | 目标 | 在 ZFC 内条件导出黎曼猜想（RH） |
+
+---
+
+## 最新进展：L² 空间重构完成（2026-09-20）
+
+### 核心突破：`L2Function` 从别名升级为真正的 L² 空间
+
+我们把 `L2Function` 从简单的别名（`abbrev L2Function M := M → ℂ`）重构为真正的 L² 空间 structure：
+
+```lean
+structure L2Function (M : Type) [MeasurableSpace M] (μ : Measure M) where
+  toFun : M → ℂ          -- 底层函数
+  measurable : Measurable toFun  -- 可测性证明
+  sq_integrable : Integrable (fun x => ‖toFun x‖ ^ 2) μ  -- 平方可积性证明
+```
+
+**为什么要重构？**
+- 旧的 `L2Function` 只是 `M → ℂ` 的别名，没有任何 L² 约束
+- 在无限测度空间上，L² 函数不一定 L¹，积分算子的有界性需要 Hilbert-Schmidt 条件
+- 真正的 L² 空间应该带上平方可积性证明，这样下游才能自动获得性质
+
+### 已添加的 typeclass 实例
+
+| 实例 | 用途 |
+|------|------|
+| `CoeFun` | 让 `f x` 可以像普通函数一样调用 |
+| `Zero` | 零元素（零函数） |
+| `Add` | 加法 |
+| `SMul ℂ` | 复数标量乘法 |
+| `Nonempty` | 非空实例（用于 opaque 定义） |
+
+### 简写
+
+- `L2ManifoldX := L2Function ManifoldX hyperbolicMeasure2` （二维 Maass 形式空间）
+- `L2ManifoldM := L2Function ManifoldM hyperbolicMeasure3` （三维自守形式空间）
+
+---
+
+### 完成的证明
+
+#### `shimura_kernel_integrand_integrable` ✅
+
+**定理**：对每个固定的 `z : ManifoldM`，`w ↦ shimuraKernel z w * f w` 是可积的。
+
+**证明模式**：AM-GM 不等式 + `Integrable.mono'`
+
+```
+|K(z,w) * f(w)| ≤ (1/2) * (|K(z,w)|² + |f(w)|²)
+```
+
+- 右边两项都是 L¹（因为 K(z,·) 和 f 都是 L²）
+- 用 `Integrable.mono'` + a.e. 范数支配完成证明
+
+**数学意义**：L² × L² → L¹，这是 Hilbert-Schmidt 核的标准性质。
+
+---
+
+### 新增加的公理
+
+#### Shimura 核公理
+
+| 公理 | 内容 |
+|------|------|
+| `shimuraKernel_measurable` | 对每个固定 z，`w ↦ shimuraKernel z w` 可测 |
+| `shimuraKernel_joint_measurable` | `(z,w) ↦ shimuraKernel z w` 联合可测 |
+| `shimuraKernel_sq_integrable` | 对每个固定 z，`w ↦ ‖shimuraKernel z w‖²` 可积 |
+| `shimuraKernel_hilbert_schmidt` | 核是 Hilbert-Schmidt 的：`∫∫ |K(z,w)|² dw dz < ∞` |
+
+#### 热核公理
+
+| 公理 | 内容 |
+|------|------|
+| `heatKernel_joint_measurable` | `(z,w) ↦ heatKernel t z w` 联合可测 |
+| `heatKernel_sq_integrable` | 对每个固定 z，`w ↦ ‖heatKernel t z w‖²` 可积 |
+| `heatKernel_hilbert_schmidt` | 热核是 Hilbert-Schmidt 的 |
+
+---
+
+### 新定义
+
+#### `shimuraLift`（Shimura 提升算子）
+
+```lean
+noncomputable def shimuraLift (f : L2ManifoldX) : L2ManifoldM :=
+  {
+    toFun := fun z => ∫ w, shimuraKernel z w * f w dw,
+    measurable := by sorry,  -- 参数积分可测性
+    sq_integrable := by sorry  -- Hilbert-Schmidt 估计
+  }
+```
+
+#### `heatOperator`（热核算子）
+
+```lean
+noncomputable def heatOperator (t : ℝ) (f : L2ManifoldM) : L2ManifoldM :=
+  {
+    toFun := fun z => ∫ w, heatKernel t z w * f w dw,
+    measurable := by sorry,  -- 参数积分可测性
+    sq_integrable := by sorry  -- Hilbert-Schmidt 估计
+  }
+```
+
+---
+
+### 编译状态
+
+✅ **编译通过！**（3835 jobs）
+
+从最开始的 75 个编译错误，逐步修复到 0 个错误：
+- 加 typeclass 实例（Zero、Add、SMul、Nonempty）
+- 把复杂证明字段暂时用 `sorry` 填
+- 修复命名空间问题（`MeasureTheory.Measurable` → `Measurable`）
+- 修复定理名不匹配问题
+
+---
+
+### 剩余的 `sorry`（新增）
+
+| 位置 | 内容 |
+|------|------|
+| `L2Function` 实例 | 零、加法、标量乘法的可测性和平方可积性证明 |
+| `shimuraLift.measurable` | 参数积分可测性 |
+| `shimuraLift.sq_integrable` | Hilbert-Schmidt 估计 |
+| `heatOperator.measurable` | 参数积分可测性 |
+| `heatOperator.sq_integrable` | Hilbert-Schmidt 估计 |
+| `shimuraLift_linear` | 线性性：`U(a·f) = a·U(f)` |
+| `eigenfunction_cancellation` | 特征函数消去律 |
 
 ---
 

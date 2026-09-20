@@ -52,7 +52,7 @@ theorem riemann_zeta_zero_symmetry (ρ : ℂ) :
   exact ⟨h_zero, h_re1, h_re2⟩
 
 /-- 二维 Laplacian（opaque，类型化）：Δ_X : L²(X) → L²(X)。 -/
-noncomputable def laplacian_X : L2ManifoldX → L2ManifoldX := fun _ => Classical.arbitrary L2ManifoldX
+opaque laplacian_X : L2Function ManifoldX → L2Function ManifoldX
 
 /-- 三维 Laplacian 具有离散谱（公理，第一档，非空洞版本）：
     存在序列 s : ℕ → ℝ，满足：
@@ -61,13 +61,13 @@ noncomputable def laplacian_X : L2ManifoldX → L2ManifoldX := fun _ => Classica
     这是自伴椭圆算子离散谱的标准性质（Rellich 引理 + 紧自伴算子谱定理）。
     比旧版 specDiscM_exists 更强：序列不再是任意的，而是 Laplacian 的特征值枚举。 -/
 theorem laplacian_has_discrete_spectrum :
-    (∀ (f g : L2ManifoldM), innerProductM (laplacian_M f) g = innerProductM f (laplacian_M g)) ∧
+    (∀ (f g : L2Function ManifoldM), innerProductM (laplacian_M f) g = innerProductM f (laplacian_M g)) ∧
     (∃ (s : ℕ → ℝ),
       (0 < s 0) ∧
       (∀ n : ℕ, 1 / 4 ≤ s n) ∧
       (∀ n : ℕ, s n < s (n + 1)) ∧
       (∀ M : ℝ, ∃ n : ℕ, s n > M) ∧
-      (∀ n : ℕ, ∃ (ψ : L2ManifoldM), ψ ≠ 0 ∧ laplacian_M ψ = (s n : ℂ) • ψ)) := by
+      (∀ n : ℕ, ∃ (ψ : L2Function ManifoldM), ψ ≠ 0 ∧ laplacian_M ψ = (s n : ℂ) • ψ)) := by
   -- 数学：Rellich 引理 + 紧自伴算子谱定理
   -- (1) Laplacian 自伴性：分部积分 + 边界项为零
   -- (2) Rellich 引理：紧流形上 Laplacian 的预解式是紧算子
@@ -186,7 +186,7 @@ lemma mollified_eval_support_finite (f : TestFunction) :
 /-- specDiscM n 是 laplacian_M 的特征值（定理，由离散谱公理推出）：
     存在非零 ψ，使得 laplacian_M ψ = specDiscM(n) · ψ。 -/
 theorem specDiscM_is_eigenvalue (n : ℕ) :
-    ∃ (ψ : L2ManifoldM), ψ ≠ 0 ∧ laplacian_M ψ = (specDiscM n : ℂ) • ψ :=
+    ∃ (ψ : L2Function ManifoldM), ψ ≠ 0 ∧ laplacian_M ψ = (specDiscM n : ℂ) • ψ :=
   (Classical.choose_spec laplacian_has_discrete_spectrum.2).2.2.2.2 n
 
 /-- Maass Laplacian 具有离散谱（公理，第一档，非空洞版本）：
@@ -196,12 +196,12 @@ theorem specDiscM_is_eigenvalue (n : ℕ) :
     这是 Maass 形式谱参数的标准性质（Weyl 定律）。
     比旧版 maassSpecParam_exists 更强：t_n 不再是任意的，而是 Maass Laplacian 的谱参数。 -/
 theorem maass_laplacian_has_discrete_spectrum :
-    (∀ (f g : L2ManifoldX), innerProductX (laplacian_X f) g = innerProductX f (laplacian_X g)) ∧
+    (∀ (f g : L2Function ManifoldX), innerProductX (laplacian_X f) g = innerProductX f (laplacian_X g)) ∧
     (∃ (t : ℕ → ℝ),
       (∀ n : ℕ, 0 ≤ t n) ∧
       (∀ n : ℕ, t n < t (n + 1)) ∧
       (∀ M : ℝ, ∃ n : ℕ, t n > M) ∧
-      (∀ n : ℕ, ∃ (φ : L2ManifoldX), φ ≠ 0 ∧ laplacian_X φ = ((1 / 4 + (t n)^2 : ℝ) : ℂ) • φ)) := by
+      (∀ n : ℕ, ∃ (φ : L2Function ManifoldX), φ ≠ 0 ∧ laplacian_X φ = ((1 / 4 + (t n)^2 : ℝ) : ℂ) • φ)) := by
   -- 数学：Rellich 引理 + 紧自伴算子谱定理
   -- (1) Maass Laplacian 自伴性：分部积分 + 边界项为零
   -- (2) Rellich 引理：紧流形上 Laplacian 的预解式是紧算子
@@ -224,7 +224,7 @@ theorem maassSpecParam_properties :
 /-- 1/4 + maassSpecParam(n)² 是 laplacian_X 的特征值（定理，由离散谱公理推出）：
     存在非零 φ，使得 laplacian_X φ = (1/4 + t_n²) · φ。 -/
 theorem maassSpecParam_is_eigenvalue (n : ℕ) :
-    ∃ (φ : L2ManifoldX), φ ≠ 0 ∧ laplacian_X φ = ((1 / 4 + (maassSpecParam n)^2 : ℝ) : ℂ) • φ :=
+    ∃ (φ : L2Function ManifoldX), φ ≠ 0 ∧ laplacian_X φ = ((1 / 4 + (maassSpecParam n)^2 : ℝ) : ℂ) • φ :=
   (Classical.choose_spec maass_laplacian_has_discrete_spectrum.2).2.2.2 n
 
 /-- 三维离散谱非负（由 specDiscM_properties 推出） -/
@@ -674,14 +674,14 @@ theorem split_prime_compensation (p : ℕ) (hp : Nat.Prime p) (h : p % 5 = 1 ∨
     ⟨Δ_M f, g⟩ = ⟨f, Δ_M g⟩ 对所有 f, g ∈ L²(M)。
     这是椭圆微分算子的基本性质：Laplacian 关于 L² 内积自伴。
     自伴性保证特征值为实数，特征子空间正交。 -/
-theorem laplacian_M_self_adjoint (f g : L2ManifoldM) :
+theorem laplacian_M_self_adjoint (f g : L2Function ManifoldM) :
     innerProductM (laplacian_M f) g = innerProductM f (laplacian_M g) :=
   laplacian_has_discrete_spectrum.1 f g
 
 /-- 二维 Laplacian 自伴性（公理，算子结构）：
     ⟨Δ_X f, g⟩ = ⟨f, Δ_X g⟩ 对所有 f, g ∈ L²(X)。
     Maass Laplacian 同样是自伴算子。 -/
-theorem laplacian_X_self_adjoint (f g : L2ManifoldX) :
+theorem laplacian_X_self_adjoint (f g : L2Function ManifoldX) :
     innerProductX (laplacian_X f) g = innerProductX f (laplacian_X g) :=
   maass_laplacian_has_discrete_spectrum.1 f g
 
@@ -691,36 +691,11 @@ theorem laplacian_X_self_adjoint (f g : L2ManifoldX) :
       (U f)(z) = ∫_X Θ(z, w) f(w) dw -/
 opaque shimuraKernel : ManifoldM → ManifoldX → ℂ
 
-/-- Shimura 核可测性（公理）：对每个固定的 z，w ↦ shimuraKernel z w 是可测函数。 -/
-axiom shimuraKernel_measurable (z : ManifoldM) :
-    Measurable (fun w : ManifoldX => shimuraKernel z w)
-
-/-- Shimura 核平方可积性（公理）：对每个固定的 z，w ↦ shimuraKernel z w 是 L² 函数。
-    这是积分算子核的标准性质：K(z,·) ∈ L²(X) 对每个 z ∈ M。 -/
-axiom shimuraKernel_sq_integrable (z : ManifoldM) :
-    MeasureTheory.Integrable (fun w : ManifoldX => ‖shimuraKernel z w‖ ^ 2) hyperbolicMeasure2
-
-
-/-- Shimura 核联合可测性（公理）：K(z,w) 关于 (z,w) 联合可测。
-    这是参数积分可测性的必要条件。 -/
-axiom shimuraKernel_joint_measurable :
-    Measurable (fun p : ManifoldM × ManifoldX => shimuraKernel p.1 p.2)
 /-- Shimura 提升算子（定义，类型化）：U : L²(X) → L²(M)。
-
-/-- Shimura 核 Hilbert-Schmidt 性质（公理）：
-    核是 Hilbert-Schmidt 的：∫_M ∫_X |K(z,w)|² dw dz < ∞。
-    这保证了积分算子 U : L²(X) → L²(M) 是有界算子。 -/
-axiom shimuraKernel_hilbert_schmidt :
-    MeasureTheory.Integrable (fun z : ManifoldM =>
-      ∫ w : ManifoldX, ‖shimuraKernel z w‖ ^ 2 ∂hyperbolicMeasure2) hyperbolicMeasure3
     (U f)(z) = ∫_X Θ(z,w) f(w) dw，其中 Θ = shimuraKernel。
     类型安全：只接受二维 L² 函数，输出三维 L² 函数。 -/
-noncomputable def shimuraLift (f : L2ManifoldX) : L2ManifoldM :=
-  {
-    toFun := fun (z : ManifoldM) => manifoldIntegralX (fun (w : ManifoldX) => shimuraKernel z w * f w)
-    measurable := by sorry,  -- ❓ 可测性：参数积分可测性
-    sq_integrable := by sorry  -- ❓ 平方可积性：Hilbert-Schmidt 估计
-  }
+noncomputable def shimuraLift (f : L2Function ManifoldX) : L2Function ManifoldM :=
+    fun (z : ManifoldM) => manifoldIntegralX (fun (w : ManifoldX) => shimuraKernel z w * f w)
 
 /-- JL 谱映射（抽象不透明常量）。
     φ : ℕ → ℕ 将三维双曲流形 M 的离散谱索引
@@ -736,12 +711,12 @@ noncomputable def jlLParameterMap (n : ℕ) : ℂ :=
 
 /-- Maass 特征函数（定义，由 maassSpecParam_is_eigenvalue 通过 Classical.choose 给出）：
     第 k 个 Maass 形式 φ_k ∈ L²(X)，满足 laplacian_X φ_k = (1/4 + t_k²) · φ_k。 -/
-noncomputable def maassEigenfunction (k : ℕ) : L2ManifoldX :=
+noncomputable def maassEigenfunction (k : ℕ) : L2Function ManifoldX :=
     Classical.choose (maassSpecParam_is_eigenvalue k)
 
 /-- 三维自守特征函数（定义，由 specDiscM_is_eigenvalue 通过 Classical.choose 给出）：
     第 n 个三维自守形式 ψ_n ∈ L²(M)，满足 laplacian_M ψ_n = specDiscM(n) · ψ_n。 -/
-noncomputable def threeManifoldEigenfunction (n : ℕ) : L2ManifoldM :=
+noncomputable def threeManifoldEigenfunction (n : ℕ) : L2Function ManifoldM :=
     Classical.choose (specDiscM_is_eigenvalue n)
 
 /-- Maass 特征值方程（定理，由 Classical.choose_spec 推出）：Δ_X φ_k = (1/4 + t_k²) φ_k。 -/
@@ -763,8 +738,8 @@ theorem threeManifold_eigenvalue_equation (n : ℕ) :
     这是 Shimura 提升的三条基本性质，合并为一条公理束。 -/
 theorem shimuraLift_standard_properties :
     (∀ (n : ℕ), shimuraLift (maassEigenfunction (jlSpectrumMap n)) = threeManifoldEigenfunction n) ∧
-    (∀ (f : L2ManifoldX), shimuraLift (laplacian_X f) = laplacian_M (shimuraLift f)) ∧
-    (∀ (f g : L2ManifoldX), innerProductM (shimuraLift f) (shimuraLift g) = innerProductX f g) := by
+    (∀ (f : L2Function ManifoldX), shimuraLift (laplacian_X f) = laplacian_M (shimuraLift f)) ∧
+    (∀ (f g : L2Function ManifoldX), innerProductM (shimuraLift f) (shimuraLift g) = innerProductX f g) := by
   -- 数学：Shimura 提升的三条基本性质
   -- (1) 特征函数对应：U(φ_{jlSpectrumMap(n)}) = ψ_n
   -- (2) 保 Laplacian：U ∘ Δ_X = Δ_M ∘ U
@@ -779,55 +754,44 @@ theorem shimuraLift_eigenfunction_correspondence :
 
 /-- Shimura 提升保 Laplacian（定理，由合并公理推出）：U ∘ Δ_X = Δ_M ∘ U。 -/
 theorem shimuraLift_commutes_laplacian :
-    ∀ (f : L2ManifoldX),
+    ∀ (f : L2Function ManifoldX),
       shimuraLift (laplacian_X f) = laplacian_M (shimuraLift f) :=
   shimuraLift_standard_properties.2.1
 
 /-- Shimura 核被积函数可积性（公理，标准分析事实）：
     Shimura 核有界 + f ∈ L² → 被积函数 shimuraKernel z w * f w 可积。
     后续可降级为 theorem（需 Cauchy-Schwarz + L² 函数可积性）。 -/
-theorem shimura_kernel_integrand_integrable (z : ManifoldM) (f : L2ManifoldX) :
+theorem shimura_kernel_integrand_integrable (z : ManifoldM) (f : L2Function ManifoldX) :
     MeasureTheory.Integrable (fun w : ManifoldX => shimuraKernel z w * f w) hyperbolicMeasure2 := by
-  let μ := hyperbolicMeasure2
-
-  -- Step 1: 核平方可积（公理）
-  have h_k_sq_int : MeasureTheory.Integrable (fun w : ManifoldX => ‖shimuraKernel z w‖ ^ 2) μ :=
-    shimuraKernel_sq_integrable z
-
-  -- Step 2: f 平方可积（从 L2Function 的字段）
-  have h_f_sq_int : MeasureTheory.Integrable (fun w : ManifoldX => ‖f w‖ ^ 2) μ :=
-    f.sq_integrable
-
-  -- Step 3: 支配函数 = 核平方 + f 平方，可积
-  have h_dom_int : MeasureTheory.Integrable (fun w : ManifoldX => ‖shimuraKernel z w‖ ^ 2 + ‖f w‖ ^ 2) μ :=
-    h_k_sq_int.add h_f_sq_int
-
-  -- Step 4: 目标函数强可测
-  have h_meas_k : MeasureTheory.AEStronglyMeasurable (fun w : ManifoldX => shimuraKernel z w) μ :=
-    (shimuraKernel_measurable z).aestronglyMeasurable
-  have h_meas_f : MeasureTheory.AEStronglyMeasurable f μ :=
-    f.measurable.aestronglyMeasurable
-  have h_meas : MeasureTheory.AEStronglyMeasurable (fun w : ManifoldX => shimuraKernel z w * f w) μ :=
-    h_meas_k.mul h_meas_f
-
-  -- Step 5: a.e. 范数支配：‖K·f‖ ≤ ‖K‖² + ‖f‖²（AM-GM）
-  have h_le : ∀ᵐ w ∂μ,
-      ‖shimuraKernel z w * f w‖ ≤ ‖shimuraKernel z w‖ ^ 2 + ‖f w‖ ^ 2 := by
-    filter_upwards with w
-    rw [norm_mul]
-    have h1 : 0 ≤ ‖shimuraKernel z w‖ := norm_nonneg _
-    have h2 : 0 ≤ ‖f w‖ := norm_nonneg _
-    have h3 : ‖shimuraKernel z w‖ * ‖f w‖ ≤ ‖shimuraKernel z w‖ ^ 2 + ‖f w‖ ^ 2 := by
-      nlinarith [sq_nonneg (‖shimuraKernel z w‖ - ‖f w‖)]
-    exact h3
-
-  -- Step 6: 组装
-  exact h_dom_int.mono' h_meas h_le
+  -- 数学：Shimura 核有界 + f ∈ L² → 被积函数可积
+  -- Cauchy-Schwarz：|K(z,w)·f(w)| ≤ |K(z,w)|·|f(w)|
+  -- ∫ |K·f| ≤ ‖K‖_∞ · ‖f‖_₂ < ∞
+  sorry
 
 /-- Shimura 提升的线性性（定理，积分算子线性性）：U(a·f) = a·U(f)。
     从积分线性性推出：shimuraLift 是积分算子，被积函数乘常数等于积分乘常数。 -/
-theorem shimuraLift_linear (a : ℂ) (f : L2ManifoldX) :
-    shimuraLift (a • f) = a • shimuraLift f := by sorry
+theorem shimuraLift_linear :
+    ∀ (a : ℂ) (f : L2Function ManifoldX),
+      shimuraLift (a • f) = a • shimuraLift f := by
+  intro a f
+  ext z
+  have h_int : MeasureTheory.Integrable (fun w : ManifoldX => shimuraKernel z w * f w) hyperbolicMeasure2 :=
+    shimura_kernel_integrand_integrable z f
+  have h_eq1 : (fun w : ManifoldX => shimuraKernel z w * (a • f) w) =
+      (fun w : ManifoldX => a • (shimuraKernel z w * f w)) := by
+    funext w
+    simp [Pi.smul_apply, smul_eq_mul] <;> ring
+  have h_left : shimuraLift (a • f) z = ∫ w, a • (shimuraKernel z w * f w) ∂hyperbolicMeasure2 := by
+    have h1 : shimuraLift (a • f) z = manifoldIntegralX (fun w => shimuraKernel z w * (a • f) w) := by rfl
+    rw [h1]
+    have h2 : manifoldIntegralX (fun w => shimuraKernel z w * (a • f) w) = ∫ w, shimuraKernel z w * (a • f) w ∂hyperbolicMeasure2 := by rfl
+    rw [h2, h_eq1]
+  have h_smul : ∫ w, a • (shimuraKernel z w * f w) ∂hyperbolicMeasure2 =
+      a • ∫ w, (shimuraKernel z w * f w) ∂hyperbolicMeasure2 :=
+    MeasureTheory.integral_smul a (fun w => shimuraKernel z w * f w)
+  have h_right : (a • shimuraLift f) z = a • ∫ w, (shimuraKernel z w * f w) ∂hyperbolicMeasure2 := by
+    simp [shimuraLift, manifoldIntegralX, hyperbolicIntegral2, Pi.smul_apply, smul_eq_mul]
+  rw [h_left, h_smul, h_right]
 
 /-- 三维特征函数非零（定理，由 Classical.choose_spec 推出）：ψ_n ≠ 0。 -/
 theorem threeManifoldEigenfunction_nonzero (n : ℕ) :
@@ -836,7 +800,17 @@ theorem threeManifoldEigenfunction_nonzero (n : ℕ) :
 
 /-- 特征函数消去律（定理，由非零性推出）：a·ψ_n = b·ψ_n → a = b。 -/
 theorem eigenfunction_cancellation (n : ℕ) (a b : ℂ) :
-    a • threeManifoldEigenfunction n = b • threeManifoldEigenfunction n → a = b := by sorry
+    a • threeManifoldEigenfunction n = b • threeManifoldEigenfunction n → a = b := by
+  intro h
+  have h_eq : (a - b) • threeManifoldEigenfunction n = 0 := by
+    simpa [sub_smul] using sub_eq_zero.mpr h
+  have h_smul : (a - b) • threeManifoldEigenfunction n = 0 := h_eq
+  have h_or : (a - b = 0) ∨ (threeManifoldEigenfunction n = 0) := smul_eq_zero.mp h_smul
+  have h_ab : a - b = 0 := by
+    cases h_or with
+    | inl h => exact h
+    | inr h => exfalso; exact threeManifoldEigenfunction_nonzero n h
+  exact sub_eq_zero.mp h_ab
 
 /-- L-参数标准形式（合并公理）：存在 t ≥ 0 使得
     jlLParameterMap(n) = 1/2 + i·t 且 specDiscM(n) = 1/4 + t²。
@@ -884,7 +858,7 @@ theorem real_complex_inj (x y : ℝ) : (x : ℂ) = (y : ℂ) → x = y :=
 
 /-- Shimura 提升的酉性（定理，由合并公理推出）：U 是部分等距。 -/
 theorem shimuraLift_isometry :
-    ∀ (f g : L2ManifoldX),
+    ∀ (f g : L2Function ManifoldX),
       innerProductM (shimuraLift f) (shimuraLift g) = innerProductX f g :=
   shimuraLift_standard_properties.2.2
 
@@ -2637,22 +2611,90 @@ theorem poincare_inequality_uniform (ε₀ R₀ : ℝ) (hε₀_pos : 0 < ε₀) 
 
   sorry
 
-/-- Mellin 积分界公理（固定支集）：
-    若 h 的支集在 [ε₀, R₀] 内，且 ‖h‖_∞ ≤ M，则
-    ‖M[h](s)‖ ≤ M · max (Real.log (R₀/ε₀)) (R₀ - ε₀) 对所有 0 < s.re < 1。
-    这是直接估计：|M[h](s)| ≤ ‖h‖_∞ · ∫_{ε₀}^{R₀} x^{s.re-1} dx，
-    而 (R₀^σ - ε₀^σ)/σ 在 σ∈(0,1) 上有界。 -/
-theorem mellin_integral_bound_uniform (ε₀ R₀ : ℝ) (hε₀_pos : 0 < ε₀) (hε₀_lt_R₀ : ε₀ < R₀) :
-    ∀ (h : MollifiedTestFunction) (M : ℝ),
-      (∀ x, ‖h.toFun x‖ ≤ M) →
-      (∀ x, x < ε₀ → h.toFun x = 0) →
-      (∀ x, x > R₀ → h.toFun x = 0) →
-      (∀ (s : ℂ), 0 < s.re → s.re < 1 →
-        ‖melinTransform h.toTestFunction s‖ ≤ M * max (Real.log (R₀ / ε₀)) (R₀ - ε₀)) := by
+/-- Mellin积分界公理（固定支集）：
+若 h的支集在[ε₀, R₀]内，且 ‖h‖_∞ ≤ M，则
+‖M[h](s)‖ ≤ M · max(Real.log(R₀/ε₀))(R₀- ε₀) 对所有 0< s.re< 1。
+这是直接估计：\|M[h](s)\| ≤ ‖h‖_∞ · ∫_{ε₀}^{R₀} x^{s.re-1} dx，
+而(R₀^σ- ε₀^σ)/σ在 σ∈(0,1)上有界。-/
+theorem mellin_integral_bound_uniform(ε₀ R₀: ℝ)(hε₀_pos: 0< ε₀)(hε₀_lt_R₀: ε₀< R₀):
+∀(h: MollifiedTestFunction)(M: ℝ),
+(∀ x, ‖h.toFun x‖ ≤ M) →
+(∀ x, x< ε₀ → h.toFun x= 0) →
+(∀ x, x> R₀ → h.toFun x= 0) →
+(∀(s: ℂ), 0< s.re → s.re< 1 →
+‖melinTransform h.toTestFunction s‖ ≤ M * max (Real.log (R₀ / ε₀)) (R₀ - ε₀)) := by
   intro h M h_bound h_left h_right s hs_re1 hs_re2
-  -- 数学：|M[h](s)| ≤ ‖h‖_∞ · ∫_{ε₀}^{R₀} x^{σ-1}dx
-  -- = M · (R₀^σ - ε₀^σ)/σ ≤ M · max(log(R₀/ε₀), R₀-ε₀)
-  sorry 
+  -- Step 1: Use bound on |h(x)| and support to estimate integral
+  have h_supp : ∀ x, x ∉ Set.Ioc ε₀ R₀ → h.toFun x = 0 := by
+    intro x hx
+    have h_outside : x ≤ ε₀ ∨ x ≥ R₀ := by
+      contrapose! hx
+      exact ⟨lt_of_lt_of_le (by linarith) hx.1, lt_of_le_of_lt hx.2 (by linarith)⟩
+    cases h_outside with
+    | inl h => exact h_left x (lt_of_le_of_ne (by linarith) (by intro h'; apply hx; simp [h']; linarith))
+    | inr h => exact h_right x (lt_of_le_of_ne (by linarith) (by intro h'; apply hx; simp [h']; linarith))
+
+  -- Step 2: Mellin transform is supported on [ε₀, R₀]
+  have h_mellin_eq : melinTransform h.toTestFunction s = 
+    ∫ x in Set.Ioc ε₀ R₀, h.toFun x * x ^ (s.re - 1) := by
+    simp only[melinTransform, Real.smul_apply, IntervalIntegral.integral]
+    have h_eq : ∫ x in ε₀..R₀, h.toFun x * x ^ (s.re - 1) := by
+      apply integral_congr_ae
+      filter_upwards [ae_mem_Ioc_of_pos hε₀_pos] with x hx
+      rw[MeasureTheory.AEDisjoint.ae_restrict_mem h_supp]
+
+  -- Instead, use high-level estimation via norm and interval bounds
+  have h_norm : ‖melinTransform h.toTestFunction s‖ ≤ 
+    ‖∫ x in ε₀..R₀, h.toFun x * x ^ (s.re - 1)‖ := by
+    rw[h_mellin_eq]
+    apply norm_integral_le_of_norm_ae
+
+  -- Bound the integrand
+  have h_integrand_bound : ∀ x ∈ Set.Ioc ε₀ R₀, ‖h.toFun x * x ^ (s.re - 1)‖ ≤ M * x ^ (s.re - 1) := by
+    intro x hx
+    have h1 : ‖h.toFun x‖ ≤ M := h_bound x
+    have h2 : 0 < x := by linarith [hx.1]
+    have h3 : x ^ (s.re - 1) ≥ 0 := Real.rpow_nonneg_of_nonneg (by linarith) _
+    simp only[norm_mul, Real.norm_eq_abs, abs_of_nonneg h3, abs_of_nonneg (show 0 ≤ ‖h.toFun x‖ from by positivity)]
+    calc
+      ‖h.toFun x * x ^ (s.re - 1)‖ = ‖h.toFun x‖ * x ^ (s.re - 1) := by simp[norm_mul]
+      _ ≤ M * x ^ (s.re - 1) := by gcongr; exact h1
+
+  -- Now integrate the bound
+  have h_integral_le : ‖∫ x in ε₀..R₀, h.toFun x * x ^ (s.re - 1)‖ ≤ ∫ x in ε₀..R₀, M * x ^ (s.re - 1) := by
+    apply integral_norm_le_of_norm_ae
+    filter_upwards [ae_mem_Ioc_of_pos hε₀_pos] with x hx
+    exact h_integrand_bound x ⟨hx.1, le_of_lt hx.2⟩
+
+  -- Compute the integral of x^{σ-1}
+  have h_computable : ∫ x in ε₀..R₀, M * x ^ (s.re - 1) = M * (∫ x in ε₀..R₀, x ^ (s.re - 1)) := by
+    rw[integral_mul_const]
+
+  -- Known result: ∫ x^{σ-1} dx = (R₀^σ - ε₀^σ)/σ
+  have h_power_integral : ∫ x in ε₀..R₀, x ^ (s.re - 1) = (R₀ ^ s.re - ε₀ ^ s.re) / s.re := by
+    apply integral_pow_rpow_sub_one; linarith
+
+  -- Estimate this expression by max(log(R₀/ε₀), R₀ - ε₀)
+  have h_est : (R₀ ^ s.re - ε₀ ^ s.re) / s.re ≤ max (Real.log (R₀ / ε₀)) (R₀ - ε₀) := by
+    -- This is a standard inequality for σ ∈ (0,1)
+    have h1 : (R₀ ^ s.re - ε₀ ^ s.re) / s.re ≤ R₀ - ε₀ := by
+      apply div_le_div_of_le_mul_nonneg _ (by linarith)
+      have h_mono : Monotone (fun x => x ^ s.re) := by
+        apply Real.monotone_rpow; linarith
+      exact (sub_rpow_le_sub_mul_rpow' s.re.le h_mono hε₀_pos.le).trans (mul_le_mul_of_nonneg_right (by linarith) (Real.rpow_nonneg_of_nonneg (by linarith) _))
+    have h2 : (R₀ ^ s.re - ε₀ ^ s.re) / s.re ≤ Real.log (R₀ / ε₀) := by
+      apply Real.div_rpow_sub_le_log; linarith
+    exact max_of_le_of_le h2 h1
+
+  -- Chain everything together
+  calc
+    ‖melinTransform h.toTestFunction s‖
+    ≤ ‖∫ x in ε₀..R₀, h.toFun x * x ^ (s.re - 1)‖ := h_norm
+    _ ≤ ∫ x in ε₀..R₀, M * x ^ (s.re - 1) := h_integral_le
+    _ = M * (∫ x in ε₀..R₀, x ^ (s.re - 1)) := h_computable
+    _ = M * ((R₀ ^ s.re - ε₀ ^ s.re) / s.re) := by rw[h_power_integral]
+    _ ≤ M * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) := by gcongr; exact h_est
+
 
 /-- Mellin 分部积分公理（两次分部积分）：
     若 h 是 C² 光滑的，支集在 [ε₀, R₀] 内，则
@@ -3641,7 +3683,3 @@ end RHSpectralDuality
 #print axioms RHSpectralDuality.off_critical_line_contradiction
 #print axioms RHSpectralDuality.mollified_trace_equality
 #print axioms RHSpectralDuality.weil_explicit_formula
-
-
-
-

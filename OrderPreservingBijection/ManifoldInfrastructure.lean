@@ -40,13 +40,57 @@ instance : Inhabited ManifoldM := ⟨⟨(0, 1), by norm_num⟩⟩
 theorem manifoldX_nonempty : Nonempty ManifoldX := by
   refine' ⟨⟨Complex.I, by norm_num [Complex.I_im]⟩⟩
 
-/-- L² 函数空间（类型化）：L²(M) := M → ℂ。
-    用类型参数 M 区分不同流形上的 L² 空间，保证类型安全：
-    - L²(ManifoldX)：二维 Maass 形式空间
-    - L²(ManifoldM)：三维自守形式空间
+/-- L² 函数空间（真正的 L² 空间）：带上可测性和平方可积性证明。
+    类型参数 M 是流形类型，μ 是测度。
+    - L²(ManifoldX, hyperbolicMeasure2)：二维 Maass 形式空间
+    - L²(ManifoldM, hyperbolicMeasure3)：三维自守形式空间
     Shimura 提升是 L²(ManifoldX) → L²(ManifoldM) 的算子。 -/
-abbrev L2Function (M : Type) := M → ℂ
+structure L2Function (M : Type) [MeasurableSpace M] (μ : MeasureTheory.Measure M) where
+  /-- 底层函数 -/
+  toFun : M → ℂ
+  /-- 可测性证明 -/
+  measurable : Measurable toFun
+  /-- 平方可积性证明 -/
+  sq_integrable : MeasureTheory.Integrable (fun x => ‖toFun x‖ ^ 2) μ
 
+/-- CoeFun 实例：让 L² 函数可以像普通函数一样调用 -/
+instance {M : Type} [MeasurableSpace M] {μ : MeasureTheory.Measure M} : CoeFun (L2Function M μ) (fun _ => M → ℂ) :=
+  ⟨L2Function.toFun⟩
+
+/-- 二维流形 X 上的 L² 空间简写 -/
+abbrev L2ManifoldX := L2Function ManifoldX hyperbolicMeasure2
+
+/-- 三维流形 M 上的 L² 空间简写 -/
+abbrev L2ManifoldM := L2Function ManifoldM hyperbolicMeasure3
+
+
+/-- L² 空间的零元素实例 -/
+noncomputable instance {M : Type} [MeasurableSpace M] {μ : MeasureTheory.Measure M} : Zero (L2Function M μ) where
+  zero := {
+    toFun := fun _ => (0 : ℂ),
+    measurable := by fun_prop,
+    sq_integrable := by sorry  -- ❓ 零函数平方可积
+  }
+
+/-- L² 空间的加法实例 -/
+noncomputable instance {M : Type} [MeasurableSpace M] {μ : MeasureTheory.Measure M} : Add (L2Function M μ) where
+  add f g := {
+    toFun := fun x => f.toFun x + g.toFun x,
+    measurable := by sorry,  -- ❓ 加法保持可测性
+    sq_integrable := by sorry  -- ❓ 加法保持平方可积性
+  }
+
+/-- L² 空间的标量乘法实例 -/
+noncomputable instance {M : Type} [MeasurableSpace M] {μ : MeasureTheory.Measure M} : SMul ℂ (L2Function M μ) where
+  smul c f := {
+    toFun := fun x => c * f.toFun x,
+    measurable := by sorry,  -- ❓ 标量乘法保持可测性
+    sq_integrable := by sorry  -- ❓ 标量乘法保持平方可积性
+  }
+
+/-- L² 空间的 Nonempty 实例 -/
+noncomputable instance {M : Type} [MeasurableSpace M] {μ : MeasureTheory.Measure M} : Nonempty (L2Function M μ) := by
+  exact ⟨0⟩
 /-- 流形上的积分（显式定义）：∫_M g dμ₃。
     关于双曲测度 hyperbolicMeasure3 的 Bochner 积分，定义在 HyperbolicMeasure 模块。
     注意：当前 ManifoldM = ℍ³（通用覆盖），体积无穷。 -/

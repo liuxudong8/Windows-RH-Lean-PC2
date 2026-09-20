@@ -10,18 +10,18 @@ namespace OrderPreservingBijection
 
 /-- L²(M) 内积（具体定义）：⟨f, g⟩_M = ∫_M f(z) · conj(g(z)) dμ₃。
     关于三维双曲测度的 Bochner 积分。 -/
-noncomputable def innerProductM (f g : L2Function ManifoldM) : ℂ :=
+noncomputable def innerProductM (f g : L2ManifoldM) : ℂ :=
     manifoldIntegral (fun z => f z * star (g z))
 
 /-- L²(X) 内积（具体定义）：⟨f, g⟩_X = ∫_X f(z) · conj(g(z)) dμ₂。
     关于二维双曲测度的 Bochner 积分。 -/
-noncomputable def innerProductX (f g : L2Function ManifoldX) : ℂ :=
+noncomputable def innerProductX (f g : L2ManifoldX) : ℂ :=
     manifoldIntegralX (fun z => f z * star (g z))
 
 /-- 内积共轭对称性（定理，由积分共轭性质推出）：
     ⟨f, g⟩ = conj(⟨g, f⟩)。
     证明：∫ f·conj(g) = conj(∫ g·conj(f))，由积分的共轭线性性推出。 -/
-theorem innerProductM_conj_sym (f g : L2Function ManifoldM) :
+theorem innerProductM_conj_sym (f g : L2ManifoldM) :
     innerProductM f g = star (innerProductM g f) := by
   let h : ManifoldM → ℂ := fun z => g z * star (f z)
   have h_main : star (manifoldIntegral h) = manifoldIntegral (fun z => star (h z)) := by
@@ -38,7 +38,7 @@ theorem innerProductM_conj_sym (f g : L2Function ManifoldM) :
 /-- 内积正定性第一部分（定理，由积分正定性推出）：
     0 ≤ ⟨f, f⟩.re。
     证明：⟨f, f⟩ = ∫ |f|² ≥ 0，被积函数非负实值。 -/
-theorem innerProductM_pos_def_re (f : L2Function ManifoldM) :
+theorem innerProductM_pos_def_re (f : L2ManifoldM) :
     0 ≤ (innerProductM f f).re := by
   simp only [innerProductM]
   have h1 : ∀ z, f z * star (f z) = (Complex.normSq (f z) : ℂ) := by
@@ -61,7 +61,7 @@ theorem innerProductM_pos_def_re (f : L2Function ManifoldM) :
     ⟨f, f⟩ = 0 → f = 0 a.e.
     证明：⟨f, f⟩ = ∫ |f|²，非负可积函数积分为 0 则 a.e. 为零（integral_eq_zero_iff_of_nonneg_ae）。
     注意：需 Integrable 条件，因为不可积函数的 Bochner 积分按约定为 0，此时定理不成立。 -/
-theorem innerProductM_pos_def_ae (f : L2Function ManifoldM)
+theorem innerProductM_pos_def_ae (f : L2ManifoldM)
     (hfi : MeasureTheory.Integrable (fun z : ManifoldM => (f z * star (f z)).re) hyperbolicMeasure3) :
     innerProductM f f = 0 → ∀ᵐ z ∂hyperbolicMeasure3, f z = 0 := by
   intro h
@@ -102,7 +102,7 @@ theorem innerProductM_pos_def_ae (f : L2Function ManifoldM)
   exact h11
 
 /-- X 上内积共轭对称性（定理）。 -/
-theorem innerProductX_conj_sym (f g : L2Function ManifoldX) :
+theorem innerProductX_conj_sym (f g : L2ManifoldX) :
     innerProductX f g = star (innerProductX g f) := by
   let h : ManifoldX → ℂ := fun z => g z * star (f z)
   have h_main : star (manifoldIntegralX h) = manifoldIntegralX (fun z => star (h z)) := by
@@ -117,7 +117,7 @@ theorem innerProductX_conj_sym (f g : L2Function ManifoldX) :
   <;> rfl
 
 /-- X 上内积正定性第一部分（定理）。 -/
-theorem innerProductX_pos_def_re (f : L2Function ManifoldX) :
+theorem innerProductX_pos_def_re (f : L2ManifoldX) :
     0 ≤ (innerProductX f f).re := by
   simp only [innerProductX]
   have h1 : ∀ z, f z * star (f z) = (Complex.normSq (f z) : ℂ) := by
@@ -136,7 +136,7 @@ theorem innerProductX_pos_def_re (f : L2Function ManifoldX) :
   exact manifoldIntegralX_positive (fun z => f z * star (f z)) h_real h_nonneg
 
 /-- X 上内积正定性第二部分（定理，a.e. 版本，需可积性条件）。 -/
-theorem innerProductX_pos_def_ae (f : L2Function ManifoldX)
+theorem innerProductX_pos_def_ae (f : L2ManifoldX)
     (hfi : MeasureTheory.Integrable (fun z : ManifoldX => (f z * star (f z)).re) hyperbolicMeasure2) :
     innerProductX f f = 0 → ∀ᵐ z ∂hyperbolicMeasure2, f z = 0 := by
   intro h
@@ -177,3 +177,4 @@ theorem innerProductX_pos_def_ae (f : L2Function ManifoldX)
   exact h11
 
 end OrderPreservingBijection
+

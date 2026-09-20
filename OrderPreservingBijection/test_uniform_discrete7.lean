@@ -1,0 +1,67 @@
+import OrderPreservingBijection.stage_4
+
+open OrderPreservingBijection
+
+namespace RHSpectralDuality
+
+theorem bounded_uniformly_discrete_real_set_finite (S : Set ℝ)
+    (h_bounded : ∃ (M : ℝ), 0 < M ∧ ∀ (x : ℝ), x ∈ S → |x| ≤ M)
+    (h_uniform_discrete : ∃ (ε : ℝ), 0 < ε ∧ ∀ (x y : ℝ), x ∈ S → y ∈ S → x ≠ y → |x - y| ≥ ε) :
+    Set.Finite S := by
+  rcases h_bounded with ⟨M, hM_pos, hM⟩
+  rcases h_uniform_discrete with ⟨ε, hε_pos, hε⟩
+  set δ : ℝ := ε / 2 with hδ_def
+  have hδ_pos : 0 < δ := by positivity
+  set N : ℕ := Nat.ceil (2 * M / δ) + 1 with hN_def
+  let f : ℝ → ℕ := fun x => Nat.floor ((x + M) / δ)
+  have h_bound : ∀ x ∈ S, f x < N := by
+    intro x hx
+    have hx1 : -M ≤ x := by have h : |x| ≤ M := hM x hx; linarith [abs_le.mp h]
+    have hx2 : x ≤ M := by have h : |x| ≤ M := hM x hx; linarith [abs_le.mp h]
+    have h3 : (x + M) / δ ≤ 2 * M / δ := by gcongr <;> linarith
+    have h4 : (f x : ℝ) ≤ (x + M) / δ := by exact?
+    have h5 : (f x : ℝ) ≤ 2 * M / δ := by linarith
+    have h6 : 2 * M / δ ≤ (Nat.ceil (2 * M / δ) : ℝ) := Nat.le_ceil (2 * M / δ)
+    have h7 : (f x : ℝ) ≤ (Nat.ceil (2 * M / δ) : ℝ) := by linarith
+    have h8 : f x ≤ Nat.ceil (2 * M / δ) := by
+      exact_mod_cast h7
+    rw [hN_def]
+    exact Nat.lt_succ_of_le h8
+  have h_inj : Set.InjOn f S := by
+    intro x hx y hy h_eq
+    by_cases hxy : x = y
+    · exact hxy
+    · have h9 : |x - y| ≥ ε := hε x y hx hy hxy
+      have h10 : (f x : ℝ) ≤ (x + M) / δ := by exact?
+      have h11 : (x + M) / δ < (f x : ℝ) + 1 := Nat.lt_floor_add_one _
+      have h12 : (f y : ℝ) ≤ (y + M) / δ := by exact?
+      have h13 : (y + M) / δ < (f y : ℝ) + 1 := Nat.lt_floor_add_one _
+      rw [h_eq] at h12 h13
+      have h14 : |x - y| < δ := by
+        rw [abs_lt]
+        constructor
+        · have h15 : x + M < (f x : ℝ) + 1 := by
+            calc x + M = ((x + M) / δ) * δ := by field_simp [hδ_pos.ne'] <;> ring
+              _ < ((f x : ℝ) + 1) * δ := by gcongr; exact h11
+          have h16 : (f x : ℝ) * δ ≤ y + M := by
+            calc (f x : ℝ) * δ ≤ ((y + M) / δ) * δ := by gcongr; exact h12
+              _ = y + M := by field_simp [hδ_pos.ne'] <;> ring
+          linarith
+        · have h17 : y + M < (f x : ℝ) + 1 := by
+            calc y + M = ((y + M) / δ) * δ := by field_simp [hδ_pos.ne'] <;> ring
+              _ < ((f x : ℝ) + 1) * δ := by gcongr; exact h13
+          have h18 : (f x : ℝ) * δ ≤ x + M := by
+            calc (f x : ℝ) * δ ≤ ((x + M) / δ) * δ := by gcongr; exact h10
+              _ = x + M := by field_simp [hδ_pos.ne'] <;> ring
+          linarith
+      have h19 : δ = ε / 2 := hδ_def
+      rw [h19] at h14
+      linarith
+  have h_image_subset : f '' S ⊆ (Finset.range N : Set ℕ) := by
+    intro z hz
+    rcases hz with ⟨x, hx, rfl⟩
+    exact Finset.mem_range.mpr (h_bound x hx)
+  have h_image_finite : (f '' S).Finite := Set.Finite.subset (Finset.finite_toSet _) h_image_subset
+  exact Set.Finite.of_finite_image h_image_finite h_inj
+
+end RHSpectralDuality
