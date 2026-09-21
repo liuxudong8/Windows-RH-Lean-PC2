@@ -91,16 +91,48 @@ theorem elliptic_term_adjustment (S : Set ℝ)
   let E0 : ℂ := ellipticTerm f0
   by_cases h_E0 : E0 = 0
   · -- E0 = 0
+    rcases f0.hasCompactSupport with ⟨R0, hR0_pos, hR0⟩
+    let ε₀ := Λ0 / 2
+    let R₀ := max (R0 + 1) (Λ0 + 1)
+    have hε₀_pos : 0 < ε₀ := by
+      dsimp only [ε₀]
+      linarith [hΛ0_pos]
+    have hR₀_pos : 0 < R₀ := by
+      dsimp only [R₀]
+      have h1 : 0 < R0 + 1 := by linarith [hR0_pos]
+      have h2 : 0 < Λ0 + 1 := by linarith [hΛ0_pos]
+      exact lt_max_iff.mpr (Or.inl h1)
+    have hε₀_lt_R₀ : ε₀ < R₀ := by
+      dsimp only [ε₀, R₀]
+      have h1 : Λ0 + 1 ≤ R₀ := le_max_right (R0 + 1) (Λ0 + 1)
+      have h2 : Λ0 / 2 < Λ0 + 1 := by linarith [hΛ0_pos]
+      linarith
+    have h_left : ∀ x, x ≤ ε₀ → f0.eval x = 0 := by
+      dsimp only [ε₀]
+      exact h_zero
+    have hR1 : R0 + 1 ≤ R₀ := by
+      dsimp only [R₀]
+      exact le_max_left (R0 + 1) (Λ0 + 1)
+    have h_right : ∀ x, x ≥ R₀ → f0.eval x = 0 := by
+      intro x hx
+      have h2 : x ≥ R0 + 1 := by
+        exact le_trans hR1 hx
+      have h3 : 0 ≤ x := by linarith
+      have h4 : |x| = x := abs_of_nonneg h3
+      have h1 : |x| > R0 := by
+        rw [h4]
+        linarith
+      exact hR0 x h1
     have h_support : ∃ (a b : ℝ), 0 < a ∧ a < b ∧
-        (∀ x, x ≤ a / 2 → f0.eval x = 0) ∧
-        (∀ x, a ≤ x ∧ x ≤ b → f0.eval x = 1) :=
-      ⟨Λ0, Λ1, hΛ0_pos, hΛ0_lt, h_zero, h_one⟩
+        (∀ x, x ≤ a → f0.eval x = 0) ∧
+        (∀ x, x ≥ b → f0.eval x = 0) :=
+      ⟨ε₀, R₀, hε₀_pos, hε₀_lt_R₀, h_left, h_right⟩
     have h_ev : ellipticTerm f0 = 0 := by
       have h_eq : E0 = ellipticTerm f0 := rfl
       rw [h_eq] at h_E0; exact h_E0
     let mf : MollifiedTestFunction :=
       { toTestFunction := f0
-        supportSeparated := h_support
+        supportBounded := h_support
         ellipticVanishes := h_ev }
     exact ⟨mf, fun x hx => rfl⟩
   · -- E0 ≠ 0, 修改 f0(l0)
@@ -168,16 +200,44 @@ theorem elliptic_term_adjustment (S : Set ℝ)
       intro x hx
       have hne : x ≠ l0 := by intro h_eq; rw [h_eq] at hx; exact hl0_notin_S hx
       exact h_f_eval x hne
-    have h_support_sep : ∃ (a b : ℝ), 0 < a ∧ a < b ∧
-        (∀ x, x ≤ a / 2 → f.eval x = 0) ∧
-        (∀ x, a ≤ x ∧ x ≤ b → f.eval x = 1) := by
-      refine ⟨Λ0, Λ1, hΛ0_pos, hΛ0_lt, ?_, ?_⟩
-      · intro x hx
-        have hne : x ≠ l0 := by intro h_eq; rw [h_eq] at hx; rcases hl0_pos with (h | h) <;> linarith
-        rw [h_f_eval x hne]; exact h_zero x hx
-      · intro x hx
-        have hne : x ≠ l0 := by intro h_eq; rw [h_eq] at hx; rcases hl0_pos with (h | h) <;> linarith
-        rw [h_f_eval x hne]; exact h_one x hx
+    rcases f.hasCompactSupport with ⟨R0, hR0_pos, hR0⟩
+    let ε₀ := Λ0 / 2
+    let R₀ := max (R0 + 1) (Λ0 + 1)
+    have hε₀_pos : 0 < ε₀ := by
+      dsimp only [ε₀]
+      linarith [hΛ0_pos]
+    have hR₀_pos : 0 < R₀ := by
+      dsimp only [R₀]
+      have h1 : 0 < R0 + 1 := by linarith [hR0_pos]
+      have h2 : 0 < Λ0 + 1 := by linarith [hΛ0_pos]
+      exact lt_max_iff.mpr (Or.inl h1)
+    have hε₀_lt_R₀ : ε₀ < R₀ := by
+      dsimp only [ε₀, R₀]
+      have h1 : Λ0 + 1 ≤ R₀ := le_max_right (R0 + 1) (Λ0 + 1)
+      have h2 : Λ0 / 2 < Λ0 + 1 := by linarith [hΛ0_pos]
+      linarith
+    have h_left : ∀ x, x ≤ ε₀ → f.eval x = 0 := by
+      dsimp only [ε₀]
+      intro x hx
+      have hne : x ≠ l0 := by intro h_eq; rw [h_eq] at hx; rcases hl0_pos with (h | h) <;> linarith
+      rw [h_f_eval x hne]; exact h_zero x hx
+    have hR1 : R0 + 1 ≤ R₀ := by
+      dsimp only [R₀]
+      exact le_max_left (R0 + 1) (Λ0 + 1)
+    have h_right : ∀ x, x ≥ R₀ → f.eval x = 0 := by
+      intro x hx
+      have h2 : x ≥ R0 + 1 := by
+        exact le_trans hR1 hx
+      have h3 : 0 ≤ x := by linarith
+      have h4 : |x| = x := abs_of_nonneg h3
+      have h1 : |x| > R0 := by
+        rw [h4]
+        linarith
+      exact hR0 x h1
+    have h_support_bounded : ∃ (a b : ℝ), 0 < a ∧ a < b ∧
+        (∀ x, x ≤ a → f.eval x = 0) ∧
+        (∀ x, x ≥ b → f.eval x = 0) :=
+      ⟨ε₀, R₀, hε₀_pos, hε₀_lt_R₀, h_left, h_right⟩
     have h_elliptic : ellipticTerm f = 0 := by
       have hl0_in_finset : l0 ∈ ellipticClassLengths_finite.toFinset :=
         ellipticClassLengths_finite.mem_toFinset.mpr hl0_in_E
@@ -203,7 +263,7 @@ theorem elliptic_term_adjustment (S : Set ℝ)
       exact h
     let mf : MollifiedTestFunction :=
       { toTestFunction := f
-        supportSeparated := h_support_sep
+        supportBounded := h_support_bounded
         ellipticVanishes := h_elliptic }
     exact ⟨mf, h_interp⟩
 

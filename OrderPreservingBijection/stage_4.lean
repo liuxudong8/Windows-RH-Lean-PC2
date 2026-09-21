@@ -826,8 +826,47 @@ theorem shimura_kernel_integrand_integrable (z : ManifoldM) (f : L2ManifoldX) :
 
 /-- Shimura 提升的线性性（定理，积分算子线性性）：U(a·f) = a·U(f)。
     从积分线性性推出：shimuraLift 是积分算子，被积函数乘常数等于积分乘常数。 -/
+-- 测试 L2Function 的外延性定理
+lemma l2function_ext {M : Type} [MeasurableSpace M] {μ : MeasureTheory.Measure M}
+    (f g : L2Function M μ) (h : f.toFun = g.toFun) : f = g := by
+  cases f
+  cases g
+  congr
+  <;> exact h
+
+-- 测试 shimuraLift_linear 的 toFun 相等
+lemma shimuraLift_linear_toFun (a : ℂ) (f : L2ManifoldX) (z : ManifoldM) :
+    (shimuraLift (a • f)).toFun z = (a • shimuraLift f).toFun z := by
+  have h1 : (shimuraLift (a • f)).toFun z =
+      manifoldIntegralX (fun w : ManifoldX => shimuraKernel z w * (a • f) w) := by rfl
+  have h2 : (a • shimuraLift f).toFun z =
+      a * (shimuraLift f).toFun z := by rfl
+  rw [h1, h2]
+  have h3 : (fun w : ManifoldX => shimuraKernel z w * (a • f) w) =
+      fun w : ManifoldX => a * (shimuraKernel z w * f w) := by
+    funext w
+    have h4 : (a • f) w = a * f w := by rfl
+    rw [h4]
+    <;> ring
+  rw [h3]
+  have h5 : (shimuraLift f).toFun z =
+      manifoldIntegralX (fun w : ManifoldX => shimuraKernel z w * f w) := by rfl
+  rw [h5]
+  -- 现在我们需要证明：
+  -- manifoldIntegralX (fun w => a * (shimuraKernel z w * f w)) =
+  -- a * manifoldIntegralX (fun w => shimuraKernel z w * f w)
+  -- 这就是积分的线性性！
+  have h_int : MeasureTheory.Integrable (fun w : ManifoldX => shimuraKernel z w * f w) hyperbolicMeasure2 :=
+    shimura_kernel_integrand_integrable z f
+  exact MeasureTheory.integral_smul a (fun w => shimuraKernel z w * f w)
+
+-- 现在我们已经证明了 toFun 相等，接下来我们需要证明两个 L2Function 相等
 theorem shimuraLift_linear (a : ℂ) (f : L2ManifoldX) :
-    shimuraLift (a • f) = a • shimuraLift f := by sorry
+    shimuraLift (a • f) = a • shimuraLift f := by
+  have h_toFun : (shimuraLift (a • f)).toFun = (a • shimuraLift f).toFun := by
+    funext z
+    exact shimuraLift_linear_toFun a f z
+  exact l2function_ext (shimuraLift (a • f)) (a • shimuraLift f) h_toFun
 
 /-- 三维特征函数非零（定理，由 Classical.choose_spec 推出）：ψ_n ≠ 0。 -/
 theorem threeManifoldEigenfunction_nonzero (n : ℕ) :
@@ -3003,7 +3042,89 @@ theorem mellin_min_norm_principle (ρ : ℂ) (wρ : ℂ) (c : ℝ) (hc_pos : 0 <
         (∀ (s : ℂ), s ∈ T → melinTransform h.toTestFunction s = 0) ∧
         ContDiff ℝ 2 h.toTestFunction.toFun ∧
         (∀ (x : ℝ), ‖(deriv (deriv h.toTestFunction.toFun) x)‖ ≤ (1 / c) * max ‖wρ‖ 1)) := by
-  sorry
+  intro hz hre1 hre2 hne T hT_fin hT_notinρ h_exist
+  rcases h_exist with ⟨hT, M, hT_spec_zero, hT_T_zero, hT_smooth, hT_ne_zero, hT_deriv_bound, hT_lower⟩
+  -- 构造 h = (wρ / M[hT](ρ)) * hT
+  let k : ℂ := wρ / melinTransform hT.toTestFunction ρ
+  let h : MollifiedTestFunction := k • hT
+  have h1 : melinTransform h.toTestFunction ρ = wρ := by
+    have h11 : melinTransform h.toTestFunction ρ = k * melinTransform hT.toTestFunction ρ := by
+      exact melinTransform_smul hT.toTestFunction k ρ
+    rw [h11]
+    dsimp only [k]
+    field_simp [hT_ne_zero] <;> ring
+  have h2 : (∀ (s : ℂ), s ∈ T → melinTransform h.toTestFunction s = 0) := by
+    intro s hs
+    have h21 : melinTransform h.toTestFunction s = k * melinTransform hT.toTestFunction s := by
+      exact melinTransform_smul hT.toTestFunction k s
+    rw [h21]
+    have h22 : melinTransform hT.toTestFunction s = 0 := hT_T_zero s hs
+    rw [h22] <;> ring
+  have h3 : (∀ (n : ℕ), h.toTestFunction.eval (specDiscM n) = 0) := by
+    intro n
+    have h31 : h.toTestFunction.eval (specDiscM n) = k * hT.toTestFunction.eval (specDiscM n) := by rfl
+    rw [h31]
+    have h32 : hT.toTestFunction.eval (specDiscM n) = 0 := hT_spec_zero n
+    rw [h32] <;> ring
+  have h4 : ContDiff ℝ 2 h.toTestFunction.toFun := by
+    have h41 : h.toTestFunction.toFun = fun x => k * hT.toTestFunction.toFun x := by rfl
+    rw [h41]
+    exact hT_smooth.const_smul k
+  have h5 : (∀ (x : ℝ), ‖(deriv (deriv h.toTestFunction.toFun) x)‖ ≤ (1 / c) * max ‖wρ‖ 1) := by
+    intro x
+    have h51 : deriv h.toTestFunction.toFun = fun x => k * deriv hT.toTestFunction.toFun x :=
+      deriv_const_mul_field' k
+    have h52 : deriv (deriv h.toTestFunction.toFun) = fun x => k * deriv (deriv hT.toTestFunction.toFun) x := by
+      rw [h51]
+      exact deriv_const_mul_field' k
+    rw [h52]
+    have h53 : ‖(k * deriv (deriv hT.toTestFunction.toFun) x)‖ = ‖k‖ * ‖deriv (deriv hT.toTestFunction.toFun) x‖ := by
+      rw [norm_mul]
+    rw [h53]
+    have h54 : ‖deriv (deriv hT.toTestFunction.toFun) x‖ ≤ M := hT_deriv_bound x
+    have h_pos1 : 0 < ‖melinTransform hT.toTestFunction ρ‖ := by
+      exact norm_pos_iff.mpr hT_ne_zero
+    have h551 : ‖k‖ = ‖wρ‖ / ‖melinTransform hT.toTestFunction ρ‖ := by
+      dsimp only [k]
+      rw [norm_div]
+      <;> rfl
+    have h552 : M ≤ (1 / c) * ‖melinTransform hT.toTestFunction ρ‖ := by
+      have h : c * M ≤ ‖melinTransform hT.toTestFunction ρ‖ := hT_lower
+      have h' : 0 < c := hc_pos
+      have h'' : c ≠ 0 := h'.ne'
+      have h_eq : (1 / c) * (c * M) = M := by
+        field_simp [h''] <;> ring
+      calc
+        M = (1 / c) * (c * M) := h_eq.symm
+        _ ≤ (1 / c) * ‖melinTransform hT.toTestFunction ρ‖ := by gcongr
+    have h553 : ‖k‖ * M ≤ (1 / c) * max ‖wρ‖ 1 := by
+      rw [h551]
+      have h : (‖wρ‖ / ‖melinTransform hT.toTestFunction ρ‖) * M = ‖wρ‖ * (M / ‖melinTransform hT.toTestFunction ρ‖) := by ring
+      rw [h]
+      have h2 : M / ‖melinTransform hT.toTestFunction ρ‖ ≤ 1 / c := by
+        calc
+          M / ‖melinTransform hT.toTestFunction ρ‖
+            ≤ ((1 / c) * ‖melinTransform hT.toTestFunction ρ‖) / ‖melinTransform hT.toTestFunction ρ‖ := by gcongr
+          _ = 1 / c := by
+            field_simp [h_pos1.ne'] <;> ring
+      have h3 : ‖wρ‖ * (M / ‖melinTransform hT.toTestFunction ρ‖) ≤ ‖wρ‖ * (1 / c) := by
+        gcongr
+      have h4 : ‖wρ‖ * (1 / c) ≤ (1 / c) * max ‖wρ‖ 1 := by
+        have h5 : ‖wρ‖ ≤ max ‖wρ‖ 1 := le_max_left ‖wρ‖ 1
+        have h6 : 0 < 1 / c := by positivity
+        calc
+          ‖wρ‖ * (1 / c) ≤ (max ‖wρ‖ 1) * (1 / c) := by gcongr
+          _ = (1 / c) * max ‖wρ‖ 1 := by ring
+      calc
+        ‖wρ‖ * (M / ‖melinTransform hT.toTestFunction ρ‖) ≤ ‖wρ‖ * (1 / c) := h3
+        _ ≤ (1 / c) * max ‖wρ‖ 1 := h4
+    have h55 : ‖k‖ * M ≤ (1 / c) * max ‖wρ‖ 1 := h553
+    exact mul_le_mul_of_nonneg_left h54 (by positivity) |>.trans h55
+  exact ⟨h, h3, h1, h2, h4, h5⟩
+
+
+
+
 /-- 最小导数范数统一界（定理，由对偶范数下界 + 最小范数原理推出）： -/
 theorem mellin_smooth_min_derivative_norm_uniform (ρ : ℂ) (wρ : ℂ) :
     _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →

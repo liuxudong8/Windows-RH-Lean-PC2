@@ -6,12 +6,19 @@
 
 import Mathlib.MeasureTheory.Integral.CircleIntegral
 import Mathlib.NumberTheory.LSeries.RiemannZeta
+import Mathlib.NumberTheory.LSeries.Dirichlet
+import Mathlib.NumberTheory.LSeries.Deriv
+import Mathlib.NumberTheory.ArithmeticFunction.VonMangoldt
+import Mathlib.NumberTheory.EulerProduct.Basic
+import Mathlib.NumberTheory.EulerProduct.DirichletLSeries
 import Mathlib.Analysis.Calculus.Deriv.Basic
 import OrderPreservingBijection.BasicInfrastructure
 import OrderPreservingBijection.MellinInfrastructure
 import OrderPreservingBijection.ZetaZeros
 
 namespace OrderPreservingBijection
+
+open ArithmeticFunction.vonMangoldt
 
 /-- 围道半径（def）：Weil 显式公式中使用的圆围道半径。
     以 1/2 为中心。具体值不影响结论（围道积分形变不变性），取 1 简化。
@@ -126,5 +133,63 @@ axiom primeDirichlet_zetaLogDerivative_diff_holomorphic (f : TestFunction) :
     (∀ s ∈ Metric.ball (1 / 2 : ℂ) contourRadius,
       DifferentiableAt ℂ (fun s => (primeDirichletSeries s - zetaLogDerivative s) * melinTransform f s) s) ∧
     CircleIntegrable (fun s => (primeDirichletSeries s - zetaLogDerivative s) * melinTransform f s) (1 / 2 : ℂ) contourRadius
+
+/-- primeDirichletSeries 等于 Nat.Primes 上的求和（引理）：
+    primeDirichletSeries s = ∑' p : Nat.Primes, (Real.log (p : ℝ) : ℂ) * (p : ℂ) ^ (-s) / (1 - (p : ℂ) ^ (-s))
+    证明：用 tsum_subtype_eq_of_support_subset 把 ℕ 上的 if-sum 改写成 Nat.Primes 上的 sum。 -/
+lemma primeDirichletSeries_eq_tsum_primes (s : ℂ) :
+    primeDirichletSeries s =
+    ∑' p : Nat.Primes, (Real.log ((p : ℕ) : ℝ) : ℂ) * ((p : ℕ) : ℂ) ^ (-s) / (1 - ((p : ℕ) : ℂ) ^ (-s)) := by
+  rw [primeDirichletSeries]
+  let f : ℕ → ℂ := fun p => if Nat.Prime p then (Real.log (p : ℝ) : ℂ) * (p : ℂ) ^ (-s) / (1 - (p : ℂ) ^ (-s)) else 0
+  have h_support : Function.support f ⊆ {p : ℕ | Nat.Prime p} := by
+    intro p hp
+    have hfp : f p ≠ 0 := (Function.mem_support.mp hp)
+    by_cases hprime : Nat.Prime p
+    · exact hprime
+    · have h : f p = 0 := by
+        simp [f, hprime]
+      contradiction
+  have h : (∑' p : {p : ℕ // Nat.Prime p}, f p) = ∑' p : ℕ, f p := by
+    exact tsum_subtype_eq_of_support_subset h_support
+  have h' : (∑' p : ℕ, f p) = ∑' p : {p : ℕ // Nat.Prime p}, f p := h.symm
+  rw [h']
+  have h2 : (∑' p : {p : ℕ // Nat.Prime p}, f p) =
+      ∑' p : Nat.Primes, (Real.log ((p : ℕ) : ℝ) : ℂ) * ((p : ℕ) : ℂ) ^ (-s) / (1 - ((p : ℕ) : ℂ) ^ (-s)) := by
+    congr with (p : {p : ℕ // Nat.Prime p})
+    simpa [f, p.prop] using rfl
+  exact h2
+
+/-- Step 3: 几何级数求和（从 k=1 开始）。
+    ∑' k : ℕ, x^(k+1) = x / (1 - x)，当 ‖x‖ < 1。
+    证明：利用 mathlib 的 tsum_geometric_of_norm_lt_one。 -/
+lemma geometric_sum_from_one (x : ℂ) (h : ‖x‖ < 1) :
+    ∑' k : ℕ, x ^ (k + 1) = x / (1 - x) := by
+  have h_summable : Summable (fun k : ℕ => x ^ k) := summable_geometric_of_norm_lt_one h
+  have h_main : ∑' k : ℕ, x ^ (k + 1) = x * ∑' k : ℕ, x ^ k := by
+    have h1 : ∑' k : ℕ, x ^ (k + 1) = ∑' k : ℕ, x ^ k * x := by
+      congr with k
+      <;> ring
+    rw [h1]
+    have h2 : ∑' k : ℕ, x ^ k * x = (∑' k : ℕ, x ^ k) * x := by
+      simpa [tsum_mul_right] using rfl
+    rw [h2] <;> ring
+  rw [h_main]
+  have h_geom : ∑' k : ℕ, x ^ k = (1 - x)⁻¹ := tsum_geometric_of_norm_lt_one h
+  rw [h_geom]
+  <;> field_simp <;> ring
+
+/-- primeDirichletSeries 等于 von Mangoldt 函数的 L 级数（定理）：
+    在 Re(s) > 1 时，primeDirichletSeries s = ∑_n Λ(n) n^{-s}。
+    证明：利用 mathlib 中的 LSeries_vonMangoldt_eq_deriv_riemannZeta_div 定理，
+    von Mangoldt 函数的 L 级数等于 ζ 函数的负对数导数，
+    而 primeDirichletSeries s = ∑_p (log p) p^{-s} / (1 - p^{-s}) = -ζ'/ζ(s)。 -/
+theorem primeDirichletSeries_eq_LSeries_vonMangoldt (s : ℂ) (hs : 1 < s.re) :
+    primeDirichletSeries s = LSeries (fun n : ℕ => (ArithmeticFunction.vonMangoldt n : ℂ)) s := by
+  have h1 : (LSeries (fun n : ℕ => (ArithmeticFunction.vonMangoldt n : ℂ)) s) = - deriv _root_.riemannZeta s / _root_.riemannZeta s := by
+    exact ArithmeticFunction.LSeries_vonMangoldt_eq_deriv_riemannZeta_div hs
+  have h2 : primeDirichletSeries s = - deriv _root_.riemannZeta s / _root_.riemannZeta s := by
+    sorry
+  rw [h1, h2]
 
 end OrderPreservingBijection
