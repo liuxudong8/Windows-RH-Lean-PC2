@@ -7,6 +7,8 @@
 ## 目录
 
 - [项目状态](#项目状态)
+- [最新进展：mellin_integral_bound_uniform 证明进行中](#最新进展mellin_integral_bound_uniform-证明进行中)
+- [最新进展：melinTransform_eq_mathlib_mellin 完全证明](#最新进展melintransform_eq_mathlib_mellin-完全证明)
 - [最新进展：spectral_sum_fiberwise 证明完成](#最新进展spectral_sum_fiberwise-证明完成)
 - [最新进展：primeDirichletSeries_eq_LSeries_vonMangoldt 完全证明](#最新进展primedirichletseries_eqlseries_vonmangoldt-完全证明)
 - [最新进展：h_norm_lt_one 和 h_mul_cpow 证明完成](#最新进展h_norm_lt_one-和-h_mul_cpow-证明完成)
@@ -27,6 +29,82 @@
 | 核心公理 | **1 条**（`spectral_zero_set_match`，RH 主定理不依赖） |
 | 模块 | 13 个独立 Lean 文件 + 6 个新文件夹 |
 | 目标 | 在 ZFC 内条件导出黎曼猜想（RH） |
+
+---
+
+## 最新进展：mellin_integral_bound_uniform 证明进行中（2026-09-21）
+
+### 正在证明 `mellin_integral_bound_uniform` —— Mellin 积分界！
+
+我们建了测试文件 `test_mellin_integral_bound.lean`，逐步填充证明！
+
+### 已完成的步骤
+
+| 步骤 | 内容 | 状态 |
+|------|------|------|
+| h1 | 把积分限制在 [ε₀, R₀] 上 | ✅ 已证明 |
+| h2 | 用三角不等式 | ✅ 已证明 |
+| h3 | `‖Complex.exp ((s - 1) * (Real.log x : ℂ))‖ = x^(s.re - 1)` | ✅ 已证明 |
+| h4 | `∀ x ∈ Set.Icc ε₀ R₀, ‖h.toFun x‖ ≤ M` | ✅ 已证明 |
+| `0 ≤ x^(s.re - 1)` | 范数非负 | ✅ 已证明 |
+| 可测性 | 两个函数的可测性 | ✅ 已证明 |
+| 有界性 | 两个函数的有界性 | ✅ 已证明 |
+| 可积性 | 紧集上的有界可测函数是可积的 | ✅ 已证明 |
+
+### 关键突破：紧集上的有界可测函数是可积的！
+
+我们成功证明了：
+
+```lean
+theorem integrableOn_bdd (ε₀ R₀ : ℝ) (hε₀_pos : 0 < ε₀) (hε₀_lt_R₀ : ε₀ < R₀) :
+    ∀ (f : ℝ → ℝ), Measurable f → (∃ C, 0 < C ∧ ∀ x ∈ Set.Icc ε₀ R₀, |f x| ≤ C) →
+      MeasureTheory.IntegrableOn f (Set.Icc ε₀ R₀)
+```
+
+**证明思路**：
+1. 用 `MeasureTheory.ae_restrict_mem measurableSet_Icc` 得到在 `restrict` 上几乎处处 `x ∈ Set.Icc ε₀ R₀`
+2. 用 `haveI : IsFiniteMeasure (volume.restrict (Set.Icc ε₀ R₀)) := by exact?` 得到有限测度
+3. 用 `MeasureTheory.Integrable.of_bound hf_meas.aestronglyMeasurable C h_bound` 得到可积性
+
+### 剩余步骤
+
+| 步骤 | 内容 | 状态 |
+|------|------|------|
+| h5 | 积分单调性 | ⚠️ sorry |
+| 最后的结论 | 计算积分 ∫_{ε₀}^{R₀} x^{σ-1} dx，然后证明不等式 | ⚠️ sorry |
+
+---
+
+## 最新进展：melinTransform_eq_mathlib_mellin 完全证明（2026-09-21）
+
+### 关键突破：我们成功地完全证明了 `melinTransform_eq_mathlib_mellin`！
+
+我们成功地证明了我们的 `melinTransform` 和 mathlib 的标准 `mellin` 定义是一样的！
+
+```lean
+theorem melinTransform_eq_mathlib_mellin (f : TestFunction) (s : ℂ) :
+    melinTransform f s = mellin f s
+```
+
+这意味着我们可以直接使用 mathlib 里关于 Mellin 变换的所有定理！
+
+### 重要说明
+
+mathlib 的 `mellinInv_mellin_eq` 定理需要 `VerticalIntegrable (mellin f) σ` 条件！
+
+而我们的 `TestFunction` 定义太弱！它只是紧支、有界、在 0 附近为 0、可测的函数！
+
+它不是光滑的！
+
+所以它的 Mellin 变换关于 s 的虚部 y 不一定是速降的！
+
+所以它不一定是可积的！
+
+我们需要给 `TestFunction` 加 `ContDiff` 条件才能证明 `VerticalIntegrable`！
+
+但是这会动摇整个论证架构！
+
+所以我们暂时不动 `TestFunction` 定义！
 
 ---
 

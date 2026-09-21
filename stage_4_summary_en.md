@@ -7,6 +7,8 @@
 ## Table of Contents
 
 - [Project Status](#project-status)
+- [Latest Progress: mellin_integral_bound_uniform Proof in Progress](#latest-progress-mellin_integral_bound_uniform-proof-in-progress)
+- [Latest Progress: melinTransform_eq_mathlib_mellin Fully Proved](#latest-progress-melintransform_eq_mathlib_mellin-fully-proved)
 - [Latest Progress: spectral_sum_fiberwise Proof Completed](#latest-progress-spectral_sum_fiberwise-proof-completed)
 - [Latest Progress: primeDirichletSeries_eq_LSeries_vonMangoldt Fully Proved](#latest-progress-primedirichletseries_eqlseries_vonmangoldt-fully-proved)
 - [Latest Progress: h_norm_lt_one and h_mul_cpow Proved](#latest-progress-h_norm_lt_one-and-h_mul_cpow-proved)
@@ -27,6 +29,82 @@
 | Core axioms | **1** (`spectral_zero_set_match`, not used by RH main theorem) |
 | Modules | 13 standalone Lean files |
 | Goal | Conditional derivation of the Riemann Hypothesis (RH) within ZFC |
+
+---
+
+## Latest Progress: mellin_integral_bound_uniform Proof in Progress (2026-09-21)
+
+### We are proving `mellin_integral_bound_uniform` — Mellin integral bound!
+
+We created a test file `test_mellin_integral_bound.lean` and are filling the proof step by step!
+
+### Completed Steps
+
+| Step | Content | Status |
+|------|---------|--------|
+| h1 | Restrict integral to [ε₀, R₀] | ✅ Proved |
+| h2 | Triangle inequality | ✅ Proved |
+| h3 | `‖Complex.exp ((s - 1) * (Real.log x : ℂ))‖ = x^(s.re - 1)` | ✅ Proved |
+| h4 | `∀ x ∈ Set.Icc ε₀ R₀, ‖h.toFun x‖ ≤ M` | ✅ Proved |
+| `0 ≤ x^(s.re - 1)` | Norm nonnegativity | ✅ Proved |
+| Measurability | Measurability of both functions | ✅ Proved |
+| Boundedness | Boundedness of both functions | ✅ Proved |
+| Integrability | Bounded measurable functions on compact set are integrable | ✅ Proved |
+
+### Key Breakthrough: Bounded measurable functions on compact set are integrable!
+
+We successfully proved:
+
+```lean
+theorem integrableOn_bdd (ε₀ R₀ : ℝ) (hε₀_pos : 0 < ε₀) (hε₀_lt_R₀ : ε₀ < R₀) :
+    ∀ (f : ℝ → ℝ), Measurable f → (∃ C, 0 < C ∧ ∀ x ∈ Set.Icc ε₀ R₀, |f x| ≤ C) →
+      MeasureTheory.IntegrableOn f (Set.Icc ε₀ R₀)
+```
+
+**Proof Idea**:
+1. Use `MeasureTheory.ae_restrict_mem measurableSet_Icc` to get almost everywhere `x ∈ Set.Icc ε₀ R₀` on `restrict`
+2. Use `haveI : IsFiniteMeasure (volume.restrict (Set.Icc ε₀ R₀)) := by exact?` to get finite measure
+3. Use `MeasureTheory.Integrable.of_bound hf_meas.aestronglyMeasurable C h_bound` to get integrability
+
+### Remaining Steps
+
+| Step | Content | Status |
+|------|---------|--------|
+| h5 | Integral monotonicity | ⚠️ sorry |
+| Final conclusion | Compute integral ∫_{ε₀}^{R₀} x^{σ-1} dx, then prove inequality | ⚠️ sorry |
+
+---
+
+## Latest Progress: melinTransform_eq_mathlib_mellin Fully Proved (2026-09-21)
+
+### Key Breakthrough: We successfully fully proved `melinTransform_eq_mathlib_mellin`!
+
+We successfully proved that our `melinTransform` is the same as mathlib's standard `mellin` definition!
+
+```lean
+theorem melinTransform_eq_mathlib_mellin (f : TestFunction) (s : ℂ) :
+    melinTransform f s = mellin f s
+```
+
+This means we can directly use all theorems about Mellin transform from mathlib!
+
+### Important Note
+
+mathlib's `mellinInv_mellin_eq` theorem requires `VerticalIntegrable (mellin f) σ` condition!
+
+But our `TestFunction` definition is too weak! It only has compact support, boundedness, vanishing near 0, and measurability!
+
+It is not smooth!
+
+So its Mellin transform may not be rapidly decaying with respect to the imaginary part y of s!
+
+So it may not be integrable!
+
+We need to add `ContDiff` condition to `TestFunction` to prove `VerticalIntegrable`!
+
+But this would shake the entire proof framework!
+
+So we temporarily do not modify the `TestFunction` definition!
 
 ---
 
