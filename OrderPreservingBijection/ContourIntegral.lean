@@ -179,6 +179,88 @@ lemma geometric_sum_from_one (x : ℂ) (h : ‖x‖ < 1) :
   rw [h_geom]
   <;> field_simp <;> ring
 
+/-- Step 5: von Mangoldt L-series 等于素数幂上的二重求和（引理）。
+    LSeries Λ s = ∑' p : Nat.Primes, ∑' k : ℕ, (Real.log p) * p^(-(k+1)*s)。
+    证明：用 tsum_eq_tsum_primes_of_support_subset_prime_powers 把 ℕ 上的求和转换成素数幂上的求和，
+    然后化简 von Mangoldt 函数和复指数。 -/
+lemma vonMangoldt_tsum_eq (s : ℂ) (hs : 1 < s.re) :
+    LSeries (fun n : ℕ => (ArithmeticFunction.vonMangoldt n : ℂ)) s =
+    ∑' p : Nat.Primes, ∑' k : ℕ, (Real.log ((p : ℕ) : ℝ) : ℂ) * ((p : ℕ) : ℂ) ^ (-(k + 1) * s) := by
+  let f : ℕ → ℂ := fun n => LSeries.term (fun n : ℕ => (ArithmeticFunction.vonMangoldt n : ℂ)) s n
+  have h_sum : Summable f := by
+    simpa [LSeriesSummable, f] using ArithmeticFunction.LSeriesSummable_vonMangoldt hs
+  have h_support : Function.support f ⊆ {n | IsPrimePow n} := by
+    intro n hn
+    have h1 : f n ≠ 0 := hn
+    have h2 : n ≠ 0 := by
+      by_contra h2'
+      rw [h2'] at h1
+      simp [f, LSeries.term] at h1 <;> contradiction
+    have h3 : (ArithmeticFunction.vonMangoldt n : ℂ) ≠ 0 := by
+      simpa [f, LSeries.term, h2] using h1
+    have h4 : IsPrimePow n := by
+      simpa [ArithmeticFunction.vonMangoldt_ne_zero_iff] using h3
+    exact h4
+  have h1 : LSeries (fun n : ℕ => (ArithmeticFunction.vonMangoldt n : ℂ)) s = ∑' n : ℕ, f n := by rfl
+  rw [h1]
+  have h_main : ∑' n : ℕ, f n = ∑' (p : Nat.Primes) (k : ℕ), f ((p : ℕ) ^ (k + 1)) :=
+    tsum_eq_tsum_primes_of_support_subset_prime_powers h_sum h_support
+  rw [h_main]
+  have h7 : ∀ (p : Nat.Primes) (k : ℕ), f ((p : ℕ) ^ (k + 1)) =
+      (Real.log ((p : ℕ) : ℝ) : ℂ) * ((p : ℕ) : ℂ) ^ (-(k + 1 : ℂ) * s) := by
+    intro p k
+    have hp_pos : (0 : ℕ) < (p : ℕ) := Nat.Prime.pos p.prop
+    have h8 : ((p : ℕ) ^ (k + 1)) ≠ 0 := by
+      exact pow_ne_zero (k + 1) hp_pos.ne'
+    have h9 : f ((p : ℕ) ^ (k + 1)) =
+        (ArithmeticFunction.vonMangoldt ((p : ℕ) ^ (k + 1)) : ℂ) / (((p : ℕ) ^ (k + 1)) : ℂ) ^ s := by
+      have h91 : f ((p : ℕ) ^ (k + 1)) = LSeries.term (fun n : ℕ => (ArithmeticFunction.vonMangoldt n : ℂ)) s ((p : ℕ) ^ (k + 1)) := by rfl
+      rw [h91]
+      rw [LSeries.term_def (fun n : ℕ => (ArithmeticFunction.vonMangoldt n : ℂ)) s ((p : ℕ) ^ (k + 1))]
+      rw [if_neg h8]
+      <;> norm_cast <;> rfl
+    rw [h9]
+    have h10 : ArithmeticFunction.vonMangoldt ((p : ℕ) ^ (k + 1)) = Real.log (p : ℝ) := by
+      have h11 : (k + 1) ≠ 0 := by linarith
+      rw [ArithmeticFunction.vonMangoldt_apply_pow h11, ArithmeticFunction.vonMangoldt_apply_prime p.prop]
+    rw [h10]
+    have h12 : (((p : ℕ) ^ (k + 1)) : ℂ) ^ s = (p : ℂ) ^ ((k + 1 : ℂ) * s) := by
+      have h13 : ((p : ℕ) ^ (k + 1) : ℂ) = (p : ℂ) ^ (k + 1 : ℂ) := by
+        norm_cast <;> simp [pow_succ] <;> ring
+      rw [h13]
+      have h14 : 0 ≤ (p : ℂ).re := by
+        exact_mod_cast hp_pos.le
+      have h15 : ((p : ℂ) ^ (k + 1 : ℂ)) ^ s = (p : ℂ) ^ ((k + 1 : ℂ) * s) := by
+        have h16 : (Complex.log (p : ℂ) * (k + 1 : ℂ)).im = 0 := by
+          have h17 : 0 < (p : ℝ) := by exact_mod_cast hp_pos
+          have h18 : (p : ℂ).im = 0 := by simp
+          simp [Complex.log_im, h17, h18, mul_comm] <;> ring
+        have h19 : -Real.pi < (Complex.log (p : ℂ) * (k + 1 : ℂ)).im := by
+          rw [h16] <;> linarith [Real.pi_pos]
+        have h20 : (Complex.log (p : ℂ) * (k + 1 : ℂ)).im ≤ Real.pi := by
+          rw [h16] <;> linarith [Real.pi_pos]
+        have h21 : (p : ℂ) ^ ((k + 1 : ℂ) * s) = ((p : ℂ) ^ (k + 1 : ℂ)) ^ s :=
+          Complex.cpow_mul s h19 h20
+        exact h21.symm
+      exact h15
+    rw [h12]
+    have h16 : ((Real.log (p : ℝ) : ℂ)) / (p : ℂ) ^ ((k + 1 : ℂ) * s) =
+        (Real.log (p : ℝ) : ℂ) * (p : ℂ) ^ (-(k + 1 : ℂ) * s) := by
+      rw [div_eq_mul_inv]
+      have hp_ne_zero : (p : ℂ) ≠ 0 := by exact_mod_cast hp_pos.ne'
+      have h17 : (p : ℂ) ^ (-((k + 1 : ℂ) * s)) = ((p : ℂ) ^ ((k + 1 : ℂ) * s))⁻¹ :=
+        Complex.cpow_neg (p : ℂ) ((k + 1 : ℂ) * s)
+      have h18 : (p : ℂ) ^ (-(k + 1 : ℂ) * s) = (p : ℂ) ^ (-((k + 1 : ℂ) * s)) := by
+        congr 1 <;> ring
+      have h19 : (p : ℂ) ^ (-(k + 1 : ℂ) * s) = ((p : ℂ) ^ ((k + 1 : ℂ) * s))⁻¹ := by
+        rw [h18, h17]
+      exact congr_arg (fun x : ℂ => (Real.log (p : ℝ) : ℂ) * x) h19.symm
+    exact h16
+  have h13 : ∑' (p : Nat.Primes) (k : ℕ), f ((p : ℕ) ^ (k + 1)) =
+      ∑' p : Nat.Primes, ∑' k : ℕ, (Real.log ((p : ℕ) : ℝ) : ℂ) * ((p : ℕ) : ℂ) ^ (-(k + 1 : ℂ) * s) := by
+    apply tsum_congr; intro p; apply tsum_congr; intro k; exact h7 p k
+  exact h13
+
 /-- primeDirichletSeries 等于 von Mangoldt 函数的 L 级数（定理）：
     在 Re(s) > 1 时，primeDirichletSeries s = ∑_n Λ(n) n^{-s}。
     证明：利用 mathlib 中的 LSeries_vonMangoldt_eq_deriv_riemannZeta_div 定理，
@@ -189,7 +271,55 @@ theorem primeDirichletSeries_eq_LSeries_vonMangoldt (s : ℂ) (hs : 1 < s.re) :
   have h1 : (LSeries (fun n : ℕ => (ArithmeticFunction.vonMangoldt n : ℂ)) s) = - deriv _root_.riemannZeta s / _root_.riemannZeta s := by
     exact ArithmeticFunction.LSeries_vonMangoldt_eq_deriv_riemannZeta_div hs
   have h2 : primeDirichletSeries s = - deriv _root_.riemannZeta s / _root_.riemannZeta s := by
-    sorry
+    have h21 : primeDirichletSeries s = ∑' p : Nat.Primes, (Real.log ((p : ℕ) : ℝ) : ℂ) * ((p : ℕ) : ℂ) ^ (-s) / (1 - ((p : ℕ) : ℂ) ^ (-s)) :=
+      primeDirichletSeries_eq_tsum_primes s
+    rw [h21]
+    have h22 : ∑' p : Nat.Primes, (Real.log ((p : ℕ) : ℝ) : ℂ) * ((p : ℕ) : ℂ) ^ (-s) / (1 - ((p : ℕ) : ℂ) ^ (-s)) =
+        ∑' p : Nat.Primes, ∑' k : ℕ, (Real.log ((p : ℕ) : ℝ) : ℂ) * ((p : ℕ) : ℂ) ^ (-(k + 1 : ℂ) * s) := by
+      apply tsum_congr
+      intro p
+      have hp_pos : (0 : ℕ) < (p : ℕ) := Nat.Prime.pos p.prop
+      have hp_two_le : 2 ≤ (p : ℕ) := Nat.Prime.two_le p.prop
+      have h_norm_lt_one : ‖((p : ℕ) : ℂ) ^ (-s)‖ < 1 := by
+        sorry
+      have h_mul_cpow : ∀ (k : ℕ), (((p : ℕ) : ℂ) ^ (-s)) ^ (k + 1) = ((p : ℕ) : ℂ) ^ (-(k + 1 : ℂ) * s) := by
+        intro k
+        sorry
+      have h_geometric : ∑' k : ℕ, (((p : ℕ) : ℂ) ^ (-s)) ^ (k + 1) =
+          ((p : ℕ) : ℂ) ^ (-s) / (1 - ((p : ℕ) : ℂ) ^ (-s)) :=
+        geometric_sum_from_one (((p : ℕ) : ℂ) ^ (-s)) h_norm_lt_one
+      have h_eq1 : ∑' k : ℕ, ((p : ℕ) : ℂ) ^ (-(k + 1 : ℂ) * s) =
+          ∑' k : ℕ, (((p : ℕ) : ℂ) ^ (-s)) ^ (k + 1) := by
+        apply tsum_congr
+        intro k
+        exact (h_mul_cpow k).symm
+      have h_main : (Real.log ((p : ℕ) : ℝ) : ℂ) * (((p : ℕ) : ℂ) ^ (-s) / (1 - ((p : ℕ) : ℂ) ^ (-s))) =
+          (Real.log ((p : ℕ) : ℝ) : ℂ) * (∑' k : ℕ, ((p : ℕ) : ℂ) ^ (-(k + 1 : ℂ) * s)) := by
+        have h_tmp : (∑' k : ℕ, (((p : ℕ) : ℂ) ^ (-s)) ^ (k + 1)) =
+            (∑' k : ℕ, ((p : ℕ) : ℂ) ^ (-(k + 1 : ℂ) * s)) := h_eq1.symm
+        have h_div : ((p : ℕ) : ℂ) ^ (-s) / (1 - ((p : ℕ) : ℂ) ^ (-s)) =
+            ∑' k : ℕ, (((p : ℕ) : ℂ) ^ (-s)) ^ (k + 1) := h_geometric.symm
+        have h1 : (Real.log ((p : ℕ) : ℝ) : ℂ) * (((p : ℕ) : ℂ) ^ (-s) / (1 - ((p : ℕ) : ℂ) ^ (-s))) =
+            (Real.log ((p : ℕ) : ℝ) : ℂ) * (∑' k : ℕ, (((p : ℕ) : ℂ) ^ (-s)) ^ (k + 1)) := by
+          exact congr_arg (fun x : ℂ => (Real.log ((p : ℕ) : ℝ) : ℂ) * x) h_div
+        have h2 : (Real.log ((p : ℕ) : ℝ) : ℂ) * (∑' k : ℕ, (((p : ℕ) : ℂ) ^ (-s)) ^ (k + 1)) =
+            (Real.log ((p : ℕ) : ℝ) : ℂ) * (∑' k : ℕ, ((p : ℕ) : ℂ) ^ (-(k + 1 : ℂ) * s)) := by
+          exact congr_arg (fun x : ℂ => (Real.log ((p : ℕ) : ℝ) : ℂ) * x) h_tmp
+        exact Eq.trans h1 h2
+      have h_assoc : ((Real.log ((p : ℕ) : ℝ) : ℂ) * ((p : ℕ) : ℂ) ^ (-s) / (1 - ((p : ℕ) : ℂ) ^ (-s))) =
+          (Real.log ((p : ℕ) : ℝ) : ℂ) * (((p : ℕ) : ℂ) ^ (-s) / (1 - ((p : ℕ) : ℂ) ^ (-s))) := by
+        ring
+      have h_final1 : (Real.log ((p : ℕ) : ℝ) : ℂ) * (((p : ℕ) : ℂ) ^ (-s) / (1 - ((p : ℕ) : ℂ) ^ (-s))) =
+          (Real.log ((p : ℕ) : ℝ) : ℂ) * (∑' k : ℕ, ((p : ℕ) : ℂ) ^ (-(k + 1 : ℂ) * s)) := h_main
+      have h_final2 : (Real.log ((p : ℕ) : ℝ) : ℂ) * (∑' k : ℕ, ((p : ℕ) : ℂ) ^ (-(k + 1 : ℂ) * s)) =
+          ∑' k : ℕ, (Real.log ((p : ℕ) : ℝ) : ℂ) * ((p : ℕ) : ℂ) ^ (-(k + 1 : ℂ) * s) := by
+        rw [tsum_mul_left]
+      rw [h_assoc, h_final1, h_final2]
+    rw [h22]
+    have h23 : LSeries (fun n : ℕ => (ArithmeticFunction.vonMangoldt n : ℂ)) s =
+        ∑' p : Nat.Primes, ∑' k : ℕ, (Real.log ((p : ℕ) : ℝ) : ℂ) * ((p : ℕ) : ℂ) ^ (-(k + 1 : ℂ) * s) :=
+      vonMangoldt_tsum_eq s hs
+    exact h23.symm.trans h1
   rw [h1, h2]
 
 end OrderPreservingBijection

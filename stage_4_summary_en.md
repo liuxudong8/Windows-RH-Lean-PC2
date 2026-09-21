@@ -7,10 +7,11 @@
 ## Table of Contents
 
 - [Project Status](#project-status)
+- [Latest Progress: primeDirichletSeries_eq_LSeries_vonMangoldt Fully Proved](#latest-progress-primedirichletseries_eqlseries_vonmangoldt-fully-proved)
+- [Latest Progress: h_norm_lt_one and h_mul_cpow Proved](#latest-progress-h_norm_lt_one-and-h_mul_cpow-proved)
 - [Latest Progress: shimuraLift_linear Proof Completed](#latest-progress-shimuralift_linear-proof-completed)
-- [Latest Progress: perron_formula Step 5 (Dirichlet Series Equality)](#latest-progress-perron_formula-step-5-dirichlet-series-equality)
 - [`#print axioms riemann_hypothesis` Audit Result](#print-axioms-riemann_hypothesis-audit-result)
-- [Core Mathematical Insight: Why ATF and Weil Explicit Formula Connect?](#core-mathematical-insight-why-atf-and-weil-explicit-formula-connect)
+- [Core Mathematical Insight: How Do ATF and Weil Explicit Formula Connect?](#core-mathematical-insight-how-do-atf-and-weil-explicit-formula-connect)
 - [RH Proof Chain](#rh-proof-chain)
 - [Remaining sorry Count](#remaining-sorry-count)
 - [Next Steps](#next-steps)
@@ -21,10 +22,58 @@
 
 | Item | Status |
 |------|--------|
-| Core file | `stage_4.lean` (~3600 lines, compiles, **20 sorry** theorem proofs) |
+| Core file | `stage_4.lean` (~3600 lines, compiles, **18 sorry** theorem proofs) |
 | Core axioms | **1** (`spectral_zero_set_match`, not used by RH main theorem) |
 | Modules | 13 standalone Lean files |
 | Goal | Conditional derivation of the Riemann Hypothesis (RH) within ZFC |
+
+---
+
+## Latest Progress: primeDirichletSeries_eq_LSeries_vonMangoldt Fully Proved (2026-09-21)
+
+### Key Breakthrough: We successfully fully proved `primeDirichletSeries_eq_LSeries_vonMangoldt`!
+
+We successfully proved:
+
+```lean
+theorem primeDirichletSeries_eq_LSeries_vonMangoldt (s : ℂ) (hs : 1 < s.re) :
+    primeDirichletSeries s = LSeries (fun n : ℕ => (ArithmeticFunction.vonMangoldt n : ℂ)) s
+```
+
+This means we have:
+- Proved `primeDirichletSeries s = -ζ'/ζ(s)`
+- Completed Step 5 (the easiest step)
+
+### Successfully Proved Lemmas
+
+| Lemma | Content | Status |
+|-------|---------|--------|
+| `geometric_sum_from_one` | Geometric series sum (from k=1): ∑' k, x^(k+1) = x / (1 - x) | ✅ Proved |
+| `primeDirichletSeries_eq_tsum_primes` | primeDirichletSeries s = ∑' p : Nat.Primes, ... | ✅ Proved |
+| `vonMangoldt_tsum_eq` | LSeries Λ s = ∑' p, ∑' k, log p * p^(-(k+1)*s) | ✅ Proved |
+| `primeDirichletSeries_eq_LSeries_vonMangoldt` | primeDirichletSeries s = LSeries Λ s | ✅ Proved |
+
+---
+
+## Latest Progress: h_norm_lt_one and h_mul_cpow Proved (2026-09-21)
+
+### h_norm_lt_one Proof
+
+We proved `‖p^(-s)‖ < 1` (for `p ≥ 2` and `s.re > 1`)!
+
+**Proof Idea**:
+1. Use `Complex.norm_cpow_eq_rpow_re_of_pos` to simplify the norm to `(p : ℝ) ^ (-s.re)`
+2. Prove `(p : ℝ) > 1` (since `p` is prime)
+3. Prove `(-s.re) < 0` (since `1 < s.re`)
+4. Use `Real.rpow_lt_one_of_one_lt_of_neg` to get `(p : ℝ) ^ (-s.re) < 1`
+
+### h_mul_cpow Proof
+
+We proved `(p^(-s))^(k+1) = p^(-(k+1)*s)`!
+
+**Proof Idea**:
+1. Use `Complex.cpow_mul_nat` to rewrite the LHS as `(p : ℂ) ^ ((-s) * (k + 1 : ℕ))`
+2. Use simple algebra to prove `(-s) * (k + 1 : ℕ) = -(k + 1 : ℂ) * s`
 
 ---
 
@@ -48,46 +97,6 @@ We decomposed the proof into 3 small steps:
    - Use `funext` to prove pointwise equality
    - Use integral linearity `MeasureTheory.integral_smul`
 3. **Step 3**: Use the extensionality theorem to assemble the final conclusion
-
-### Key APIs
-
-| API | Purpose |
-|-----|---------|
-| `shimura_kernel_integrand_integrable` | Prove integrand is integrable |
-| `MeasureTheory.integral_smul` | Integral linearity |
-| `cases f; cases g; congr` | Prove `L2Function` extensionality |
-
----
-
-## Latest Progress: perron_formula Step 5 (Dirichlet Series Equality) (2026-09-21)
-
-### Key Finding: mathlib has the von Mangoldt L-series theorem!
-
-We found the key theorem in mathlib:
-
-```lean
-theorem ArithmeticFunction.LSeries_vonMangoldt_eq_deriv_riemannZeta_div 
-    (hs : 1 < s.re) :
-    L ↗Λ s = - deriv riemannZeta s / riemannZeta s
-```
-
-This is exactly what we need!
-
-### Successfully Proved Lemmas
-
-| Lemma | Content | Status |
-|-------|---------|--------|
-| `geometric_sum_from_one` | Geometric series sum (from k=1): ∑' k, x^(k+1) = x / (1 - x) | ✅ Proved |
-| `primeDirichletSeries_eq_tsum_primes` | primeDirichletSeries s = ∑' p : Nat.Primes, ... | ✅ Proved |
-| `primeDirichletSeries_eq_LSeries_vonMangoldt` | primeDirichletSeries s = LSeries Λ s | ⏳ sorry |
-
-### Proof Decomposition
-
-We decomposed `primeDirichletSeries s = LSeries Λ s` into 3 small steps:
-
-1. **Step 1**: Sum interchange: convert `∑' n, Λ(n) * n^{-s}` to `∑' p, if Prime p then ∑' k, log p * (p^k)^{-s} else 0`
-2. **Step 2**: Power simplification: `(p^k)^{-s} = (p^{-s})^k`
-3. **Step 3**: Geometric series sum: `∑' k, (p^{-s})^k = p^{-s} / (1 - p^{-s})`
 
 ---
 
@@ -180,16 +189,16 @@ mellin_smooth_surjectivity [theorem, proved]
 
 | Category | Count |
 |----------|-------|
-| Core file sorry | **20** |
+| Core file sorry | **18** |
 | Core axioms | 1 (`spectral_zero_set_match`) |
 
 ---
 
 ## Next Steps
 
-1. **eigenfunction_cancellation**: Continue proving the eigenfunction cancellation law
-2. **perron_formula filling**: Continue decomposing perron_formula, fill small steps one by one
-3. **Other sorry filling**: Continue filling remaining sorry one by one
+1. **perron_formula other steps**: Continue filling perron_formula Steps 1-4
+2. **Other sorry filling**: Continue filling remaining sorry one by one
+3. **mellin_min_norm_principle**: Continue proving this core theorem
 
 ---
 

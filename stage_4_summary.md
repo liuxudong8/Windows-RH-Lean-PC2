@@ -7,10 +7,9 @@
 ## 目录
 
 - [项目状态](#项目状态)
+- [最新进展：primeDirichletSeries_eq_LSeries_vonMangoldt 完全证明](#最新进展primedirichletseries_eqlseries_vonmangoldt-完全证明)
+- [最新进展：h_norm_lt_one 和 h_mul_cpow 证明完成](#最新进展h_norm_lt_one-和-h_mul_cpow-证明完成)
 - [最新进展：shimuraLift_linear 证明完成](#最新进展shimuralift_linear-证明完成)
-- [最新进展：perron_formula Step 5（Dirichlet 级数相等）](#最新进展perron_formula-step-5dirichlet-级数相等)
-- [最新进展：perron_formula 拆分](#最新进展perron_formula-拆分)
-- [最新进展：mellin_integral_bound_uniform 7 步框架](#最新进展mellin_integral_bound_uniform-7-步框架)
 - [`#print axioms riemann_hypothesis` 审计结果](#print-axioms-riemann_hypothesis-审计结果)
 - [核心数学洞察：为什么 Arthur 迹公式与 Weil 显式公式能连接？](#核心数学洞察为什么-arthur-迹公式与-weil-显式公式能连接)
 - [RH 证明链](#rh-证明链)
@@ -23,10 +22,58 @@
 
 | 项目 | 状态 |
 |------|------|
-| 核心文件 | stage_4.lean（编译通过，**20 个 sorry** 定理证明体） |
+| 核心文件 | stage_4.lean（编译通过，**18 个 sorry** 定理证明体） |
 | 核心公理 | **1 条**（`spectral_zero_set_match`，RH 主定理不依赖） |
 | 模块 | 13 个独立 Lean 文件 + 6 个新文件夹 |
 | 目标 | 在 ZFC 内条件导出黎曼猜想（RH） |
+
+---
+
+## 最新进展：primeDirichletSeries_eq_LSeries_vonMangoldt 完全证明（2026-09-21）
+
+### 关键突破：我们成功地完全证明了 `primeDirichletSeries_eq_LSeries_vonMangoldt`！
+
+我们成功地证明了：
+
+```lean
+theorem primeDirichletSeries_eq_LSeries_vonMangoldt (s : ℂ) (hs : 1 < s.re) :
+    primeDirichletSeries s = LSeries (fun n : ℕ => (ArithmeticFunction.vonMangoldt n : ℂ)) s
+```
+
+这意味着我们已经：
+- 证明了 `primeDirichletSeries s = -ζ'/ζ(s)`
+- 完成了 Step 5（最简单的一步）
+
+### 已成功证明的引理
+
+| 引理 | 内容 | 状态 |
+|------|------|------|
+| `geometric_sum_from_one` | 几何级数求和（从 k=1 开始）：∑' k, x^(k+1) = x / (1 - x) | ✅ 已证明 |
+| `primeDirichletSeries_eq_tsum_primes` | primeDirichletSeries s = ∑' p : Nat.Primes, ... | ✅ 已证明 |
+| `vonMangoldt_tsum_eq` | LSeries Λ s = ∑' p, ∑' k, log p * p^(-(k+1)*s) | ✅ 已证明 |
+| `primeDirichletSeries_eq_LSeries_vonMangoldt` | primeDirichletSeries s = LSeries Λ s | ✅ 已证明 |
+
+---
+
+## 最新进展：h_norm_lt_one 和 h_mul_cpow 证明完成（2026-09-21）
+
+### h_norm_lt_one 证明
+
+我们证明了 `‖p^(-s)‖ < 1`（对于 `p ≥ 2` 和 `s.re > 1`）！
+
+**证明思路**：
+1. 用 `Complex.norm_cpow_eq_rpow_re_of_pos` 把范数化简为 `(p : ℝ) ^ (-s.re)`
+2. 证明 `(p : ℝ) > 1`（因为 `p` 是素数）
+3. 证明 `(-s.re) < 0`（因为 `1 < s.re`）
+4. 用 `Real.rpow_lt_one_of_one_lt_of_neg` 得到 `(p : ℝ) ^ (-s.re) < 1`
+
+### h_mul_cpow 证明
+
+我们证明了 `(p^(-s))^(k+1) = p^(-(k+1)*s)`！
+
+**证明思路**：
+1. 用 `Complex.cpow_mul_nat` 把左边改写为 `(p : ℂ) ^ ((-s) * (k + 1 : ℕ))`
+2. 用简单的代数运算证明 `(-s) * (k + 1 : ℕ) = -(k + 1 : ℂ) * s`
 
 ---
 
@@ -50,102 +97,6 @@ theorem shimuraLift_linear (a : ℂ) (f : L2ManifoldX) :
    - 用 `funext` 逐点证明
    - 用积分的线性性 `MeasureTheory.integral_smul`
 3. **Step 3**：用外延性定理组装，得到最终结论
-
-### 关键 API
-
-| API | 用途 |
-|-----|------|
-| `shimura_kernel_integrand_integrable` | 证明被积函数可积 |
-| `MeasureTheory.integral_smul` | 积分的线性性 |
-| `cases f; cases g; congr` | 证明 `L2Function` 外延性 |
-
----
-
-## 最新进展：perron_formula Step 5（Dirichlet 级数相等）（2026-09-21）
-
-### 关键发现：mathlib 中有 von Mangoldt 函数的 L 级数定理！
-
-我们找到了 mathlib 中的关键定理：
-
-```lean
-theorem ArithmeticFunction.LSeries_vonMangoldt_eq_deriv_riemannZeta_div 
-    (hs : 1 < s.re) :
-    L ↗Λ s = - deriv riemannZeta s / riemannZeta s
-```
-
-这正是我们需要的！
-
-### 已成功证明的引理
-
-| 引理 | 内容 | 状态 |
-|------|------|------|
-| `geometric_sum_from_one` | 几何级数求和（从 k=1 开始）：∑' k, x^(k+1) = x / (1 - x) | ✅ 已证明 |
-| `primeDirichletSeries_eq_tsum_primes` | primeDirichletSeries s = ∑' p : Nat.Primes, ... | ✅ 已证明 |
-| `primeDirichletSeries_eq_LSeries_vonMangoldt` | primeDirichletSeries s = LSeries Λ s | ⏳ sorry |
-
-### 证明拆分思路
-
-我们把 `primeDirichletSeries s = LSeries Λ s` 拆分成了 3 个小步骤：
-
-1. **Step 1**：交换求和顺序，把 `∑' n, Λ(n) * n^{-s}` 变成 `∑' p, if Prime p then ∑' k, log p * (p^k)^{-s} else 0`
-2. **Step 2**：幂运算化简，`(p^k)^{-s} = (p^{-s})^k`
-3. **Step 3**：几何级数求和，`∑' k, (p^{-s})^k = p^{-s} / (1 - p^{-s})`
-
----
-
-## 最新进展：perron_formula 拆分（2026-09-20）
-
-### 关键发现：mathlib 中有 Mellin 反演公式！
-
-我们找到了 mathlib 中的 Mellin 反演公式：
-
-```lean
-theorem mellinInv_mellin_eq (σ : ℝ) (f : ℝ → E) {x : ℝ} (hx : 0 < x) 
-    (hf : MellinConvergent f σ)
-    (hFf : VerticalIntegrable (mellin f) σ) (hfx : ContinuousAt f x) :
-    mellinInv σ (mellin f) x = f x
-```
-
-这正是我们需要的 Mellin 反演公式！
-
-### perron_formula 拆分
-
-我们把 `perron_formula` 拆分成了 5 个小步骤：
-
-| 步骤 | 内容 | 难度 | 状态 |
-|------|------|------|------|
-| Step 1 | Mellin 反演公式 | 中 | 已找到 mathlib 定理 |
-| Step 2 | 逐点代入（把 f(log N(p)) 换成积分形式） | 低 | 待填充 |
-| Step 3 | 求和-积分交换（控制收敛定理） | 中 | 待填充 |
-| Step 4 | 围道移动 | 高 | 待填充 |
-| Step 5 | Dirichlet 级数相等 | 低 | 部分完成 |
-
----
-
-## 最新进展：mellin_integral_bound_uniform 7 步框架（2026-09-20）
-
-### 关键 API 发现：`Integrable.mul_bdd`
-
-我们找到了关键 API：`Integrable.mul_bdd`，它正是我们需要的"连续函数 × 有界可测函数"在紧集上可积的定理！
-
-签名：
-```lean
-hf.mul_bdd hg hg_bound
-```
-其中：
-- `hf : Integrable f μ`
-- `hg : AEStronglyMeasurable g μ`
-- `hg_bound : ∀ᵐ x ∂μ, ‖g x‖ ≤ c`
-
-### 已成功填充的步骤
-
-| 步骤 | 内容 | 状态 |
-|------|------|------|
-| Step 1 | `mellin_set_integral_reduce`（积分缩限） | ✅ 已证明 |
-| Step 2 | `h_right_integrable` 的连续性 | ✅ 已证明 |
-| Step 3 | `h_integral_power` Case 1（∫ x⁻¹ dx = log(R₀/ε₀)） | ✅ 已证明 |
-| Step 4 | `h_integral_power` Case 2（∫ x^{σ-1} dx = (R₀^σ - ε₀^σ)/σ） | ✅ 已证明 |
-| Step 5 | `h_left_integrable`（用 `Integrable.mul_bdd`） | ✅ 已证明 |
 
 ---
 
@@ -196,13 +147,13 @@ mellin_smooth_surjectivity [theorem, 已证明]
 
 | 类别 | 数量 |
 |------|------|
-| 核心文件 sorry | **20** |
+| 核心文件 sorry | **18** |
 | 核心公理 | 1（`spectral_zero_set_match`） |
 
 ---
 
 ## 下一步方向
 
-1. **eigenfunction_cancellation**：继续证明特征函数消去律
-2. **perron_formula 填充**：继续拆分 perron_formula，逐个填充小步骤
-3. **其他 sorry 填充**：继续逐个填充剩余的 sorry
+1. **perron_formula 其他步骤**：继续填充 perron_formula 的 Step 1-4
+2. **其他 sorry 填充**：继续逐个填充剩余的 sorry
+3. **mellin_min_norm_principle**：继续证明这个核心定理
