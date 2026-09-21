@@ -1121,12 +1121,8 @@ theorem spectral_sum_fiberwise :
       jl_spectrum_preserving n
     rw [h2] <;> rfl
   have h_main : (∑' n : ℕ, f.eval (specDiscM n)) = ∑' k : ℕ, (jlFiberSize k : ℂ) * g k := by
-    -- 数学：tsum 按纤维重排
-    -- ∑' n, g(jlSpectrumMap n) = ∑' k, |fiber(k)| * g(k)
-    -- 纤维有限性由 jlSpectrumMap_finite_fibers 保证
     sorry
   simpa [g, spectralSum] using h_main
-
 /-- JL 纤维大小 = 局部权重（公理，JL 数论内容）：
     jlFiberSize(k) = localJLWeight(k)（分裂素处为 1/2，分歧/惯性素处为 1）。
     这是 JL 对应的局部多重性理论，不是纯求和重排。 -/

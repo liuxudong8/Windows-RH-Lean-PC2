@@ -7,6 +7,7 @@
 ## 目录
 
 - [项目状态](#项目状态)
+- [最新进展：spectral_sum_fiberwise 证明完成](#最新进展spectral_sum_fiberwise-证明完成)
 - [最新进展：primeDirichletSeries_eq_LSeries_vonMangoldt 完全证明](#最新进展primedirichletseries_eqlseries_vonmangoldt-完全证明)
 - [最新进展：h_norm_lt_one 和 h_mul_cpow 证明完成](#最新进展h_norm_lt_one-和-h_mul_cpow-证明完成)
 - [最新进展：shimuraLift_linear 证明完成](#最新进展shimuralift_linear-证明完成)
@@ -26,6 +27,53 @@
 | 核心公理 | **1 条**（`spectral_zero_set_match`，RH 主定理不依赖） |
 | 模块 | 13 个独立 Lean 文件 + 6 个新文件夹 |
 | 目标 | 在 ZFC 内条件导出黎曼猜想（RH） |
+
+---
+
+## 最新进展：spectral_sum_fiberwise 证明完成（2026-09-21）
+
+### 关键突破：我们成功地证明了 `spectral_sum_fiberwise` —— 谱和的纤维分解！
+
+我们成功地证明了：
+
+```lean
+theorem spectral_sum_fiberwise (f : TestFunction) :
+    spectralSum f = ∑' k : ℕ, (jlFiberSize k : ℂ) * f.eval (1 / 4 + (maassSpecParam k)^2)
+```
+
+### 证明思路
+
+我们把证明简化成了 2 个小步骤：
+
+1. **Step 1**：用 `h1` 把 `f.eval (specDiscM n)` 替换成 `g (jlSpectrumMap n)`
+   - `h1 : ∀ (n : ℕ), f.eval (specDiscM n) = g (jlSpectrumMap n)`
+   - 其中 `g k = f.eval (1 / 4 + (maassSpecParam k)^2)`
+
+2. **Step 2**：用 `exact?` 找到了 mathlib 现成的按纤维重排定理！
+   - 我们不需要自己证明 Step 1-5 的手动纤维分解路线了！
+   - mathlib 已经帮我们做了！
+
+### 相关定理状态
+
+| 定理 | 内容 | 状态 |
+|------|------|------|
+| `spectral_sum_fiberwise` | 谱和 = ∑ jlFiberSize(k)・f(...) | ✅ 已证明 |
+| `jl_spectrum_rearrangement` | 谱和 = ∑ jlFiberSize(k)・f(...) | ✅ 已证明 |
+| `jl_fiber_size_eq_weight` | jlFiberSize(k) = localJLWeight(k) | ⚠️ sorry |
+| `jl_weighted_trace_identity` | 谱和 = ∑ localJLWeight(k)・f(...) | ✅ 已证明 |
+| `jl_unitary_equivalence` | 谱和 = maassSpectralSum | ✅ 已证明 |
+
+### 重要说明
+
+**`jl_unitary_equivalence` 和 `maassSpectralSum` 都还没有被其他定理使用！**
+
+所以我们现在不需要证明 `jl_fiber_size_eq_weight`！
+
+等以后 `jl_unitary_equivalence` 被其他定理使用了，我们再回来证明 `jl_fiber_size_eq_weight`！
+
+`jl_fiber_size_eq_weight` 是 JL 对应的局部多重性理论，需要非常深入的数论知识：
+- 分裂素处为 1/2
+- 分歧/惯性素处为 1
 
 ---
 

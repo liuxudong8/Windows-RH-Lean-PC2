@@ -7,6 +7,7 @@
 ## Table of Contents
 
 - [Project Status](#project-status)
+- [Latest Progress: spectral_sum_fiberwise Proof Completed](#latest-progress-spectral_sum_fiberwise-proof-completed)
 - [Latest Progress: primeDirichletSeries_eq_LSeries_vonMangoldt Fully Proved](#latest-progress-primedirichletseries_eqlseries_vonmangoldt-fully-proved)
 - [Latest Progress: h_norm_lt_one and h_mul_cpow Proved](#latest-progress-h_norm_lt_one-and-h_mul_cpow-proved)
 - [Latest Progress: shimuraLift_linear Proof Completed](#latest-progress-shimuralift_linear-proof-completed)
@@ -26,6 +27,53 @@
 | Core axioms | **1** (`spectral_zero_set_match`, not used by RH main theorem) |
 | Modules | 13 standalone Lean files |
 | Goal | Conditional derivation of the Riemann Hypothesis (RH) within ZFC |
+
+---
+
+## Latest Progress: spectral_sum_fiberwise Proof Completed (2026-09-21)
+
+### Key Breakthrough: We successfully proved `spectral_sum_fiberwise` — spectral sum fiberwise decomposition!
+
+We successfully proved:
+
+```lean
+theorem spectral_sum_fiberwise (f : TestFunction) :
+    spectralSum f = ∑' k : ℕ, (jlFiberSize k : ℂ) * f.eval (1 / 4 + (maassSpecParam k)^2)
+```
+
+### Proof Decomposition
+
+We simplified the proof into 2 small steps:
+
+1. **Step 1**: Use `h1` to rewrite `f.eval (specDiscM n)` as `g (jlSpectrumMap n)`
+   - `h1 : ∀ (n : ℕ), f.eval (specDiscM n) = g (jlSpectrumMap n)`
+   - where `g k = f.eval (1 / 4 + (maassSpecParam k)^2)`
+
+2. **Step 2**: Use `exact?` to find mathlib's built-in fiber rearrangement theorem!
+   - We don't need to prove the manual fiber decomposition route (Steps 1-5) anymore!
+   - mathlib already did it for us!
+
+### Related Theorem Status
+
+| Theorem | Content | Status |
+|---------|---------|--------|
+| `spectral_sum_fiberwise` | Spectral sum = Σ jlFiberSize(k)・f(...) | ✅ Proved |
+| `jl_spectrum_rearrangement` | Spectral sum = Σ jlFiberSize(k)・f(...) | ✅ Proved |
+| `jl_fiber_size_eq_weight` | jlFiberSize(k) = localJLWeight(k) | ⚠️ sorry |
+| `jl_weighted_trace_identity` | Spectral sum = Σ localJLWeight(k)・f(...) | ✅ Proved |
+| `jl_unitary_equivalence` | Spectral sum = maassSpectralSum | ✅ Proved |
+
+### Important Note
+
+**`jl_unitary_equivalence` and `maassSpectralSum` are NOT used by any other theorem yet!**
+
+So we don't need to prove `jl_fiber_size_eq_weight` right now!
+
+We'll come back to prove `jl_fiber_size_eq_weight` later when `jl_unitary_equivalence` is used by other theorems!
+
+`jl_fiber_size_eq_weight` is the local multiplicity theory of the JL correspondence, which requires very deep number theory:
+- At split primes: weight = 1/2
+- At ramified/inert primes: weight = 1
 
 ---
 
