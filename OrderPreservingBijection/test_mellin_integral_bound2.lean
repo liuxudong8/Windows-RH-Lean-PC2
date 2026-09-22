@@ -2,6 +2,7 @@ import OrderPreservingBijection.BasicInfrastructure
 import OrderPreservingBijection.MellinInfrastructure
 import OrderPreservingBijection.MollifiedFunction
 import OrderPreservingBijection.test_rpow_ineq
+import Mathlib.Analysis.SpecialFunctions.Pow.Deriv
 
 open OrderPreservingBijection
 
@@ -132,14 +133,62 @@ theorem test_mellin_integral_bound (ε₀ R₀ : ℝ) (hε₀_pos : 0 < ε₀) (
     exact MeasureTheory.integral_const_mul M _
   -- 第七步：计算积分 ∫_{ε₀}^{R₀} x^(σ-1) dx
   have h7 : ∫ x in Set.Icc ε₀ R₀, x^(s.re - 1) = (R₀^s.re - ε₀^s.re) / s.re := by
-    sorry
+    have h_le : ε₀ ≤ R₀ := by linarith
+    have h_deriv : ∀ x ∈ Set.uIcc ε₀ R₀,
+        HasDerivAt (fun y : ℝ => y^s.re / s.re) (x^(s.re - 1)) x := by
+      intro x hx
+      have hx_in_Icc : x ∈ Set.Icc ε₀ R₀ := by
+        rw [Set.uIcc_of_le h_le] at hx
+        exact hx
+      have hx_pos : 0 < x := by linarith [hx_in_Icc.1]
+      have h1 : HasDerivAt (fun y : ℝ => y^s.re) (s.re * x^(s.re - 1)) x := by
+        have h1' : HasDerivAt (fun x : ℝ => id x ^ s.re)
+            (1 * s.re * id x ^ (s.re - 1) + 0 * id x ^ s.re * Real.log (id x)) x := by
+          exact HasDerivAt.rpow (hasDerivAt_id x) (hasDerivAt_const x s.re) hx_pos
+        have h_eq1 : (fun x : ℝ => id x ^ s.re) = (fun y : ℝ => y ^ s.re) := by
+          funext y
+          rfl
+        have h_eq2 : (1 * s.re * id x ^ (s.re - 1) + 0 * id x ^ s.re * Real.log (id x)) = s.re * x ^ (s.re - 1) := by
+          simp [mul_zero, zero_add, one_mul]
+          <;> ring
+        rw [h_eq1, h_eq2] at h1'
+        exact h1'
+      have h2 : HasDerivAt (fun y : ℝ => y^s.re / s.re) ((s.re * x^(s.re - 1)) / s.re) x := by
+        exact h1.div_const (s.re : ℝ)
+      have h3 : (s.re * x^(s.re - 1)) / s.re = x^(s.re - 1) := by
+        field_simp [hs_re1.ne'] <;> ring
+      rw [h3] at h2
+      exact h2
+    have h_interval_integrable : IntervalIntegrable (fun x : ℝ => x^(s.re - 1)) MeasureTheory.volume ε₀ R₀ := by
+      exact ContinuousOn.intervalIntegrable_of_Icc h_le h_cont_pow
+    have h_eq2 : ∫ x in ε₀..R₀, x^(s.re - 1) =
+        (R₀^s.re / s.re) - (ε₀^s.re / s.re) := by
+      exact intervalIntegral.integral_eq_sub_of_hasDerivAt h_deriv h_interval_integrable
+    have h_ioc_eq_iic : ∫ x in Set.Icc ε₀ R₀, x^(s.re - 1) = ∫ x in Set.Ioc ε₀ R₀, x^(s.re - 1) := by
+      exact MeasureTheory.integral_Icc_eq_integral_Ioc
+    have h_eq1 : ∫ x in Set.Ioc ε₀ R₀, x^(s.re - 1) = ∫ x in ε₀..R₀, x^(s.re - 1) := by
+      rw [intervalIntegral.integral_of_le h_le]
+    calc
+      ∫ x in Set.Icc ε₀ R₀, x^(s.re - 1)
+        = ∫ x in Set.Ioc ε₀ R₀, x^(s.re - 1) := h_ioc_eq_iic
+      _ = ∫ x in ε₀..R₀, x^(s.re - 1) := h_eq1
+      _ = (R₀^s.re / s.re) - (ε₀^s.re / s.re) := h_eq2
+      _ = (R₀^s.re - ε₀^s.re) / s.re := by ring
   calc
     ‖∫ x in Set.Icc ε₀ R₀, h.toFun x * Complex.exp ((s - 1) * (Real.log x : ℂ))‖
       ≤ ∫ x in Set.Icc ε₀ R₀, ‖h.toFun x * Complex.exp ((s - 1) * (Real.log x : ℂ))‖ := h2
     _ = ∫ x in Set.Icc ε₀ R₀, ‖h.toFun x‖ * x^(s.re - 1) := by
-      sorry
+      apply MeasureTheory.setIntegral_congr_fun measurableSet_Icc
+      intro x hx
+      exact h3 x hx
     _ ≤ ∫ x in Set.Icc ε₀ R₀, M * x^(s.re - 1) := h5
     _ = M * ∫ x in Set.Icc ε₀ R₀, x^(s.re - 1) := h6
     _ = M * ((R₀^s.re - ε₀^s.re) / s.re) := by rw [h7]
     _ ≤ M * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) := by
-      sorry
+      have hM_nonneg : 0 ≤ M := by
+        have h1 : 0 ≤ ‖h.toFun (ε₀ / 2)‖ := by positivity
+        have h2 : ‖h.toFun (ε₀ / 2)‖ ≤ M := h_bound (ε₀ / 2)
+        linarith
+      have h_ineq : (R₀^s.re - ε₀^s.re) / s.re ≤ max (Real.log (R₀ / ε₀)) (R₀ - ε₀) := by
+        sorry
+      exact mul_le_mul_of_nonneg_left h_ineq hM_nonneg
