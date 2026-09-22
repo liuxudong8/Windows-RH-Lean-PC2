@@ -1,12 +1,13 @@
 ﻿# Stage 4 总结 — RH 谱对偶论证框架
 
-> **更新日期**：2026-09-21
+> **更新日期**：2026-09-22
 > **Lean 版本**：v4.34.0-rc2
 > **mathlib 版本**：mathlib4-master
 
 ## 目录
 
 - [项目状态](#项目状态)
+- [最新进展：test_rpow_ineq 完全证明](#最新进展test_rpow_ineq-完全证明)
 - [最新进展：mellin_integral_bound_uniform 证明进行中](#最新进展mellin_integral_bound_uniform-证明进行中)
 - [最新进展：melinTransform_eq_mathlib_mellin 完全证明](#最新进展melintransform_eq_mathlib_mellin-完全证明)
 - [最新进展：spectral_sum_fiberwise 证明完成](#最新进展spectral_sum_fiberwise-证明完成)
@@ -29,6 +30,46 @@
 | 核心公理 | **1 条**（`spectral_zero_set_match`，RH 主定理不依赖） |
 | 模块 | 13 个独立 Lean 文件 + 6 个新文件夹 |
 | 目标 | 在 ZFC 内条件导出黎曼猜想（RH） |
+
+---
+
+## 最新进展：test_rpow_ineq 完全证明（2026-09-22）
+
+### 关键突破：我们成功地完全证明了 `test_rpow_ineq`！
+
+我们成功地证明了：
+
+```lean
+theorem test_rpow_ineq (X : ℝ) (hX_pos : 1 < X) (σ : ℝ) (hσ_pos : 0 < σ) (hσ_lt_one : σ < 1) :
+    (X^σ - 1) / σ ≤ max (Real.log X) (X - 1)
+```
+
+这是 Mellin 积分界的核心不等式！
+
+### 证明思路
+
+我们用凸性来证明：
+
+1. **变量替换**：令 `t = Real.log X`，则 `X = e^t`
+2. **分两种情况**：
+   - 情况 1：`t ≥ Real.exp t - 1`，此时 `max = t`
+   - 情况 2：`t < Real.exp t - 1`，此时 `max = Real.exp t - 1`
+3. **构造函数**：`g(σ) = Real.exp (σ * t) - 1 - σ * (Real.exp t - 1)`
+4. **证明 `g` 是凸函数**：
+   - `fun σ => Real.exp (σ * t)` 是凸的（用 `ConvexOn.comp_linearMap`）
+   - `fun σ => σ * (-(Real.exp t - 1))` 是凸的（线性函数）
+   - 常数函数 `-1` 是凸的
+   - 凸函数相加仍是凸的
+5. **端点论证**：`g(0) = 0`，`g(1) = 0`，所以凸函数在 `[0,1]` 上 `g(σ) ≤ 0`
+6. **情况 1**：`(Real.exp (σ * t) - 1) / σ ≤ Real.exp t - 1 ≤ t`
+
+### 已成功证明的引理
+
+| 引理 | 内容 | 状态 |
+|------|------|------|
+| `test_linear_convex` | 线性函数是凸的 | ✅ 已证明 |
+| `test_exp_linear_convex` | exp 复合线性函数是凸的 | ✅ 已证明 |
+| `test_rpow_ineq` | rpow 不等式 | ✅ 已证明 |
 
 ---
 
@@ -70,8 +111,14 @@ theorem integrableOn_bdd (ε₀ R₀ : ℝ) (hε₀_pos : 0 < ε₀) (hε₀_lt_
 
 | 步骤 | 内容 | 状态 |
 |------|------|------|
-| h5 | 积分单调性 | ⚠️ sorry |
-| 最后的结论 | 计算积分 ∫_{ε₀}^{R₀} x^{σ-1} dx，然后证明不等式 | ⚠️ sorry |
+| h1 | 把 Mellin 变换的积分限制到 `[ε₀, R₀]` | ✅ 已证明！ |
+| h51 | 点态不等式 | ✅ 已证明！ |
+| h_cont_pow | `x^(s.re - 1)` 在 `[ε₀, R₀]` 上连续 | ✅ 已证明！ |
+| h2_int | `M * x^(s.re - 1)` 在 `[ε₀, R₀]` 上可积 | ✅ 已证明！（用 `exact?`） |
+| h1_int | `‖h.toFun x‖ * x^(s.re - 1)` 在 `[ε₀, R₀]` 上可积 | ⚠️ sorry |
+| h5 | 积分单调性 | ✅ 已证明！（用 `setIntegral_mono_on`） |
+| h7 | 计算积分 ∫_{ε₀}^{R₀} x^{σ-1} dx | ⚠️ sorry |
+| h8 | 用 test_rpow_ineq 证明不等式 | ⚠️ sorry |
 
 ---
 

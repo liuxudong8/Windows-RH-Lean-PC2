@@ -1,12 +1,13 @@
 ﻿# Stage 4 Summary — RH Spectral Duality Framework
 
-> **Last Updated**: 2026-09-21
+> **Last Updated**: 2026-09-22
 > **Lean Version**: v4.34.0-rc2
 > **mathlib Version**: mathlib4-master
 
 ## Table of Contents
 
 - [Project Status](#project-status)
+- [Latest Progress: test_rpow_ineq Fully Proved](#latest-progress-test_rpow_ineq-fully-proved)
 - [Latest Progress: mellin_integral_bound_uniform Proof in Progress](#latest-progress-mellin_integral_bound_uniform-proof-in-progress)
 - [Latest Progress: melinTransform_eq_mathlib_mellin Fully Proved](#latest-progress-melintransform_eq_mathlib_mellin-fully-proved)
 - [Latest Progress: spectral_sum_fiberwise Proof Completed](#latest-progress-spectral_sum_fiberwise-proof-completed)
@@ -29,6 +30,46 @@
 | Core axioms | **1** (`spectral_zero_set_match`, not used by RH main theorem) |
 | Modules | 13 standalone Lean files |
 | Goal | Conditional derivation of the Riemann Hypothesis (RH) within ZFC |
+
+---
+
+## Latest Progress: test_rpow_ineq Fully Proved (2026-09-22)
+
+### Key Breakthrough: We successfully fully proved `test_rpow_ineq`!
+
+We successfully proved:
+
+```lean
+theorem test_rpow_ineq (X : ℝ) (hX_pos : 1 < X) (σ : ℝ) (hσ_pos : 0 < σ) (hσ_lt_one : σ < 1) :
+    (X^σ - 1) / σ ≤ max (Real.log X) (X - 1)
+```
+
+This is the core inequality for the Mellin integral bound!
+
+### Proof Idea
+
+We use convexity to prove:
+
+1. **Variable substitution**: Let `t = Real.log X`, then `X = e^t`
+2. **Split into two cases**:
+   - Case 1: `t ≥ Real.exp t - 1`, then `max = t`
+   - Case 2: `t < Real.exp t - 1`, then `max = Real.exp t - 1`
+3. **Construct function**: `g(σ) = Real.exp (σ * t) - 1 - σ * (Real.exp t - 1)`
+4. **Prove `g` is convex**:
+   - `fun σ => Real.exp (σ * t)` is convex (using `ConvexOn.comp_linearMap`)
+   - `fun σ => σ * (-(Real.exp t - 1))` is convex (linear function)
+   - Constant function `-1` is convex
+   - Sum of convex functions is convex
+5. **Endpoint argument**: `g(0) = 0`, `g(1) = 0`, so convex function implies `g(σ) ≤ 0` on `[0,1]`
+6. **Case 1**: `(Real.exp (σ * t) - 1) / σ ≤ Real.exp t - 1 ≤ t`
+
+### Successfully Proved Lemmas
+
+| Lemma | Content | Status |
+|-------|---------|--------|
+| `test_linear_convex` | Linear function is convex | ✅ Proved |
+| `test_exp_linear_convex` | exp composed with linear function is convex | ✅ Proved |
+| `test_rpow_ineq` | rpow inequality | ✅ Proved |
 
 ---
 
