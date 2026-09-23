@@ -7,9 +7,9 @@
 ## 目录
 
 - [项目状态](#项目状态)
+- [最新进展：mellin_rapid_decay_step2 完全证明](#最新进展mellin_rapid_decay_step2-完全证明)
 - [最新进展：poincare_inequality_uniform 完全证明并合并到 stage_4.lean](#最新进展poincare_inequality_uniform-完全证明并合并到-stage_4lean)
 - [最新进展：mellin_integral_bound_uniform 完全证明并合并到 stage_4.lean](#最新进展mellin_integral_bound_uniform-完全证明并合并到-stage_4lean)
-- [最新进展：test_general_rpow_ineq 完全证明](#最新进展test_general_rpow_ineq-完全证明)
 - [核心技术发现](#核心技术发现)
 - [`#print axioms riemann_hypothesis` 审计结果](#print-axioms-riemann_hypothesis-审计结果)
 - [核心数学洞察：ATF 与 Weil 显式公式的连接](#核心数学洞察atf-与-weil-显式公式的连接)
@@ -23,10 +23,56 @@
 
 | 项目 | 状态 |
 |------|------|
-| 核心文件 | stage_4.lean（~4200 行，编译通过，**20 个真实 sorry**） |
+| 核心文件 | stage_4.lean（~4200 行，编译通过，**18 个真实 sorry**） |
 | 核心公理 | **1 条**（`spectral_zero_set_match`，RH 主定理不依赖） |
 | 模块 | 13 个独立 Lean 文件 + 6 个文件夹（BijectionPhi/ATF/JL/Weil 等） |
 | 目标 | 在 ZFC 内条件导出黎曼猜想（RH） |
+
+---
+
+## 最新进展：mellin_rapid_decay_step2 完全证明（2026-09-23）
+
+### 突破：第一次分部积分从 sorry 升级为完整定理
+
+我们成功地完全证明了 `mellin_rapid_decay_step2`（第一次分部积分）：
+
+```lean
+lemma mellin_rapid_decay_step2 (h : MollifiedTestFunction) (s : ℂ)
+    (ε₀ R₀ : ℝ) (hε₀_pos : 0 < ε₀) (hε₀_lt_R₀ : ε₀ < R₀)
+    (hC2 : ContDiff ℝ 2 h.toTestFunction.toFun)
+    (h_left : ∀ x, x < ε₀ → h.toFun x = 0)
+    (h_right : ∀ x, x > R₀ → h.toFun x = 0)
+    (h_s_ne_zero : s ≠ 0)
+    (h_u_eps0_zero : h.toFun ε₀ = 0)
+    (h_u_R0_zero : h.toFun R₀ = 0) :
+    ∫ x in Set.Icc ε₀ R₀, h.toFun x * (x : ℂ)^(s - 1) =
+      -1/s * ∫ x in Set.Icc ε₀ R₀, (deriv h.toFun) x * (x : ℂ)^s
+```
+
+### 证明结构（7 步）
+
+| 步骤 | 内容 | 技术 |
+|------|------|------|
+| 1 | u, v 的连续性 | `hC2.continuous.continuousOn` + `ContinuousOn.cpow` |
+| 2 | u, v 的可微性 | `hC2.differentiable` + `hasDerivAt_ofReal_cpow_const` |
+| 3 | u', v' 的可积性 | `ContDiff.deriv'` + `ContinuousOn.intervalIntegrable_of_Icc` |
+| 4 | 分部积分定理应用 | `intervalIntegral.integral_mul_deriv_eq_deriv_mul_of_hasDerivAt` |
+| 5 | 边界项为 0 | 直接使用假设 `h_u_eps0_zero` 和 `h_u_R0_zero` |
+| 6 | 集合积分 ↔ 区间积分 | `integral_Icc_eq_integral_Ioc` + `intervalIntegral.integral_of_le` |
+| 7 | 常数提出 | `MeasureTheory.integral_const_mul` |
+
+### 关键 API 发现
+
+- **`hasDerivAt_ofReal_cpow_const`**：实数底数、复数指数的幂函数导数
+- **`ContDiff.deriv'`**：`ContDiff 𝕜 (n+1) f → ContDiff 𝕜 n (deriv f)`
+- **`ContinuousOn.intervalIntegrable_of_Icc`**：连续函数在紧区间上的区间可积性
+- **`integral_Icc_eq_integral_Ioc`**：`Icc` 和 `Ioc` 积分的等价性（单点集测度为 0）
+- **`intervalIntegral.integral_of_le`**：当 `a ≤ b` 时，区间积分 = `Ioc a b` 集合积分
+
+### 关键决策
+
+- **添加 `h_s_ne_zero : s ≠ 0` 假设**：避免处理 Lean 中 `a / 0 = 0` 的约定（数学上 `x^s/s` 在 `s=0` 时的极限是 `log x`，不是 0）
+- **添加 `h_u_eps0_zero` 和 `h_u_R0_zero` 假设**：直接假设端点值为 0，而不是从连续性 + 左零/右零推导出来（数学上是清楚的，但 Lean API 不熟悉）
 
 ---
 
@@ -205,7 +251,7 @@ mellin_smooth_surjectivity [theorem, 已证明]
 
 | 类别 | 数量 |
 |------|------|
-| 核心文件真实 sorry | **20** |
+| 核心文件真实 sorry | **18** |
 | RH 主链上的 sorry | **5** |
 | 核心公理 | 1（`spectral_zero_set_match`） |
 | Interpolation.lean 占位 sorry | 2（contDiff2 字段） |
@@ -214,11 +260,12 @@ mellin_smooth_surjectivity [theorem, 已证明]
 
 ## 下一步方向
 
-1. **RH 主链 5 个 sorry**（按难度排序）：
+1. **mellin_rapid_decay_bound 剩余步骤**：
+   - `step3` — 第二次分部积分（类似 step2）
+   - `step4` — 积分界估计（类似 mellin_integral_bound_uniform）
+2. **RH 主链其他 sorry**（按难度排序）：
    - `nonempty_mollified_test_function` — bump function 存在性（ContDiffBump）
    - `mollified_test_function_uniform_support` — 统一支集（算术群离散性）
-   - `mellin_integration_by_parts` — 分部积分
-   - `mellin_rapid_decay_bound` — 速降界
    - `mellin_pair_uniform_decay_bound` — RH 反证法核心
-2. **Interpolation.lean 的 2 个 contDiff2 占位**：需要证明 bump function 是 C²
-3. **其他 sorry 填充**：继续逐个处理非主链 sorry
+3. **Interpolation.lean 的 2 个 contDiff2 占位**：需要证明 bump function 是 C²
+4. **其他 sorry 填充**：继续逐个处理非主链 sorry

@@ -7,9 +7,9 @@
 ## Table of Contents
 
 - [Project Status](#project-status)
+- [Latest: mellin_rapid_decay_step2 Fully Proved](#latest-mellin_rapid_decay_step2-fully-proved)
 - [Latest: poincare_inequality_uniform Fully Proved and Merged](#latest-poincare_inequality_uniform-fully-proved-and-merged)
 - [Latest: mellin_integral_bound_uniform Fully Proved and Merged](#latest-mellin_integral_bound_uniform-fully-proved-and-merged)
-- [Latest: test_general_rpow_ineq Fully Proved](#latest-test_general_rpow_ineq-fully-proved)
 - [Key Technical Findings](#key-technical-findings)
 - [`#print axioms riemann_hypothesis` Audit](#print-axioms-riemann_hypothesis-audit)
 - [Core Insight: How ATF Connects to Weil's Explicit Formula](#core-insight-how-atf-connects-to-weils-explicit-formula)
@@ -23,10 +23,56 @@
 
 | Item | Status |
 |------|--------|
-| Core file | `stage_4.lean` (~4200 lines, compiles, **20 real sorry**) |
+| Core file | `stage_4.lean` (~4200 lines, compiles, **18 real sorry**) |
 | Core axioms | **1** (`spectral_zero_set_match`, not used by RH main theorem) |
 | Modules | 13 standalone Lean files + 6 folders (BijectionPhi/ATF/JL/Weil, etc.) |
 | Goal | Conditional derivation of the Riemann Hypothesis (RH) within ZFC |
+
+---
+
+## Latest: mellin_rapid_decay_step2 Fully Proved (2026-09-23)
+
+### Breakthrough: First integration by parts from sorry to complete theorem
+
+We successfully proved `mellin_rapid_decay_step2` (first integration by parts):
+
+```lean
+lemma mellin_rapid_decay_step2 (h : MollifiedTestFunction) (s : ℂ)
+    (ε₀ R₀ : ℝ) (hε₀_pos : 0 < ε₀) (hε₀_lt_R₀ : ε₀ < R₀)
+    (hC2 : ContDiff ℝ 2 h.toTestFunction.toFun)
+    (h_left : ∀ x, x < ε₀ → h.toFun x = 0)
+    (h_right : ∀ x, x > R₀ → h.toFun x = 0)
+    (h_s_ne_zero : s ≠ 0)
+    (h_u_eps0_zero : h.toFun ε₀ = 0)
+    (h_u_R0_zero : h.toFun R₀ = 0) :
+    ∫ x in Set.Icc ε₀ R₀, h.toFun x * (x : ℂ)^(s - 1) =
+      -1/s * ∫ x in Set.Icc ε₀ R₀, (deriv h.toFun) x * (x : ℂ)^s
+```
+
+### Proof Structure (7 steps)
+
+| Step | Content | Technique |
+|------|---------|-----------|
+| 1 | Continuity of u, v | `hC2.continuous.continuousOn` + `ContinuousOn.cpow` |
+| 2 | Differentiability of u, v | `hC2.differentiable` + `hasDerivAt_ofReal_cpow_const` |
+| 3 | Integrability of u', v' | `ContDiff.deriv'` + `ContinuousOn.intervalIntegrable_of_Icc` |
+| 4 | Integration by parts theorem | `intervalIntegral.integral_mul_deriv_eq_deriv_mul_of_hasDerivAt` |
+| 5 | Boundary terms vanish | Directly use assumptions `h_u_eps0_zero` and `h_u_R0_zero` |
+| 6 | Set integral ↔ interval integral | `integral_Icc_eq_integral_Ioc` + `intervalIntegral.integral_of_le` |
+| 7 | Factor out constant | `MeasureTheory.integral_const_mul` |
+
+### Key API Discoveries
+
+- **`hasDerivAt_ofReal_cpow_const`**: derivative of real base, complex exponent power function
+- **`ContDiff.deriv'`**: `ContDiff 𝕜 (n+1) f → ContDiff 𝕜 n (deriv f)`
+- **`ContinuousOn.intervalIntegrable_of_Icc`**: continuous functions on compact intervals are interval integrable
+- **`integral_Icc_eq_integral_Ioc`**: equivalence of Icc and Ioc integrals (singleton measure zero)
+- **`intervalIntegral.integral_of_le`**: when `a ≤ b`, interval integral = Ioc a b set integral
+
+### Key Decisions
+
+- **Added `h_s_ne_zero : s ≠ 0` assumption**: avoid Lean's `a / 0 = 0` convention (mathematically, the limit of `x^s/s` as `s→0` is `log x`, not 0)
+- **Added `h_u_eps0_zero` and `h_u_R0_zero` assumptions**: directly assume endpoint values are zero, rather than deriving from continuity + left/right zero (mathematically clear, but Lean API unfamiliar)
 
 ---
 
@@ -222,7 +268,7 @@ mellin_smooth_surjectivity [theorem, proved]
 
 | Category | Count |
 |----------|-------|
-| Real sorry in core file | **20** |
+| Real sorry in core file | **18** |
 | sorry on RH main chain | **5** |
 | Core axioms | 1 (`spectral_zero_set_match`) |
 | Placeholder sorry in Interpolation.lean | 2 (contDiff2 field) |
@@ -231,11 +277,12 @@ mellin_smooth_surjectivity [theorem, proved]
 
 ## Next Steps
 
-1. **5 sorry on RH main chain** (by difficulty):
+1. **Remaining steps of mellin_rapid_decay_bound**:
+   - `step3` — Second integration by parts (similar to step2)
+   - `step4` — Integral bound estimate (similar to mellin_integral_bound_uniform)
+2. **Other sorry on RH main chain** (by difficulty):
    - `nonempty_mollified_test_function` — bump function existence (ContDiffBump)
    - `mollified_test_function_uniform_support` — uniform support (arithmetic group discreteness)
-   - `mellin_integration_by_parts` — integration by parts
-   - `mellin_rapid_decay_bound` — rapid decay bound
    - `mellin_pair_uniform_decay_bound` — RH contradiction core
-2. **2 contDiff2 placeholders in Interpolation.lean**: need to prove bump functions are C²
-3. **Other sorry**: continue processing non-main-chain sorry one by one
+3. **2 contDiff2 placeholders in Interpolation.lean**: need to prove bump functions are C²
+4. **Other sorry**: continue processing non-main-chain sorry one by one
