@@ -2,7 +2,12 @@ import OrderPreservingBijection.BasicInfrastructure
 import OrderPreservingBijection.MellinInfrastructure
 import OrderPreservingBijection.MollifiedFunction
 import OrderPreservingBijection.test_rpow_ineq
+import OrderPreservingBijection.test_general_rpow_ineq
 import Mathlib.Analysis.SpecialFunctions.Pow.Deriv
+
+#check @MeasureTheory.Integrable.mono'
+#check @MeasureTheory.AEStronglyMeasurable.mul
+#check @ContinuousOn.aestronglyMeasurable
 
 open OrderPreservingBijection
 
@@ -116,14 +121,52 @@ theorem test_mellin_integral_bound (ε₀ R₀ : ℝ) (hε₀_pos : 0 < ε₀) (
       have h_pos_eps : 0 < ε₀ := hε₀_pos
       have h_ne_zero : x ≠ 0 := by linarith
       exact Or.inl h_ne_zero
-  have h1_int : MeasureTheory.IntegrableOn (fun x : ℝ => ‖h.toFun x‖ * x^(s.re - 1)) (Set.Icc ε₀ R₀) := by
-    sorry
   have h2_int : MeasureTheory.IntegrableOn (fun x : ℝ => M * x^(s.re - 1)) (Set.Icc ε₀ R₀) := by
     have h_g_cont : ContinuousOn (fun x : ℝ => M * x^(s.re - 1)) (Set.Icc ε₀ R₀) := by
       apply ContinuousOn.mul continuousOn_const h_cont_pow
     have h : MeasureTheory.IntegrableOn (fun x : ℝ => M * x^(s.re - 1)) (Set.Icc ε₀ R₀) := by
       exact?
     exact h
+  have h1_int : MeasureTheory.IntegrableOn (fun x : ℝ => ‖h.toFun x‖ * x^(s.re - 1)) (Set.Icc ε₀ R₀) := by
+    -- (1) 支配函数 M * x^(s.re - 1) 可积（实值）
+    have hg_int : MeasureTheory.IntegrableOn (fun x : ℝ => M * x^(s.re - 1)) (Set.Icc ε₀ R₀) := h2_int
+    -- (2) 目标函数强可测
+    have h_f_meas : MeasureTheory.AEStronglyMeasurable (fun x : ℝ => ‖h.toFun x‖ * x^(s.re - 1))
+        (MeasureTheory.volume.restrict (Set.Icc ε₀ R₀)) := by
+      -- x ↦ x^(s.re - 1) 在 Icc ε₀ R₀ 上连续
+      have h1 : ContinuousOn (fun x : ℝ => x^(s.re - 1)) (Set.Icc ε₀ R₀) := h_cont_pow
+      -- x ↦ ‖h.toFun x‖ 可测
+      have h2 : Measurable (fun x : ℝ => ‖h.toFun x‖) := by
+        exact h.measurable.norm
+      -- 乘积强可测
+      have h1_ae : MeasureTheory.AEStronglyMeasurable (fun x : ℝ => x^(s.re - 1))
+          (MeasureTheory.volume.restrict (Set.Icc ε₀ R₀)) := h1.aestronglyMeasurable measurableSet_Icc
+      have h2_ae : MeasureTheory.AEStronglyMeasurable (fun x : ℝ => ‖h.toFun x‖)
+          (MeasureTheory.volume.restrict (Set.Icc ε₀ R₀)) := h2.aestronglyMeasurable
+      have h_mul : MeasureTheory.AEStronglyMeasurable (fun x : ℝ => (fun x : ℝ => x^(s.re - 1)) x * (fun x : ℝ => ‖h.toFun x‖) x)
+          (MeasureTheory.volume.restrict (Set.Icc ε₀ R₀)) := h1_ae.mul h2_ae
+      have h_eq : (fun x : ℝ => (fun x : ℝ => x^(s.re - 1)) x * (fun x : ℝ => ‖h.toFun x‖) x) = (fun x : ℝ => ‖h.toFun x‖ * x^(s.re - 1)) := by
+        funext x
+        ring
+      rw [h_eq] at h_mul
+      exact h_mul
+    -- (3) a.e. 支配
+    have h_le_ae : ∀ᵐ x ∂(MeasureTheory.volume.restrict (Set.Icc ε₀ R₀)),
+        ‖(fun x : ℝ => ‖h.toFun x‖ * x^(s.re - 1)) x‖ ≤ M * x^(s.re - 1) := by
+      filter_upwards [MeasureTheory.ae_restrict_mem measurableSet_Icc] with x hx
+      have h_pos : 0 ≤ x^(s.re - 1) := by
+        apply Real.rpow_nonneg
+        linarith [hx.1]
+      have h_bound' : ‖h.toFun x‖ ≤ M := h4 x hx
+      have hM_nonneg : 0 ≤ M := by
+        have h1 : 0 ≤ ‖h.toFun (ε₀ / 2)‖ := by positivity
+        have h2 : ‖h.toFun (ε₀ / 2)‖ ≤ M := h_bound (ε₀ / 2)
+        linarith
+      have h_main : ‖h.toFun x‖ * x^(s.re - 1) ≤ M * x^(s.re - 1) := by
+        exact mul_le_mul_of_nonneg_right h_bound' h_pos
+      simpa [Real.norm_eq_abs, abs_of_nonneg h_pos, abs_of_nonneg hM_nonneg] using h_main
+    -- (4) 组装
+    exact hg_int.mono' h_f_meas h_le_ae
   have h5 : ∫ x in Set.Icc ε₀ R₀, ‖h.toFun x‖ * x^(s.re - 1) ≤
       ∫ x in Set.Icc ε₀ R₀, M * x^(s.re - 1) := by
     exact MeasureTheory.setIntegral_mono_on h1_int h2_int measurableSet_Icc h51
@@ -189,6 +232,9 @@ theorem test_mellin_integral_bound (ε₀ R₀ : ℝ) (hε₀_pos : 0 < ε₀) (
         have h1 : 0 ≤ ‖h.toFun (ε₀ / 2)‖ := by positivity
         have h2 : ‖h.toFun (ε₀ / 2)‖ ≤ M := h_bound (ε₀ / 2)
         linarith
-      have h_ineq : (R₀^s.re - ε₀^s.re) / s.re ≤ max (Real.log (R₀ / ε₀)) (R₀ - ε₀) := by
-        sorry
-      exact mul_le_mul_of_nonneg_left h_ineq hM_nonneg
+      -- 直接用 test_general_rpow_ineq
+      have h_main_ineq : (R₀^s.re - ε₀^s.re) / s.re ≤ max (Real.log (R₀ / ε₀)) (R₀ - ε₀) :=
+        test_general_rpow_ineq ε₀ R₀ hε₀_pos hε₀_lt_R₀ s.re hs_re1 hs_re2
+      have h_final : M * ((R₀^s.re - ε₀^s.re) / s.re) ≤ M * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) :=
+        mul_le_mul_of_nonneg_left h_main_ineq hM_nonneg
+      exact h_final
