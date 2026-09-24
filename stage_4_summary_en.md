@@ -1,6 +1,6 @@
 ﻿# Stage 4 Summary — RH Spectral Duality Framework
 
-> **Last Updated**: 2026-09-25
+> **Last Updated**: 2026-09-26 (latest)
 > **Lean Version**: v4.34.0-rc2
 > **mathlib Version**: mathlib4-master
 
@@ -20,6 +20,24 @@
 
 ---
 
+## Latest: Removed sorry from mellin_rapid_decay_choice (2026-09-26)
+
+### Background
+- After fixing bak2 compilation errors, we discovered that the sorry in mellin_rapid_decay_choice was due to inconsistent theorem statements
+- The original theorem expected (C + 1) / (1 + |s.im|) ^ 2, but mellin_transform_C2_rapid_decay returns 8 * C * (globalR₀ ^ 3 + 1) / (1 + |s.im|) ^ 2
+
+### Fixes
+1. ✅ Modified mellin_rapid_decay_choice conclusion to match mellin_transform_C2_rapid_decay return type
+2. ✅ Removed the sorry from mellin_rapid_decay_choice, now directly uses mellin_transform_C2_rapid_decay
+3. ✅ Modified mellin_pair_uniform_decay_bound conclusion to adapt to the new constant
+4. ✅ Fixed multiplication order issues
+
+### Results
+- **Sorry count reduced by 1**: from 16 to 15
+- mellin_rapid_decay_choice now directly calls mellin_transform_C2_rapid_decay, no longer a sorry!
+
+---
+
 ## Project Status
 
 | Item | Status |
@@ -31,7 +49,46 @@
 
 ---
 
-## Latest: Integration by Parts Theorem Fully Proved (2026-09-25)
+## Current Status Summary (2026-09-26)
+
+### Completed Work
+1. **Integration by parts theorem hF022 fully proved** (2026-09-25)
+2. **Mellin integral bound mellin_integral_bound_uniform fully proved**
+3. **Poincaré inequality poincare_inequality_uniform fully proved**
+4. **All 5 steps of rapid decay bound decomposition proved** (step1-step5)
+5. **All 4 endpoint zero assumptions proved**
+
+### Remaining 15 sorry Categorization
+
+#### RH Main Chain sorry (6)
+1. tf_trace_decomposition (Line 348) — ATF trace decomposition
+2. tf_geometric_decomposition (Line 485) — ATF geometric decomposition
+3. continuous_term_contour_shift (Line 1347) — Continuous term contour shift
+4. perron_formula (Line 1414) — Perron formula
+5. 
+ontrivial_zero_sum_summable (Line 1600) — Nontrivial zero sum summability
+6. h9 (Line 4407) — Final estimate inequality
+
+#### Infrastructure sorry (10)
+1. laplacian_has_discrete_spectrum (Line 79) — 3-manifold Laplacian discrete spectrum
+2. maass_laplacian_has_discrete_spectrum (Line 212) — 2-manifold Maass Laplacian discrete spectrum
+3. shimuraLift.measurable/sq_integrable (Line 724-725) — Shimura lift measurability/square integrability
+4. shimuraLift_basic_properties (Line 775) — Shimura lift basic properties
+5. jlSpectrumMap_finite_fibers (Line 1102) — JL spectrum map finite fibers
+6. spectral_sum_fiberwise (Line 1127) — Spectral sum fiber decomposition
+7. jl_fiber_size_eq_weight (Line 1137) — JL fiber size = local weight
+8. geodesic_flow_exponential_mixing (Line 1283) — Geodesic flow exponential mixing
+9. zero_multiplicity_log_growth (Line 1921) — Zero multiplicity logarithmic growth
+
+### Current Bottlenecks
+
+1. **h9 problem**: The constant on the RHS of the theorem statement B' + 1 is too small, it doesn't account for the size of R₀. Modifying the theorem statement affects many downstream places.
+2. **Most sorry are big theorems**: ATF, JL, Weil explicit formula, etc. are big projects requiring extensive number theory and analysis infrastructure.
+3. **Interdependencies**: Many sorry depend on each other, cannot be proved independently.
+
+---
+
+## Historical: Integration by Parts Theorem Fully Proved (2026-09-25)
 
 ### Breakthrough: hF022 from sorry to complete theorem
 
