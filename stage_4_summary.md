@@ -1,12 +1,13 @@
 ﻿# Stage 4 总结 — RH 谱对偶论证框架
 
-> **更新日期**：2026-09-23
+> **更新日期**：2026-09-25
 > **Lean 版本**：v4.34.0-rc2
 > **mathlib 版本**：mathlib4-master
 
 ## 目录
 
 - [项目状态](#项目状态)
+- [最新进展：4 个端点值为 0 的假设全部证明](#最新进展4-个端点值为-0-的假设全部证明)
 - [最新进展：mellin_rapid_decay_step2 完全证明](#最新进展mellin_rapid_decay_step2-完全证明)
 - [最新进展：poincare_inequality_uniform 完全证明并合并到 stage_4.lean](#最新进展poincare_inequality_uniform-完全证明并合并到-stage_4lean)
 - [最新进展：mellin_integral_bound_uniform 完全证明并合并到 stage_4.lean](#最新进展mellin_integral_bound_uniform-完全证明并合并到-stage_4lean)
@@ -23,10 +24,114 @@
 
 | 项目 | 状态 |
 |------|------|
-| 核心文件 | stage_4.lean（~4200 行，编译通过，**18 个真实 sorry**） |
+| 核心文件 | stage_4.lean（~4400 行，编译通过，**16 个真实 sorry**） |
 | 核心公理 | **1 条**（`spectral_zero_set_match`，RH 主定理不依赖） |
 | 模块 | 13 个独立 Lean 文件 + 6 个文件夹（BijectionPhi/ATF/JL/Weil 等） |
 | 目标 | 在 ZFC 内条件导出黎曼猜想（RH） |
+
+---
+
+## 最新进展：分部积分定理完全证明（2026-09-25）
+
+### 突破：hF022 从 sorry 升级为完整定理
+
+我们成功地完全证明了分部积分定理 hF022：
+
+`lean
+∫ x in ε₀..R₀, (deriv (deriv h.toFun)) x * x =
+  (deriv h.toFun R₀) * R₀ - (deriv h.toFun ε₀) * ε₀ - ∫ x in ε₀..R₀, (deriv h.toFun) x
+`
+
+### 证明的关键步骤
+
+1. **v 的导数**：ofRealCLM.hasDerivAt（Mathlib.Analysis.Complex.RealDeriv）
+2. **u 的可微性**：ContDiff.deriv' hC2
+3. **u 的连续性**：(hC2.deriv.deriv).continuous
+4. **u 的区间可积性**：Continuous.intervalIntegrable
+5. **v 的区间可积性**：continuous_const.intervalIntegrable
+6. **区间包含关系**：Ioo ⊆ uIcc（用 linarith）
+7. **分部积分定理方向调整**：calc 块
+
+### 遇到的问题及解决方案
+
+| 问题 | 解决方案 |
+|------|----------|
+| hasDerivAt_ofReal 不存在 | 找到 ofRealCLM.hasDerivAt |
+| Continuous.intervalIntegrable 类型不匹配 | 用 .intervalIntegrable ε₀ R₀ |
+| Set.Ioo_subset_uIcc 不存在 | 手动证明 Ioo ⊆ uIcc |
+| 分部积分定理方向反了 | 用 calc 块重新排列 |
+
+---
+
+## 最新进展：找到 ofRealCLM.hasDerivAt 定理（2026-09-24）
+
+### 突破：找到了 ℝ→ℂ 嵌入的导数定理
+
+我们成功找到了 un x : ℝ => (x : ℂ) 的导数定理：
+
+`lean
+ofRealCLM.hasDerivAt
+`
+
+这个定理在 Mathlib.Analysis.Complex.RealDeriv 中，它是 Complex.ofRealCLM 的导数。
+
+### 之前尝试过但失败的方法
+
+1. ❌ hasDerivAt_ofReal — 不存在
+2. ❌ Complex.hasDerivAt_ofReal — 不存在
+3. ❌ hasDerivAt_complex_ofReal — 不存在
+4. ❌ HasDerivAt.const_mul — 类型不匹配
+5. ❌ exact? — 找不到
+
+### 分部积分定理的进展
+
+我们尝试填充分部积分定理（hF0），成功证明了：
+- ✅ v 的导数（ofRealCLM.hasDerivAt）
+- ✅ u 的可微性（ContDiff.deriv' hC2）
+
+但还遇到了一些 API 问题：
+- ⚠️ u 的区间可积性
+- ⚠️ v 的区间可积性
+- ⚠️ 分部积分定理的参数类型匹配
+
+---
+
+## 最新进展：4 个端点值为 0 的假设全部证明（2026-09-24）
+
+### 突破：从连续性推出端点值为 0
+
+我们成功地完全证明了所有 4 个端点值为 0 的假设：
+
+`lean
+h_u_eps0_zero : h.toFun ε₀ = 0
+h_u_R0_zero : h.toFun R₀ = 0
+h_u'_eps0_zero : (deriv h.toFun) ε₀ = 0
+h_u'_R0_zero : (deriv h.toFun) R₀ = 0
+`
+
+### 证明方法
+
+利用 hC2 : ContDiff ℝ 2 h.toFun，推出：
+1. h.toFun 是连续的
+2. deriv h.toFun 是连续的
+
+然后利用连续性 + 支集条件（x < ε₀ 时 h.toFun x = 0，x > R₀ 时 h.toFun x = 0），通过极限唯一性证明端点值为 0。
+
+### 关键 API
+
+- hC2.continuous：从 ContDiff 推出连续性
+- hC2.deriv'：从 ContDiff 2 推出 deriv h.toFun 是 ContDiff 1
+- ContinuousAt.tendsto.mono_left：连续函数在邻域滤子上的极限
+- 	endsto_nhds_unique：Hausdorff 空间中极限的唯一性
+
+### 同时证明：FTC 定理
+
+我们还成功证明了 FTC 定理：
+`lean
+∫ x in ε₀..R₀, (deriv h.toFun) x = h.toFun R₀ - h.toFun ε₀
+`
+
+使用 intervalIntegral.integral_eq_sub_of_hasDerivAt。
 
 ---
 

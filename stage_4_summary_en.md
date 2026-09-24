@@ -1,12 +1,13 @@
 ﻿# Stage 4 Summary — RH Spectral Duality Framework
 
-> **Last Updated**: 2026-09-23
+> **Last Updated**: 2026-09-25
 > **Lean Version**: v4.34.0-rc2
 > **mathlib Version**: mathlib4-master
 
 ## Table of Contents
 
 - [Project Status](#project-status)
+- [Latest: All 4 Boundary Zero Assumptions Proved](#latest-all-4-boundary-zero-assumptions-proved)
 - [Latest: mellin_rapid_decay_step2 Fully Proved](#latest-mellin_rapid_decay_step2-fully-proved)
 - [Latest: poincare_inequality_uniform Fully Proved and Merged](#latest-poincare_inequality_uniform-fully-proved-and-merged)
 - [Latest: mellin_integral_bound_uniform Fully Proved and Merged](#latest-mellin_integral_bound_uniform-fully-proved-and-merged)
@@ -27,6 +28,110 @@
 | Core axioms | **1** (`spectral_zero_set_match`, not used by RH main theorem) |
 | Modules | 13 standalone Lean files + 6 folders (BijectionPhi/ATF/JL/Weil, etc.) |
 | Goal | Conditional derivation of the Riemann Hypothesis (RH) within ZFC |
+
+---
+
+## Latest: Integration by Parts Theorem Fully Proved (2026-09-25)
+
+### Breakthrough: hF022 from sorry to complete theorem
+
+We successfully proved the integration by parts theorem hF022:
+
+`lean
+∫ x in ε₀..R₀, (deriv (deriv h.toFun)) x * x =
+  (deriv h.toFun R₀) * R₀ - (deriv h.toFun ε₀) * ε₀ - ∫ x in ε₀..R₀, (deriv h.toFun) x
+`
+
+### Key Steps in the Proof
+
+1. **v's derivative**: ofRealCLM.hasDerivAt (Mathlib.Analysis.Complex.RealDeriv)
+2. **u's differentiability**: ContDiff.deriv' hC2
+3. **u's continuity**: (hC2.deriv.deriv).continuous
+4. **u's interval integrability**: Continuous.intervalIntegrable
+5. **v's interval integrability**: continuous_const.intervalIntegrable
+6. **Interval inclusion**: Ioo ⊆ uIcc (using linarith)
+7. **Integration by parts direction adjustment**: calc block
+
+### Problems and Solutions
+
+| Problem | Solution |
+|---------|----------|
+| hasDerivAt_ofReal does not exist | Found ofRealCLM.hasDerivAt |
+| Continuous.intervalIntegrable type mismatch | Use .intervalIntegrable ε₀ R₀ |
+| Set.Ioo_subset_uIcc does not exist | Manually prove Ioo ⊆ uIcc |
+| Integration by parts theorem direction reversed | Use calc block to rearrange |
+
+---
+
+## Latest: Found ofRealCLM.hasDerivAt Theorem (2026-09-24)
+
+### Breakthrough: Found the derivative theorem for ℝ→ℂ embedding
+
+We successfully found the derivative theorem for un x : ℝ => (x : ℂ):
+
+`lean
+ofRealCLM.hasDerivAt
+`
+
+This theorem is in Mathlib.Analysis.Complex.RealDeriv, and it is the derivative of Complex.ofRealCLM.
+
+### Failed Attempts
+
+1. ❌ hasDerivAt_ofReal — does not exist
+2. ❌ Complex.hasDerivAt_ofReal — does not exist
+3. ❌ hasDerivAt_complex_ofReal — does not exist
+4. ❌ HasDerivAt.const_mul — type mismatch
+5. ❌ exact? — cannot find
+
+### Integration by Parts Progress
+
+We attempted to fill the integration by parts theorem (hF0), and successfully proved:
+- ✅ v's derivative (ofRealCLM.hasDerivAt)
+- ✅ u's differentiability (ContDiff.deriv' hC2)
+
+But we still encountered some API issues:
+- ⚠️ u's interval integrability
+- ⚠️ v's interval integrability
+- ⚠️ Integration by parts theorem parameter type matching
+
+---
+
+## Latest: All 4 Boundary Zero Assumptions Proved (2026-09-24)
+
+### Breakthrough: Deriving boundary zeros from continuity
+
+We successfully proved all 4 boundary zero assumptions:
+
+`lean
+h_u_eps0_zero : h.toFun ε₀ = 0
+h_u_R0_zero : h.toFun R₀ = 0
+h_u'_eps0_zero : (deriv h.toFun) ε₀ = 0
+h_u'_R0_zero : (deriv h.toFun) R₀ = 0
+`
+
+### Proof Method
+
+Using hC2 : ContDiff ℝ 2 h.toFun, we derive:
+1. h.toFun is continuous
+2. deriv h.toFun is continuous
+
+Then using continuity + support conditions (h.toFun x = 0 for x < ε₀, h.toFun x = 0 for x > R₀), we prove boundary zeros via uniqueness of limits.
+
+### Key APIs
+
+- hC2.continuous: Derive continuity from ContDiff
+- hC2.deriv': Derive deriv h.toFun is ContDiff 1 from ContDiff 2
+- ContinuousAt.tendsto.mono_left: Continuous function limit on neighborhood filter
+- 	endsto_nhds_unique: Uniqueness of limits in Hausdorff spaces
+
+### Also Proved: FTC Theorem
+
+We also successfully proved the FTC theorem:
+`lean
+∫ x in ε₀..R₀, (deriv h.toFun) x = h.toFun R₀ - h.toFun ε₀
+`
+
+Using intervalIntegral.integral_eq_sub_of_hasDerivAt.
 
 ---
 
