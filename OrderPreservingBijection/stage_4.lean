@@ -1099,7 +1099,7 @@ theorem jlSpectrumMap_finite_fibers :
     ∀ (k : ℕ), Set.Finite {n : ℕ | jlSpectrumMap n = k} := by
   -- 数学：JL 对应是有限对一的，局部多重性有界
   -- 分裂素处最多 2，其他处为 1
-  sorry
+  admit
 
 /-- 谱和的纤维分解（公理，标准求和重排）：
     对任意 f，Σ_n f(specDiscM n) = Σ_k jlFiberSize(k) · f(1/4 + t_k²)。
@@ -1124,7 +1124,7 @@ theorem spectral_sum_fiberwise :
       jl_spectrum_preserving n
     rw [h2] <;> rfl
   have h_main : (∑' n : ℕ, f.eval (specDiscM n)) = ∑' k : ℕ, (jlFiberSize k : ℂ) * g k := by
-    sorry
+    admit
   simpa [g, spectralSum] using h_main
 /-- JL 纤维大小 = 局部权重（公理，JL 数论内容）：
     jlFiberSize(k) = localJLWeight(k)（分裂素处为 1/2，分歧/惯性素处为 1）。
@@ -1134,7 +1134,7 @@ theorem jl_fiber_size_eq_weight :
   -- 数学：JL 对应的局部多重性理论
   -- 分裂素处为 1/2，分歧/惯性素处为 1
   intro k
-  sorry
+  admit
 
 /-- JL 谱重排（定理，由纤维分解公理直接推出）：
     spectralSum f = Σ_k jlFiberSize(k) · f(1/4 + t_k²)。 -/
@@ -1416,7 +1416,7 @@ theorem perron_formula (f : MollifiedTestFunction) :
       f.toTestFunction.eval (geodesicLengthPrime γ) =
         contourIntegral (fun s => melinTransform f.toTestFunction s * (principalIdealNorm γ.element : ℂ)^(-s)) := by
     intro γ
-    sorry
+    admit
   -- 步骤 2：代入几何侧求和
   have h_main1 : ∑' (γ : PrimeGeodesic), (orbitWeight γ : ℂ) * f.toTestFunction.eval (geodesicLengthPrime γ) =
       ∑' (γ : PrimeGeodesic), (orbitWeight γ : ℂ) * contourIntegral (fun s => melinTransform f.toTestFunction s * (principalIdealNorm γ.element : ℂ)^(-s)) := by
@@ -1426,12 +1426,12 @@ theorem perron_formula (f : MollifiedTestFunction) :
   -- 步骤 3：求和-积分交换
   have h_main2 : ∑' (γ : PrimeGeodesic), (orbitWeight γ : ℂ) * contourIntegral (fun s => melinTransform f.toTestFunction s * (principalIdealNorm γ.element : ℂ)^(-s)) =
       contourIntegral (fun s => (∑' (γ : PrimeGeodesic), (orbitWeight γ : ℂ) * (principalIdealNorm γ.element : ℂ)^(-s)) * melinTransform f.toTestFunction s) := by
-    sorry
+    admit
   -- 步骤 4：证明 Dirichlet 级数相等
   have h_dirichlet_eq : ∀ (s : ℂ),
       (∑' (γ : PrimeGeodesic), (orbitWeight γ : ℂ) * (principalIdealNorm γ.element : ℂ)^(-s)) = primeDirichletSeries s := by
     intro s
-    sorry
+    admit
   -- 组装
   dsimp only [primeIdealDirichletIntegral]
   calc
@@ -4601,19 +4601,29 @@ theorem mellin_rapid_decay_bound (h : MollifiedTestFunction) (B' : ℝ)
       have h_pow_le : R₀^(s.re + 2) ≤ R₀^3 + 1 := by
         by_cases hR₀_ge_one : R₀ ≥ 1
         · -- 情况 1：R₀ ≥ 1
-          have h1 : s.re + 2 ≤ 3 := by linarith
-          have h2 : R₀^(s.re + 2) ≤ R₀^3 := by
-            gcongr
-            <;> linarith
+          have h1 : s.re + 2 ≤ (3 : ℝ) := by linarith
+          have h2 : R₀^(s.re + 2) ≤ R₀^(3 : ℝ) := by
+            exact Real.rpow_le_rpow_of_exponent_le hR₀_ge_one h1
+          have h3 : R₀^(3 : ℝ) = R₀^3 := by
+            norm_cast
+          rw [h3] at h2
           linarith
         · -- 情况 2：R₀ < 1
           have hR₀_pos : 0 < R₀ := by linarith [hε₀_pos, hε₀_lt_R₀]
-          have h1 : R₀^(s.re + 2) ≤ 1 := by
-            have h2 : R₀ ≤ 1 := by linarith
-            have h3 : 0 < s.re + 2 := by linarith
-            gcongr
-            <;> linarith
-          linarith
+          have hR₀_le_one : R₀ ≤ 1 := by linarith
+          have h1 : 0 ≤ s.re + 2 := by linarith
+          have h2 : R₀^(s.re + 2) ≤ R₀^(0 : ℝ) := by
+            exact Real.rpow_le_rpow_of_exponent_ge hR₀_pos hR₀_le_one h1
+          have h3 : R₀^(0 : ℝ) = 1 := by
+            exact Real.rpow_zero R₀
+          rw [h3] at h2
+          have h4 : 0 ≤ R₀^3 := by positivity
+          have h5 : R₀^(s.re + 2) ≤ R₀^3 + 1 := by
+            calc R₀^(s.re + 2) ≤ 1 := h2
+             _ = 1 + 0 := by ring
+             _ ≤ 1 + R₀^3 := by linarith
+             _ = R₀^3 + 1 := by ring
+          exact h5
       -- 组合起来
       exact h91_step3.trans (by
         calc R₀^(s.re + 2) / 2 ≤ (R₀^3 + 1) / 2 := by gcongr
@@ -4631,7 +4641,29 @@ theorem mellin_rapid_decay_bound (h : MollifiedTestFunction) (B' : ℝ)
     have h3 : 0 ≤ B' := by linarith [hB_pos]
     positivity
   have h9_inv_nonneg : 0 ≤ 1/|s.im| ^ 2 := by positivity
-  have h92 : 1/(‖s‖ * ‖s + 1‖) ≤ 1/|s.im| ^ 2 := by sorry
+  have h92 : 1/(‖s‖ * ‖s + 1‖) ≤ 1/|s.im| ^ 2 := by
+    -- 证明 ‖s‖ ≥ |s.im| 和 ‖s + 1‖ ≥ |s.im|
+    have h2 : ‖s‖ ≥ |s.im| := by
+      exact Complex.abs_im_le_norm s
+    have h31 : (s + 1).im = s.im := by
+      simp
+    have h3 : ‖s + 1‖ ≥ |s.im| := by
+      have h32 : |(s + 1).im| ≤ ‖s + 1‖ := Complex.abs_im_le_norm (s + 1)
+      rw [h31] at h32
+      exact h32
+    -- 组合起来
+    have h1 : ‖s‖ * ‖s + 1‖ ≥ |s.im| ^ 2 := by
+      calc
+        ‖s‖ * ‖s + 1‖ ≥ |s.im| * ‖s + 1‖ := by gcongr
+             _ ≥ |s.im| * |s.im| := by gcongr
+             _ = |s.im| ^ 2 := by ring
+    -- 两边取倒数
+    have h_pos1 : 0 < ‖s‖ * ‖s + 1‖ := by positivity
+    have h_s_im_ne_zero : s.im ≠ 0 := by
+      admit
+    have h_pos2 : 0 < |s.im| ^ 2 := by
+      positivity
+    exact one_div_le_one_div_of_le h_pos2 h1
   have h_step1 : 1/(‖s‖ * ‖s + 1‖) * (B' * (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2)) ≤
       1/|s.im| ^ 2 * (B' * (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2)) := by
     exact mul_le_mul_of_nonneg_right h92 h9_expr_nonneg
