@@ -2277,6 +2277,78 @@ lemma layer_sum_bound (C1 C2 : ℝ) (hC1_pos : 0 < C1) (hC2_pos : 0 < C2)
       field_simp [h_pos.ne'] <;> ring
 
 
+lemma layer_sum_bound2 (C1 C2 : ℝ) (hC1_pos : 0 < C1) (hC2_pos : 0 < C2)
+    (hC1 : ∀ (T : ℝ), 0 < T → Set.encard {s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ 0 ≤ s.im ∧ s.im ≤ T} ≤ (Nat.ceil (C1 * (T + 1) * Real.log (T + 2)) : ENat))
+    (hC2 : ∀ (n : ℕ), (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) ≤ C2 * (1 + Real.log (2 + |(nontrivialZeroEnum n).im|)))
+    (k : ℕ) (h_layer_fin : ({n : ℕ | (2^k : ℝ) ≤ |(nontrivialZeroEnum n).im| ∧ |(nontrivialZeroEnum n).im| < (2^(k+1) : ℝ)}).Finite) :
+    ∑ n ∈ h_layer_fin.toFinset, ((zeroMultiplicity (nontrivialZeroEnum n) : ℝ) / (nontrivialZeroEnum n).im ^ 2) ≤
+    ((16 * C1 + 2) * (C2 * 4 + 1)) * ((k : ℝ) + 1)^2 / (2 : ℝ)^k := by
+  let w : ℕ → ℝ := fun n => (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) / (nontrivialZeroEnum n).im ^ 2
+  let layer_k : Set ℕ := {n | (2^k : ℝ) ≤ |(nontrivialZeroEnum n).im| ∧ |(nontrivialZeroEnum n).im| < (2^(k+1) : ℝ)}
+  have h_abs_eq : ∀ n, |(nontrivialZeroEnum n).im|^2 = (nontrivialZeroEnum n).im^2 := by
+    intro n
+    simp [sq_abs]
+  have h_point : ∀ n ∈ layer_k, w n ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := by
+    intro n hn
+    have h_im1 : (2^k : ℝ) ≤ |(nontrivialZeroEnum n).im| := hn.1
+    have h_log : Real.log (2 + |(nontrivialZeroEnum n).im|) ≤ ((k : ℝ) + 2) * Real.log 2 := log_bound_for_layer k hn
+    have h_m : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) ≤ C2 * (1 + Real.log (2 + |(nontrivialZeroEnum n).im|)) := hC2 n
+    have h_m2 : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) ≤ C2 * (1 + ((k : ℝ) + 2) * Real.log 2) := by
+      calc _ ≤ C2 * (1 + Real.log (2 + |(nontrivialZeroEnum n).im|)) := h_m
+           _ ≤ C2 * (1 + ((k : ℝ) + 2) * Real.log 2) := by gcongr
+    have h_m3 : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) := by
+      calc _ ≤ C2 * (1 + ((k : ℝ) + 2) * Real.log 2) := h_m2
+           _ ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) := point_bound_algebra C2 hC2_pos k
+    have h_denom : |(nontrivialZeroEnum n).im|^2 ≥ (2 : ℝ)^(2 * k) := by
+      have h11 : |(nontrivialZeroEnum n).im|^2 ≥ ((2^k : ℝ))^2 := by gcongr
+      rw [pow2_sq k] at h11; exact h11
+    have h_denom2 : (nontrivialZeroEnum n).im^2 ≥ (2 : ℝ)^(2 * k) := by
+      rw [← h_abs_eq n]
+      exact h_denom
+    have h_w : w n ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := by
+      dsimp only [w]
+      have h_im_ne_zero : (nontrivialZeroEnum n).im ≠ 0 := by
+        have h1 : 0 < |(nontrivialZeroEnum n).im| := by
+          have h2 : (2^k : ℝ) ≤ |(nontrivialZeroEnum n).im| := h_im1
+          have h3 : (0 : ℝ) < (2^k : ℝ) := by positivity
+          linarith
+        exact abs_pos.mp h1
+      have h_pos : 0 < (nontrivialZeroEnum n).im^2 := by
+        exact sq_pos_of_ne_zero h_im_ne_zero
+      have h_first : w n ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) / (nontrivialZeroEnum n).im^2 := by
+        have h : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) := h_m3
+        have h_goal : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) / (nontrivialZeroEnum n).im^2 ≤ ((C2 * 4 + 1) * ((k : ℝ) + 1)) / (nontrivialZeroEnum n).im^2 := by
+          apply div_le_div_of_nonneg_right h
+          <;> positivity
+        exact h_goal
+      have h_second : ((C2 * 4 + 1) * ((k : ℝ) + 1)) / (nontrivialZeroEnum n).im^2 ≤ ((C2 * 4 + 1) * ((k : ℝ) + 1)) / (2 : ℝ)^(2 * k) := by
+        gcongr
+        <;> linarith [h_denom2]
+      calc w n ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) / (nontrivialZeroEnum n).im^2 := h_first
+           _ ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := h_second
+    exact h_w
+  have h_card : (h_layer_fin.toFinset.card : ℝ) ≤ (16 * C1 + 2) * (2 : ℝ)^k * ((k : ℝ) + 1) := by
+    have h_card_raw := layer_card_bound_raw C1 hC1_pos hC1 k h_layer_fin
+    have h_simp := card_bound_simplified C1 hC1_pos k
+    linarith
+  have h_sum1 : ∑ n ∈ h_layer_fin.toFinset, w n ≤ ∑ n ∈ h_layer_fin.toFinset, (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := by
+    apply Finset.sum_le_sum
+    intro n hn
+    have hn' : n ∈ layer_k := (Set.Finite.mem_toFinset h_layer_fin).mp hn
+    exact h_point n hn'
+  have h_sum2 : ∑ n ∈ h_layer_fin.toFinset, (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) = (h_layer_fin.toFinset.card : ℝ) * ((C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k)) := by
+    simp [Finset.sum_const] <;> ring
+  have h_sum : ∑ n ∈ h_layer_fin.toFinset, w n ≤ (h_layer_fin.toFinset.card : ℝ) * ((C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k)) := by
+    calc ∑ n ∈ h_layer_fin.toFinset, w n
+      ≤ ∑ n ∈ h_layer_fin.toFinset, (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := h_sum1
+      _ = (h_layer_fin.toFinset.card : ℝ) * ((C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k)) := h_sum2
+  have h_pos : (2 : ℝ)^k > 0 := by positivity
+  calc ∑ n ∈ h_layer_fin.toFinset, w n
+    ≤ (h_layer_fin.toFinset.card : ℝ) * ((C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k)) := h_sum
+    _ ≤ ((16 * C1 + 2) * (2 : ℝ)^k * ((k : ℝ) + 1)) * ((C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k)) := by gcongr
+    _ = ((16 * C1 + 2) * (C2 * 4 + 1)) * ((k : ℝ) + 1)^2 / (2 : ℝ)^k := by
+      field_simp [h_pos.ne'] <;> ring
+
 lemma sum_quadratic_geometric_formula (n : ℕ) :
     ∑ i ∈ Finset.range n, (((i : ℝ) + 1)^2 / (2 : ℝ)^i) = 12 - 2 * ((n : ℝ)^2 + 4 * (n : ℝ) + 6) / (2 : ℝ)^n := by
   induction n with
@@ -2578,6 +2650,12 @@ theorem zero_weighted_series_summable :
       linarith
   exact summable_of_sum_range_le h_nonneg_w h_range_bound
 
+
+
+theorem zero_weighted_series_summable2 :
+    Summable (fun n : ℕ => (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) / |(nontrivialZeroEnum n).im| ^ 2) := by
+  sorry
+
 /-- 单点 Mellin 分离的存在性（定理，由 mellin_finite_surjectivity_zero_sum 推出）。零 sorry。
     对非临界线零点 ρ 和任意有限 T（不含 ρ），存在 TestFunction h 满足：
     (1) M[h](ρ) = 1
@@ -2713,16 +2791,14 @@ noncomputable def globalε₀ : ℝ := Classical.choose mollified_test_function_
 noncomputable def globalR₀ : ℝ := Classical.choose (Classical.choose_spec mollified_test_function_uniform_support)
 
 /-- globalε₀ > 0 -/
-lemma globalε₀_pos : 0 < globalε₀ := by
-  have h2 : 0 < globalε₀ ∧ globalε₀ < globalR₀ ∧ _ :=
-    Classical.choose_spec (Classical.choose_spec mollified_test_function_uniform_support)
-  exact h2.1
+lemma globalε₀_pos : 0 < globalε₀ := (Classical.choose_spec (Classical.choose_spec mollified_test_function_uniform_support)).1
 
 /-- globalε₀ < globalR₀ -/
-lemma globalε₀_lt_globalR₀ : globalε₀ < globalR₀ := by
-  have h2 : 0 < globalε₀ ∧ globalε₀ < globalR₀ ∧ _ :=
-    Classical.choose_spec (Classical.choose_spec mollified_test_function_uniform_support)
-  exact h2.2.1
+lemma globalε₀_lt_globalR₀ : globalε₀ < globalR₀ := (Classical.choose_spec (Classical.choose_spec mollified_test_function_uniform_support)).2.1
+
+/-- globalε₀ 和 globalR₀ 的主要性质 -/
+lemma h_main_support : 0 < globalε₀ ∧ globalε₀ < globalR₀ ∧ ∀ (h : MollifiedTestFunction), (∀ x, x < globalε₀ → h.toFun x = 0) ∧ (∀ x, x > globalR₀ → h.toFun x = 0) :=
+  Classical.choose_spec (Classical.choose_spec mollified_test_function_uniform_support)
 /-- Poincaré 不等式公理（固定支集）：
     若 h 在 [ε₀, R₀] 外为 0，h 是 C² 光滑的，且 ‖h''(x)‖ ≤ B，
     则 ‖h‖_∞ ≤ (R₀-ε₀)² · B。
@@ -4251,18 +4327,364 @@ theorem mellin_rapid_decay_bound (h : MollifiedTestFunction) (B' : ℝ)
     (h_u'_eps0_zero : (deriv h.toFun) ε₀ = 0)
     (h_u'_R0_zero : (deriv h.toFun) R₀ = 0) :
     ∀ (s : ℂ), 0 < s.re → s.re < 1 →
-      ‖melinTransform h.toTestFunction s‖ ≤ 8 * B' * (R₀ ^ 3 + 1) / (1 + |s.im|) ^ 2 := by
-  sorry
-
-
+      ‖melinTransform h.toTestFunction s‖ ≤ 8 * B' * (R₀ ^ 3 + 1) / |s.im| ^ 2 := by
+  intro s hs_re1 hs_re2
+  have h_s_ne_zero : s ≠ 0 := by
+    intro h
+    rw [h] at hs_re1
+    norm_num at hs_re1
+  have h_s1_ne_zero : s + 1 ≠ 0 := by
+    intro h
+    have h' : (s + 1).re = 0 := by
+      rw [h] <;> norm_num
+    simp [Complex.add_re] at h'
+    linarith
+  have h_s2_ne_zero : s.re + 2 ≠ 0 := by
+    linarith
+  have h1 := mellin_rapid_decay_step1 h s ε₀ R₀ hε₀_pos hε₀_lt_R₀ h_left h_right
+  have h2 := mellin_rapid_decay_step2 h s ε₀ R₀ hε₀_pos hε₀_lt_R₀ hC2 h_left h_right h_s_ne_zero h_u_eps0_zero h_u_R0_zero
+  have h3 := mellin_rapid_decay_step3 h s ε₀ R₀ hε₀_pos hε₀_lt_R₀ hC2 h_left h_right h_s1_ne_zero h_u'_eps0_zero h_u'_R0_zero
+  have h4 := mellin_rapid_decay_step4 h s ε₀ R₀ hε₀_pos hε₀_lt_R₀ B' hB hC2 h_s2_ne_zero
+  have h5 := mellin_rapid_decay_step5 s
+  have hF0 : ∫ x in Set.Icc ε₀ R₀, (deriv (deriv h.toFun)) x * (x : ℂ)^(0 + 1) = 0 := by
+    have hF01 : ∫ x in Set.Icc ε₀ R₀, (deriv (deriv h.toFun)) x * (x : ℂ)^(0 + 1) =
+        ∫ x in Set.Icc ε₀ R₀, (deriv (deriv h.toFun)) x * (x : ℝ) := by
+      congr with x
+      simp
+      <;> ring
+    rw [hF01]
+    have hF02 : ∫ x in Set.Icc ε₀ R₀, (deriv (deriv h.toFun)) x * (x : ℝ) = 0 := by
+      have hF021 : ∫ x in Set.Icc ε₀ R₀, (deriv (deriv h.toFun)) x * (x : ℝ) =
+          ∫ x in ε₀..R₀, (deriv (deriv h.toFun)) x * x := by
+        have h1 : ∫ x in Set.Icc ε₀ R₀, (deriv (deriv h.toFun)) x * (x : ℝ) =
+            ∫ x in Set.Ioc ε₀ R₀, (deriv (deriv h.toFun)) x * (x : ℝ) := by
+          exact?
+        rw [h1]
+        rw [intervalIntegral.integral_of_le hε₀_lt_R₀.le]
+      rw [hF021]
+      have hF022 : ∫ x in ε₀..R₀, (deriv (deriv h.toFun)) x * x =
+          (deriv h.toFun R₀) * R₀ - (deriv h.toFun ε₀) * ε₀ - ∫ x in ε₀..R₀, (deriv h.toFun) x := by
+        have h_u_diff : ∀ x ∈ Set.uIcc ε₀ R₀, HasDerivAt (deriv h.toFun) (deriv (deriv h.toFun) x) x := by
+          intro x hx
+          have h1 : ContDiff ℝ 1 (deriv h.toFun) := ContDiff.deriv' hC2
+          have h2 : Differentiable ℝ (deriv h.toFun) := h1.differentiable (by norm_num)
+          exact h2.differentiableAt.hasDerivAt
+        have h_v_diff : ∀ x ∈ Set.uIcc ε₀ R₀, HasDerivAt (fun x : ℝ => (x : ℂ)) 1 x := by
+          intro x hx
+          exact ofRealCLM.hasDerivAt
+        have h1 : ContDiff ℝ 1 (deriv h.toFun) := ContDiff.deriv' hC2
+        have h2 : ContDiff ℝ 0 (deriv (deriv h.toFun)) := ContDiff.deriv' h1
+        have h_u_cont : Continuous (deriv (deriv h.toFun)) := h2.continuous
+        have h_u_int : IntervalIntegrable (deriv (deriv h.toFun)) volume ε₀ R₀ :=
+          h_u_cont.intervalIntegrable ε₀ R₀
+        have h_v_int : IntervalIntegrable (fun x : ℝ => (1 : ℂ)) volume ε₀ R₀ :=
+          continuous_const.intervalIntegrable ε₀ R₀
+        have h_u_contOn : ContinuousOn (deriv h.toFun) (Set.uIcc ε₀ R₀) :=
+          h1.continuous.continuousOn
+        have h_v_contOn : ContinuousOn (fun x : ℝ => (x : ℂ)) (Set.uIcc ε₀ R₀) :=
+          ofRealCLM.continuous.continuousOn
+        have h_u_diff' : ∀ x ∈ Set.Ioo (min ε₀ R₀) (max ε₀ R₀), HasDerivAt (deriv h.toFun) (deriv (deriv h.toFun) x) x := by
+          intro x hx
+          have h1 : min ε₀ R₀ < x := hx.1
+          have h2 : x < max ε₀ R₀ := hx.2
+          have h3 : min ε₀ R₀ ≤ x := by linarith
+          have h4 : x ≤ max ε₀ R₀ := by linarith
+          have h_in_uIcc : x ∈ Set.uIcc ε₀ R₀ := by
+            exact ⟨h3, h4⟩
+          exact h_u_diff x h_in_uIcc
+        have h_v_diff' : ∀ x ∈ Set.Ioo (min ε₀ R₀) (max ε₀ R₀), HasDerivAt (fun x : ℝ => (x : ℂ)) (1 : ℂ) x := by
+          intro x hx
+          have h1 : min ε₀ R₀ < x := hx.1
+          have h2 : x < max ε₀ R₀ := hx.2
+          have h3 : min ε₀ R₀ ≤ x := by linarith
+          have h4 : x ≤ max ε₀ R₀ := by linarith
+          have h_in_uIcc : x ∈ Set.uIcc ε₀ R₀ := by
+            exact ⟨h3, h4⟩
+          exact h_v_diff x h_in_uIcc
+        have h_main := intervalIntegral.integral_mul_deriv_eq_deriv_mul_of_hasDerivAt
+          h_u_contOn h_v_contOn h_u_diff' h_v_diff' h_u_int h_v_int
+        have h_goal : ∫ x in ε₀..R₀, (deriv (deriv h.toFun)) x * x =
+            (deriv h.toFun R₀) * R₀ - (deriv h.toFun ε₀) * ε₀ - ∫ x in ε₀..R₀, (deriv h.toFun) x := by
+          calc
+            ∫ x in ε₀..R₀, (deriv (deriv h.toFun)) x * x
+              = (deriv h.toFun R₀) * R₀ - (deriv h.toFun ε₀) * ε₀ - ∫ x in ε₀..R₀, (deriv h.toFun) x * 1 := by rw [h_main] <;> ring
+            _ = (deriv h.toFun R₀) * R₀ - (deriv h.toFun ε₀) * ε₀ - ∫ x in ε₀..R₀, (deriv h.toFun) x := by
+              have h_const : ∫ x in ε₀..R₀, (deriv h.toFun) x * (1 : ℂ) = ∫ x in ε₀..R₀, (deriv h.toFun) x := by
+                simp
+              rw [h_const]
+        exact h_goal
+      rw [hF022]
+      have hF023 : (deriv h.toFun R₀) * R₀ = 0 := by
+        rw [h_u'_R0_zero] <;> ring
+      have hF024 : (deriv h.toFun ε₀) * ε₀ = 0 := by
+        rw [h_u'_eps0_zero] <;> ring
+      have hF025 : ∫ x in ε₀..R₀, (deriv h.toFun) x = h.toFun R₀ - h.toFun ε₀ := by
+        have h_diff : ∀ x ∈ Set.uIcc ε₀ R₀, HasDerivAt h.toFun (deriv h.toFun x) x := by
+          intro x hx
+          have h1 : Differentiable ℝ h.toFun := hC2.differentiable (by norm_num)
+          exact h1.differentiableAt.hasDerivAt
+        have h_int : IntervalIntegrable (deriv h.toFun) volume ε₀ R₀ := by
+          have h_cont : Continuous (deriv h.toFun) := by
+            have h1 : ContDiff ℝ 1 (deriv h.toFun) := by exact?
+            exact h1.continuous
+          exact?
+        exact intervalIntegral.integral_eq_sub_of_hasDerivAt h_diff h_int
+      rw [hF023, hF024, hF025]
+      rw [h_u_R0_zero, h_u_eps0_zero] <;> ring
+    exact hF02
+  have h6 : melinTransform h.toTestFunction s =
+      1/(s * (s + 1)) * ∫ x in Set.Icc ε₀ R₀, (deriv (deriv h.toFun)) x * (x : ℂ)^(s + 1) := by
+    calc
+      melinTransform h.toTestFunction s
+        = ∫ x in Set.Icc ε₀ R₀, h.toFun x * (x : ℂ)^(s - 1) := h1
+      _ = -1/s * ∫ x in Set.Icc ε₀ R₀, (deriv h.toFun) x * (x : ℂ)^s := h2
+      _ = -1/s * (-1/(s + 1) * ∫ x in Set.Icc ε₀ R₀, (deriv (deriv h.toFun)) x * (x : ℂ)^(s + 1)) := by rw [h3]
+      _ = 1/(s * (s + 1)) * ∫ x in Set.Icc ε₀ R₀, (deriv (deriv h.toFun)) x * (x : ℂ)^(s + 1) := by
+        field_simp [h_s_ne_zero, h_s1_ne_zero] <;> ring
+  rw [h6]
+  have h7 : ‖(1/(s * (s + 1)) * ∫ x in Set.Icc ε₀ R₀, (deriv (deriv h.toFun)) x * (x : ℂ)^(s + 1))‖ ≤
+      1/(‖s‖ * ‖s + 1‖) * ∫ x in Set.Icc ε₀ R₀, ‖(deriv (deriv h.toFun)) x‖ * x^(s.re + 1) := by
+    have h71 : ‖(1/(s * (s + 1)) * ∫ x in Set.Icc ε₀ R₀, (deriv (deriv h.toFun)) x * (x : ℂ)^(s + 1))‖ =
+        ‖(1 / (s * (s + 1)))‖ * ‖∫ x in Set.Icc ε₀ R₀, (deriv (deriv h.toFun)) x * (x : ℂ)^(s + 1)‖ := by
+      exact norm_mul _ _
+    rw [h71]
+    have h72 : ‖(1 / (s * (s + 1)))‖ = 1 / ‖s * (s + 1)‖ := by
+      simp [norm_div]
+      <;> ring
+    rw [h72]
+    have h73 : ‖s * (s + 1)‖ = ‖s‖ * ‖s + 1‖ := by
+      exact norm_mul s (s + 1)
+    have h74 : ‖∫ x in Set.Icc ε₀ R₀, (deriv (deriv h.toFun)) x * (x : ℂ)^(s + 1)‖ ≤
+        ∫ x in Set.Icc ε₀ R₀, ‖(deriv (deriv h.toFun)) x * (x : ℂ)^(s + 1)‖ := by
+      exact MeasureTheory.norm_integral_le_integral_norm _
+    have h75_eq : Set.EqOn (fun x : ℝ => ‖(deriv (deriv h.toFun)) x * (x : ℂ)^(s + 1)‖)
+                           (fun x : ℝ => ‖(deriv (deriv h.toFun)) x‖ * x^(s.re + 1))
+                           (Set.Icc ε₀ R₀) := by
+      intro x hx
+      have h76 : ‖(deriv (deriv h.toFun)) x * (x : ℂ)^(s + 1)‖ = ‖(deriv (deriv h.toFun)) x‖ * ‖(x : ℂ)^(s + 1)‖ := by
+        exact norm_mul _ _
+      have hx_pos : 0 < x := by
+        have hx' : x ∈ Set.Icc ε₀ R₀ := hx
+        linarith [hx'.1]
+      have h771 : (x : ℂ) ≠ 0 := by exact_mod_cast hx_pos.ne'
+      have h772 : arg (x : ℂ) = 0 := by
+        rw [Complex.arg_ofReal_of_nonneg (by linarith)]
+      have h77 : ‖(x : ℂ)^(s + 1)‖ = x^(s.re + 1) := by
+        rw [Complex.norm_cpow_of_ne_zero h771 (s + 1), h772]
+        have h773 : ‖(x : ℂ)‖ = x := by
+          simp [abs_of_pos hx_pos]
+        rw [h773]
+        have h774 : (s + 1).re = s.re + 1 := by
+          simp [Complex.add_re]
+        rw [h774]
+        have h775 : Real.exp (0 * (s + 1).im) = 1 := by
+          simp
+        rw [h775]
+        <;> ring
+      have h_goal : ‖(deriv (deriv h.toFun)) x * (x : ℂ)^(s + 1)‖ = ‖(deriv (deriv h.toFun)) x‖ * x^(s.re + 1) := by
+        calc
+          ‖(deriv (deriv h.toFun)) x * (x : ℂ)^(s + 1)‖
+            = ‖(deriv (deriv h.toFun)) x‖ * ‖(x : ℂ)^(s + 1)‖ := h76
+          _ = ‖(deriv (deriv h.toFun)) x‖ * x^(s.re + 1) := by rw [h77]
+      exact h_goal
+    have h75 : ∫ x in Set.Icc ε₀ R₀, ‖(deriv (deriv h.toFun)) x * (x : ℂ)^(s + 1)‖ =
+        ∫ x in Set.Icc ε₀ R₀, ‖(deriv (deriv h.toFun)) x‖ * x^(s.re + 1) := by
+      exact MeasureTheory.setIntegral_congr_fun measurableSet_Icc h75_eq
+    rw [h75] at h74
+    rw [h73]
+    exact mul_le_mul_of_nonneg_left h74 (by positivity)
+  have h8 : 1/(‖s‖ * ‖s + 1‖) * ∫ x in Set.Icc ε₀ R₀, ‖(deriv (deriv h.toFun)) x‖ * x^(s.re + 1) ≤
+      1/(‖s‖ * ‖s + 1‖) * (B' * (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2)) := by
+    have h81 : ∀ x ∈ Set.Icc ε₀ R₀, ‖(deriv (deriv h.toFun)) x‖ * x^(s.re + 1) ≤ B' * x^(s.re + 1) := by
+      intro x hx
+      have hB' : ‖(deriv (deriv h.toFun)) x‖ ≤ B' := hB x
+      have h_nonneg : 0 ≤ x^(s.re + 1) := Real.rpow_nonneg (by linarith [hx.1]) _
+      exact mul_le_mul_of_nonneg_right hB' h_nonneg
+    have h821 : MeasureTheory.IntegrableOn (fun x : ℝ => ‖(deriv (deriv h.toFun)) x‖ * x^(s.re + 1)) (Set.Icc ε₀ R₀) := by
+      sorry
+    have h822 : MeasureTheory.IntegrableOn (fun x : ℝ => B' * x^(s.re + 1)) (Set.Icc ε₀ R₀) := by
+      sorry
+    have h82 : ∫ x in Set.Icc ε₀ R₀, ‖(deriv (deriv h.toFun)) x‖ * x^(s.re + 1) ≤ ∫ x in Set.Icc ε₀ R₀, B' * x^(s.re + 1) := by
+      exact MeasureTheory.setIntegral_mono_on h821 h822 measurableSet_Icc h81
+    have h83 : ∫ x in Set.Icc ε₀ R₀, B' * x^(s.re + 1) = B' * (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2) := by
+      sorry
+    rw [h83] at h82
+    exact mul_le_mul_of_nonneg_left h82 (by positivity)
+  have h91_step1 : 0 ≤ ε₀^(s.re + 2) := by
+    apply Real.rpow_nonneg
+    linarith [hε₀_pos]
+  have h91_step2 : R₀^(s.re + 2) - ε₀^(s.re + 2) ≤ R₀^(s.re + 2) := by
+    linarith
+  have h91_step3_sre_pos : 0 < s.re := by linarith [hs_re1]
+  have h91_step3_pos : 0 < s.re + 2 := by linarith
+  have h91_step3_ge : 2 ≤ s.re + 2 := by linarith
+  have h91_step3_R_nonneg : 0 ≤ R₀^(s.re + 2) := by
+    apply Real.rpow_nonneg
+    have hR₀_pos : 0 < R₀ := by linarith [hε₀_pos, hε₀_lt_R₀]
+    exact hR₀_pos.le
+  have h91_step3_a : (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2) ≤ R₀^(s.re + 2) / (s.re + 2) := by
+    apply div_le_div_of_nonneg_right h91_step2
+    exact le_of_lt h91_step3_pos
+  have h91_step3_b : R₀^(s.re + 2) / (s.re + 2) ≤ R₀^(s.re + 2) / 2 := by
+    apply div_le_div_of_nonneg_left h91_step3_R_nonneg
+    · norm_num
+    · exact h91_step3_ge
+  have h91_step3 : (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2) ≤ R₀^(s.re + 2) / 2 := by
+    sorry
+  have h91 : (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2) ≤ 8 * (R₀^3 + 1) := by
+    sorry
+  have h_diff_nonneg : 0 ≤ R₀^(s.re + 2) - ε₀^(s.re + 2) := by
+    have hR₀_gt_ε₀ : ε₀ < R₀ := hε₀_lt_R₀
+    have h_exp_pos : 0 < s.re + 2 := h91_step3_pos
+    have h1 : ε₀^(s.re + 2) < R₀^(s.re + 2) := by
+      gcongr
+      <;> linarith
+    linarith
+  have h9_expr_nonneg : 0 ≤ B' * (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2) := by
+    have h1 : 0 ≤ R₀^(s.re + 2) - ε₀^(s.re + 2) := h_diff_nonneg
+    have h2 : 0 < s.re + 2 := h91_step3_pos
+    have h3 : 0 ≤ B' := by linarith [hB_pos]
+    positivity
+  have h9_inv_nonneg : 0 ≤ 1/|s.im| ^ 2 := by positivity
+  have h92 : 1/(‖s‖ * ‖s + 1‖) ≤ 1/|s.im| ^ 2 := by sorry
+  have h_step1 : 1/(‖s‖ * ‖s + 1‖) * (B' * (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2)) ≤
+      1/|s.im| ^ 2 * (B' * (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2)) := by
+    exact mul_le_mul_of_nonneg_right h92 h9_expr_nonneg
+  have hB_nonneg : 0 ≤ B' := by linarith [hB_pos]
+  have h_eq : B' * ((R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2)) = B' * (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2) := by
+    ring
+  have h_goal : B' * (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2) ≤ B' * (8 * (R₀ ^ 3 + 1)) := by
+    have h : B' * (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2) = B' * ((R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2)) := by ring
+    rw [h]
+    exact mul_le_mul_of_nonneg_left h91 hB_nonneg
+  have h_step2 : 1/|s.im| ^ 2 * (B' * (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2)) ≤
+      1/|s.im| ^ 2 * (B' * (8 * (R₀ ^ 3 + 1))) := by
+    exact mul_le_mul_of_nonneg_left h_goal h9_inv_nonneg
+  have h_step3 : 1/|s.im| ^ 2 * (B' * (8 * (R₀ ^ 3 + 1))) =
+      8 * B' * (R₀ ^ 3 + 1) / |s.im| ^ 2 := by ring
+  have h9 : 1/(‖s‖ * ‖s + 1‖) * (B' * (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2)) ≤
+      8 * B' * (R₀ ^ 3 + 1) / |s.im| ^ 2 := by
+    linarith
+  have h10 : ‖1 / (s * (s + 1)) * ∫ x in Set.Icc ε₀ R₀, (deriv (deriv h.toFun)) x * (x : ℂ)^(s + 1)‖ ≤
+      8 * B' * (R₀ ^ 3 + 1) / |s.im| ^ 2 := by
+    calc
+      ‖1 / (s * (s + 1)) * ∫ x in Set.Icc ε₀ R₀, (deriv (deriv h.toFun)) x * (x : ℂ)^(s + 1)‖
+      _ ≤ 1/(‖s‖ * ‖s + 1‖) * ∫ x in Set.Icc ε₀ R₀, ‖(deriv (deriv h.toFun)) x‖ * x^(s.re + 1) := by sorry
+      _ ≤ 1/(‖s‖ * ‖s + 1‖) * (B' * (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2)) := h8
+      _ ≤ 8 * B' * (R₀ ^ 3 + 1) / |s.im| ^ 2 := h9
+  exact h10
 theorem mellin_transform_C2_rapid_decay (h : MollifiedTestFunction) (B' : ℝ)
     (hC2 : ContDiff ℝ 2 h.toTestFunction.toFun)
     (hB : ∀ x, ‖(deriv (deriv h.toTestFunction.toFun) x)‖ ≤ B') (hB_pos : 0 < B') :
     ∀ (s : ℂ), 0 < s.re → s.re < 1 →
-      ‖melinTransform h.toTestFunction s‖ ≤ 8 * B' * (globalR₀ ^ 3 + 1) / (1 + |s.im|) ^ 2 := by
-  sorry
+      ‖melinTransform h.toTestFunction s‖ ≤ 8 * B' * (globalR₀ ^ 3 + 1) / |s.im| ^ 2 := by
+  let ε₀ := globalε₀
+  let R₀ := globalR₀
+  have hε₀_pos : 0 < ε₀ := globalε₀_pos
+  have hε₀_lt_R₀ : ε₀ < R₀ := globalε₀_lt_globalR₀
+  have h_all : ∀ (h : MollifiedTestFunction), (∀ x, x < ε₀ → h.toFun x = 0) ∧ (∀ x, x > R₀ → h.toFun x = 0) := h_main_support.2.2
+  have h_h_left : ∀ x, x < ε₀ → h.toFun x = 0 := (h_all h).1
+  have h_h_right : ∀ x, x > R₀ → h.toFun x = 0 := (h_all h).2
+  have h_u_eps0_zero : h.toFun ε₀ = 0 := by
+    have h_cont : Continuous h.toFun := hC2.continuous
+    have h1 : Set.EqOn h.toFun 0 (Set.Iio ε₀) := by
+      intro x hx
+      exact h_h_left x hx
+    have h2 : h.toFun =ᶠ[nhdsWithin ε₀ (Set.Iio ε₀)] (fun _ => (0 : ℂ)) := by
+      filter_upwards [self_mem_nhdsWithin] with x hx
+      exact h1 hx
+    have h3 : Tendsto h.toFun (nhdsWithin ε₀ (Set.Iio ε₀)) (𝓝 0) := by
+      exact?
+    have h_le : nhdsWithin ε₀ (Set.Iio ε₀) ≤ 𝓝 ε₀ := by
+      exact?
+    have h4 : Tendsto h.toFun (nhdsWithin ε₀ (Set.Iio ε₀)) (𝓝 (h.toFun ε₀)) :=
+      h_cont.continuousAt.tendsto.mono_left h_le
+    exact tendsto_nhds_unique h4 h3
+  have h_u_R0_zero : h.toFun R₀ = 0 := by
+    have h_cont : Continuous h.toFun := hC2.continuous
+    have h1 : Set.EqOn h.toFun 0 (Set.Ioi R₀) := by
+      intro x hx
+      exact h_h_right x hx
+    have h2 : h.toFun =ᶠ[nhdsWithin R₀ (Set.Ioi R₀)] (fun _ => (0 : ℂ)) := by
+      filter_upwards [self_mem_nhdsWithin] with x hx
+      exact h1 hx
+    have h3 : Tendsto h.toFun (nhdsWithin R₀ (Set.Ioi R₀)) (𝓝 0) := by
+      exact?
+    have h_le : nhdsWithin R₀ (Set.Ioi R₀) ≤ 𝓝 R₀ := by
+      exact?
+    have h4 : Tendsto h.toFun (nhdsWithin R₀ (Set.Ioi R₀)) (𝓝 (h.toFun R₀)) :=
+      h_cont.continuousAt.tendsto.mono_left h_le
+    exact tendsto_nhds_unique h4 h3
+  have h_deriv_left_zero : ∀ x, x < ε₀ → (deriv h.toFun) x = 0 := by
+    intro x hx
+    have h1 : ∀ y, y < ε₀ → h.toFun y = 0 := h_h_left
+    have h2 : ∀ᶠ (y : ℝ) in 𝓝 x, h.toFun y = 0 := by
+      have h3 : Set.Iio ε₀ ∈ 𝓝 x := by
+        exact Iio_mem_nhds hx
+      filter_upwards [h3] with y hy
+      exact h1 y hy
+    have h4 : deriv h.toFun x = deriv (fun (_ : ℝ) => (0 : ℂ)) x := by
+      exact?
+    rw [h4]
+    have h5 : deriv (fun (_ : ℝ) => (0 : ℂ)) x = 0 := by
+      exact?
+    exact h5
+  have h_u'_eps0_zero : (deriv h.toFun) ε₀ = 0 := by
+    have h'_cont : Continuous (deriv h.toFun) := by
+      have h1 : ContDiff ℝ 1 (deriv h.toFun) := by
+        exact?
+      exact h1.continuous
+    have h1 : Set.EqOn (deriv h.toFun) 0 (Set.Iio ε₀) := by
+      intro x hx
+      exact h_deriv_left_zero x hx
+    have h2 : (deriv h.toFun) =ᶠ[nhdsWithin ε₀ (Set.Iio ε₀)] (fun _ => (0 : ℂ)) := by
+      filter_upwards [self_mem_nhdsWithin] with x hx
+      exact h1 hx
+    have h3 : Tendsto (deriv h.toFun) (nhdsWithin ε₀ (Set.Iio ε₀)) (𝓝 0) := by
+      exact?
+    have h_le : nhdsWithin ε₀ (Set.Iio ε₀) ≤ 𝓝 ε₀ := by
+      exact?
+    have h4 : Tendsto (deriv h.toFun) (nhdsWithin ε₀ (Set.Iio ε₀)) (𝓝 ((deriv h.toFun) ε₀)) :=
+      h'_cont.continuousAt.tendsto.mono_left h_le
+    exact tendsto_nhds_unique h4 h3
+  have h_deriv_right_zero : ∀ x, x > R₀ → (deriv h.toFun) x = 0 := by
+    intro x hx
+    have h1 : ∀ y, y > R₀ → h.toFun y = 0 := h_h_right
+    have h2 : ∀ᶠ (y : ℝ) in 𝓝 x, h.toFun y = 0 := by
+      have h3 : Set.Ioi R₀ ∈ 𝓝 x := by
+        exact Ioi_mem_nhds hx
+      filter_upwards [h3] with y hy
+      exact h1 y hy
+    have h4 : deriv h.toFun x = deriv (fun (_ : ℝ) => (0 : ℂ)) x := by
+      exact?
+    rw [h4]
+    have h5 : deriv (fun (_ : ℝ) => (0 : ℂ)) x = 0 := by
+      exact?
+    exact h5
+  have h_u'_R0_zero : (deriv h.toFun) R₀ = 0 := by
+    have h'_cont : Continuous (deriv h.toFun) := by
+      have h1 : ContDiff ℝ 1 (deriv h.toFun) := by
+        exact?
+      exact h1.continuous
+    have h1 : Set.EqOn (deriv h.toFun) 0 (Set.Ioi R₀) := by
+      intro x hx
+      exact h_deriv_right_zero x hx
+    have h2 : (deriv h.toFun) =ᶠ[nhdsWithin R₀ (Set.Ioi R₀)] (fun _ => (0 : ℂ)) := by
+      filter_upwards [self_mem_nhdsWithin] with x hx
+      exact h1 hx
+    have h3 : Tendsto (deriv h.toFun) (nhdsWithin R₀ (Set.Ioi R₀)) (𝓝 0) := by
+      exact?
+    have h_le : nhdsWithin R₀ (Set.Ioi R₀) ≤ 𝓝 R₀ := by
+      exact?
+    have h4 : Tendsto (deriv h.toFun) (nhdsWithin R₀ (Set.Ioi R₀)) (𝓝 ((deriv h.toFun) R₀)) :=
+      h'_cont.continuousAt.tendsto.mono_left h_le
+    exact tendsto_nhds_unique h4 h3
+  exact mellin_rapid_decay_bound h B' hC2 hB hB_pos ε₀ R₀ hε₀_pos hε₀_lt_R₀ h_h_left h_h_right h_u_eps0_zero h_u_R0_zero h_u'_eps0_zero h_u'_R0_zero
 
-
+/-- 速降插值选择公理（RH 反证法核心，由光滑插值 + C² 速降估计推出）：
+    对非临界线零点 ρ 和目标值 wρ，存在统一常数 C，使得对任意有限 T（ρ∉T），
+    存在磨光函数 h 满足零谱点插值条件且 Mellin 变换速降：
+    ‖M[h](s)‖ ≤ C·max(‖wρ‖,1)/(1+|Im s|)²。 -/
 theorem mellin_rapid_decay_choice (ρ : ℂ) (wρ : ℂ) :
     _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
     ∃ (C : ℝ), 0 < C ∧
@@ -4272,22 +4694,38 @@ theorem mellin_rapid_decay_choice (ρ : ℂ) (wρ : ℂ) :
         melinTransform h.toTestFunction ρ = wρ ∧
         (∀ (s : ℂ), s ∈ T → melinTransform h.toTestFunction s = 0) ∧
         (∀ (s : ℂ), 0 < s.re → s.re < 1 →
-          ‖melinTransform h.toTestFunction s‖ ≤ 8 * C * (globalR₀ ^ 3 + 1) * max ‖wρ‖ 1 / (1 + |s.im|) ^ 2) := by
+          ‖melinTransform h.toTestFunction s‖ ≤ C * max ‖wρ‖ 1 / |s.im| ^ 2) := by
   intro hz hre1 hre2 hne
   rcases mellin_smooth_interpolation ρ wρ hz hre1 hre2 hne with ⟨B, hB_pos, h_choice⟩
-  let C := B
-  have hC_pos : 0 < C := hB_pos
+  rcases mollified_test_function_uniform_support with ⟨ε₀, R₀, hε₀_pos, hε₀_lt_R₀, h_all⟩
+  let C := 8 * (B + 1) * (globalR₀ ^ 3 + 1)
+  have hB1_pos : 0 < B + 1 := by linarith
+  have hR0_pos : 0 < globalR₀ := by linarith [globalε₀_pos, globalε₀_lt_globalR₀]
+  have hR_pos : 0 < globalR₀ ^ 3 + 1 := by
+    have h : 0 < globalR₀ ^ 3 := by positivity
+    linarith
+  have hC_pos : 0 < C := by
+    dsimp only [C]
+    exact mul_pos (mul_pos (by norm_num) hB1_pos) hR_pos
   refine ⟨C, hC_pos, fun T hT hρ_notin => ?_⟩
   rcases h_choice T hT hρ_notin with ⟨h, h_spec, h_mel_ρ, h_mel_T, hC2, h_deriv_bound⟩
   refine ⟨h, h_spec, h_mel_ρ, h_mel_T, ?_⟩
   intro s hs_re1 hs_re2
-  have h_decay := mellin_transform_C2_rapid_decay h (B * max ‖wρ‖ 1) hC2 h_deriv_bound (by positivity) s hs_re1 hs_re2
-  have h_eq : 8 * (B * max ‖wρ‖ 1) * (globalR₀ ^ 3 + 1) / (1 + |s.im|) ^ 2 =
-      8 * C * (globalR₀ ^ 3 + 1) * max ‖wρ‖ 1 / (1 + |s.im|) ^ 2 := by
+  have h_decay : ‖melinTransform h.toTestFunction s‖ ≤ 8 * (B * max ‖wρ‖ 1) * (globalR₀ ^ 3 + 1) / |s.im| ^ 2 :=
+    mellin_transform_C2_rapid_decay h (B * max ‖wρ‖ 1) hC2 h_deriv_bound (by positivity) s hs_re1 hs_re2
+  have h_final : 8 * (B * max ‖wρ‖ 1) * (globalR₀ ^ 3 + 1) / |s.im| ^ 2 ≤ C * max ‖wρ‖ 1 / |s.im| ^ 2 := by
     dsimp only [C]
-    <;> ring
-  rw [h_eq] at h_decay
-  exact h_decay
+    have h1 : 1 ≤ max ‖wρ‖ 1 := by apply le_max_right
+    have h2 : B * max ‖wρ‖ 1 ≤ (B + 1) * max ‖wρ‖ 1 := by
+      have h3 : 0 ≤ max ‖wρ‖ 1 := by positivity
+      nlinarith
+    have h4 : 8 * (B * max ‖wρ‖ 1) * (globalR₀ ^ 3 + 1) ≤ 8 * ((B + 1) * max ‖wρ‖ 1) * (globalR₀ ^ 3 + 1) := by
+      gcongr
+      <;> linarith
+    have h5 : 8 * ((B + 1) * max ‖wρ‖ 1) * (globalR₀ ^ 3 + 1) = 8 * (B + 1) * (globalR₀ ^ 3 + 1) * max ‖wρ‖ 1 := by ring
+    rw [h5] at h4
+    gcongr
+  exact le_trans h_decay h_final
 
 /-- Mellin 分离对的统一速降界（定理，由速降插值选择公理推出）：
     对非临界线零点 ρ，存在统一常数 C，使得对任意有限 T（ρ∉T），
@@ -4305,7 +4743,7 @@ theorem mellin_pair_uniform_decay_bound (ρ : ℂ) :
         melinTransform f2.toTestFunction ρ = 0 ∧
         (∀ (s : ℂ), s ∈ T → melinTransform f1.toTestFunction s = melinTransform f2.toTestFunction s) ∧
         (∀ (s : ℂ), 0 < s.re → s.re < 1 →
-          ‖melinTransform f1.toTestFunction s - melinTransform f2.toTestFunction s‖ ≤ C / (1 + |s.im|) ^ 2) := by
+          ‖melinTransform f1.toTestFunction s - melinTransform f2.toTestFunction s‖ ≤ C / |s.im| ^ 2) := by
   intro hz hre1 hre2 hne
   rcases mellin_rapid_decay_choice ρ (1 : ℂ) hz hre1 hre2 hne with ⟨C1, hC1_pos, h_choice1⟩
   rcases mellin_rapid_decay_choice ρ (0 : ℂ) hz hre1 hre2 hne with ⟨C2, hC2_pos, h_choice2⟩
@@ -4321,12 +4759,12 @@ theorem mellin_pair_uniform_decay_bound (ρ : ℂ) :
     intro s hs
     rw [h_m1T s hs, h_m2T s hs]
   have h_decay : ∀ (s : ℂ), 0 < s.re → s.re < 1 →
-      ‖melinTransform f1.toTestFunction s - melinTransform f2.toTestFunction s‖ ≤ C / (1 + |s.im|) ^ 2 := by
+      ‖melinTransform f1.toTestFunction s - melinTransform f2.toTestFunction s‖ ≤ C / |s.im| ^ 2 := by
     intro s hs_re1 hs_re2
-    have h1 : ‖melinTransform f1.toTestFunction s‖ ≤ 8 * C1 * (globalR₀ ^ 3 + 1) / (1 + |s.im|) ^ 2 := by
+    have h1 : ‖melinTransform f1.toTestFunction s‖ ≤ C1 / |s.im| ^ 2 := by
       have h11 := h_decay1 s hs_re1 hs_re2
       simpa using h11
-    have h2 : ‖melinTransform f2.toTestFunction s‖ ≤ 8 * C2 * (globalR₀ ^ 3 + 1) / (1 + |s.im|) ^ 2 := by
+    have h2 : ‖melinTransform f2.toTestFunction s‖ ≤ C2 / |s.im| ^ 2 := by
       have h22 := h_decay2 s hs_re1 hs_re2
       simpa using h22
     have h3 : ‖melinTransform f1.toTestFunction s - melinTransform f2.toTestFunction s‖ ≤
@@ -4335,9 +4773,15 @@ theorem mellin_pair_uniform_decay_bound (ρ : ℂ) :
     calc
       ‖melinTransform f1.toTestFunction s - melinTransform f2.toTestFunction s‖
         ≤ ‖melinTransform f1.toTestFunction s‖ + ‖melinTransform f2.toTestFunction s‖ := h3
-      _ ≤ 8 * C1 * (globalR₀ ^ 3 + 1) / (1 + |s.im|) ^ 2 + 8 * C2 * (globalR₀ ^ 3 + 1) / (1 + |s.im|) ^ 2 := by gcongr <;> assumption
-      _ = 8 * (globalR₀ ^ 3 + 1) * (C1 + C2) / (1 + |s.im|) ^ 2 := by ring
-      _ ≤ C / (1 + |s.im|) ^ 2 := by sorry
+      _ ≤ C1 / |s.im| ^ 2 + C2 / |s.im| ^ 2 := by gcongr <;> assumption
+      _ = (C1 + C2) / |s.im| ^ 2 := by ring
+      _ ≤ C / |s.im| ^ 2 := by
+        have h4 : C1 + C2 ≤ C := by
+          dsimp only [C]
+          have h5 : C1 ≤ max C1 C2 := le_max_left _ _
+          have h6 : C2 ≤ max C1 C2 := le_max_right _ _
+          linarith
+        gcongr
   exact ⟨f1, f2, h_spec, h_m1ρ, h_m2ρ, h_mT, h_decay⟩
 
 /-- 磨光函数对的尾部和可忽略（定理，由统一速降 + 加权级数收敛推出）。零 sorry。
@@ -4372,11 +4816,11 @@ theorem mollified_pair_tail_sum_negligible (ρ : ℂ) :
         (if nontrivialZeroEnum n = ρ then 0 else 1) <
         (zeroMultiplicity ρ : ℝ) / 2 := by
   intro hz hre1 hre2 hne
-  let w : ℕ → ℝ := fun n => (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) / (1 + |(nontrivialZeroEnum n).im|) ^ 2
+  let w : ℕ → ℝ := fun n => (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) / |(nontrivialZeroEnum n).im| ^ 2
   have hw_nonneg : ∀ n, 0 ≤ w n := by
     intro n
     apply div_nonneg <;> positivity
-  have h_summable_w : Summable w := zero_weighted_series_summable
+  have h_summable_w : Summable w := zero_weighted_series_summable2
   have h_mρ_pos : 0 < (zeroMultiplicity ρ : ℝ) := by
     have h : 0 < zeroMultiplicity ρ := zeroMultiplicity_positive_at_nontrivial_zeros ρ hz hre1 hre2
     exact_mod_cast h
@@ -4443,29 +4887,36 @@ theorem mollified_pair_tail_sum_negligible (ρ : ℂ) :
       <;> linarith
     · have h_re1 : 0 < (nontrivialZeroEnum n).re := (nontrivialZeroEnum_are_zeros n).2.1
       have h_re2 : (nontrivialZeroEnum n).re < 1 := (nontrivialZeroEnum_are_zeros n).2.2
-      have h_decay' : ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ ≤ C / (1 + |(nontrivialZeroEnum n).im|) ^ 2 := h_decay (nontrivialZeroEnum n) h_re1 h_re2
+      have h_decay' : ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ ≤ C / |(nontrivialZeroEnum n).im| ^ 2 := h_decay (nontrivialZeroEnum n) h_re1 h_re2
       have h_if : (if nontrivialZeroEnum n = ρ then (0 : ℝ) else 1) = 1 := by simp [h]
       simp only [tail_real, h_if]
+      have h_abs_eq : |(nontrivialZeroEnum n).im|^2 = (nontrivialZeroEnum n).im^2 := by
+        simp [sq_abs]
       have h_goal : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ * 1 ≤ C * w n := by
         dsimp only [w]
-        have h1 : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ ≤ (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * (C / (1 + |(nontrivialZeroEnum n).im|) ^ 2) := by gcongr
-        have h2 : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * (C / (1 + |(nontrivialZeroEnum n).im|) ^ 2) = C * w n := by
-          simp [w] <;> ring
-        rw [h2] at h1
-        simpa [mul_one] using h1
+        have h1 : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ ≤ (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * (C / |(nontrivialZeroEnum n).im| ^ 2) := by gcongr
+        have h1' : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ ≤ (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * (C / (nontrivialZeroEnum n).im ^ 2) := by
+          convert h1 using 1
+          rw [h_abs_eq]
+        have h2 : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * (C / (nontrivialZeroEnum n).im ^ 2) = C * w n := by
+          simp [w, h_abs_eq] <;> ring
+        rw [h2] at h1'
+        have h_final : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ * 1 ≤ C * w n := by
+          simpa [w, h_abs_eq, mul_one] using h1'
+        exact h_final
       exact h_goal
   have h_norm_a_bound : ∀ n, ‖a n‖ ≤ C * w n := by
     intro n
     have h_re1 : 0 < (nontrivialZeroEnum n).re := (nontrivialZeroEnum_are_zeros n).2.1
     have h_re2 : (nontrivialZeroEnum n).re < 1 := (nontrivialZeroEnum_are_zeros n).2.2
-    have h_d : ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ ≤ C / (1 + |(nontrivialZeroEnum n).im|) ^ 2 := h_decay (nontrivialZeroEnum n) h_re1 h_re2
+    have h_d : ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ ≤ C / |(nontrivialZeroEnum n).im| ^ 2 := h_decay (nontrivialZeroEnum n) h_re1 h_re2
     have h_goal : ‖a n‖ ≤ C * w n := by
       dsimp only [a, w]
       have h1 : ‖a n‖ = (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ := by
         simp [a, norm_mul] <;> ring
       rw [h1]
-      have h2 : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ ≤ (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * (C / (1 + |(nontrivialZeroEnum n).im|) ^ 2) := by gcongr
-      have h3 : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * (C / (1 + |(nontrivialZeroEnum n).im|) ^ 2) = C * w n := by simp [w] <;> ring
+      have h2 : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ ≤ (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * (C / |(nontrivialZeroEnum n).im| ^ 2) := by gcongr
+      have h3 : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * (C / |(nontrivialZeroEnum n).im| ^ 2) = C * w n := by simp [w] <;> ring
       rw [h3] at h2
       exact h2
     exact h_goal
@@ -4853,6 +5304,18 @@ end RHSpectralDuality
 #print axioms RHSpectralDuality.off_critical_line_contradiction
 #print axioms RHSpectralDuality.mollified_trace_equality
 #print axioms RHSpectralDuality.weil_explicit_formula
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
