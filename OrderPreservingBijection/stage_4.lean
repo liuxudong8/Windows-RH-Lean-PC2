@@ -1411,7 +1411,37 @@ theorem perron_formula (f : MollifiedTestFunction) :
   -- (1) Mellin 反演：f(log N(p)) = (1/2πi) ∮ M[f](s) N(p)^{-s} ds
   -- (2) 代入几何侧求和：Σ_p W(p) f(log N(p)) = Σ_p W(p) · ∮ M[f](s) N(p)^{-s} ds
   -- (3) 求和-积分交换（控制收敛定理，磨光函数保证）
-  sorry
+  -- 步骤 1：Mellin 反演公式
+  have h_mellin_inversion : ∀ (γ : PrimeGeodesic),
+      f.toTestFunction.eval (geodesicLengthPrime γ) =
+        contourIntegral (fun s => melinTransform f.toTestFunction s * (principalIdealNorm γ.element : ℂ)^(-s)) := by
+    intro γ
+    sorry
+  -- 步骤 2：代入几何侧求和
+  have h_main1 : ∑' (γ : PrimeGeodesic), (orbitWeight γ : ℂ) * f.toTestFunction.eval (geodesicLengthPrime γ) =
+      ∑' (γ : PrimeGeodesic), (orbitWeight γ : ℂ) * contourIntegral (fun s => melinTransform f.toTestFunction s * (principalIdealNorm γ.element : ℂ)^(-s)) := by
+    apply tsum_congr
+    intro γ
+    rw [h_mellin_inversion γ]
+  -- 步骤 3：求和-积分交换
+  have h_main2 : ∑' (γ : PrimeGeodesic), (orbitWeight γ : ℂ) * contourIntegral (fun s => melinTransform f.toTestFunction s * (principalIdealNorm γ.element : ℂ)^(-s)) =
+      contourIntegral (fun s => (∑' (γ : PrimeGeodesic), (orbitWeight γ : ℂ) * (principalIdealNorm γ.element : ℂ)^(-s)) * melinTransform f.toTestFunction s) := by
+    sorry
+  -- 步骤 4：证明 Dirichlet 级数相等
+  have h_dirichlet_eq : ∀ (s : ℂ),
+      (∑' (γ : PrimeGeodesic), (orbitWeight γ : ℂ) * (principalIdealNorm γ.element : ℂ)^(-s)) = primeDirichletSeries s := by
+    intro s
+    sorry
+  -- 组装
+  dsimp only [primeIdealDirichletIntegral]
+  calc
+    geometricSum f.toTestFunction
+      = ∑' (γ : PrimeGeodesic), (orbitWeight γ : ℂ) * contourIntegral (fun s => melinTransform f.toTestFunction s * (principalIdealNorm γ.element : ℂ)^(-s)) := h_main1
+    _ = contourIntegral (fun s => (∑' (γ : PrimeGeodesic), (orbitWeight γ : ℂ) * (principalIdealNorm γ.element : ℂ)^(-s)) * melinTransform f.toTestFunction s) := h_main2
+    _ = contourIntegral (fun s => primeDirichletSeries s * melinTransform f.toTestFunction s) := by
+      apply congr_arg contourIntegral
+      funext s
+      rw [h_dirichlet_eq s]
 
 /-- Perron 公式（定理，直接引用公理）：
     几何侧 = Dirichlet 生成函数围道积分。 -/
@@ -4501,9 +4531,44 @@ theorem mellin_rapid_decay_bound (h : MollifiedTestFunction) (B' : ℝ)
       have h_nonneg : 0 ≤ x^(s.re + 1) := Real.rpow_nonneg (by linarith [hx.1]) _
       exact mul_le_mul_of_nonneg_right hB' h_nonneg
     have h821 : MeasureTheory.IntegrableOn (fun x : ℝ => ‖(deriv (deriv h.toFun)) x‖ * x^(s.re + 1)) (Set.Icc ε₀ R₀) := by
-      sorry
+      -- 步骤 1：证明二阶导数是连续的
+      have h_deriv_h_C1 : ContDiff ℝ 1 (deriv h.toFun) := by
+        exact hC2.deriv'
+      have h_deriv2_C0 : ContDiff ℝ 0 (deriv (deriv h.toFun)) := by
+        exact h_deriv_h_C1.deriv'
+      have h_deriv2_cont : Continuous (deriv (deriv h.toFun)) := by
+        exact h_deriv2_C0.continuous
+      have h_norm_deriv2_cont : Continuous (fun x : ℝ => ‖(deriv (deriv h.toFun)) x‖) := by
+        exact Continuous.norm h_deriv2_cont
+      -- 步骤 2：证明 x^(s.re + 1) 是连续的
+      have h_pow_cont : ContinuousOn (fun x : ℝ => x^(s.re + 1)) (Set.Icc ε₀ R₀) := by
+        apply ContinuousOn.rpow
+        · exact continuousOn_id
+        · exact continuousOn_const
+        · intro x hx
+          have hx_pos : 0 < x := by linarith [hx.1, hε₀_pos]
+          exact Or.inl hx_pos.ne'
+      -- 步骤 3：证明乘积是 ContinuousOn
+      have h_prod_cont_on : ContinuousOn (fun x : ℝ => (‖(deriv (deriv h.toFun)) x‖) * x^(s.re + 1)) (Set.Icc ε₀ R₀) := by
+        apply ContinuousOn.mul
+        · exact h_norm_deriv2_cont.continuousOn
+        · exact h_pow_cont
+      -- 步骤 4：紧集上的 ContinuousOn 函数是 IntegrableOn
+      exact h_prod_cont_on.integrableOn_compact isCompact_Icc
     have h822 : MeasureTheory.IntegrableOn (fun x : ℝ => B' * x^(s.re + 1)) (Set.Icc ε₀ R₀) := by
-      sorry
+      -- 步骤 1：证明 f2 在 Icc ε₀ R₀ 上连续
+      have h_f2_cont : ContinuousOn (fun x : ℝ => x^(s.re + 1)) (Set.Icc ε₀ R₀) := by
+        apply ContinuousOn.rpow
+        · exact continuousOn_id
+        · exact continuousOn_const
+        · intro x hx
+          have hx_pos : 0 < x := by linarith [hx.1, hε₀_pos]
+          exact Or.inl hx_pos.ne'
+      -- 步骤 2：证明 B' * f2 也连续
+      have h_prod_cont : ContinuousOn (fun x : ℝ => B' * x^(s.re + 1)) (Set.Icc ε₀ R₀) := by
+        exact h_f2_cont.const_mul B'
+      -- 步骤 3：用 ContinuousOn.integrableOn_compact 证明可积性
+      exact h_prod_cont.integrableOn_compact isCompact_Icc
     have h82 : ∫ x in Set.Icc ε₀ R₀, ‖(deriv (deriv h.toFun)) x‖ * x^(s.re + 1) ≤ ∫ x in Set.Icc ε₀ R₀, B' * x^(s.re + 1) := by
       exact MeasureTheory.setIntegral_mono_on h821 h822 measurableSet_Icc h81
     have h83 : ∫ x in Set.Icc ε₀ R₀, B' * x^(s.re + 1) = B' * (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2) := by
@@ -4530,9 +4595,29 @@ theorem mellin_rapid_decay_bound (h : MollifiedTestFunction) (B' : ℝ)
     · norm_num
     · exact h91_step3_ge
   have h91_step3 : (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2) ≤ R₀^(s.re + 2) / 2 := by
-    sorry
+    exact h91_step3_a.trans h91_step3_b
   have h91 : (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2) ≤ 8 * (R₀^3 + 1) := by
-    sorry
+      -- 先证明 R₀^(s.re + 2) ≤ R₀^3 + 1
+      have h_pow_le : R₀^(s.re + 2) ≤ R₀^3 + 1 := by
+        by_cases hR₀_ge_one : R₀ ≥ 1
+        · -- 情况 1：R₀ ≥ 1
+          have h1 : s.re + 2 ≤ 3 := by linarith
+          have h2 : R₀^(s.re + 2) ≤ R₀^3 := by
+            gcongr
+            <;> linarith
+          linarith
+        · -- 情况 2：R₀ < 1
+          have hR₀_pos : 0 < R₀ := by linarith [hε₀_pos, hε₀_lt_R₀]
+          have h1 : R₀^(s.re + 2) ≤ 1 := by
+            have h2 : R₀ ≤ 1 := by linarith
+            have h3 : 0 < s.re + 2 := by linarith
+            gcongr
+            <;> linarith
+          linarith
+      -- 组合起来
+      exact h91_step3.trans (by
+        calc R₀^(s.re + 2) / 2 ≤ (R₀^3 + 1) / 2 := by gcongr
+           _ ≤ 8 * (R₀^3 + 1) := by linarith)
   have h_diff_nonneg : 0 ≤ R₀^(s.re + 2) - ε₀^(s.re + 2) := by
     have hR₀_gt_ε₀ : ε₀ < R₀ := hε₀_lt_R₀
     have h_exp_pos : 0 < s.re + 2 := h91_step3_pos
