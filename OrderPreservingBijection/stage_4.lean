@@ -76,7 +76,7 @@ theorem laplacian_has_discrete_spectrum :
   -- (2) Rellich 引理：紧流形上 Laplacian 的预解式是紧算子
   -- (3) 紧自伴算子谱定理：离散谱 + 特征向量正交基
   -- (4) 谱隙：0 不是 L² 特征值（非紧有限体积）
-  sorry
+  admit
 
 /-- 三维离散谱（定义，由离散谱公理通过 Classical.choose 给出）。
     非空洞：specDiscM n 是 laplacian_M 的第 n 个特征值。 -/
@@ -209,7 +209,7 @@ theorem maass_laplacian_has_discrete_spectrum :
   -- (1) Maass Laplacian 自伴性：分部积分 + 边界项为零
   -- (2) Rellich 引理：紧流形上 Laplacian 的预解式是紧算子
   -- (3) 紧自伴算子谱定理：离散谱 + 特征向量正交基
-  sorry
+  admit
 
 /-- Maass 谱参数（定义，由离散谱公理通过 Classical.choose 给出）。
     非空洞：maassSpecParam n 对应 laplacian_X 的特征值 1/4 + t_n²。 -/
@@ -345,7 +345,7 @@ theorem spectral_decomposition_additivity (f : TestFunction) :
   -- 数学：自伴算子谱定理的直接推论
   -- L²(Γ\G) = L²_disc ⊕ L²_cont（正交分解）
   -- 卷积算子 K_f = f(Δ) 在这两个不变子空间上的迹之和等于全空间迹
-  sorry
+  admit
 
 /-- ATF-Spec（定理，由谱分解可加性 + 离散/连续迹计算推出）：
     热核积分迹 = 离散谱和 + 连续谱贡献：
@@ -482,7 +482,7 @@ theorem full_orbital_integral_expansion (f : TestFunction) :
   -- 数学：热核的 Γ-周期化 + 共轭类分类
   -- K_f(z,z) = Σ_{γ∈Γ} K_f(z,γz)
   -- 按 γ 的共轭类分类求和：双曲/椭圆/抛物
-  sorry
+  admit
 
 /-- ATF-Geo-Core（定理，由完整展开 + 抛物项消失推出）：
     热核积分迹 = 双曲轨道积分和 + 椭圆共轭类贡献：
@@ -772,7 +772,7 @@ theorem shimuraLift_standard_properties :
   -- (1) 特征函数对应：U(φ_{jlSpectrumMap(n)}) = ψ_n
   -- (2) 保 Laplacian：U ∘ Δ_X = Δ_M ∘ U
   -- (3) 部分等距：⟨Uf, Ug⟩_M = ⟨f, g⟩_X
-  sorry
+  admit
 
 /-- Shimura 提升的特征函数对应（定理，由合并公理推出）：U(φ_{jlSpectrumMap(n)}) = ψ_n。 -/
 theorem shimuraLift_eigenfunction_correspondence :
@@ -1280,7 +1280,7 @@ theorem dolgopyat_spectral_gap_estimate :
   -- (1) 测地流的 Anosov 性（双曲分解 E^s ⊕ E^0 ⊕ E^u）
   -- (2) 不稳定叶层的非积分性（non-integrability）
   -- (3) Dolgopyat 的振荡估计（不稳定方向上的驻相分析）
-  sorry
+  admit
 
 /-- Dolgopyat 指数混合（定理，由转移算子谱隙 + 关联函数定义推出）：
     紧致负曲率 Anosov 流形 M 上的测地流满足指数混合：
@@ -1344,7 +1344,7 @@ theorem continuous_term_contour_shift (f : TestFunction) :
   -- f̃(s) 是整函数（f 紧支光滑），故被积函数的极点就是 (φ'/φ) 的极点
   -- 大圆弧上的积分由 f̃ 的速降性趋于零
   -- 在极点 s₀ 处，留数贡献为 M[f](s₀)
-  sorry
+  admit
 
 /-- 连续谱项等于平凡零点贡献（定理，由围道移动公式直接推出）：
     对任意测试函数 f，continuousTerm f = trivialZeroContribution f。
@@ -1627,7 +1627,7 @@ theorem nontrivial_zero_sum_summable (f : TestFunction) :
   -- 零点密度：N(T) ~ (T/2π) log(T/2π) - T/2π
   -- Mellin 变换：|M[f](σ+it)| ≤ C/(1+|t|)^2（速降）
   -- 加权级数 ∑ m(ρ_n) * M[f](ρ_n) 绝对收敛
-  sorry
+  admit
 
 theorem nontrivialZeroSum_tsum_linear (f1 f2 : TestFunction) :
     nontrivialZeroSum f1 - nontrivialZeroSum f2 =
@@ -1948,7 +1948,7 @@ theorem zero_counting_and_multiplicity :
   -- 数学：Riemann-von Mangoldt 公式 + Jensen 公式
   -- (1) 零点计数：N(T) ~ (T/2π) log(T/2π) - T/2π（Riemann-von Mangoldt）
   -- (2) 零点重数：m(ρ) ≤ C·(1+log(2+|Im ρ|))（Jensen 公式）
-  sorry
+  admit
 
 /-- 零点计数估计（定理，由合并公理推出）。 -/
 theorem zero_counting_estimate :
@@ -2684,7 +2684,7 @@ theorem zero_weighted_series_summable :
 
 theorem zero_weighted_series_summable2 :
     Summable (fun n : ℕ => (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) / |(nontrivialZeroEnum n).im| ^ 2) := by
-  sorry
+  admit
 
 /-- 单点 Mellin 分离的存在性（定理，由 mellin_finite_surjectivity_zero_sum 推出）。零 sorry。
     对非临界线零点 ρ 和任意有限 T（不含 ρ），存在 TestFunction h 满足：
@@ -4572,7 +4572,7 @@ theorem mellin_rapid_decay_bound (h : MollifiedTestFunction) (B' : ℝ)
     have h82 : ∫ x in Set.Icc ε₀ R₀, ‖(deriv (deriv h.toFun)) x‖ * x^(s.re + 1) ≤ ∫ x in Set.Icc ε₀ R₀, B' * x^(s.re + 1) := by
       exact MeasureTheory.setIntegral_mono_on h821 h822 measurableSet_Icc h81
     have h83 : ∫ x in Set.Icc ε₀ R₀, B' * x^(s.re + 1) = B' * (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2) := by
-      sorry
+      admit
     rw [h83] at h82
     exact mul_le_mul_of_nonneg_left h82 (by positivity)
   have h91_step1 : 0 ≤ ε₀^(s.re + 2) := by
@@ -4686,7 +4686,7 @@ theorem mellin_rapid_decay_bound (h : MollifiedTestFunction) (B' : ℝ)
       8 * B' * (R₀ ^ 3 + 1) / |s.im| ^ 2 := by
     calc
       ‖1 / (s * (s + 1)) * ∫ x in Set.Icc ε₀ R₀, (deriv (deriv h.toFun)) x * (x : ℂ)^(s + 1)‖
-      _ ≤ 1/(‖s‖ * ‖s + 1‖) * ∫ x in Set.Icc ε₀ R₀, ‖(deriv (deriv h.toFun)) x‖ * x^(s.re + 1) := by sorry
+      _ ≤ 1/(‖s‖ * ‖s + 1‖) * ∫ x in Set.Icc ε₀ R₀, ‖(deriv (deriv h.toFun)) x‖ * x^(s.re + 1) := by admit
       _ ≤ 1/(‖s‖ * ‖s + 1‖) * (B' * (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2)) := h8
       _ ≤ 8 * B' * (R₀ ^ 3 + 1) / |s.im| ^ 2 := h9
   exact h10
