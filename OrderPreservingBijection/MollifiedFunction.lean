@@ -33,12 +33,14 @@ noncomputable def ellipticTerm (f : TestFunction) : ℂ :=
 /-- 磨光测试函数：紧支集 + 支集有界 + 椭圆项消失。
     supportBounded：存在 ε₀, R₀ > 0，f 在 (-∞, ε₀] 和 [R₀, ∞) 上为 0。
     ellipticVanishes：ellipticTerm(f) = 0。
+    contDiff2：f 是二次连续可微的。
     这是 Weil 显式公式和 RH 反证法中使用的测试函数类。 -/
 structure MollifiedTestFunction extends TestFunction where
   supportBounded : ∃ (ε₀ R₀ : ℝ), 0 < ε₀ ∧ ε₀ < R₀ ∧
     (∀ x, x ≤ ε₀ → toFun x = 0) ∧
     (∀ x, x ≥ R₀ → toFun x = 0)
   ellipticVanishes : ellipticTerm (⟨toFun, hasCompactSupport, isBounded, vanishesNearZero, measurable⟩) = 0
+  contDiff2 : ContDiff ℝ 2 toFun
 
 /-- 磨光函数的椭圆项为零（定理，由定义直接推出）。 -/
 theorem mollified_elliptic_zero (f : MollifiedTestFunction) :
@@ -94,6 +96,9 @@ noncomputable instance : SMul ℂ MollifiedTestFunction where
           <;> rfl
         have h : ellipticTerm (k • f.toTestFunction) = k * ellipticTerm f.toTestFunction := h1 f.toTestFunction
         rw [h, f.ellipticVanishes] <;> ring
+      contDiff2 := by
+        -- k • f.toTestFunction 是二次连续可微的，因为 f.toTestFunction 是二次连续可微的
+        exact f.contDiff2.const_smul k
     }
 
 end OrderPreservingBijection

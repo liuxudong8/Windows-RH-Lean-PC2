@@ -3032,9 +3032,9 @@ theorem mellin_integral_bound_uniform (ε₀ R₀ : ℝ) (hε₀_pos : 0 < ε₀
       (∀ x, ‖h.toFun x‖ ≤ M) →
       (∀ x, x < ε₀ → h.toFun x = 0) →
       (∀ x, x > R₀ → h.toFun x = 0) →
-      (∀ (s : ℂ), 0 < s.re → s.re < 1 → s.im ≠ 0 →
+      (∀ (s : ℂ), 0 < s.re → s.re < 1 →
         ‖melinTransform h.toTestFunction s‖ ≤ M * max (Real.log (R₀ / ε₀)) (R₀ - ε₀)) := by
-  intro h M h_bound h_left h_right s hs_re1 hs_re2 hs_im_ne_zero
+  intro h M h_bound h_left h_right s hs_re1 hs_re2
   -- 第一步：把 Mellin 变换的积分限制到 [ε₀, R₀]
   have h1 : melinTransform h.toTestFunction s =
       ∫ x in Set.Icc ε₀ R₀, h.toFun x * Complex.exp ((s - 1) * (Real.log x : ℂ)) := by
@@ -3404,7 +3404,7 @@ theorem mellin_smooth_surjectivity (ρ : ℂ) :
     支集有界 [ε,R]，故 ∫ x^{Re(s)+1}dx 有限。
     谱点取值界由 Poincaré 不等式：‖h‖_∞ ≤ (R-ε)²·‖h''‖_∞。
     注：C(s) 依赖于 s，当 s.re→0 时 C(s)→∞（因 |s(s+1)|→0）。 -/
-theorem mellin_pointwise_dual_norm_bound (s : ℂ) (hs_re1 : 0 < s.re) (hs_re2 : s.re < 1) (hs_im_ne_zero : s.im ≠ 0) :
+theorem mellin_pointwise_dual_norm_bound (s : ℂ) (hs_re1 : 0 < s.re) (hs_re2 : s.re < 1) :
     ∃ (C : ℝ), 0 < C ∧
       ∀ (h : MollifiedTestFunction) (B : ℝ),
         ContDiff ℝ 2 h.toTestFunction.toFun →
@@ -3429,7 +3429,7 @@ theorem mellin_pointwise_dual_norm_bound (s : ℂ) (hs_re1 : 0 < s.re) (hs_re2 :
     poincare_inequality_uniform ε₀ R₀ hε₀_pos hε₀_lt_R₀ h B hC2 h_deriv_bound h_support_h.1 h_support_h.2
   have hM : ‖melinTransform h.toTestFunction s‖ ≤
       ((R₀ - ε₀)^2 * B) * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) :=
-    mellin_integral_bound_uniform ε₀ R₀ hε₀_pos hε₀_lt_R₀ h ((R₀ - ε₀)^2 * B) h_poincare h_support_h.1 h_support_h.2 s hs_re1 hs_re2 hs_im_ne_zero
+    mellin_integral_bound_uniform ε₀ R₀ hε₀_pos hε₀_lt_R₀ h ((R₀ - ε₀)^2 * B) h_poincare h_support_h.1 h_support_h.2 s hs_re1 hs_re2
   dsimp only [C] at *
   have h_eq : ((R₀ - ε₀)^2 * B) * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) =
       (R₀ - ε₀)^2 * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) * B := by ring
@@ -3453,7 +3453,7 @@ theorem mellin_constraint_dual_norm_uniform (ρ : ℂ) :
         ContDiff ℝ 2 h.toTestFunction.toFun →
         (∀ (x : ℝ), ‖(deriv (deriv h.toTestFunction.toFun) x)‖ ≤ B) →
         (∀ (n : ℕ), ‖h.toTestFunction.eval (specDiscM n)‖ ≤ C * B) ∧
-        (∀ (s : ℂ), s ∈ insert ρ T → 0 < s.re → s.re < 1 → s.im ≠ 0 →
+        (∀ (s : ℂ), s ∈ insert ρ T → 0 < s.re → s.re < 1 →
           ‖melinTransform h.toTestFunction s‖ ≤ C * B) := by
   intro hz hre1 hre2 hne
   rcases mollified_test_function_uniform_support with ⟨ε₀, R₀, hε₀_pos, hε₀_lt_R₀, h_support⟩
@@ -3505,12 +3505,12 @@ theorem mellin_constraint_dual_norm_uniform (ρ : ℂ) :
       exact h7
     exact le_trans h3 h4
   -- Mellin 变换界：|M[h](s)| ≤ C · B
-  have h2 : ∀ s, s ∈ insert ρ T → 0 < s.re → s.re < 1 → s.im ≠ 0 →
+  have h2 : ∀ s, s ∈ insert ρ T → 0 < s.re → s.re < 1 →
       ‖melinTransform h.toTestFunction s‖ ≤ C * B := by
-    intro s hs_in hs_re1 hs_re2 hs_im_ne_zero
+    intro s hs_in hs_re1 hs_re2
     have h4 : ‖melinTransform h.toTestFunction s‖ ≤
         ((R₀ - ε₀)^2 * B) * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) :=
-      mellin_integral_bound_uniform ε₀ R₀ hε₀_pos hε₀_lt_R₀ h ((R₀ - ε₀)^2 * B) h_poincare h_support_h.1 h_support_h.2 s hs_re1 hs_re2 hs_im_ne_zero
+      mellin_integral_bound_uniform ε₀ R₀ hε₀_pos hε₀_lt_R₀ h ((R₀ - ε₀)^2 * B) h_poincare h_support_h.1 h_support_h.2 s hs_re1 hs_re2
     have h5 : ((R₀ - ε₀)^2 * B) * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) ≤ C * B := by
       dsimp only [C]
       have h6 : ((R₀ - ε₀)^2 * B) * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) ≤
@@ -5412,30 +5412,6 @@ theorem generalization_to_real_quadratic_fields (d : ℕ) (hd : 0 < d)
 
 
 end RHSpectralDuality
-
--- 引理：当 |t| ≥ 1 时，1 / |t| ^ 2 ≤ 4 / (1 + |t|) ^ 2
-lemma one_div_abs_sq_le_four_div_one_plus_abs_sq {t : ℝ} (ht : 1 ≤ |t|) :
-    1 / |t| ^ 2 ≤ 4 / (1 + |t|) ^ 2 := by
-  have h1 : 0 < |t| := by
-    exact lt_of_lt_of_le (by norm_num) ht
-  have h2 : 1 + |t| ≤ 2 * |t| := by
-    linarith [abs_nonneg t]
-  have h3 : (1 + |t|) ^ 2 ≤ (2 * |t|) ^ 2 := by
-    gcongr
-    <;> linarith [abs_nonneg t]
-  have h4 : (2 * |t|) ^ 2 = 4 * |t| ^ 2 := by ring
-  rw [h4] at h3
-  have h5 : 0 < |t| ^ 2 := by positivity
-  have h6 : 0 < (1 + |t|) ^ 2 := by positivity
-  have h7 : 1 / (1 + |t|) ^ 2 ≥ 1 / (4 * |t| ^ 2) := by
-    exact one_div_le_one_div_of_le (by positivity) h3
-  have h8 : 4 / (1 + |t|) ^ 2 ≥ 1 / |t| ^ 2 := by
-    calc
-      4 / (1 + |t|) ^ 2
-        = 4 * (1 / (1 + |t|) ^ 2) := by ring
-      _ ≥ 4 * (1 / (4 * |t| ^ 2)) := by gcongr
-      _ = 1 / |t| ^ 2 := by ring
-  exact h8
 
 
 #print axioms RHSpectralDuality.riemann_hypothesis

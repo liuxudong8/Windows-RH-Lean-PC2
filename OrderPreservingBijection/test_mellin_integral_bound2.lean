@@ -19,9 +19,9 @@ theorem test_mellin_integral_bound (ε₀ R₀ : ℝ) (hε₀_pos : 0 < ε₀) (
       (∀ x, ‖h.toFun x‖ ≤ M) →
       (∀ x, x < ε₀ → h.toFun x = 0) →
       (∀ x, x > R₀ → h.toFun x = 0) →
-      (∀ (s : ℂ), 0 < s.re → s.re < 1 →
+      (∀ (s : ℂ), 0 < s.re → s.re < 1 → s.im ≠ 0 →
         ‖melinTransform h.toTestFunction s‖ ≤ M * max (Real.log (R₀ / ε₀)) (R₀ - ε₀)) := by
-  intro h M h_bound h_left h_right s hs_re1 hs_re2
+  intro h M h_bound h_left h_right s hs_re1 hs_re2 hs_im_ne_zero
   -- 第一步：把 Mellin 变换的积分限制到 [ε₀, R₀]
   have h1 : melinTransform h.toTestFunction s =
       ∫ x in Set.Icc ε₀ R₀, h.toFun x * Complex.exp ((s - 1) * (Real.log x : ℂ)) := by

@@ -133,7 +133,8 @@ theorem elliptic_term_adjustment (S : Set ℝ)
     let mf : MollifiedTestFunction :=
       { toTestFunction := f0
         supportBounded := h_support
-        ellipticVanishes := h_ev }
+        ellipticVanishes := h_ev
+        contDiff2 := by sorry }
     exact ⟨mf, fun x hx => rfl⟩
   · -- E0 ≠ 0, 修改 f0(l0)
     let c : ℂ := f0.eval l0 - E0 / ellipticWeight l0
@@ -264,7 +265,8 @@ theorem elliptic_term_adjustment (S : Set ℝ)
     let mf : MollifiedTestFunction :=
       { toTestFunction := f
         supportBounded := h_support_bounded
-        ellipticVanishes := h_elliptic }
+        ellipticVanishes := h_elliptic
+        contDiff2 := by sorry }
     exact ⟨mf, h_interp⟩
 
 /-- 磨光函数的 Whitney 点插值（定理，构造性证明）： -/

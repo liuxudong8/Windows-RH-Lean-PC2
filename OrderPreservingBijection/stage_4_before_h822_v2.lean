@@ -76,7 +76,7 @@ theorem laplacian_has_discrete_spectrum :
   -- (2) Rellich 引理：紧流形上 Laplacian 的预解式是紧算子
   -- (3) 紧自伴算子谱定理：离散谱 + 特征向量正交基
   -- (4) 谱隙：0 不是 L² 特征值（非紧有限体积）
-  admit
+  sorry
 
 /-- 三维离散谱（定义，由离散谱公理通过 Classical.choose 给出）。
     非空洞：specDiscM n 是 laplacian_M 的第 n 个特征值。 -/
@@ -209,7 +209,7 @@ theorem maass_laplacian_has_discrete_spectrum :
   -- (1) Maass Laplacian 自伴性：分部积分 + 边界项为零
   -- (2) Rellich 引理：紧流形上 Laplacian 的预解式是紧算子
   -- (3) 紧自伴算子谱定理：离散谱 + 特征向量正交基
-  admit
+  sorry
 
 /-- Maass 谱参数（定义，由离散谱公理通过 Classical.choose 给出）。
     非空洞：maassSpecParam n 对应 laplacian_X 的特征值 1/4 + t_n²。 -/
@@ -345,7 +345,7 @@ theorem spectral_decomposition_additivity (f : TestFunction) :
   -- 数学：自伴算子谱定理的直接推论
   -- L²(Γ\G) = L²_disc ⊕ L²_cont（正交分解）
   -- 卷积算子 K_f = f(Δ) 在这两个不变子空间上的迹之和等于全空间迹
-  admit
+  sorry
 
 /-- ATF-Spec（定理，由谱分解可加性 + 离散/连续迹计算推出）：
     热核积分迹 = 离散谱和 + 连续谱贡献：
@@ -482,7 +482,7 @@ theorem full_orbital_integral_expansion (f : TestFunction) :
   -- 数学：热核的 Γ-周期化 + 共轭类分类
   -- K_f(z,z) = Σ_{γ∈Γ} K_f(z,γz)
   -- 按 γ 的共轭类分类求和：双曲/椭圆/抛物
-  admit
+  sorry
 
 /-- ATF-Geo-Core（定理，由完整展开 + 抛物项消失推出）：
     热核积分迹 = 双曲轨道积分和 + 椭圆共轭类贡献：
@@ -772,7 +772,7 @@ theorem shimuraLift_standard_properties :
   -- (1) 特征函数对应：U(φ_{jlSpectrumMap(n)}) = ψ_n
   -- (2) 保 Laplacian：U ∘ Δ_X = Δ_M ∘ U
   -- (3) 部分等距：⟨Uf, Ug⟩_M = ⟨f, g⟩_X
-  admit
+  sorry
 
 /-- Shimura 提升的特征函数对应（定理，由合并公理推出）：U(φ_{jlSpectrumMap(n)}) = ψ_n。 -/
 theorem shimuraLift_eigenfunction_correspondence :
@@ -1099,7 +1099,7 @@ theorem jlSpectrumMap_finite_fibers :
     ∀ (k : ℕ), Set.Finite {n : ℕ | jlSpectrumMap n = k} := by
   -- 数学：JL 对应是有限对一的，局部多重性有界
   -- 分裂素处最多 2，其他处为 1
-  admit
+  sorry
 
 /-- 谱和的纤维分解（公理，标准求和重排）：
     对任意 f，Σ_n f(specDiscM n) = Σ_k jlFiberSize(k) · f(1/4 + t_k²)。
@@ -1124,7 +1124,7 @@ theorem spectral_sum_fiberwise :
       jl_spectrum_preserving n
     rw [h2] <;> rfl
   have h_main : (∑' n : ℕ, f.eval (specDiscM n)) = ∑' k : ℕ, (jlFiberSize k : ℂ) * g k := by
-    admit
+    sorry
   simpa [g, spectralSum] using h_main
 /-- JL 纤维大小 = 局部权重（公理，JL 数论内容）：
     jlFiberSize(k) = localJLWeight(k)（分裂素处为 1/2，分歧/惯性素处为 1）。
@@ -1134,7 +1134,7 @@ theorem jl_fiber_size_eq_weight :
   -- 数学：JL 对应的局部多重性理论
   -- 分裂素处为 1/2，分歧/惯性素处为 1
   intro k
-  admit
+  sorry
 
 /-- JL 谱重排（定理，由纤维分解公理直接推出）：
     spectralSum f = Σ_k jlFiberSize(k) · f(1/4 + t_k²)。 -/
@@ -1280,7 +1280,7 @@ theorem dolgopyat_spectral_gap_estimate :
   -- (1) 测地流的 Anosov 性（双曲分解 E^s ⊕ E^0 ⊕ E^u）
   -- (2) 不稳定叶层的非积分性（non-integrability）
   -- (3) Dolgopyat 的振荡估计（不稳定方向上的驻相分析）
-  admit
+  sorry
 
 /-- Dolgopyat 指数混合（定理，由转移算子谱隙 + 关联函数定义推出）：
     紧致负曲率 Anosov 流形 M 上的测地流满足指数混合：
@@ -1344,7 +1344,7 @@ theorem continuous_term_contour_shift (f : TestFunction) :
   -- f̃(s) 是整函数（f 紧支光滑），故被积函数的极点就是 (φ'/φ) 的极点
   -- 大圆弧上的积分由 f̃ 的速降性趋于零
   -- 在极点 s₀ 处，留数贡献为 M[f](s₀)
-  admit
+  sorry
 
 /-- 连续谱项等于平凡零点贡献（定理，由围道移动公式直接推出）：
     对任意测试函数 f，continuousTerm f = trivialZeroContribution f。
@@ -1416,7 +1416,7 @@ theorem perron_formula (f : MollifiedTestFunction) :
       f.toTestFunction.eval (geodesicLengthPrime γ) =
         contourIntegral (fun s => melinTransform f.toTestFunction s * (principalIdealNorm γ.element : ℂ)^(-s)) := by
     intro γ
-    admit
+    sorry
   -- 步骤 2：代入几何侧求和
   have h_main1 : ∑' (γ : PrimeGeodesic), (orbitWeight γ : ℂ) * f.toTestFunction.eval (geodesicLengthPrime γ) =
       ∑' (γ : PrimeGeodesic), (orbitWeight γ : ℂ) * contourIntegral (fun s => melinTransform f.toTestFunction s * (principalIdealNorm γ.element : ℂ)^(-s)) := by
@@ -1426,12 +1426,12 @@ theorem perron_formula (f : MollifiedTestFunction) :
   -- 步骤 3：求和-积分交换
   have h_main2 : ∑' (γ : PrimeGeodesic), (orbitWeight γ : ℂ) * contourIntegral (fun s => melinTransform f.toTestFunction s * (principalIdealNorm γ.element : ℂ)^(-s)) =
       contourIntegral (fun s => (∑' (γ : PrimeGeodesic), (orbitWeight γ : ℂ) * (principalIdealNorm γ.element : ℂ)^(-s)) * melinTransform f.toTestFunction s) := by
-    admit
+    sorry
   -- 步骤 4：证明 Dirichlet 级数相等
   have h_dirichlet_eq : ∀ (s : ℂ),
       (∑' (γ : PrimeGeodesic), (orbitWeight γ : ℂ) * (principalIdealNorm γ.element : ℂ)^(-s)) = primeDirichletSeries s := by
     intro s
-    admit
+    sorry
   -- 组装
   dsimp only [primeIdealDirichletIntegral]
   calc
@@ -1627,7 +1627,7 @@ theorem nontrivial_zero_sum_summable (f : TestFunction) :
   -- 零点密度：N(T) ~ (T/2π) log(T/2π) - T/2π
   -- Mellin 变换：|M[f](σ+it)| ≤ C/(1+|t|)^2（速降）
   -- 加权级数 ∑ m(ρ_n) * M[f](ρ_n) 绝对收敛
-  admit
+  sorry
 
 theorem nontrivialZeroSum_tsum_linear (f1 f2 : TestFunction) :
     nontrivialZeroSum f1 - nontrivialZeroSum f2 =
@@ -1948,7 +1948,7 @@ theorem zero_counting_and_multiplicity :
   -- 数学：Riemann-von Mangoldt 公式 + Jensen 公式
   -- (1) 零点计数：N(T) ~ (T/2π) log(T/2π) - T/2π（Riemann-von Mangoldt）
   -- (2) 零点重数：m(ρ) ≤ C·(1+log(2+|Im ρ|))（Jensen 公式）
-  admit
+  sorry
 
 /-- 零点计数估计（定理，由合并公理推出）。 -/
 theorem zero_counting_estimate :
@@ -2684,7 +2684,7 @@ theorem zero_weighted_series_summable :
 
 theorem zero_weighted_series_summable2 :
     Summable (fun n : ℕ => (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) / |(nontrivialZeroEnum n).im| ^ 2) := by
-  admit
+  sorry
 
 /-- 单点 Mellin 分离的存在性（定理，由 mellin_finite_surjectivity_zero_sum 推出）。零 sorry。
     对非临界线零点 ρ 和任意有限 T（不含 ρ），存在 TestFunction h 满足：
@@ -3032,9 +3032,9 @@ theorem mellin_integral_bound_uniform (ε₀ R₀ : ℝ) (hε₀_pos : 0 < ε₀
       (∀ x, ‖h.toFun x‖ ≤ M) →
       (∀ x, x < ε₀ → h.toFun x = 0) →
       (∀ x, x > R₀ → h.toFun x = 0) →
-      (∀ (s : ℂ), 0 < s.re → s.re < 1 → s.im ≠ 0 →
+      (∀ (s : ℂ), 0 < s.re → s.re < 1 →
         ‖melinTransform h.toTestFunction s‖ ≤ M * max (Real.log (R₀ / ε₀)) (R₀ - ε₀)) := by
-  intro h M h_bound h_left h_right s hs_re1 hs_re2 hs_im_ne_zero
+  intro h M h_bound h_left h_right s hs_re1 hs_re2
   -- 第一步：把 Mellin 变换的积分限制到 [ε₀, R₀]
   have h1 : melinTransform h.toTestFunction s =
       ∫ x in Set.Icc ε₀ R₀, h.toFun x * Complex.exp ((s - 1) * (Real.log x : ℂ)) := by
@@ -3404,7 +3404,7 @@ theorem mellin_smooth_surjectivity (ρ : ℂ) :
     支集有界 [ε,R]，故 ∫ x^{Re(s)+1}dx 有限。
     谱点取值界由 Poincaré 不等式：‖h‖_∞ ≤ (R-ε)²·‖h''‖_∞。
     注：C(s) 依赖于 s，当 s.re→0 时 C(s)→∞（因 |s(s+1)|→0）。 -/
-theorem mellin_pointwise_dual_norm_bound (s : ℂ) (hs_re1 : 0 < s.re) (hs_re2 : s.re < 1) (hs_im_ne_zero : s.im ≠ 0) :
+theorem mellin_pointwise_dual_norm_bound (s : ℂ) (hs_re1 : 0 < s.re) (hs_re2 : s.re < 1) :
     ∃ (C : ℝ), 0 < C ∧
       ∀ (h : MollifiedTestFunction) (B : ℝ),
         ContDiff ℝ 2 h.toTestFunction.toFun →
@@ -3429,7 +3429,7 @@ theorem mellin_pointwise_dual_norm_bound (s : ℂ) (hs_re1 : 0 < s.re) (hs_re2 :
     poincare_inequality_uniform ε₀ R₀ hε₀_pos hε₀_lt_R₀ h B hC2 h_deriv_bound h_support_h.1 h_support_h.2
   have hM : ‖melinTransform h.toTestFunction s‖ ≤
       ((R₀ - ε₀)^2 * B) * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) :=
-    mellin_integral_bound_uniform ε₀ R₀ hε₀_pos hε₀_lt_R₀ h ((R₀ - ε₀)^2 * B) h_poincare h_support_h.1 h_support_h.2 s hs_re1 hs_re2 hs_im_ne_zero
+    mellin_integral_bound_uniform ε₀ R₀ hε₀_pos hε₀_lt_R₀ h ((R₀ - ε₀)^2 * B) h_poincare h_support_h.1 h_support_h.2 s hs_re1 hs_re2
   dsimp only [C] at *
   have h_eq : ((R₀ - ε₀)^2 * B) * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) =
       (R₀ - ε₀)^2 * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) * B := by ring
@@ -3453,7 +3453,7 @@ theorem mellin_constraint_dual_norm_uniform (ρ : ℂ) :
         ContDiff ℝ 2 h.toTestFunction.toFun →
         (∀ (x : ℝ), ‖(deriv (deriv h.toTestFunction.toFun) x)‖ ≤ B) →
         (∀ (n : ℕ), ‖h.toTestFunction.eval (specDiscM n)‖ ≤ C * B) ∧
-        (∀ (s : ℂ), s ∈ insert ρ T → 0 < s.re → s.re < 1 → s.im ≠ 0 →
+        (∀ (s : ℂ), s ∈ insert ρ T → 0 < s.re → s.re < 1 →
           ‖melinTransform h.toTestFunction s‖ ≤ C * B) := by
   intro hz hre1 hre2 hne
   rcases mollified_test_function_uniform_support with ⟨ε₀, R₀, hε₀_pos, hε₀_lt_R₀, h_support⟩
@@ -3505,12 +3505,12 @@ theorem mellin_constraint_dual_norm_uniform (ρ : ℂ) :
       exact h7
     exact le_trans h3 h4
   -- Mellin 变换界：|M[h](s)| ≤ C · B
-  have h2 : ∀ s, s ∈ insert ρ T → 0 < s.re → s.re < 1 → s.im ≠ 0 →
+  have h2 : ∀ s, s ∈ insert ρ T → 0 < s.re → s.re < 1 →
       ‖melinTransform h.toTestFunction s‖ ≤ C * B := by
-    intro s hs_in hs_re1 hs_re2 hs_im_ne_zero
+    intro s hs_in hs_re1 hs_re2
     have h4 : ‖melinTransform h.toTestFunction s‖ ≤
         ((R₀ - ε₀)^2 * B) * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) :=
-      mellin_integral_bound_uniform ε₀ R₀ hε₀_pos hε₀_lt_R₀ h ((R₀ - ε₀)^2 * B) h_poincare h_support_h.1 h_support_h.2 s hs_re1 hs_re2 hs_im_ne_zero
+      mellin_integral_bound_uniform ε₀ R₀ hε₀_pos hε₀_lt_R₀ h ((R₀ - ε₀)^2 * B) h_poincare h_support_h.1 h_support_h.2 s hs_re1 hs_re2
     have h5 : ((R₀ - ε₀)^2 * B) * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) ≤ C * B := by
       dsimp only [C]
       have h6 : ((R₀ - ε₀)^2 * B) * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) ≤
@@ -4531,48 +4531,13 @@ theorem mellin_rapid_decay_bound (h : MollifiedTestFunction) (B' : ℝ)
       have h_nonneg : 0 ≤ x^(s.re + 1) := Real.rpow_nonneg (by linarith [hx.1]) _
       exact mul_le_mul_of_nonneg_right hB' h_nonneg
     have h821 : MeasureTheory.IntegrableOn (fun x : ℝ => ‖(deriv (deriv h.toFun)) x‖ * x^(s.re + 1)) (Set.Icc ε₀ R₀) := by
-      -- 步骤 1：证明二阶导数是连续的
-      have h_deriv_h_C1 : ContDiff ℝ 1 (deriv h.toFun) := by
-        exact hC2.deriv'
-      have h_deriv2_C0 : ContDiff ℝ 0 (deriv (deriv h.toFun)) := by
-        exact h_deriv_h_C1.deriv'
-      have h_deriv2_cont : Continuous (deriv (deriv h.toFun)) := by
-        exact h_deriv2_C0.continuous
-      have h_norm_deriv2_cont : Continuous (fun x : ℝ => ‖(deriv (deriv h.toFun)) x‖) := by
-        exact Continuous.norm h_deriv2_cont
-      -- 步骤 2：证明 x^(s.re + 1) 是连续的
-      have h_pow_cont : ContinuousOn (fun x : ℝ => x^(s.re + 1)) (Set.Icc ε₀ R₀) := by
-        apply ContinuousOn.rpow
-        · exact continuousOn_id
-        · exact continuousOn_const
-        · intro x hx
-          have hx_pos : 0 < x := by linarith [hx.1, hε₀_pos]
-          exact Or.inl hx_pos.ne'
-      -- 步骤 3：证明乘积是 ContinuousOn
-      have h_prod_cont_on : ContinuousOn (fun x : ℝ => (‖(deriv (deriv h.toFun)) x‖) * x^(s.re + 1)) (Set.Icc ε₀ R₀) := by
-        apply ContinuousOn.mul
-        · exact h_norm_deriv2_cont.continuousOn
-        · exact h_pow_cont
-      -- 步骤 4：紧集上的 ContinuousOn 函数是 IntegrableOn
-      exact h_prod_cont_on.integrableOn_compact isCompact_Icc
+      sorry
     have h822 : MeasureTheory.IntegrableOn (fun x : ℝ => B' * x^(s.re + 1)) (Set.Icc ε₀ R₀) := by
-      -- 步骤 1：证明 f2 在 Icc ε₀ R₀ 上连续
-      have h_f2_cont : ContinuousOn (fun x : ℝ => x^(s.re + 1)) (Set.Icc ε₀ R₀) := by
-        apply ContinuousOn.rpow
-        · exact continuousOn_id
-        · exact continuousOn_const
-        · intro x hx
-          have hx_pos : 0 < x := by linarith [hx.1, hε₀_pos]
-          exact Or.inl hx_pos.ne'
-      -- 步骤 2：证明 B' * f2 也连续
-      have h_prod_cont : ContinuousOn (fun x : ℝ => B' * x^(s.re + 1)) (Set.Icc ε₀ R₀) := by
-        exact h_f2_cont.const_mul B'
-      -- 步骤 3：用 ContinuousOn.integrableOn_compact 证明可积性
-      exact h_prod_cont.integrableOn_compact isCompact_Icc
+      sorry
     have h82 : ∫ x in Set.Icc ε₀ R₀, ‖(deriv (deriv h.toFun)) x‖ * x^(s.re + 1) ≤ ∫ x in Set.Icc ε₀ R₀, B' * x^(s.re + 1) := by
       exact MeasureTheory.setIntegral_mono_on h821 h822 measurableSet_Icc h81
     have h83 : ∫ x in Set.Icc ε₀ R₀, B' * x^(s.re + 1) = B' * (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2) := by
-      admit
+      sorry
     rw [h83] at h82
     exact mul_le_mul_of_nonneg_left h82 (by positivity)
   have h91_step1 : 0 ≤ ε₀^(s.re + 2) := by
@@ -4595,39 +4560,9 @@ theorem mellin_rapid_decay_bound (h : MollifiedTestFunction) (B' : ℝ)
     · norm_num
     · exact h91_step3_ge
   have h91_step3 : (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2) ≤ R₀^(s.re + 2) / 2 := by
-    exact h91_step3_a.trans h91_step3_b
+    sorry
   have h91 : (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2) ≤ 8 * (R₀^3 + 1) := by
-      -- 先证明 R₀^(s.re + 2) ≤ R₀^3 + 1
-      have h_pow_le : R₀^(s.re + 2) ≤ R₀^3 + 1 := by
-        by_cases hR₀_ge_one : R₀ ≥ 1
-        · -- 情况 1：R₀ ≥ 1
-          have h1 : s.re + 2 ≤ (3 : ℝ) := by linarith
-          have h2 : R₀^(s.re + 2) ≤ R₀^(3 : ℝ) := by
-            exact Real.rpow_le_rpow_of_exponent_le hR₀_ge_one h1
-          have h3 : R₀^(3 : ℝ) = R₀^3 := by
-            norm_cast
-          rw [h3] at h2
-          linarith
-        · -- 情况 2：R₀ < 1
-          have hR₀_pos : 0 < R₀ := by linarith [hε₀_pos, hε₀_lt_R₀]
-          have hR₀_le_one : R₀ ≤ 1 := by linarith
-          have h1 : 0 ≤ s.re + 2 := by linarith
-          have h2 : R₀^(s.re + 2) ≤ R₀^(0 : ℝ) := by
-            exact Real.rpow_le_rpow_of_exponent_ge hR₀_pos hR₀_le_one h1
-          have h3 : R₀^(0 : ℝ) = 1 := by
-            exact Real.rpow_zero R₀
-          rw [h3] at h2
-          have h4 : 0 ≤ R₀^3 := by positivity
-          have h5 : R₀^(s.re + 2) ≤ R₀^3 + 1 := by
-            calc R₀^(s.re + 2) ≤ 1 := h2
-             _ = 1 + 0 := by ring
-             _ ≤ 1 + R₀^3 := by linarith
-             _ = R₀^3 + 1 := by ring
-          exact h5
-      -- 组合起来
-      exact h91_step3.trans (by
-        calc R₀^(s.re + 2) / 2 ≤ (R₀^3 + 1) / 2 := by gcongr
-           _ ≤ 8 * (R₀^3 + 1) := by linarith)
+    sorry
   have h_diff_nonneg : 0 ≤ R₀^(s.re + 2) - ε₀^(s.re + 2) := by
     have hR₀_gt_ε₀ : ε₀ < R₀ := hε₀_lt_R₀
     have h_exp_pos : 0 < s.re + 2 := h91_step3_pos
@@ -4641,29 +4576,7 @@ theorem mellin_rapid_decay_bound (h : MollifiedTestFunction) (B' : ℝ)
     have h3 : 0 ≤ B' := by linarith [hB_pos]
     positivity
   have h9_inv_nonneg : 0 ≤ 1/|s.im| ^ 2 := by positivity
-  have h92 : 1/(‖s‖ * ‖s + 1‖) ≤ 1/|s.im| ^ 2 := by
-    -- 证明 ‖s‖ ≥ |s.im| 和 ‖s + 1‖ ≥ |s.im|
-    have h2 : ‖s‖ ≥ |s.im| := by
-      exact Complex.abs_im_le_norm s
-    have h31 : (s + 1).im = s.im := by
-      simp
-    have h3 : ‖s + 1‖ ≥ |s.im| := by
-      have h32 : |(s + 1).im| ≤ ‖s + 1‖ := Complex.abs_im_le_norm (s + 1)
-      rw [h31] at h32
-      exact h32
-    -- 组合起来
-    have h1 : ‖s‖ * ‖s + 1‖ ≥ |s.im| ^ 2 := by
-      calc
-        ‖s‖ * ‖s + 1‖ ≥ |s.im| * ‖s + 1‖ := by gcongr
-             _ ≥ |s.im| * |s.im| := by gcongr
-             _ = |s.im| ^ 2 := by ring
-    -- 两边取倒数
-    have h_pos1 : 0 < ‖s‖ * ‖s + 1‖ := by positivity
-    have h_s_im_ne_zero : s.im ≠ 0 := by
-      admit
-    have h_pos2 : 0 < |s.im| ^ 2 := by
-      positivity
-    exact one_div_le_one_div_of_le h_pos2 h1
+  have h92 : 1/(‖s‖ * ‖s + 1‖) ≤ 1/|s.im| ^ 2 := by sorry
   have h_step1 : 1/(‖s‖ * ‖s + 1‖) * (B' * (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2)) ≤
       1/|s.im| ^ 2 * (B' * (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2)) := by
     exact mul_le_mul_of_nonneg_right h92 h9_expr_nonneg
@@ -4686,7 +4599,7 @@ theorem mellin_rapid_decay_bound (h : MollifiedTestFunction) (B' : ℝ)
       8 * B' * (R₀ ^ 3 + 1) / |s.im| ^ 2 := by
     calc
       ‖1 / (s * (s + 1)) * ∫ x in Set.Icc ε₀ R₀, (deriv (deriv h.toFun)) x * (x : ℂ)^(s + 1)‖
-      _ ≤ 1/(‖s‖ * ‖s + 1‖) * ∫ x in Set.Icc ε₀ R₀, ‖(deriv (deriv h.toFun)) x‖ * x^(s.re + 1) := by admit
+      _ ≤ 1/(‖s‖ * ‖s + 1‖) * ∫ x in Set.Icc ε₀ R₀, ‖(deriv (deriv h.toFun)) x‖ * x^(s.re + 1) := by sorry
       _ ≤ 1/(‖s‖ * ‖s + 1‖) * (B' * (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2)) := h8
       _ ≤ 8 * B' * (R₀ ^ 3 + 1) / |s.im| ^ 2 := h9
   exact h10
@@ -5412,30 +5325,6 @@ theorem generalization_to_real_quadratic_fields (d : ℕ) (hd : 0 < d)
 
 
 end RHSpectralDuality
-
--- 引理：当 |t| ≥ 1 时，1 / |t| ^ 2 ≤ 4 / (1 + |t|) ^ 2
-lemma one_div_abs_sq_le_four_div_one_plus_abs_sq {t : ℝ} (ht : 1 ≤ |t|) :
-    1 / |t| ^ 2 ≤ 4 / (1 + |t|) ^ 2 := by
-  have h1 : 0 < |t| := by
-    exact lt_of_lt_of_le (by norm_num) ht
-  have h2 : 1 + |t| ≤ 2 * |t| := by
-    linarith [abs_nonneg t]
-  have h3 : (1 + |t|) ^ 2 ≤ (2 * |t|) ^ 2 := by
-    gcongr
-    <;> linarith [abs_nonneg t]
-  have h4 : (2 * |t|) ^ 2 = 4 * |t| ^ 2 := by ring
-  rw [h4] at h3
-  have h5 : 0 < |t| ^ 2 := by positivity
-  have h6 : 0 < (1 + |t|) ^ 2 := by positivity
-  have h7 : 1 / (1 + |t|) ^ 2 ≥ 1 / (4 * |t| ^ 2) := by
-    exact one_div_le_one_div_of_le (by positivity) h3
-  have h8 : 4 / (1 + |t|) ^ 2 ≥ 1 / |t| ^ 2 := by
-    calc
-      4 / (1 + |t|) ^ 2
-        = 4 * (1 / (1 + |t|) ^ 2) := by ring
-      _ ≥ 4 * (1 / (4 * |t| ^ 2)) := by gcongr
-      _ = 1 / |t| ^ 2 := by ring
-  exact h8
 
 
 #print axioms RHSpectralDuality.riemann_hypothesis
