@@ -5,6 +5,7 @@
 -/
 
 import Mathlib.MeasureTheory.Integral.CircleIntegral
+import Mathlib.Analysis.Complex.CauchyIntegral
 import Mathlib.NumberTheory.LSeries.RiemannZeta
 import Mathlib.NumberTheory.LSeries.Dirichlet
 import Mathlib.NumberTheory.LSeries.Deriv
@@ -62,13 +63,18 @@ noncomputable def zetaLogDerivative (s : ℂ) : ℂ :=
 noncomputable def primeDirichletSeries (s : ℂ) : ℂ :=
     ∑' p : ℕ, if Nat.Prime p then (Real.log (p : ℝ) : ℂ) * (p : ℂ) ^ (-s) / (1 - (p : ℂ) ^ (-s)) else 0
 
-/-- 柯西定理（公理，围道积分版本）：
-    如果 g 在围道内部（开圆盘 |s - 1/2| < contourRadius）全纯，
-    则围道积分为零。
-    这是复分析基本定理，Mathlib 有 circleIntegral 版本但需额外条件。 -/
-axiom cauchy_theorem_contour (g : ℂ → ℂ) :
-    (∀ s ∈ Metric.ball (1 / 2 : ℂ) contourRadius, DifferentiableAt ℂ g s) →
-    contourIntegral g = 0
+/-- 柯西定理（围道积分版本）：g 在闭圆盘上连续，开圆盘内全纯，则围道积分为零。
+    桥接 mathlib Complex.circleIntegral_eq_zero_of_differentiable_on_off_countable。 -/
+lemma cauchy_theorem_contour (g : ℂ → ℂ)
+    (h_cont : ContinuousOn g (Metric.closedBall (1 / 2 : ℂ) contourRadius))
+    (h_diff : ∀ s ∈ Metric.ball (1 / 2 : ℂ) contourRadius, DifferentiableAt ℂ g s) :
+    contourIntegral g = 0 := by
+  have h_diff' : ∀ z ∈ Metric.ball (1 / 2 : ℂ) contourRadius \ (∅ : Set ℂ), DifferentiableAt ℂ g z := by
+    intro z hz; exact h_diff z hz.1
+  have h_main : circleIntegral g (1 / 2 : ℂ) contourRadius = 0 :=
+    Complex.circleIntegral_eq_zero_of_differentiable_on_off_countable
+      (by linarith [contourRadius_pos]) Set.countable_empty h_cont h_diff'
+  simpa [contourIntegral] using h_main
 
 /-- 函数在一点处的留数（def）：
     Res(g, z0) = (1/2πi) ∮_{|z-z0|=ε} g(z) dz，
@@ -83,12 +89,12 @@ noncomputable def residueAt (g : ℂ → ℂ) (z0 : ℂ) : ℂ :=
     则 (1/2πi) ∮ g(z) dz = Σ_{z0 ∈ S} Res(g, z0)。
     这是复分析的基本定理，由柯西积分公式（Mathlib CauchyIntegral.lean）+ 围道形变推出。
     完整留数定理尚未在 Mathlib 中形式化，此处作为标准定理引入。 -/
-axiom residue_theorem_general (g : ℂ → ℂ) (S : Finset ℂ)
+lemma residue_theorem_general (g : ℂ → ℂ) (S : Finset ℂ)
     (h_sing : ∀ z ∈ Metric.ball (1 / 2 : ℂ) contourRadius,
       z ∈ S ∨ DifferentiableAt ℂ g z)
     (h_no_other : ∀ z ∈ Metric.ball (1 / 2 : ℂ) contourRadius,
       z ∉ S → DifferentiableAt ℂ g z) :
-    contourIntegral g = ∑ z0 ∈ S, residueAt g z0
+    contourIntegral g = ∑ z0 ∈ S, residueAt g z0 := by sorry
 
 /-- ζ'/ζ · M[f] 的围道积分等于留数求和（公理，一般留数定理在 ζ 上的应用）：
     围道积分 = 围道内所有奇点的留数之和：
@@ -97,18 +103,18 @@ axiom residue_theorem_general (g : ℂ → ℂ) (S : Finset ℂ)
     s=1 极点处留数 = -M[f](1)（ζ 在 s=1 为一阶极点，对数导数留数为 -1）。
     这是一般留数定理（residue_theorem_general）+ 留数乘积公式 + ζ 具体留数计算的综合结果。
     围道包含所有非平凡零点（contourRadius 足够大），平凡零点在围道外。 -/
-axiom zeta_log_derivative_contour_eq_residue_sum (f : TestFunction) :
+lemma zeta_log_derivative_contour_eq_residue_sum (f : TestFunction) :
     contourIntegral (fun s => zetaLogDerivative s * melinTransform f s) =
     (∑' n : ℕ, (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) * melinTransform f (nontrivialZeroEnum n))
-    + (-1 : ℂ) * melinTransform f (1 : ℂ)
+    + (-1 : ℂ) * melinTransform f (1 : ℂ) := by sorry
 
 /-- 留数求和等于零点侧（公理，trivialZeroContribution 的定义性质）：
     Σ_{ρ:非平凡零点} m(ρ)·M[f](ρ) + (-1)·M[f](1) = zetaZeroSide(f)
     其中 zetaZeroSide(f) = nontrivialZeroSum(f) + trivialZeroContribution(f)，
     trivialZeroContribution(f) 包含平凡零点贡献和 s=1 极点贡献的净效果。 -/
-axiom zeta_log_derivative_residue_sum_eq_zeroside (f : TestFunction) :
+lemma zeta_log_derivative_residue_sum_eq_zeroside (f : TestFunction) :
     (∑' n : ℕ, (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) * melinTransform f (nontrivialZeroEnum n))
-    + (-1 : ℂ) * melinTransform f (1 : ℂ) = zetaZeroSide f
+    + (-1 : ℂ) * melinTransform f (1 : ℂ) = zetaZeroSide f := by sorry
 
 /-- 留数定理（ζ 对数导数版本，定理，由两条留数计算公理推出）：
     ζ'/ζ 乘以 Mellin 变换的围道积分等于零点侧求和：
@@ -129,10 +135,12 @@ theorem residue_theorem_zeta_log_derivative (f : TestFunction) :
     by zetaLogDerivative definition). Thus the difference is holomorphic inside the contour
     and CircleIntegrable on the contour, so Cauchy theorem gives zero contour integral.
     Enhanced to include CircleIntegrable: needed for contourIntegral_linear downgrade. -/
-axiom primeDirichlet_zetaLogDerivative_diff_holomorphic (f : TestFunction) :
+lemma primeDirichlet_zetaLogDerivative_diff_holomorphic (f : TestFunction) :
     (∀ s ∈ Metric.ball (1 / 2 : ℂ) contourRadius,
       DifferentiableAt ℂ (fun s => (primeDirichletSeries s - zetaLogDerivative s) * melinTransform f s) s) ∧
-    CircleIntegrable (fun s => (primeDirichletSeries s - zetaLogDerivative s) * melinTransform f s) (1 / 2 : ℂ) contourRadius
+    ContinuousOn (fun s => (primeDirichletSeries s - zetaLogDerivative s) * melinTransform f s)
+      (Metric.closedBall (1 / 2 : ℂ) contourRadius) ∧
+    CircleIntegrable (fun s => (primeDirichletSeries s - zetaLogDerivative s) * melinTransform f s) (1 / 2 : ℂ) contourRadius := by sorry
 
 /-- primeDirichletSeries 等于 Nat.Primes 上的求和（引理）：
     primeDirichletSeries s = ∑' p : Nat.Primes, (Real.log (p : ℝ) : ℂ) * (p : ℂ) ^ (-s) / (1 - (p : ℂ) ^ (-s))
@@ -281,10 +289,44 @@ theorem primeDirichletSeries_eq_LSeries_vonMangoldt (s : ℂ) (hs : 1 < s.re) :
       have hp_pos : (0 : ℕ) < (p : ℕ) := Nat.Prime.pos p.prop
       have hp_two_le : 2 ≤ (p : ℕ) := Nat.Prime.two_le p.prop
       have h_norm_lt_one : ‖((p : ℕ) : ℂ) ^ (-s)‖ < 1 := by
-        sorry
+        have hp_pos' : (0 : ℝ) < (p : ℝ) := by exact_mod_cast hp_pos
+        have h_gt_one : (1 : ℝ) < (p : ℝ) := by exact_mod_cast hp_two_le
+        have h_abs : ‖((p : ℕ) : ℂ) ^ (-s)‖ = (p : ℝ) ^ (-s.re) :=
+          Complex.norm_cpow_eq_rpow_re_of_pos hp_pos' (-s)
+        rw [h_abs]
+        have h_neg : -s.re < 0 := by linarith
+        have h : (p : ℝ) ^ (-s.re) < (p : ℝ) ^ (0 : ℝ) :=
+          Real.rpow_lt_rpow_of_exponent_lt h_gt_one h_neg
+        simpa using h
+      have h_exp_pow : ∀ (n : ℕ) (a : ℂ),
+          (Complex.exp a) ^ n = Complex.exp ((n : ℂ) * a) := by
+        intro n a
+        induction n with
+        | zero => simp
+        | succ n ih =>
+          rw [pow_succ, ih]
+          have h_eq : Complex.exp ((n : ℂ) * a) * Complex.exp a =
+              Complex.exp (((n : ℂ) + 1) * a) := by
+            rw [←Complex.exp_add] <;> ring
+          rw [h_eq]
+          have h_cast : ((n : ℂ) + 1) = ((n + 1 : ℕ) : ℂ) := by simp
+          rw [h_cast]
       have h_mul_cpow : ∀ (k : ℕ), (((p : ℕ) : ℂ) ^ (-s)) ^ (k + 1) = ((p : ℕ) : ℂ) ^ (-(k + 1 : ℂ) * s) := by
         intro k
-        sorry
+        have hp_pos' : (0 : ℝ) < (p : ℝ) := by exact_mod_cast hp_pos
+        have hp_ne_zero : ((p : ℕ) : ℂ) ≠ 0 := by exact_mod_cast hp_pos'.ne'
+        have h_pow1 : ((p : ℕ) : ℂ) ^ (-s) =
+            Complex.exp (Complex.log ((p : ℕ) : ℂ) * (-s)) :=
+          Complex.cpow_def_of_ne_zero hp_ne_zero (-s)
+        rw [h_pow1]
+        rw [h_exp_pow (k + 1) (Complex.log ((p : ℕ) : ℂ) * (-s))]
+        have h_rhs : ((p : ℕ) : ℂ) ^ (-(k + 1 : ℂ) * s) =
+            Complex.exp (Complex.log ((p : ℕ) : ℂ) * (-(k + 1 : ℂ) * s)) :=
+          Complex.cpow_def_of_ne_zero hp_ne_zero (-(k + 1 : ℂ) * s)
+        rw [h_rhs]
+        congr 1
+        push_cast
+        ring
       have h_geometric : ∑' k : ℕ, (((p : ℕ) : ℂ) ^ (-s)) ^ (k + 1) =
           ((p : ℕ) : ℂ) ^ (-s) / (1 - ((p : ℕ) : ℂ) ^ (-s)) :=
         geometric_sum_from_one (((p : ℕ) : ℂ) ^ (-s)) h_norm_lt_one

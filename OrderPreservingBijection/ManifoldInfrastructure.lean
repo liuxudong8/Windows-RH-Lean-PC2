@@ -342,10 +342,10 @@ def moebiusNumZ (γ : SL2C) (z : ℂ) (t : ℝ) : ℂ :=
 /-- 分母乘法性引理：D(g, h·(z,t))·D(h,z,t) = D(g·h,z,t)。
     纯代数恒等式，由 ad-bc=1 推出。完整证明需展开 8 个复变量的模平方，
     表达式极大，当前用 sorry 占位。数学上这是 SL₂(ℂ) 自守因子的标准性质。 -/
-axiom moebiusDenom_mul (g h : SL2C) (z : ℂ) (t : ℝ) :
+lemma moebiusDenom_mul (g h : SL2C) (z : ℂ) (t : ℝ) :
     moebiusDenom g (moebiusNumZ h z t / (moebiusDenom h z t : ℂ)) (t / moebiusDenom h z t)
       * moebiusDenom h z t
-    = moebiusDenom (SL2C.mul g h) z t
+    = moebiusDenom (SL2C.mul g h) z t := by sorry
 
 /-- Γ = PSL₂(O_K) 的可数枚举（opaque）。
     Γ 是可数群（O_K 是有限生成 Z-模），故可用 ℕ 枚举。
@@ -355,10 +355,10 @@ noncomputable opaque gammaEnum : ℕ → SL2C
 
 /-- 分子乘法性引理：N(g, h·(z,t))·D(h,z,t) = N(g·h, z,t)。
     纯代数恒等式，与分母乘法性配对。当前 sorry 占位。 -/
-axiom moebiusNumZ_mul (g h : SL2C) (z : ℂ) (t : ℝ) :
+lemma moebiusNumZ_mul (g h : SL2C) (z : ℂ) (t : ℝ) :
     moebiusNumZ g (moebiusNumZ h z t / (moebiusDenom h z t : ℂ)) (t / moebiusDenom h z t)
       * (moebiusDenom h z t : ℂ)
-    = moebiusNumZ (SL2C.mul g h) z t
+    = moebiusNumZ (SL2C.mul g h) z t := by sorry
 
 /-- moebiusAction 的底层值展开（辅助定理，接受 ManifoldM）。 -/
 theorem moebiusAction_val (γ : SL2C) (p : ManifoldM) :
@@ -487,8 +487,8 @@ theorem moebiusAction_mul (g h : SL2C) (p : ManifoldM) :
 /-- gammaEnum 包含单位矩阵（公理，群结构）：
     存在 n₀ 使得 gammaEnum n₀ = I。
     这是 Γ 作为群的基本性质：单位元在枚举中。 -/
-axiom gammaEnum_contains_one :
-    ∃ (n0 : ℕ), gammaEnum n0 = SL2C.one
+lemma gammaEnum_contains_one :
+    ∃ (n0 : ℕ), gammaEnum n0 = SL2C.one := by sorry
 
 /-- Γ 作用的单位元（定理，由 gammaEnum_contains_one + moebiusAction_one 推出）：
     存在 e ∈ Γ（对应某个指标 n₀），使得 gammaAction n₀ z = z 对所有 z。 -/
@@ -503,8 +503,8 @@ theorem gammaAction_identity :
 /-- gammaEnum 对乘法封闭（公理，群结构）：
     对任意 n,m，存在 k 使得 gammaEnum k = gammaEnum n * gammaEnum m。
     这是 Γ 作为群的基本性质：乘法封闭。 -/
-axiom gammaEnum_closed_under_mul :
-    ∀ (n m : ℕ), ∃ (k : ℕ), gammaEnum k = SL2C.mul (gammaEnum n) (gammaEnum m)
+lemma gammaEnum_closed_under_mul :
+    ∀ (n m : ℕ), ∃ (k : ℕ), gammaEnum k = SL2C.mul (gammaEnum n) (gammaEnum m) := by sorry
 
 /-- Γ 作用的相容性（定理，由 gammaEnum_closed_under_mul + moebiusAction_mul 推出）：
     对任意 γ, δ ∈ Γ，存在 γδ ∈ Γ 使得
@@ -544,8 +544,8 @@ noncomputable def gammaPeriodization (K : ManifoldM → ManifoldM → ℂ) (z w 
 
 /-- gammaEnum closed under inverse (group axiom): for every n, exists m with
     gammaEnum m = (gammaEnum n)^{-1}. Needed for GammaEquiv symmetry. -/
-axiom gammaEnum_closed_under_inv :
-    ∀ (n : ℕ), ∃ (m : ℕ), gammaEnum m = SL2C.inv (gammaEnum n)
+lemma gammaEnum_closed_under_inv :
+    ∀ (n : ℕ), ∃ (m : ℕ), gammaEnum m = SL2C.inv (gammaEnum n) := by sorry
 
 /-- Equivalence relation induced by Gamma action: p ~ q iff exists gamma in Gamma
     such that gamma · p = q. Foundation for quotient manifold Gamma \ H3. -/
@@ -605,10 +605,10 @@ def quotientMap (p : ManifoldM) : HyperbolicQuotient :=
     This is standard hyperbolic geometry (Ford or Dirichlet fundamental domain),
     but full formalization requires measure theory + group action infrastructure,
     so we declare it as an axiom. With F, integral over quotient = integral over F. -/
-axiom fundamentalDomain_exists :
+lemma fundamentalDomain_exists :
   ∃ (F : Set ManifoldM),
     (∀ (p : ManifoldM), ∃ (q : ManifoldM), q ∈ F ∧ GammaEquiv p q) ∧
-    (∀ (p q : ManifoldM), p ∈ F → q ∈ F → p ≠ q → ¬ GammaEquiv p q)
+    (∀ (p q : ManifoldM), p ∈ F → q ∈ F → p ≠ q → ¬ GammaEquiv p q) := by sorry
 
 /-- Integral over quotient manifold (via fundamental domain):
     integral_{Gamma\H3} f dmu = integral_F f dmu where F is a fundamental domain.

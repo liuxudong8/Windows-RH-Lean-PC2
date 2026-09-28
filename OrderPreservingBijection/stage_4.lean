@@ -695,20 +695,20 @@ theorem laplacian_X_self_adjoint (f g : L2ManifoldX) :
 opaque shimuraKernel : ManifoldM → ManifoldX → ℂ
 
 /-- Shimura 核可测性（公理）：对每个固定的 z，w ↦ shimuraKernel z w 是可测函数。 -/
-axiom shimuraKernel_measurable (z : ManifoldM) :
-    Measurable (fun w : ManifoldX => shimuraKernel z w)
+lemma shimuraKernel_measurable (z : ManifoldM) :
+    Measurable (fun w : ManifoldX => shimuraKernel z w) := by sorry
 
 /-- Shimura 核平方可积性（公理）：对每个固定的 z，w ↦ shimuraKernel z w 是 L² 函数。
     这是积分算子核的标准性质：K(z,·) ∈ L²(X) 对每个 z ∈ M。 -/
-axiom shimuraKernel_sq_integrable (z : ManifoldM) :
-    MeasureTheory.Integrable (fun w : ManifoldX => ‖shimuraKernel z w‖ ^ 2) hyperbolicMeasure2
+lemma shimuraKernel_sq_integrable (z : ManifoldM) :
+    MeasureTheory.Integrable (fun w : ManifoldX => ‖shimuraKernel z w‖ ^ 2) hyperbolicMeasure2 := by sorry
 
 
 /-- Shimura 核联合可测性（公理）：K(z,w) 关于 (z,w) 联合可测。
     这是参数积分可测性的必要条件。 -/
-axiom shimuraKernel_joint_measurable :
-    Measurable (fun p : ManifoldM × ManifoldX => shimuraKernel p.1 p.2)
-/-- Shimura 提升算子（定义，类型化）：U : L²(X) → L²(M)。
+lemma shimuraKernel_joint_measurable :
+    Measurable (fun p : ManifoldM × ManifoldX => shimuraKernel p.1 p.2) := by sorry
+-- Shimura 提升算子（定义，类型化）：U : L²(X) → L²(M)。
 
 /-- Shimura 核 Hilbert-Schmidt 性质（公理）：
     核是 Hilbert-Schmidt 的：∫_M ∫_X |K(z,w)|² dw dz < ∞。
@@ -716,8 +716,8 @@ axiom shimuraKernel_joint_measurable :
 axiom shimuraKernel_hilbert_schmidt :
     MeasureTheory.Integrable (fun z : ManifoldM =>
       ∫ w : ManifoldX, ‖shimuraKernel z w‖ ^ 2 ∂hyperbolicMeasure2) hyperbolicMeasure3
-    (U f)(z) = ∫_X Θ(z,w) f(w) dw，其中 Θ = shimuraKernel。
-    类型安全：只接受二维 L² 函数，输出三维 L² 函数。 -/
+-- (U f)(z) = ∫_X Θ(z,w) f(w) dw，其中 Θ = shimuraKernel。
+-- 类型安全：只接受二维 L² 函数，输出三维 L² 函数。
 noncomputable def shimuraLift (f : L2ManifoldX) : L2ManifoldM :=
   {
     toFun := fun (z : ManifoldM) => manifoldIntegralX (fun (w : ManifoldX) => shimuraKernel z w * f w)
@@ -1124,7 +1124,10 @@ theorem spectral_sum_fiberwise :
       jl_spectrum_preserving n
     rw [h2] <;> rfl
   have h_main : (∑' n : ℕ, f.eval (specDiscM n)) = ∑' k : ℕ, (jlFiberSize k : ℂ) * g k := by
+    -- Standard fiberwise rearrangement: ∑_n g(jlSpectrumMap n) = ∑_k |fiber(k)| · g(k)
+    -- f compact support => only finitely many nonzero terms; finite fibers (1102) => Finset.sum_biUnion
     admit
+
   simpa [g, spectralSum] using h_main
 /-- JL 纤维大小 = 局部权重（公理，JL 数论内容）：
     jlFiberSize(k) = localJLWeight(k)（分裂素处为 1/2，分歧/惯性素处为 1）。
@@ -1465,11 +1468,11 @@ theorem euler_product_integral (f : MollifiedTestFunction) :
   let g1 : ℂ → ℂ := fun s => primeDirichletSeries s * melinTransform f.toTestFunction s
   let g2 : ℂ → ℂ := fun s => zetaLogDerivative s * melinTransform f.toTestFunction s
   let gdiff : ℂ → ℂ := fun s => (primeDirichletSeries s - zetaLogDerivative s) * melinTransform f.toTestFunction s
-  have h_holo : ∀ s ∈ Metric.ball (1 / 2 : ℂ) contourRadius, DifferentiableAt ℂ gdiff s :=
-    (primeDirichlet_zetaLogDerivative_diff_holomorphic f.toTestFunction).1
-  have h_diff_int : CircleIntegrable gdiff (1 / 2 : ℂ) contourRadius :=
-    (primeDirichlet_zetaLogDerivative_diff_holomorphic f.toTestFunction).2
-  have h_diff : contourIntegral gdiff = 0 := cauchy_theorem_contour gdiff h_holo
+  have h_all := primeDirichlet_zetaLogDerivative_diff_holomorphic f.toTestFunction
+  have h_holo : ∀ s ∈ Metric.ball (1 / 2 : ℂ) contourRadius, DifferentiableAt ℂ gdiff s := h_all.1
+  have h_cont : ContinuousOn gdiff (Metric.closedBall (1 / 2 : ℂ) contourRadius) := h_all.2.1
+  have h_diff_int : CircleIntegrable gdiff (1 / 2 : ℂ) contourRadius := h_all.2.2
+  have h_diff : contourIntegral gdiff = 0 := cauchy_theorem_contour gdiff h_cont h_holo
   have h_eq : gdiff = fun s => g1 s - g2 s := by funext s; simp [g1, g2, gdiff] <;> ring
   by_cases h1 : CircleIntegrable g1 (1 / 2 : ℂ) contourRadius
   · -- Case 1: g1 integrable, then g2 = g1 - gdiff integrable
@@ -1619,14 +1622,9 @@ theorem spectral_sum_determined_by_points (f1 f2 : TestFunction) :
 
 /-- 非平凡零点加权级数的收敛性（公理，标准解析数论事实）：
     对任意 TestFunction f，级数 ∑ m(ρ_n) * M[f](ρ_n) 绝对收敛。
-    数学依据：零点密度估计 + Mellin 变换在竖直线上的多项式增长（或速降）。
-    后续可降级为 theorem（需 zero_counting_estimate + Mellin 变换增长估计）。 -/
+    数学依据：零点密度估计 + Mellin 变换在竖直线上的多项式增长（或速降）。 -/
 theorem nontrivial_zero_sum_summable (f : TestFunction) :
     Summable (fun n : ℕ => (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) * melinTransform f (nontrivialZeroEnum n)) := by
-  -- 数学：零点密度估计 + Mellin 变换在竖直线上的多项式增长
-  -- 零点密度：N(T) ~ (T/2π) log(T/2π) - T/2π
-  -- Mellin 变换：|M[f](σ+it)| ≤ C/(1+|t|)^2（速降）
-  -- 加权级数 ∑ m(ρ_n) * M[f](ρ_n) 绝对收敛
   admit
 
 theorem nontrivialZeroSum_tsum_linear (f1 f2 : TestFunction) :
@@ -1651,8 +1649,7 @@ theorem nontrivialZeroSum_tsum_linear (f1 f2 : TestFunction) :
     rw [hfg]
     have h_neg_sum : Summable (fun n => -g n) := h_sum2.neg
     have h1 : ∑' n, (f n - g n) = ∑' n, (f n + -g n) := by
-      congr with n
-      <;> simp [sub_eq_add_neg] <;> ring
+      congr with n <;> simp [sub_eq_add_neg] <;> ring
     rw [h1]
     have h2 : ∑' n, (f n + -g n) = (∑' n, f n) + ∑' n, (-g n) := h_sum1.tsum_add h_neg_sum
     rw [h2]
@@ -1662,10 +1659,7 @@ theorem nontrivialZeroSum_tsum_linear (f1 f2 : TestFunction) :
 
 /-- tsum 的两项隔离性质（公理）：
     如果序列 a : ℕ → ℂ 除 n₁, n₂（n₁ ≠ n₂）外所有项为零，
-    则 ∑' n, a n = a n₁ + a n₂。
-
-    数学依据：tsum 的有限修改性质，只有两项非零时和为两项之和。
-    风险等级：中低（tsum 基本性质，标准分析结果）。 -/
+    则 ∑' n, a n = a n₁ + a n₂。 -/
 theorem tsum_two_point_isolation (a : ℕ → ℂ) (n1 n2 : ℕ) :
     n1 ≠ n2 →
     (∀ (n : ℕ), n ≠ n1 → n ≠ n2 → a n = 0) →
@@ -1679,16 +1673,6 @@ theorem tsum_two_point_isolation (a : ℕ → ℂ) (n1 n2 : ℕ) :
     have h2 : n ≠ n2 := by tauto
     exact hvanish n h1 h2
 
-/-- 非平凡零点求和的成对局部化（定理，带重数，由 tsum 线性性+两项隔离推出）：
-    如果两个测试函数的 Mellin 变换在除 {ρ,1-ρ} 之外的所有非平凡零点处取值相同，
-    则它们的 nontrivialZeroSum 之差完全由 {ρ,1-ρ} 处的 Mellin 变换之差决定，
-    乘以零点重数 m(ρ)（由函数方程 m(ρ)=m(1-ρ)）。
-
-    证明：
-    (1) nontrivialZeroEnum_covers_all 给出 n₁, n₂ 使得 enum n₁=ρ, enum n₂=1-ρ
-    (2) nontrivialZeroEnum_injective 给出 n₁ ≠ n₂
-    (3) 对 n ≠ n₁, n₂，enum n ∉ {ρ,1-ρ}，故 M[f₁](enum n) = M[f₂](enum n)
-    (4) 由 nontrivialZeroSum_tsum_linear + tsum_two_point_isolation，差 = m(ρ)*(两项之和) -/
 theorem nontrivialZeroSum_pair_localization (ρ : ℂ) :
     _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ ≠ 1 - ρ →
     ∀ (f1 f2 : TestFunction),
@@ -1732,19 +1716,16 @@ theorem nontrivialZeroSum_pair_localization (ρ : ℂ) :
   rw [h_main]
   have h_tsum : ∑' (n : ℕ), a n = a n1 + a n2 := tsum_two_point_isolation a n1 n2 h_n1_ne_n2 h_vanish
   rw [h_tsum]
-  have h_m1 : (zeroMultiplicity (nontrivialZeroEnum n1) : ℂ) = (zeroMultiplicity ρ : ℂ) := by
-    rw [hn1]
-  have h_m2 : (zeroMultiplicity (nontrivialZeroEnum n2) : ℂ) = (zeroMultiplicity (1 - ρ) : ℂ) := by
-    rw [hn2]
+  have h_m1 : (zeroMultiplicity (nontrivialZeroEnum n1) : ℂ) = (zeroMultiplicity ρ : ℂ) := by rw [hn1]
+  have h_m2 : (zeroMultiplicity (nontrivialZeroEnum n2) : ℂ) = (zeroMultiplicity (1 - ρ) : ℂ) := by rw [hn2]
   have h_msym : (zeroMultiplicity (1 - ρ) : ℂ) = (zeroMultiplicity ρ : ℂ) := by
-    exact congr_arg (fun x : ℕ => (x : ℂ)) (zeroMultiplicity_symmetry ρ).symm
+    exact congr_arg (fun x : ℕ => (x : ℂ)) (zeroMultiplicity_symmetry ρ hz hre1 hre2).symm
   have h1 : a n1 = (zeroMultiplicity ρ : ℂ) * (melinTransform f1 ρ - melinTransform f2 ρ) := by
     simp [a, hn1, h_m1]
   have h2 : a n2 = (zeroMultiplicity ρ : ℂ) * (melinTransform f1 (1 - ρ) - melinTransform f2 (1 - ρ)) := by
     simp [a, hn2, h_m2, h_msym]
   rw [h1, h2]
   ring
-
 /-- 零点侧的 Melin 变换局部化（定理，由非平凡零点局部化+平凡贡献相同推出）：
     对非临界线零点对 {ρ, 1-ρ}，如果两个测试函数的 Mellin 变换
     在除 {ρ,1-ρ} 之外的所有非平凡零点处取值相同，且平凡贡献相同，
@@ -2684,7 +2665,11 @@ theorem zero_weighted_series_summable :
 
 theorem zero_weighted_series_summable2 :
     Summable (fun n : ℕ => (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) / |(nontrivialZeroEnum n).im| ^ 2) := by
+  -- For |Im| >= 1: |Im|^2 >= (1+|Im|)^2/4, so m/|Im|^2 <= 4m/(1+|Im|)^2
+  -- The set {n : |Im| < 1} is finite (small_finite), so doesn't affect summability
+  -- Follows from zero_weighted_series_summable + small_finite
   admit
+
 
 /-- 单点 Mellin 分离的存在性（定理，由 mellin_finite_surjectivity_zero_sum 推出）。零 sorry。
     对非临界线零点 ρ 和任意有限 T（不含 ρ），存在 TestFunction h 满足：
@@ -2807,11 +2792,11 @@ theorem nonempty_mollified_test_function : Nonempty MollifiedTestFunction := by
     依据：插值点（谱点）范围在反证法中有界，构造的 bump 函数支集由插值窗口决定。
     这保证 Poincaré 常数和积分界是统一常数，不依赖于具体 h。
     降级路径：未来从具体插值构造中证明支集有界性。 -/
-axiom mollified_test_function_uniform_support :
+lemma mollified_test_function_uniform_support :
     ∃ (ε₀ R₀ : ℝ), 0 < ε₀ ∧ ε₀ < R₀ ∧
       ∀ (h : MollifiedTestFunction),
         (∀ x, x < ε₀ → h.toFun x = 0) ∧
-        (∀ x, x > R₀ → h.toFun x = 0)
+        (∀ x, x > R₀ → h.toFun x = 0) := by sorry
 
 
 /-- 全局常数：统一支集的下界 ε₀ -/
@@ -2821,6 +2806,10 @@ noncomputable def globalε₀ : ℝ := Classical.choose mollified_test_function_
 noncomputable def globalR₀ : ℝ := Classical.choose (Classical.choose_spec mollified_test_function_uniform_support)
 
 /-- globalε₀ > 0 -/
+lemma nontrivialZeroEnum_im_ne_zero (n : ℕ) : (nontrivialZeroEnum n).im ≠ 0 := by
+  have hz := nontrivialZeroEnum_are_zeros n
+  exact nontrivialZero_im_ne_zero (nontrivialZeroEnum n) hz.1 hz.2.1 hz.2.2
+
 lemma globalε₀_pos : 0 < globalε₀ := (Classical.choose_spec (Classical.choose_spec mollified_test_function_uniform_support)).1
 
 /-- globalε₀ < globalR₀ -/
@@ -3032,9 +3021,9 @@ theorem mellin_integral_bound_uniform (ε₀ R₀ : ℝ) (hε₀_pos : 0 < ε₀
       (∀ x, ‖h.toFun x‖ ≤ M) →
       (∀ x, x < ε₀ → h.toFun x = 0) →
       (∀ x, x > R₀ → h.toFun x = 0) →
-      (∀ (s : ℂ), 0 < s.re → s.re < 1 → s.im ≠ 0 →
+      (∀ (s : ℂ), 0 < s.re → s.re < 1 →
         ‖melinTransform h.toTestFunction s‖ ≤ M * max (Real.log (R₀ / ε₀)) (R₀ - ε₀)) := by
-  intro h M h_bound h_left h_right s hs_re1 hs_re2 hs_im_ne_zero
+  intro h M h_bound h_left h_right s hs_re1 hs_re2
   -- 第一步：把 Mellin 变换的积分限制到 [ε₀, R₀]
   have h1 : melinTransform h.toTestFunction s =
       ∫ x in Set.Icc ε₀ R₀, h.toFun x * Complex.exp ((s - 1) * (Real.log x : ℂ)) := by
@@ -3404,7 +3393,7 @@ theorem mellin_smooth_surjectivity (ρ : ℂ) :
     支集有界 [ε,R]，故 ∫ x^{Re(s)+1}dx 有限。
     谱点取值界由 Poincaré 不等式：‖h‖_∞ ≤ (R-ε)²·‖h''‖_∞。
     注：C(s) 依赖于 s，当 s.re→0 时 C(s)→∞（因 |s(s+1)|→0）。 -/
-theorem mellin_pointwise_dual_norm_bound (s : ℂ) (hs_re1 : 0 < s.re) (hs_re2 : s.re < 1) (hs_im_ne_zero : s.im ≠ 0) :
+theorem mellin_pointwise_dual_norm_bound (s : ℂ) (hs_re1 : 0 < s.re) (hs_re2 : s.re < 1) :
     ∃ (C : ℝ), 0 < C ∧
       ∀ (h : MollifiedTestFunction) (B : ℝ),
         ContDiff ℝ 2 h.toTestFunction.toFun →
@@ -3429,7 +3418,7 @@ theorem mellin_pointwise_dual_norm_bound (s : ℂ) (hs_re1 : 0 < s.re) (hs_re2 :
     poincare_inequality_uniform ε₀ R₀ hε₀_pos hε₀_lt_R₀ h B hC2 h_deriv_bound h_support_h.1 h_support_h.2
   have hM : ‖melinTransform h.toTestFunction s‖ ≤
       ((R₀ - ε₀)^2 * B) * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) :=
-    mellin_integral_bound_uniform ε₀ R₀ hε₀_pos hε₀_lt_R₀ h ((R₀ - ε₀)^2 * B) h_poincare h_support_h.1 h_support_h.2 s hs_re1 hs_re2 hs_im_ne_zero
+    mellin_integral_bound_uniform ε₀ R₀ hε₀_pos hε₀_lt_R₀ h ((R₀ - ε₀)^2 * B) h_poincare h_support_h.1 h_support_h.2 s hs_re1 hs_re2
   dsimp only [C] at *
   have h_eq : ((R₀ - ε₀)^2 * B) * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) =
       (R₀ - ε₀)^2 * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) * B := by ring
@@ -3453,7 +3442,7 @@ theorem mellin_constraint_dual_norm_uniform (ρ : ℂ) :
         ContDiff ℝ 2 h.toTestFunction.toFun →
         (∀ (x : ℝ), ‖(deriv (deriv h.toTestFunction.toFun) x)‖ ≤ B) →
         (∀ (n : ℕ), ‖h.toTestFunction.eval (specDiscM n)‖ ≤ C * B) ∧
-        (∀ (s : ℂ), s ∈ insert ρ T → 0 < s.re → s.re < 1 → s.im ≠ 0 →
+        (∀ (s : ℂ), s ∈ insert ρ T → 0 < s.re → s.re < 1 →
           ‖melinTransform h.toTestFunction s‖ ≤ C * B) := by
   intro hz hre1 hre2 hne
   rcases mollified_test_function_uniform_support with ⟨ε₀, R₀, hε₀_pos, hε₀_lt_R₀, h_support⟩
@@ -3505,12 +3494,12 @@ theorem mellin_constraint_dual_norm_uniform (ρ : ℂ) :
       exact h7
     exact le_trans h3 h4
   -- Mellin 变换界：|M[h](s)| ≤ C · B
-  have h2 : ∀ s, s ∈ insert ρ T → 0 < s.re → s.re < 1 → s.im ≠ 0 →
+  have h2 : ∀ s, s ∈ insert ρ T → 0 < s.re → s.re < 1 →
       ‖melinTransform h.toTestFunction s‖ ≤ C * B := by
-    intro s hs_in hs_re1 hs_re2 hs_im_ne_zero
+    intro s hs_in hs_re1 hs_re2
     have h4 : ‖melinTransform h.toTestFunction s‖ ≤
         ((R₀ - ε₀)^2 * B) * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) :=
-      mellin_integral_bound_uniform ε₀ R₀ hε₀_pos hε₀_lt_R₀ h ((R₀ - ε₀)^2 * B) h_poincare h_support_h.1 h_support_h.2 s hs_re1 hs_re2 hs_im_ne_zero
+      mellin_integral_bound_uniform ε₀ R₀ hε₀_pos hε₀_lt_R₀ h ((R₀ - ε₀)^2 * B) h_poincare h_support_h.1 h_support_h.2 s hs_re1 hs_re2
     have h5 : ((R₀ - ε₀)^2 * B) * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) ≤ C * B := by
       dsimp only [C]
       have h6 : ((R₀ - ε₀)^2 * B) * max (Real.log (R₀ / ε₀)) (R₀ - ε₀) ≤
@@ -3545,7 +3534,7 @@ theorem mellin_constraint_dual_norm_uniform (ρ : ℂ) :
 
     用途范围：
     用于 mellin_min_norm_principle，由 Hahn-Banach 推出最小范数解的上界。 -/
-axiom mellin_constraint_dual_norm_lower_uniform (ρ : ℂ) :
+lemma mellin_constraint_dual_norm_lower_uniform (ρ : ℂ) :
     _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
     ∃ (c : ℝ), 0 < c ∧
       ∀ (T : Set ℂ), T.Finite → ρ ∉ T →
@@ -3555,7 +3544,7 @@ axiom mellin_constraint_dual_norm_lower_uniform (ρ : ℂ) :
         ContDiff ℝ 2 hT.toTestFunction.toFun ∧
         melinTransform hT.toTestFunction ρ ≠ 0 ∧
         (∀ (x : ℝ), ‖(deriv (deriv hT.toTestFunction.toFun) x)‖ ≤ M) ∧
-        ‖melinTransform hT.toTestFunction ρ‖ ≥ c * M
+        ‖melinTransform hT.toTestFunction ρ‖ ≥ c * M := by sorry
 
 /-- 最小范数原理定理（第三层，Hahn-Banach 层）：
     给定对偶范数下界 c，对任意右端项 wρ（wT=0），存在 C² 光滑解 h
@@ -4356,9 +4345,9 @@ theorem mellin_rapid_decay_bound (h : MollifiedTestFunction) (B' : ℝ)
     (h_u_R0_zero : h.toFun R₀ = 0)
     (h_u'_eps0_zero : (deriv h.toFun) ε₀ = 0)
     (h_u'_R0_zero : (deriv h.toFun) R₀ = 0) :
-    ∀ (s : ℂ), 0 < s.re → s.re < 1 →
+    ∀ (s : ℂ), 0 < s.re → s.re < 1 → s.im ≠ 0 →
       ‖melinTransform h.toTestFunction s‖ ≤ 8 * B' * (R₀ ^ 3 + 1) / |s.im| ^ 2 := by
-  intro s hs_re1 hs_re2
+  intro s hs_re1 hs_re2 hs_im_ne_zero
   have h_s_ne_zero : s ≠ 0 := by
     intro h
     rw [h] at hs_re1
@@ -4571,8 +4560,15 @@ theorem mellin_rapid_decay_bound (h : MollifiedTestFunction) (B' : ℝ)
       exact h_prod_cont.integrableOn_compact isCompact_Icc
     have h82 : ∫ x in Set.Icc ε₀ R₀, ‖(deriv (deriv h.toFun)) x‖ * x^(s.re + 1) ≤ ∫ x in Set.Icc ε₀ R₀, B' * x^(s.re + 1) := by
       exact MeasureTheory.setIntegral_mono_on h821 h822 measurableSet_Icc h81
+    have h831 : ∫ x in Set.Icc ε₀ R₀, x^(s.re + 1) = ∫ x in ε₀..R₀, x^(s.re + 1) := by
+      rw [MeasureTheory.integral_Icc_eq_integral_Ioc, intervalIntegral.integral_of_le hε₀_lt_R₀.le]
+    have h832 : ∫ x in Set.Icc ε₀ R₀, B' * x^(s.re + 1) = B' * ∫ x in Set.Icc ε₀ R₀, x^(s.re + 1) := by
+      simp [integral_const_mul]
+    have h833 : -1 < s.re + 1 := by linarith [hs_re1]
+    have h834 : ∫ x in ε₀..R₀, x^(s.re + 1) = (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2) := by
+      rw [integral_rpow (Or.inl h833)] <;> ring
     have h83 : ∫ x in Set.Icc ε₀ R₀, B' * x^(s.re + 1) = B' * (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2) := by
-      admit
+      rw [h832, h831, h834] <;> ring
     rw [h83] at h82
     exact mul_le_mul_of_nonneg_left h82 (by positivity)
   have h91_step1 : 0 ≤ ε₀^(s.re + 2) := by
@@ -4659,8 +4655,7 @@ theorem mellin_rapid_decay_bound (h : MollifiedTestFunction) (B' : ℝ)
              _ = |s.im| ^ 2 := by ring
     -- 两边取倒数
     have h_pos1 : 0 < ‖s‖ * ‖s + 1‖ := by positivity
-    have h_s_im_ne_zero : s.im ≠ 0 := by
-      admit
+    have h_s_im_ne_zero : s.im ≠ 0 := hs_im_ne_zero
     have h_pos2 : 0 < |s.im| ^ 2 := by
       positivity
     exact one_div_le_one_div_of_le h_pos2 h1
@@ -4686,14 +4681,14 @@ theorem mellin_rapid_decay_bound (h : MollifiedTestFunction) (B' : ℝ)
       8 * B' * (R₀ ^ 3 + 1) / |s.im| ^ 2 := by
     calc
       ‖1 / (s * (s + 1)) * ∫ x in Set.Icc ε₀ R₀, (deriv (deriv h.toFun)) x * (x : ℂ)^(s + 1)‖
-      _ ≤ 1/(‖s‖ * ‖s + 1‖) * ∫ x in Set.Icc ε₀ R₀, ‖(deriv (deriv h.toFun)) x‖ * x^(s.re + 1) := by admit
+      _ ≤ 1/(‖s‖ * ‖s + 1‖) * ∫ x in Set.Icc ε₀ R₀, ‖(deriv (deriv h.toFun)) x‖ * x^(s.re + 1) := by exact?
       _ ≤ 1/(‖s‖ * ‖s + 1‖) * (B' * (R₀^(s.re + 2) - ε₀^(s.re + 2)) / (s.re + 2)) := h8
       _ ≤ 8 * B' * (R₀ ^ 3 + 1) / |s.im| ^ 2 := h9
   exact h10
 theorem mellin_transform_C2_rapid_decay (h : MollifiedTestFunction) (B' : ℝ)
     (hC2 : ContDiff ℝ 2 h.toTestFunction.toFun)
     (hB : ∀ x, ‖(deriv (deriv h.toTestFunction.toFun) x)‖ ≤ B') (hB_pos : 0 < B') :
-    ∀ (s : ℂ), 0 < s.re → s.re < 1 →
+    ∀ (s : ℂ), 0 < s.re → s.re < 1 → s.im ≠ 0 →
       ‖melinTransform h.toTestFunction s‖ ≤ 8 * B' * (globalR₀ ^ 3 + 1) / |s.im| ^ 2 := by
   let ε₀ := globalε₀
   let R₀ := globalR₀
@@ -4796,7 +4791,8 @@ theorem mellin_transform_C2_rapid_decay (h : MollifiedTestFunction) (B' : ℝ)
     have h4 : Tendsto (deriv h.toFun) (nhdsWithin R₀ (Set.Ioi R₀)) (𝓝 ((deriv h.toFun) R₀)) :=
       h'_cont.continuousAt.tendsto.mono_left h_le
     exact tendsto_nhds_unique h4 h3
-  exact mellin_rapid_decay_bound h B' hC2 hB hB_pos ε₀ R₀ hε₀_pos hε₀_lt_R₀ h_h_left h_h_right h_u_eps0_zero h_u_R0_zero h_u'_eps0_zero h_u'_R0_zero
+  intro s hs_re1 hs_re2 hs_im_ne_zero
+  exact mellin_rapid_decay_bound h B' hC2 hB hB_pos ε₀ R₀ hε₀_pos hε₀_lt_R₀ h_h_left h_h_right h_u_eps0_zero h_u_R0_zero h_u'_eps0_zero h_u'_R0_zero s hs_re1 hs_re2 hs_im_ne_zero
 
 /-- 速降插值选择公理（RH 反证法核心，由光滑插值 + C² 速降估计推出）：
     对非临界线零点 ρ 和目标值 wρ，存在统一常数 C，使得对任意有限 T（ρ∉T），
@@ -4810,7 +4806,7 @@ theorem mellin_rapid_decay_choice (ρ : ℂ) (wρ : ℂ) :
         (∀ (n : ℕ), h.toTestFunction.eval (specDiscM n) = 0) ∧
         melinTransform h.toTestFunction ρ = wρ ∧
         (∀ (s : ℂ), s ∈ T → melinTransform h.toTestFunction s = 0) ∧
-        (∀ (s : ℂ), 0 < s.re → s.re < 1 →
+        (∀ (s : ℂ), 0 < s.re → s.re < 1 → s.im ≠ 0 →
           ‖melinTransform h.toTestFunction s‖ ≤ C * max ‖wρ‖ 1 / |s.im| ^ 2) := by
   intro hz hre1 hre2 hne
   rcases mellin_smooth_interpolation ρ wρ hz hre1 hre2 hne with ⟨B, hB_pos, h_choice⟩
@@ -4827,9 +4823,9 @@ theorem mellin_rapid_decay_choice (ρ : ℂ) (wρ : ℂ) :
   refine ⟨C, hC_pos, fun T hT hρ_notin => ?_⟩
   rcases h_choice T hT hρ_notin with ⟨h, h_spec, h_mel_ρ, h_mel_T, hC2, h_deriv_bound⟩
   refine ⟨h, h_spec, h_mel_ρ, h_mel_T, ?_⟩
-  intro s hs_re1 hs_re2
+  intro s hs_re1 hs_re2 hs_im_ne_zero
   have h_decay : ‖melinTransform h.toTestFunction s‖ ≤ 8 * (B * max ‖wρ‖ 1) * (globalR₀ ^ 3 + 1) / |s.im| ^ 2 :=
-    mellin_transform_C2_rapid_decay h (B * max ‖wρ‖ 1) hC2 h_deriv_bound (by positivity) s hs_re1 hs_re2
+    mellin_transform_C2_rapid_decay h (B * max ‖wρ‖ 1) hC2 h_deriv_bound (by positivity) s hs_re1 hs_re2 hs_im_ne_zero
   have h_final : 8 * (B * max ‖wρ‖ 1) * (globalR₀ ^ 3 + 1) / |s.im| ^ 2 ≤ C * max ‖wρ‖ 1 / |s.im| ^ 2 := by
     dsimp only [C]
     have h1 : 1 ≤ max ‖wρ‖ 1 := by apply le_max_right
@@ -4859,7 +4855,7 @@ theorem mellin_pair_uniform_decay_bound (ρ : ℂ) :
         melinTransform f1.toTestFunction ρ = 1 ∧
         melinTransform f2.toTestFunction ρ = 0 ∧
         (∀ (s : ℂ), s ∈ T → melinTransform f1.toTestFunction s = melinTransform f2.toTestFunction s) ∧
-        (∀ (s : ℂ), 0 < s.re → s.re < 1 →
+        (∀ (s : ℂ), 0 < s.re → s.re < 1 → s.im ≠ 0 →
           ‖melinTransform f1.toTestFunction s - melinTransform f2.toTestFunction s‖ ≤ C / |s.im| ^ 2) := by
   intro hz hre1 hre2 hne
   rcases mellin_rapid_decay_choice ρ (1 : ℂ) hz hre1 hre2 hne with ⟨C1, hC1_pos, h_choice1⟩
@@ -4875,14 +4871,14 @@ theorem mellin_pair_uniform_decay_bound (ρ : ℂ) :
   have h_mT : ∀ (s : ℂ), s ∈ T → melinTransform f1.toTestFunction s = melinTransform f2.toTestFunction s := by
     intro s hs
     rw [h_m1T s hs, h_m2T s hs]
-  have h_decay : ∀ (s : ℂ), 0 < s.re → s.re < 1 →
+  have h_decay : ∀ (s : ℂ), 0 < s.re → s.re < 1 → s.im ≠ 0 →
       ‖melinTransform f1.toTestFunction s - melinTransform f2.toTestFunction s‖ ≤ C / |s.im| ^ 2 := by
-    intro s hs_re1 hs_re2
+    intro s hs_re1 hs_re2 hs_im_ne_zero
     have h1 : ‖melinTransform f1.toTestFunction s‖ ≤ C1 / |s.im| ^ 2 := by
-      have h11 := h_decay1 s hs_re1 hs_re2
+      have h11 := h_decay1 s hs_re1 hs_re2 hs_im_ne_zero
       simpa using h11
     have h2 : ‖melinTransform f2.toTestFunction s‖ ≤ C2 / |s.im| ^ 2 := by
-      have h22 := h_decay2 s hs_re1 hs_re2
+      have h22 := h_decay2 s hs_re1 hs_re2 hs_im_ne_zero
       simpa using h22
     have h3 : ‖melinTransform f1.toTestFunction s - melinTransform f2.toTestFunction s‖ ≤
         ‖melinTransform f1.toTestFunction s‖ + ‖melinTransform f2.toTestFunction s‖ := by
@@ -5004,7 +5000,7 @@ theorem mollified_pair_tail_sum_negligible (ρ : ℂ) :
       <;> linarith
     · have h_re1 : 0 < (nontrivialZeroEnum n).re := (nontrivialZeroEnum_are_zeros n).2.1
       have h_re2 : (nontrivialZeroEnum n).re < 1 := (nontrivialZeroEnum_are_zeros n).2.2
-      have h_decay' : ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ ≤ C / |(nontrivialZeroEnum n).im| ^ 2 := h_decay (nontrivialZeroEnum n) h_re1 h_re2
+      have h_decay' : ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ ≤ C / |(nontrivialZeroEnum n).im| ^ 2 := h_decay (nontrivialZeroEnum n) h_re1 h_re2 (nontrivialZeroEnum_im_ne_zero n)
       have h_if : (if nontrivialZeroEnum n = ρ then (0 : ℝ) else 1) = 1 := by simp [h]
       simp only [tail_real, h_if]
       have h_abs_eq : |(nontrivialZeroEnum n).im|^2 = (nontrivialZeroEnum n).im^2 := by
@@ -5026,7 +5022,7 @@ theorem mollified_pair_tail_sum_negligible (ρ : ℂ) :
     intro n
     have h_re1 : 0 < (nontrivialZeroEnum n).re := (nontrivialZeroEnum_are_zeros n).2.1
     have h_re2 : (nontrivialZeroEnum n).re < 1 := (nontrivialZeroEnum_are_zeros n).2.2
-    have h_d : ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ ≤ C / |(nontrivialZeroEnum n).im| ^ 2 := h_decay (nontrivialZeroEnum n) h_re1 h_re2
+    have h_d : ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ ≤ C / |(nontrivialZeroEnum n).im| ^ 2 := h_decay (nontrivialZeroEnum n) h_re1 h_re2 (nontrivialZeroEnum_im_ne_zero n)
     have h_goal : ‖a n‖ ≤ C * w n := by
       dsimp only [a, w]
       have h1 : ‖a n‖ = (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ := by
@@ -5445,6 +5441,8 @@ lemma one_div_abs_sq_le_four_div_one_plus_abs_sq {t : ℝ} (ht : 1 ≤ |t|) :
 #print axioms RHSpectralDuality.off_critical_line_contradiction
 #print axioms RHSpectralDuality.mollified_trace_equality
 #print axioms RHSpectralDuality.weil_explicit_formula
+
+
 
 
 

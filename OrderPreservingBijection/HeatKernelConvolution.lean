@@ -28,22 +28,22 @@ namespace OrderPreservingBijection
 opaque sphericalPoint (z w : ManifoldM) (r θ : ℝ) : ManifoldM
 
 /-- sphericalPoint satisfies d(z, sphericalPoint z w r theta) = r (axiom). -/
-axiom sphericalPoint_radius (z w : ManifoldM) (r : ℝ) (hr : 0 ≤ r) (θ : ℝ) :
-    hyperbolicDistance z (sphericalPoint z w r θ) = r
+lemma sphericalPoint_radius (z w : ManifoldM) (r : ℝ) (hr : 0 ≤ r) (θ : ℝ) :
+    hyperbolicDistance z (sphericalPoint z w r θ) = r := by sorry
 
 /-- Spherical coordinates on H3 centered at z: volume element sinh^2(r) sin(theta). -/
-axiom heatKernel_spherical_coords (z w : ManifoldM) (f : ManifoldM → ℂ) :
+lemma heatKernel_spherical_coords (z w : ManifoldM) (f : ManifoldM → ℂ) :
     manifoldIntegral f =
     (2 * Real.pi : ℂ) * ∫ r in Set.Ioi (0 : ℝ),
       ∫ θ in Set.Icc (0 : ℝ) Real.pi,
-        ((Real.sinh r)^2 * Real.sin θ : ℂ) * f (sphericalPoint z w r θ)
+        ((Real.sinh r)^2 * Real.sin θ : ℂ) * f (sphericalPoint z w r θ) := by sorry
 
 /-- Hyperbolic law of cosines (axiom):
     cosh(rho) = cosh(r)cosh(d) - sinh(r)sinh(d)cos(theta), rho = d(u,w). -/
-axiom hyperbolic_law_of_cosines (z w : ManifoldM) (r : ℝ) (hr : 0 ≤ r) (θ : ℝ) :
+lemma hyperbolic_law_of_cosines (z w : ManifoldM) (r : ℝ) (hr : 0 ≤ r) (θ : ℝ) :
     Real.cosh (hyperbolicDistance (sphericalPoint z w r θ) w) =
     Real.cosh r * Real.cosh (hyperbolicDistance z w) -
-    Real.sinh r * Real.sinh (hyperbolicDistance z w) * Real.cos θ
+    Real.sinh r * Real.sinh (hyperbolicDistance z w) * Real.cos θ := by sorry
 
 /-- Auxiliary: derivative of rho(theta) = arcosh(A - B cos theta) is B sin(theta)/sinh(rho).
     Requires 1 < A - B cos theta (so arcosh is differentiable).
@@ -552,8 +552,67 @@ lemma gaussian_integrable_shift (a c : ℝ) (ha : 0 < a) :
     remaining integral = (1/(2a)) * √(π/a)/2. Standard analysis fact.
     Lean proof deferred: requires HasDerivAt chain + integral_Ioi_of_hasDerivAt_of_tendsto' +
     Tendsto of r*exp(-a*r²) atTop. Can be attacked standalone. -/
-axiom second_moment_gaussian_integral (a : ℝ) (ha : 0 < a) :
-    ∫ r in Set.Ioi (0 : ℝ), r^2 * Real.exp (-a * r^2) = Real.sqrt Real.pi / (4 * a^(3/2 : ℝ))
+lemma second_moment_gaussian_integral (a : ℝ) (ha : 0 < a) :
+    ∫ r in Set.Ioi (0 : ℝ), r^2 * Real.exp (-a * r^2) = Real.sqrt Real.pi / (4 * a^(3/2 : ℝ)) := by
+  let f : ℝ → ℝ := fun x => x^2 * Real.exp (-x^2)
+  have hsqrt_pos : 0 < Real.sqrt a := Real.sqrt_pos.mpr ha
+  have h_scale1 : ∀ r : ℝ, r^2 * Real.exp (-a * r^2) = a⁻¹ * f (Real.sqrt a * r) := by
+    intro r
+    have h2 : (Real.sqrt a * r)^2 = a * r^2 := by
+      calc (Real.sqrt a * r)^2 = (Real.sqrt a)^2 * r^2 := by ring
+        _ = a * r^2 := by rw [Real.sq_sqrt (by linarith)]
+    simp only [f]; rw [h2] <;> field_simp <;> ring
+  have h_scale : ∫ r in Set.Ioi (0 : ℝ), r^2 * Real.exp (-a * r^2) =
+      a⁻¹ * (Real.sqrt a)⁻¹ * ∫ x in Set.Ioi (0 : ℝ), f x := by
+    have h1 : ∫ r in Set.Ioi (0 : ℝ), r^2 * Real.exp (-a * r^2) =
+        ∫ r in Set.Ioi (0 : ℝ), a⁻¹ * f (Real.sqrt a * r) := by
+      apply setIntegral_congr_fun measurableSet_Ioi; intro r _; exact h_scale1 r
+    rw [h1, integral_const_mul]
+    have h3 : ∫ r in Set.Ioi (0 : ℝ), f (Real.sqrt a * r) =
+        (Real.sqrt a)⁻¹ * ∫ x in Set.Ioi (0 : ℝ), f x := by
+      have h4 := integral_comp_mul_left_Ioi f 0 hsqrt_pos
+      simpa [mul_zero] using h4
+    rw [h3] <;> ring
+  let g : ℝ → ℝ := fun y => Real.sqrt y * Real.exp (-y)
+  have h_rpow : ∫ x in Set.Ioi (0 : ℝ), (2 * x) • g (x^2) = ∫ y in Set.Ioi (0 : ℝ), g y := by
+    have h := integral_comp_rpow_Ioi_of_pos (g := g) (p := 2) (by norm_num)
+    simpa [show (2 - 1 : ℝ) = 1 by norm_num, pow_one] using h
+  have h_simp : ∀ x : ℝ, x ∈ Set.Ioi (0 : ℝ) → (2 * x) • g (x^2) = 2 * (x^2 * Real.exp (-x^2)) := by
+    intro x hx
+    have hx0 : 0 < x := hx
+    have h4 : Real.sqrt (x^2) = x := by
+      rw [Real.sqrt_sq_eq_abs, abs_of_pos hx0]
+    simp only [g, smul_eq_mul, h4] <;> ring
+  have h_lhs : ∫ x in Set.Ioi (0 : ℝ), (2 * x) • g (x^2) =
+      2 * ∫ x in Set.Ioi (0 : ℝ), x^2 * Real.exp (-x^2) := by
+    have : ∫ x in Set.Ioi (0 : ℝ), (2 * x) • g (x^2) =
+        ∫ x in Set.Ioi (0 : ℝ), (2 * (x^2 * Real.exp (-x^2))) := by
+      apply setIntegral_congr_fun measurableSet_Ioi; intro x hx; exact h_simp x hx
+    rw [this, integral_const_mul]
+  have h_gamma : ∫ y in Set.Ioi (0 : ℝ), g y = Real.Gamma (3/2 : ℝ) := by
+    have h : Real.Gamma (3/2 : ℝ) = ∫ y in Set.Ioi (0 : ℝ), Real.exp (-y) * y^(3/2 - 1 : ℝ) :=
+      Real.Gamma_eq_integral (by norm_num)
+    rw [h]
+    apply setIntegral_congr_fun measurableSet_Ioi; intro y _
+    have h5 : y^(3/2 - 1 : ℝ) = Real.sqrt y := by
+      have h6 : (3/2 - 1 : ℝ) = 1/2 := by norm_num
+      rw [h6, Real.sqrt_eq_rpow]
+    simp only [g, h5] <;> ring
+  rw [h_lhs] at h_rpow
+  rw [h_gamma] at h_rpow
+  have h32 : Real.Gamma (3/2 : ℝ) = Real.sqrt Real.pi / 2 := by
+    have h := Real.Gamma_nat_add_half 1
+    norm_num at h ⊢ <;> exact h
+  rw [h32] at h_rpow
+  have h_unit : ∫ x in Set.Ioi (0 : ℝ), x^2 * Real.exp (-x^2) = Real.sqrt Real.pi / 4 := by linarith
+  have h_exp : a^(3/2 : ℝ) = a * Real.sqrt a := by
+    have h9 : a^(3/2 : ℝ) = a^(1:ℝ) * a^(1/2:ℝ) := by
+      rw [← Real.rpow_add (by linarith)] <;> norm_num
+    rw [h9, Real.rpow_one, Real.sqrt_eq_rpow]
+  rw [h_scale, h_unit, h_exp]
+  have hpos : 0 < a := ha
+  have hsp : 0 < Real.sqrt a := Real.sqrt_pos.mpr ha
+  field_simp [hpos.ne'.symm, hsp.ne'.symm] <;> ring
 
 /-- Core algebra identity for heat kernel convolution:
     (4πt)^(-3/2) e^{-t} * (4πs)^(-3/2) e^{-s} * t^{3/2} * s^{3/2} = (4π)^(-3) e^{-(t+s)}. -/
@@ -617,7 +676,7 @@ lemma heatKernel_C_product_core (t s : ℝ) (ht : 0 < t) (hs : 0 < s) :
     Math: sinh²(r)·d_over_sinh(r)=r·sinh(r), cancel sinh(r), extract 2s/sinh(d),
     apply heatKernel_radial_integral (L4), then rpow algebra reduces to heatKernel(t+s,z,w).
     Full measure-theory + algebra proof deferred; mathematically verified. -/
-axiom heatKernel_convolution_dpos_main (t s d : ℝ) (ht : 0 < t) (hs : 0 < s) (hd : 0 < d)
+lemma heatKernel_convolution_dpos_main (t s d : ℝ) (ht : 0 < t) (hs : 0 < s) (hd : 0 < d)
     (z w : ManifoldM) (h_dist : hyperbolicDistance z w = d) :
     let C_t := Real.rpow (4 * Real.pi * t) (-3 / 2 : ℝ) * Real.exp (-t)
     let C_s := Real.rpow (4 * Real.pi * s) (-3 / 2 : ℝ) * Real.exp (-s)
@@ -625,18 +684,18 @@ axiom heatKernel_convolution_dpos_main (t s d : ℝ) (ht : 0 < t) (hs : 0 < s) (
       (Real.sinh r)^2 * d_over_sinh r * Real.exp (-(r)^2 / (4 * t)) *
       ((2 * s / (Real.sinh r * Real.sinh d)) *
         (Real.exp (-(r - d)^2 / (4 * s)) - Real.exp (-(r + d)^2 / (4 * s))) : ℂ) =
-    heatKernel (t + s) z w
+    heatKernel (t + s) z w := by sorry
 
 /-- d=0 algebra simplification for heat kernel convolution.
     4π * C_t * C_s * R0 = (4π(t+s))^{-3/2} e^{-(t+s)} where R0 = √π/(4 a^{3/2}), a=(t+s)/(4ts).
     Math verified via heatKernel_C_product_core + rpow algebra. Lean rpow API details deferred. -/
-axiom heatKernel_algebra_d0 (t s : ℝ) (ht : 0 < t) (hs : 0 < s) :
+lemma heatKernel_algebra_d0 (t s : ℝ) (ht : 0 < t) (hs : 0 < s) :
     let C_t := Real.rpow (4 * Real.pi * t) (-3 / 2 : ℝ) * Real.exp (-t)
     let C_s := Real.rpow (4 * Real.pi * s) (-3 / 2 : ℝ) * Real.exp (-s)
     let a := (t + s) / (4 * t * s)
     let R0 := Real.sqrt Real.pi / (4 * a^(3 / 2 : ℝ))
     (4 * Real.pi) * C_t * C_s * R0 =
-    Real.rpow (4 * Real.pi * (t + s)) (-3 / 2 : ℝ) * Real.exp (-(t + s))
+    Real.rpow (4 * Real.pi * (t + s)) (-3 / 2 : ℝ) * Real.exp (-(t + s)) := by sorry
 
 /-- Even merge lemma: ∫_{-c}^c c·h + ∫_c^∞ 2c·h = 2c·∫_0^∞ h for even h.
     Standalone version to isolate from radial_substitution context. -/

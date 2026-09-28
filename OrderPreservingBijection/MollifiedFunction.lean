@@ -17,7 +17,7 @@ opaque ellipticClassLengths : Set ℝ
     ellipticClassLengths 是有限集。
     数学原因：算术群 Γ 中椭圆元素的阶有界，故旋转角只能取有限个值。
     注意：不能通过"有界+离散→有限"推出，反例 {1/n}。 -/
-axiom ellipticClassLengths_finite : Set.Finite ellipticClassLengths
+lemma ellipticClassLengths_finite : Set.Finite ellipticClassLengths := by sorry
 
 /-- 椭圆类权重（opaque）：w(ℓ) 是特征长度为 ℓ 的椭圆共轭类的权重。
     由椭圆共轭类的几何（旋转角、中心化子体积）决定。 -/

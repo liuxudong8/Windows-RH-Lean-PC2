@@ -48,11 +48,11 @@ def PointSetSeparable (S : Set ℝ) : Prop :=
 
 /-- 椭圆项可调整点存在性（公理）：对任意可分离点集 S，存在 Λ0,Λ1 同时满足
     PointSetSeparable 和存在可调整的椭圆类长度点。 -/
-axiom elliptic_adjustable_exists (S : Set ℝ) (h_sep : PointSetSeparable S) :
+lemma elliptic_adjustable_exists (S : Set ℝ) (h_sep : PointSetSeparable S) :
     ∃ (Λ0 Λ1 : ℝ), 0 < Λ0 ∧ Λ0 < Λ1 ∧
       (∀ x ∈ S, Λ0 / 2 < x) ∧ (∀ x ∈ S, x < Λ0 ∨ Λ1 < x) ∧
       (∃ (l0 : ℝ), l0 ∈ ellipticClassLengths ∧ ellipticWeight l0 ≠ 0 ∧
-        l0 ∉ S ∧ (Λ0 / 2 < l0 ∧ l0 < Λ0 ∨ Λ1 < l0))
+        l0 ∉ S ∧ (Λ0 / 2 < l0 ∧ l0 < Λ0 ∨ Λ1 < l0)) := by sorry
 
 /-- 有限和单点修改引理（公理，标准有限和性质，数学无争议）：
     若 f 与 f0 只在 l0 处不同，则 Σ f(x) = Σ f0(x) + (f(l0)-f0(l0))。 -/
@@ -408,7 +408,7 @@ theorem whitney_mollified_point_interpolation
     关键：M[·](s) 的范数 ≤ ∫_{supp} x^{σ-1} dx，对 σ∈(0,1) 和固定支集统一有界，
     故有限维约束的最小范数解的界只依赖于 ‖w‖_∞，不依赖于 |T|。
     风险等级：中（标准泛函分析；ZFC 内可证，形式化需 Hahn-Banach + 积分估计）。 -/
-axiom mellin_finite_surjectivity_zero_sum_norm_bound :
+lemma mellin_finite_surjectivity_zero_sum_norm_bound :
     ∃ (C : ℝ), 0 < C ∧
       ∀ (T : Set ℂ), T.Finite → ∀ (w : ℂ → ℂ) (B : ℝ),
         (∀ (t : ℂ), t ∈ T → ‖w t‖ ≤ B) →
@@ -416,7 +416,7 @@ axiom mellin_finite_surjectivity_zero_sum_norm_bound :
           (∀ (s : ℂ), s ∈ T → melinTransform h s = w s) ∧
           nontrivialZeroSum h = 0 ∧
           (∀ (s : ℂ), 0 < s.re → s.re < 1 →
-            ‖melinTransform h s‖ ≤ C * max B 1 / (1 + |s.im|) ^ 2)
+            ‖melinTransform h s‖ ≤ C * max B 1 / (1 + |s.im|) ^ 2) := by sorry
 
 /-- 有限集上 Mellin 变换任意赋值且 nontrivialZeroSum 为零（定理，由带范数估计版本推出，忽略范数条件）。零 sorry。 -/
 theorem mellin_finite_surjectivity_zero_sum (T : Set ℂ) (hT : T.Finite) (w : ℂ → ℂ) :
@@ -445,12 +445,12 @@ theorem mellin_finite_surjectivity_zero_sum (T : Set ℂ) (hT : T.Finite) (w : �
     存在磨光函数 f 使得 f|_S = f0|_S 且 M[f]|_T = w。
     ZFC 基础：Paley-Wiener-Whitney 联合插值定理（标准泛函分析）。
     注意：只断言有限点 T 上的 Mellin 相等，不断言全局相等——全局版本因 Mellin 变换单射性而不成立。 -/
-axiom mellin_surjectivity_over_point_fiber
+lemma mellin_surjectivity_over_point_fiber
     (f0 : MollifiedTestFunction) (S : Set ℝ) (hS : S.Countable) (h_sep : PointSetSeparable S)
     (T : Set ℂ) (hT : T.Finite) (w : ℂ → ℂ) :
     ∃ (f : MollifiedTestFunction),
       (∀ (x : ℝ), x ∈ S → f.toTestFunction.eval x = f0.toTestFunction.eval x) ∧
-      (∀ (s : ℂ), s ∈ T → melinTransform f.toTestFunction s = w s)
+      (∀ (s : ℂ), s ∈ T → melinTransform f.toTestFunction s = w s) := by sorry
 
 /-- Paley-Wiener-Whitney 联合插值（定理）： -/
 theorem paley_wiener_whitney_joint_interpolation
@@ -486,9 +486,9 @@ theorem mellin_finite_interpolation (T : Set ℂ) (hT : T.Finite) (w : ℂ → �
 /- ======================================================================== -/
 
 /-- 区间指示函数的 Mellin 变换（公理，标准微积分基本定理结果）。 -/
-axiom intervalIndicator_mellinTransform (a b : ℝ) (ha : 0 < a) (hab : a < b) (s : ℂ) (hs : s ≠ 0) :
+lemma intervalIndicator_mellinTransform (a b : ℝ) (ha : 0 < a) (hab : a < b) (s : ℂ) (hs : s ≠ 0) :
     melinTransform (intervalIndicator a b ha hab) s =
-    (Complex.exp (s * (Real.log b : ℂ)) - Complex.exp (s * (Real.log a : ℂ))) / s
+    (Complex.exp (s * (Real.log b : ℂ)) - Complex.exp (s * (Real.log a : ℂ))) / s := by sorry
 
 /-- exp(z) = 1 ⟹ z.re = 0。 -/
 theorem exp_eq_one_implies_re_zero (z : ℂ) (h : Complex.exp z = 1) : z.re = 0 := by

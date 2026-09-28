@@ -86,13 +86,13 @@ noncomputable def kernelComposition (K1 K2 : ManifoldM → ManifoldM → ℂ) :
     ManifoldM → ManifoldM → ℂ :=
   fun z w => manifoldIntegral (fun u => K1 z u * K2 u w)
 
-/-- 流形积分的 Fubini 定理（公理，第一档标准结果）：
+/-- 流形积分的 Fubini 定理：
     ∫_M ∫_M f(z,u) du dz = ∫_M ∫_M f(z,u) dz du。
     对迹类核函数成立，是积分交换顺序的标准性质。
-    TODO：降级需 hyperbolicMeasure3 的 SigmaFinite 实例。 -/
-axiom manifoldIntegral_fubini (f : ManifoldM → ManifoldM → ℂ) :
+    TODO: 降级需 hyperbolicMeasure3 的 SigmaFinite 实例。 -/
+lemma manifoldIntegral_fubini (f : ManifoldM → ManifoldM → ℂ) :
     manifoldIntegral (fun z => manifoldIntegral (fun u => f z u)) =
-    manifoldIntegral (fun u => manifoldIntegral (fun z => f z u))
+    manifoldIntegral (fun u => manifoldIntegral (fun z => f z u)) := by sorry
 
 /-- 迹的循环性（定理，由 Fubini 定理推出）：Tr(T_{K1} ∘ T_{K2}) = Tr(T_{K2} ∘ T_{K1})。
     即复合核的对角线积分与顺序无关：
@@ -146,14 +146,14 @@ theorem hyperbolicDistance_symmetric (p q : ManifoldM) :
   have h3 : 2 * p.val.2 * q.val.2 = 2 * q.val.2 * p.val.2 := by ring
   simp [hyperbolicDistance, h1, h2, h3]
 
-/-- 双曲距离的 Γ-不变性（公理）：
+/-- 双曲距离的 Γ-不变性：
     d(γ·z, γ·w) = d(z,w) 对所有 γ ∈ Γ。
     这是双曲等距变换的基本性质：PSL₂(C) 通过等距变换作用在 H³ 上。
     此性质保证热核 K_t(z,w) 只依赖 d(z,w)，因此是 Γ-不变的。
-    距离本身已显式化，但 gammaAction 仍为 opaque，故不变性保持为公理。 -/
-axiom hyperbolicDistance_gamma_invariant :
+    距离本身已显式化，但 gammaAction 仍为 opaque，故不变性暂时 sorry。 -/
+lemma hyperbolicDistance_gamma_invariant :
     ∀ (n : ℕ) (z w : ManifoldM),
-      hyperbolicDistance (gammaAction n z) (gammaAction n w) = hyperbolicDistance z w
+      hyperbolicDistance (gammaAction n z) (gammaAction n w) = hyperbolicDistance z w := by sorry
 
 /-- 双曲距离非负（定理，由 arcosh 值域推出）：d(p,q) ≥ 0。
     Real.arcosh(x) ≥ 0 对 x ≥ 1 成立，而距离参数 ≥ 1（hyperbolicDistance_arg_ge_one）。 -/
@@ -327,22 +327,25 @@ noncomputable def geometricKernelTrace (f : TestFunction) : ℂ :=
 
 /-- 三维 Laplacian（opaque，类型化）：Δ_M : L²(M) → L²(M)。 -/
 noncomputable def laplacian_M : L2ManifoldM → L2ManifoldM := fun _ => Classical.arbitrary L2ManifoldM
-/-- 热核联合可测性（公理）：K_t(z,w) 关于 (z,w) 联合可测。
-    这是参数积分可测性的必要条件。 -/
-axiom heatKernel_joint_measurable (t : ℝ) :
-    Measurable (fun p : ManifoldM × ManifoldM => heatKernel t p.1 p.2)
+/-- 热核联合可测性：K_t(z,w) 关于 (z,w) 联合可测。
+    这是参数积分可测性的必要条件。
+    TODO: 由 heatKernel 显式公式 + 距离连续推出。 -/
+lemma heatKernel_joint_measurable (t : ℝ) :
+    Measurable (fun p : ManifoldM × ManifoldM => heatKernel t p.1 p.2) := by sorry
 
-/-- 热核逐点平方可积性（公理）：对每个固定的 z，w ↦ K_t(z,w) 是 L² 函数。
-    热核是高斯型的衰减，自然平方可积。 -/
-axiom heatKernel_sq_integrable (t : ℝ) (z : ManifoldM) :
-    MeasureTheory.Integrable (fun w : ManifoldM => ‖heatKernel t z w‖ ^ 2) hyperbolicMeasure3
+/-- 热核逐点平方可积性：对每个固定的 z，w ↦ K_t(z,w) 是 L² 函数。
+    热核是高斯型的衰减，自然平方可积。
+    TODO: 由热核显式公式 + 体积元估计推出。 -/
+lemma heatKernel_sq_integrable (t : ℝ) (z : ManifoldM) :
+    MeasureTheory.Integrable (fun w : ManifoldM => ‖heatKernel t z w‖ ^ 2) hyperbolicMeasure3 := by sorry
 
-/-- 热核 Hilbert-Schmidt 性质（公理）：
+/-- 热核 Hilbert-Schmidt 性质：
     核是 Hilbert-Schmidt 的：∫_M ∫_M |K_t(z,w)|² dw dz < ∞。
-    这保证了热核算子 H_t : L²(M) → L²(M) 是有界算子。 -/
-axiom heatKernel_hilbert_schmidt (t : ℝ) :
+    这保证了热核算子 H_t : L²(M) → L²(M) 是有界算子。
+    TODO: 暂时用 sorry 占位，后续补 Gauss 衰减估计。 -/
+lemma heatKernel_hilbert_schmidt (t : ℝ) :
     MeasureTheory.Integrable (fun z : ManifoldM =>
-      ∫ w : ManifoldM, ‖heatKernel t z w‖ ^ 2 ∂hyperbolicMeasure3) hyperbolicMeasure3
+      ∫ w : ManifoldM, ‖heatKernel t z w‖ ^ 2 ∂hyperbolicMeasure3) hyperbolicMeasure3 := by sorry
 
 /-- 热核算子（定义）：H_t = integralOperator (heatKernel t)。
     (H_t f)(z) = ∫ K_t(z,w) f(w) dw。
@@ -356,15 +359,16 @@ noncomputable def heatOperator (t : ℝ) (f : L2ManifoldM) : L2ManifoldM :=
     sq_integrable := by sorry  -- ❓ 平方可积性：Hilbert-Schmidt 估计
   }
 
-/-- 热核与 Laplacian 交换（公理，精确版）：H_t ∘ Δ_M = Δ_M ∘ H_t。
+/-- 热核与 Laplacian 交换：H_t ∘ Δ_M = Δ_M ∘ H_t。
     这是热方程的直接推论：热核算子是 Laplacian 的函数 H_t = e^{-tΔ_M}。
     因此 H_t 保持 Laplacian 的特征子空间：
     如果 Δ_M φ = λ φ，则 Δ_M (H_t φ) = H_t (Δ_M φ) = λ (H_t φ)。
-    这是热核方法证明谱定理的基础。 -/
-axiom heatKernel_commutes_laplacian :
+    这是热核方法证明谱定理的基础。
+    TODO: 由半群性质 + 谱定理推出。 -/
+lemma heatKernel_commutes_laplacian :
     ∀ (t : ℝ), 0 ≤ t →
       ∀ (f : L2ManifoldM),
-        heatOperator t (laplacian_M f) = laplacian_M (heatOperator t f)
+        heatOperator t (laplacian_M f) = laplacian_M (heatOperator t f) := by sorry
 
 
 
