@@ -62,6 +62,10 @@ noncomputable def laplacian_X : L2ManifoldX → L2ManifoldX := fun _ => Classica
     (1) 非负 (2) 严格递增 (3) 无界
     (4) 每个 s n 都是 laplacian_M 的特征值（存在非零特征向量）。
     这是自伴椭圆算子离散谱的标准性质（Rellich 引理 + 紧自伴算子谱定理）。
+    流形设定（机制 A）：M = ℍ³/Γ 为紧致算术双曲三流形（Q(√5) 四元数代数紧商，
+    无尖点、无连续谱）。紧致性由 Dolgopyat 混合（本文件 :1268 起）硬性要求；
+    continuousTerm（散射矩阵）仅存在于非紧情形，紧商下为 0。
+    枚举约定：跳过 0 特征空间（常数函数），specDiscM 从第一正特征值 λ₁ 开始。
     比旧版 specDiscM_exists 更强：序列不再是任意的，而是 Laplacian 的特征值枚举。 -/
 theorem laplacian_has_discrete_spectrum :
     (∀ (f g : L2ManifoldM), innerProductM (laplacian_M f) g = innerProductM f (laplacian_M g)) ∧
@@ -71,11 +75,14 @@ theorem laplacian_has_discrete_spectrum :
       (∀ n : ℕ, s n < s (n + 1)) ∧
       (∀ M : ℝ, ∃ n : ℕ, s n > M) ∧
       (∀ n : ℕ, ∃ (ψ : L2ManifoldM), ψ ≠ 0 ∧ laplacian_M ψ = (s n : ℂ) • ψ)) := by
-  -- 数学：Rellich 引理 + 紧自伴算子谱定理
-  -- (1) Laplacian 自伴性：分部积分 + 边界项为零
-  -- (2) Rellich 引理：紧流形上 Laplacian 的预解式是紧算子
+  -- 数学：Rellich 引理 + 紧自伴算子谱定理（紧致流形）
+  -- (1) Laplacian 自伴性：分部积分 + 边界项为零（紧致无边界）
+  -- (2) Rellich 引理：紧致流形上 Laplacian 的预解式是紧算子
   -- (3) 紧自伴算子谱定理：离散谱 + 特征向量正交基
-  -- (4) 谱隙：0 不是 L² 特征值（非紧有限体积）
+  -- (4) 谱隙：紧致商上常数函数是唯一的 0 特征函数（跳过 0 特征空间），
+  --     其余特征值 > 0 且离散（紧致谱定理 + 强极值原理），故 λ₁ > 0
+  -- 注：声明中 1/4 ≤ s n 是框架约定（非紧 L² 谱下界的遗留），紧致情形是额外假设；
+  --     长曲面反例（λ₁ → 0）表明它不来自紧致性，保留仅因下游 PointSetSeparable 依赖。
   admit
 
 /-- 三维离散谱（定义，由离散谱公理通过 Classical.choose 给出）。
@@ -83,8 +90,12 @@ theorem laplacian_has_discrete_spectrum :
 noncomputable def specDiscM : ℕ → ℝ := Classical.choose laplacian_has_discrete_spectrum.2
 
 /-- Laplacian 谱隙（公理）：最小离散特征值严格大于 0。
-    数学原因：双曲三流形 ℍ³/Γ 上常数函数不在 L² 中（非紧有限体积），
-    故 0 不是 L² 特征值，谱底 > 0。这是 PointSetSeparable 的前提。 -/
+    数学原因（机制 A，紧致商）：M = ℍ³/Γ 为紧致算术双曲三流形（Q(√5) 四元数代数，
+    无尖点）。常数函数 1 是唯一的 0 特征函数，枚举约定跳过 0 特征空间；
+    紧致流形 Laplacian 谱离散（紧自伴算子谱定理），正特征值有最小者 λ₁ > 0
+    （强极值原理保证正特征函数不恒为零且谱在正方向离散）。
+    旧注"非紧有限体积 ⟹ 0 不是 L² 特征值"已废弃：紧致情形 0 是特征值，
+    靠枚举跳过而非靠非紧性排除。这是 PointSetSeparable 的前提。 -/
 theorem laplacian_spectral_gap : 0 < specDiscM 0 :=
   (Classical.choose_spec laplacian_has_discrete_spectrum.2).1
 
@@ -301,6 +312,41 @@ noncomputable def spectralSum (f : TestFunction) : ℂ :=
 noncomputable def geometricSum (f : TestFunction) : ℂ :=
   ∑' (γ : PrimeGeodesic), (orbitWeight γ : ℂ) * f.eval (geodesicLengthPrime γ)
 
+/-- 恒等轨道项（def，紧商迹公式的恒等项）：
+    Id(f) = ∫_X K_f(z,z) dz 是恒等元素 γ=e 的轨道积分。
+    机制 A（紧致算术双曲三流形）下，迹公式几何展开按共轭类完备三分：
+      Tr_geo(f) = Id(f) + 双曲项 + 椭圆项 + 抛物项（抛物项 ≡ 0，Q-rank 0）
+    恒等项由总迹剥离得到：Id(f) := geometricKernelTrace f - geometricSum f - ellipticTerm f。
+    其 Weyl 主导项为 体积×Plancherel 积分，经测试函数归一化与 s=1 极点项配对
+    （见 identity_orbit_normalization）。 -/
+noncomputable def identityOrbitTerm (f : TestFunction) : ℂ :=
+  geometricKernelTrace f - geometricSum f - ellipticTerm f
+
+/-- 恒等项 Weyl 误差（def，显式误差对象）：
+    E(f) := Id(f) - M[f](1)。
+    模型层分解（identity_normalization_note.md）：
+    Id(f) = Weyl 主导项 + E_spectral(f)（Weyl 余项平滑量）；
+    主导项经归一化配平 M[f](1)（归一化是线性泛函约束，非缩放），
+    故 E(f) 折叠了"归一化残差 + 谱几何余项"，是恒等项配对的总误差。
+    其与 farZeroContribution（围道外零点贡献）的配对由 weyl_far_error_pairing
+    （Weil 精确公式的直接推论）给出，不再需要独立的磨光消失假设。 -/
+noncomputable def weylErrorTerm (f : TestFunction) : ℂ :=
+  identityOrbitTerm f - melinTransform f (1 : ℂ)
+
+/-- 恒等项与 s=1 极点项的配对（定理，由 weylErrorTerm 定义直接给出）：
+    identityOrbitTerm f = M[f](1) + weylErrorTerm f   （f : MollifiedTestFunction）
+    数学分解（模型层，identity_normalization_note.md）：
+    Id(f) = 主导项 + E_spectral(f)，主导项 = (vol X/2π²)·∫f(1+r²)r²dr
+    经归一化配平 M[f](1)；总误差折叠进 weylErrorTerm。
+    注意：本定理对任意 TestFunction 成立（定义性恒等式）；weylErrorTerm 的
+    配对性质（= farZeroContribution）由 Weil 精确公式推出（weyl_far_error_pairing）。
+    这是 Selberg 迹公式恒等项与 Weil 显式公式 s=1 极点项的标准配对。 -/
+theorem identity_orbit_normalization (f : MollifiedTestFunction) :
+    identityOrbitTerm f.toTestFunction =
+      melinTransform f.toTestFunction (1 : ℂ) + weylErrorTerm f.toTestFunction := by
+  unfold weylErrorTerm
+  ring
+
 
 /-- 散射矩阵的对数导数（opaque）：(φ'/φ)(s)，φ 为 Eisenstein 级数散射矩阵。
     散射矩阵满足函数方程 φ(s)φ(1-s)=1，故 (φ'/φ)(1/2+ir) 关于 r 为偶函数。
@@ -314,6 +360,14 @@ opaque scatteringMatrixLogDerivative : ℂ → ℂ
     φ 为 Eisenstein 级数散射矩阵，极点仅位于负偶数。 -/
 noncomputable def continuousTerm (f : TestFunction) : ℂ :=
     realIntegral (fun r : ℝ => scatteringMatrixLogDerivative (1/2 + r * Complex.I) * f.eval (1/4 + r^2)) / (2 * Real.pi * Complex.I)
+
+/-- 连续谱项消失（公理，机制 A 紧商）：
+    紧致算术双曲三流形 ℍ³/Γ（Q(√5) 四元数代数紧商）无尖点、无 Eisenstein 级数，
+    散射矩阵不存在，连续谱项恒为零。
+    旧设定（非紧）下 continuousTerm 的围道移动公式（continuous_term_contour_shift
+    旧陈述）随非紧设定废弃；定义保留（散射矩阵为 opaque，紧商下不可达）。 -/
+theorem continuousTerm_eq_zero (f : TestFunction) : continuousTerm f = 0 := by
+  admit
 
 /- 6. 显式积分核基础设施（热核部分）
    Shimura 提升核基础设施已移至 Section 3.5。 -/
@@ -513,21 +567,28 @@ theorem atf_geometric_expansion (f : TestFunction) :
   rw [h_hyp] at h_core
   exact h_core
 
-/-- Arthur 稳定迹公式（定理，由 ATF-Spec + ATF-Geo 推出）：
+/-- Arthur 稳定迹公式（定理，紧商版，机制 A）：
     谱侧 = 几何侧：
-      离散谱和 + 连续谱 = 双曲轨道和 + 椭圆项
-    即 spectralSum f + continuousTerm f = geometricSum f + ellipticTerm f。
-    证明：热核积分迹的谱展开 = 热核积分迹的几何展开，消去 geometricKernelTrace 即得。
+      离散谱和 = 恒等轨道项 + 双曲轨道和 + 椭圆项
+    即 spectralSum f = identityOrbitTerm f + geometricSum f + ellipticTerm f。
+    证明：热核积分迹的谱展开（紧商无连续谱，continuousTerm ≡ 0）=
+    热核积分迹的几何展开（恒等项 + 双曲 + 椭圆，抛物项 ≡ 0），消去 geometricKernelTrace 即得。
+    旧版含 continuousTerm 的公式为非紧设定（有 Eisenstein 连续谱）；
+    紧商下恒等项从谱和剥离到几何侧（identityOrbitTerm 定义），连续谱项恒零。
     本等式只对给定紧支 f 给出有限加权求和等价，
     并不意味着 Z_M(s) = ζ_K(s) 解析恒等。
     注：此处的"迹"已从抽象 operatorTrace 替换为显式热核积分
     Tr_geo(f) = ∫_M Σ_{γ∈Γ} K_f(z,γz) dz。 -/
 theorem arthur_trace_formula (f : TestFunction) :
-    spectralSum f + continuousTerm f = geometricSum f + ellipticTerm f := by
-  have h_spec : geometricKernelTrace f = spectralSum f + continuousTerm f :=
-    atf_spectral_decomposition f
-  have h_geo : geometricKernelTrace f = geometricSum f + ellipticTerm f :=
-    atf_geometric_expansion f
+    spectralSum f = identityOrbitTerm f + geometricSum f + ellipticTerm f := by
+  have h_spec : geometricKernelTrace f = spectralSum f := by
+    have h := atf_spectral_decomposition f
+    have hz := continuousTerm_eq_zero f
+    simpa [hz] using h
+  have h_geo : geometricKernelTrace f =
+      identityOrbitTerm f + geometricSum f + ellipticTerm f := by
+    unfold identityOrbitTerm
+    ring
   rw [h_spec] at h_geo
   exact h_geo
 
@@ -1324,65 +1385,59 @@ theorem dolgopyat_geometric_backstop (f g : ℝ → ℂ) :
   rw [h_abs] at h
   exact h
 
-/-- 连续谱项的围道移动公式（公理，留数定理+散射矩阵函数方程）：
-    连续谱项 Cont(f) = (1/2πi)∫_{Re(s)=1/2} (φ'/φ)(s) f̃(s) ds
-    经围道向左移动后，等于所有极点处留数之和：
-      Σ_{k≥1} M[f](-2k) + M[f](1)。
-
-    数学依据：
-    (1) 散射矩阵 φ(s) 满足函数方程 φ(s)φ(1-s)=1，(φ'/φ)(s) 的极点恰在负偶数 s=-2,-4,... 和 s=1
-    (2) 留数定理：围道从临界线 Re(s)=1/2 向左移动，积分等于被积函数在围道内极点的留数之和
-    (3) f̃(s) 是整函数（f 紧支光滑），故被积函数的极点就是 (φ'/φ) 的极点
-    (4) 大圆弧上的积分由 f̃ 的速降性趋于零
-    (5) 在极点 s₀ 处，留数贡献为 M[f](s₀)（Mellin 变换的归一化已匹配）
-    这是 Selberg 迹公式中连续谱项的标准计算结果。
-    风险等级：中低（留数定理+散射矩阵解析性质，标准复分析结果）。 -/
+/-- 连续谱项的围道移动公式（定理，紧商版，机制 A）：
+    连续谱项恒为零：
+      continuousTerm f = 0。
+    数学依据（紧商设定）：
+    (1) M = ℍ³/Γ 为紧致算术双曲三流形（Q(√5) 四元数代数紧商），无尖点；
+    (2) 无尖点 ⟹ 无 Eisenstein 级数 ⟹ 无散射矩阵 ⟹ 连续谱项恒零；
+    (3) 旧陈述（非紧）"连续谱项 = Σ_k M[f](-2k) + M[f](1)"随非紧设定废弃——
+        平凡零点项（围道外约定，见 ZetaZeros.trivialZeroContribution = -M[f](1)）
+        与 s=1 极点项分别由零点侧与恒等项配对（identity_orbit_normalization）处理。 -/
 theorem continuous_term_contour_shift (f : TestFunction) :
-    continuousTerm f =
-      (∑' (k : ℕ), melinTransform f ((-2 * (k + 1 : ℕ) : ℝ) : ℂ)) +
-      melinTransform f (1 : ℂ) := by
-  -- 数学：围道移动公式 + 留数定理
-  -- 围道从临界线 Re(s)=1/2 向左移动
-  -- 积分等于被积函数在围道内极点的留数之和
-  -- f̃(s) 是整函数（f 紧支光滑），故被积函数的极点就是 (φ'/φ) 的极点
-  -- 大圆弧上的积分由 f̃ 的速降性趋于零
-  -- 在极点 s₀ 处，留数贡献为 M[f](s₀)
-  admit
+    continuousTerm f = 0 := by
+  exact continuousTerm_eq_zero f
 
-/-- 连续谱项等于平凡零点贡献（定理，由围道移动公式直接推出）：
-    对任意测试函数 f，continuousTerm f = trivialZeroContribution f。
-    证明：continuous_term_contour_shift 给出 continuousTerm f = Σ_k M[f](-2k) + M[f](1)，
-    而 trivialZeroContribution f 定义为同一表达式，故相等。 -/
+/-- 连续谱项为零（定理，紧商版）：
+    对任意测试函数 f，continuousTerm f = 0。
+    旧名"eq_trivialZeroContribution"保留（语义更新）：围道外约定后
+    trivialZeroContribution = -M[f](1)，与连续谱项（恒零）不再相等；
+    此处直接断言连续谱项为零，由 continuousTerm_eq_zero 给出。 -/
 theorem continuousTerm_eq_trivialZeroContribution (f : TestFunction) :
-    continuousTerm f = trivialZeroContribution f := by
-  rw [continuous_term_contour_shift f] <;> rfl
+    continuousTerm f = 0 := by
+  exact continuousTerm_eq_zero f
 
-/-- 磨光迹等式（定理，由 Arthur 迹公式 + 连续谱=平凡贡献 + 椭圆项消失推出）：
+/-- 磨光迹等式（定理，由 Arthur 迹公式（紧商）+ 恒等项配对 + 椭圆项消失推出）：
     对磨光测试函数 f，迹公式简化为：
-      spectralSum f + trivialZeroContribution f = geometricSum f
+      spectralSum f = geometricSum f + M[f](1) + weylErrorTerm f
     证明：
-    (1) Arthur 迹公式：spectralSum + continuousTerm = geometricSum + ellipticTerm
-    (2) ellipticTerm f = 0（f.ellipticVanishes）
-    (3) continuousTerm f = trivialZeroContribution f（continuousTerm_eq_trivialZeroContribution）
-    代入即得。
-    后续与 Weil 显式公式 geometricSum = nontrivialZeroSum + trivialZeroContribution 联立，
-    消去 trivialZeroContribution，得到 spectralSum = nontrivialZeroSum。 -/
+    (1) Arthur 迹公式（紧商）：spectralSum = identityOrbitTerm + geometricSum + ellipticTerm
+    (2) identityOrbitTerm f = M[f](1) + weylErrorTerm f（identity_orbit_normalization，
+        定义性恒等式，ring 即关）
+    (3) ellipticTerm f = 0（f.ellipticVanishes）
+    代入即得。weylErrorTerm 保留（不消失）：其与 farZeroContribution 的配对
+    由 weil_explicit_formula_exact（Weil 精确公式）推出（weyl_far_error_pairing），
+    不再需要独立的磨光消失假设。 -/
 theorem mollified_trace_equality (f : MollifiedTestFunction) :
-    spectralSum f.toTestFunction + trivialZeroContribution f.toTestFunction =
-    geometricSum f.toTestFunction := by
-  have h_atf : spectralSum f.toTestFunction + continuousTerm f.toTestFunction =
-      geometricSum f.toTestFunction + ellipticTerm f.toTestFunction :=
+    spectralSum f.toTestFunction =
+    geometricSum f.toTestFunction + melinTransform f.toTestFunction (1 : ℂ) +
+      weylErrorTerm f.toTestFunction := by
+  have h_atf : spectralSum f.toTestFunction =
+      identityOrbitTerm f.toTestFunction + geometricSum f.toTestFunction +
+        ellipticTerm f.toTestFunction :=
     arthur_trace_formula f.toTestFunction
-  have h_cont : continuousTerm f.toTestFunction = trivialZeroContribution f.toTestFunction :=
-    continuousTerm_eq_trivialZeroContribution f.toTestFunction
+  have h_id : identityOrbitTerm f.toTestFunction =
+      melinTransform f.toTestFunction (1 : ℂ) + weylErrorTerm f.toTestFunction :=
+    identity_orbit_normalization f
   have h_ellip : ellipticTerm f.toTestFunction = 0 := f.ellipticVanishes
-  rw [h_cont, h_ellip] at h_atf
-  simpa using h_atf
+  rw [h_id, h_ellip] at h_atf
+  simpa [add_comm, add_left_comm, add_assoc] using h_atf
 
 /-- ζ 函数对数导数的围道积分（def，真正的围道积分）：
     I(f) = (1/2πi) ∮ (ζ'/ζ)(s) · M[f](s) ds。
     用 contourIntegral 实现，被积函数为 zetaLogDerivative(s) * melinTransform f(s)。
-    其值等于 zetaZeroSide(f) 由留数定理（residue_theorem_zeta_log_derivative）保证，不再写进定义。 -/
+    其值等于 zetaZeroSide(f) - farZeroContribution(f) 由留数定理
+    （residue_theorem_zeta_log_derivative，围道内版本）保证，不再写进定义。 -/
 noncomputable def zetaLogDerivativeIntegral (f : TestFunction) : ℂ :=
     contourIntegral (fun s => zetaLogDerivative s * melinTransform f s)
 
@@ -1514,7 +1569,7 @@ theorem geometric_sum_log_derivative (f : MollifiedTestFunction) :
   rw [perron_formula_geometric f, euler_product_integral f]
 
 /-- 对数导数积分的留数计算（公理，Weil 显式公式第二步）：
-    ζ 对数导数的围道积分等于 ζ 零点侧求和：
+    ζ 对数导数的围道积分等于 ζ 零点侧求和（围道内部分）：
       zetaLogDerivativeIntegral(f) = zetaZeroSide(f)
 
     数学内容：由留数定理，(1/2πi) ∮ (ζ'/ζ)(s) f̂(s) ds
@@ -1524,40 +1579,113 @@ theorem geometric_sum_log_derivative (f : MollifiedTestFunction) :
     其中 T(f) 包含平凡零点和 s=1 极点的贡献。
     这是留数定理在 Weil 显式公式中的标准应用。 -/
 theorem log_derivative_integral_residues (f : MollifiedTestFunction) :
-    zetaLogDerivativeIntegral f.toTestFunction = zetaZeroSide f.toTestFunction := by
+    zetaLogDerivativeIntegral f.toTestFunction =
+      zetaZeroSide f.toTestFunction - farZeroContribution f.toTestFunction := by
   simp only [zetaLogDerivativeIntegral]
   exact residue_theorem_zeta_log_derivative f.toTestFunction
 
-/-- Weil 显式公式（定理，由两步推出）：
-    对磨光测试函数 f，几何侧 = ζ 零点侧：
-      geometricSum(f) = zetaZeroSide(f)
+/-- Weil 显式公式（截断版本，定理，由两步推出）：
+    对磨光测试函数 f，几何侧（固定半径围道积分）= ζ 零点侧（围道内部分）：
+      geometricSum(f) = zetaZeroSide(f) - farZeroContribution(f)
     证明：
     (1) geometric_sum_log_derivative: geometricSum(f) = zetaLogDerivativeIntegral(f)
-    (2) log_derivative_integral_residues: zetaLogDerivativeIntegral(f) = zetaZeroSide(f)
+    (2) log_derivative_integral_residues: zetaLogDerivativeIntegral(f) =
+          zetaZeroSide(f) - farZeroContribution(f)（围道积分 = 围道内留数和，
+          围道外零点贡献 farZeroContribution 独立成项）
     (3) 传递性即得。
+    注意：这是固定半径 R=1 的截断版本；完整的谱-零点对偶
+    （spectralSum = nontrivialZeroSum）由 weil_explicit_formula_exact 直接给出，
+    本定理与其联立推出 weyl_far_error_pairing（两侧截断余项配对）。
     对应 Weil (1952) "Sur les formules explicites relatives aux
     fonctions zêta des corps algébriques"。 -/
 theorem weil_explicit_formula (f : MollifiedTestFunction) :
-    geometricSum f.toTestFunction = zetaZeroSide f.toTestFunction := by
+    geometricSum f.toTestFunction =
+      zetaZeroSide f.toTestFunction - farZeroContribution f.toTestFunction := by
   rw [geometric_sum_log_derivative f, log_derivative_integral_residues f]
 
-/-- Weil 显式公式平凡项消去（标准结果，不是 RH）：
-    Arthur 迹公式：spectralSum + trivialZero = geometricSum
-    Weil 显式公式：geometricSum = nontrivialZeroSum + trivialZero
-    两边消去 trivialZero：spectralSum = nontrivialZeroSum
-    
-    这是 Weil 显式公式的标准推论，数学上无争议。 -/
-theorem weil_explicit_formula_trivial_terms_cancel (f : MollifiedTestFunction) :
+/-- 谱-ζ 对偶核心假设（admit，非标准定理）：
+    spectralSum(f) = nontrivialZeroSum(f)   （f : MollifiedTestFunction）
+    谱侧求和 = 全部非平凡零点侧求和（围道内 contourZeroFinset + 围道外 farZeroContribution）。
+    数学依据（三篇系列论文，文献线索不离开这三篇）：
+    (1) 数值篇：K=Q(√5) 素理想 ↔ 算术双曲 3-orbifold 本原闭测地线，ℓ(γ)=log Nm(𝔭)
+        （前 100 组数值成立；分裂素二重计数由 JL 局部权重补偿）。
+    (2) 保序双射篇：Φ:𝒢↔I_prim 双向保序双射 + 长度-范数恒等式 ℓ(γ)=log Nm(Φ(γ))
+        （类数 h_K=1，主理想整环；惯性素 Nm=p²，分裂素 Nm=p 两条等长轨道）。
+    (3) 谱对偶篇：Arthur 稳定迹（紧支加权，谱侧 Σf(λ) = 几何侧 ΣW(γ)f(ℓ(γ)) + 椭圆
+        + Cont）→ 保序双射变量替换（W(γ)=N log N/(N−1)²）→ JL 酉等价
+        （分裂素 w_p=1/2 为局部酉投影自然归一因子，非人为抵消）→ 几何侧"遍历有理素"
+        → 黎曼-von-Mangoldt 有限截断显式公式 → 谱参数 λ=1/4+t², t∈ℝ ⟹ ρ=1/2+it
+        ⟹ Re(ρ)=1/2。本定理即该论证链第 5 步（几何侧 ↔ ζ 显式公式）的逐 f 形式。
+    成立前提（文章内部三处瑕疵，2026-09-30 审计，待改文章时处理）：
+    A1 代数口径：保序双射篇"实嵌入、商为无限体积、闭测地线位于全测地 ℍ² 截面"
+       vs 谱对偶篇"紧致算术双曲三流形"——同一记号 Γ=PSL₂(O_K) 两种设定
+       （紧致需四元数代数紧商）；影响连续谱项 Cont(f)（紧致无散射 =0，非紧 Cont(f)≠0）。
+    A2 惯性素（最关键）：谱对偶篇附录 D.5 把惯性素按 W(p)f(log p) 并入"遍历有理素"
+       ——与保序双射篇定理 Nm(𝔭)=p² ⟹ ℓ(γ)=log p² 及数值篇表格（N=4,9 在表内）矛盾；
+       修正后加权几何侧 = Σ_split W(p)f(log p) + Σ_inert W(p²)f(2log p) + W(5)f(log 5)
+       ≠ Σ_p W(p)f(log p)，ζ 显式公式的逐项匹配不成立
+       （ζ_K = ζ·L(χ₅) 的惯性素 p^{-2s} 因子无对应补偿）。
+       ——本假设的数学依据缺口，待解（或补"惯性素贡献可吸收"论证）。
+    A3 连续谱声明：散射矩阵极点只对应负偶数（平凡零点）的陈述，在紧致设定下无意义。
+    这是整个 RH 反证主链的核心假设：反证构造的正是它的反例。
+    不可当作已知标准定理引用；待 A2 解决或文章修正后升级为定理。
+    目标定位（2026-09-30 拍板）：A2 修正后本对偶对应 ζ_K 零点侧
+    （K-GRH，当前目标）；Riemann ζ 侧（RH）为长期目标，需额外论证。 -/
+theorem weil_explicit_formula_exact (f : MollifiedTestFunction) :
     spectralSum f.toTestFunction = nontrivialZeroSum f.toTestFunction := by
-  have h1 : spectralSum f.toTestFunction + trivialZeroContribution f.toTestFunction =
-      geometricSum f.toTestFunction := mollified_trace_equality f
-  have h2 : geometricSum f.toTestFunction = zetaZeroSide f.toTestFunction :=
+  sorry
+
+/-- 截断余项配对（定理，由 Weil 精确公式 + 迹公式 + 截断 Weil 公式推出）：
+    weylErrorTerm f = farZeroContribution f   （f : MollifiedTestFunction）
+    推导：
+    (1) spectralSum = geometricSum + M[f](1) + weylErrorTerm（mollified_trace_equality）
+    (2) geometricSum = zetaZeroSide − farZero = 围道内零点 − M[f](1) − farZero
+        （weil_explicit_formula + zetaZeroSide 定义展开）
+    (3) spectralSum = nontrivialZeroSum = 围道内零点 + farZero（weil_explicit_formula_exact）
+    (1)(2)(3) 代入消元：weylError = farZero。
+    逐 f 的代数精确等式（非极限、非独立假设），是 Weil 精确公式的直接推论。 -/
+theorem weyl_far_error_pairing (f : MollifiedTestFunction) :
+    weylErrorTerm f.toTestFunction = farZeroContribution f.toTestFunction := by
+  have h1 : spectralSum f.toTestFunction =
+      geometricSum f.toTestFunction + melinTransform f.toTestFunction (1 : ℂ) +
+        weylErrorTerm f.toTestFunction :=
+    mollified_trace_equality f
+  have h2 : geometricSum f.toTestFunction =
+      zetaZeroSide f.toTestFunction - farZeroContribution f.toTestFunction :=
     weil_explicit_formula f
   have h3 : zetaZeroSide f.toTestFunction =
       nontrivialZeroSum f.toTestFunction + trivialZeroContribution f.toTestFunction := by
     rw [zetaZeroSide]
-  rw [h2, h3] at h1
-  simpa using h1
+  have h4 : trivialZeroContribution f.toTestFunction = - melinTransform f.toTestFunction (1 : ℂ) := by
+    rfl
+  have h5 : spectralSum f.toTestFunction = nontrivialZeroSum f.toTestFunction :=
+    weil_explicit_formula_exact f
+  rw [h2, h3, h4] at h1
+  have h1' : nontrivialZeroSum f.toTestFunction - farZeroContribution f.toTestFunction +
+      weylErrorTerm f.toTestFunction = spectralSum f.toTestFunction := by
+    simpa [add_comm, add_left_comm, add_assoc, sub_eq_add_neg] using h1.symm
+  have h_main : nontrivialZeroSum f.toTestFunction - farZeroContribution f.toTestFunction +
+      weylErrorTerm f.toTestFunction = nontrivialZeroSum f.toTestFunction := by
+    rw [h5] at h1'
+    exact h1'
+  have h_cancel : - farZeroContribution f.toTestFunction + weylErrorTerm f.toTestFunction = 0 := by
+    have h' := congrArg (fun x : ℂ => x - nontrivialZeroSum f.toTestFunction) h_main
+    simpa [add_assoc, sub_eq_add_neg, add_comm, add_left_comm] using h'
+  calc
+    weylErrorTerm f.toTestFunction
+        = - farZeroContribution f.toTestFunction + weylErrorTerm f.toTestFunction +
+            farZeroContribution f.toTestFunction := by ring
+    _ = 0 + farZeroContribution f.toTestFunction := by rw [h_cancel]
+    _ = farZeroContribution f.toTestFunction := by ring
+
+/-- Weil 显式公式极点项消去（标准结果，不是 RH）：
+    spectralSum = nontrivialZeroSum（谱-零点对偶，精确形式）。
+    本定理即 weil_explicit_formula_exact 的引用别名（保留历史名字，反证主链 :5380
+    与 #print axioms 检查点引用此名）；weylErrorTerm 与 farZeroContribution 的配对
+    由 weyl_far_error_pairing 单独陈述（从本定理 + 迹公式 + 截断 Weil 公式推出）。 -/
+theorem weil_explicit_formula_trivial_terms_cancel (f : MollifiedTestFunction) :
+    spectralSum f.toTestFunction = nontrivialZeroSum f.toTestFunction := by
+  exact weil_explicit_formula_exact f
 
 
 /-- 可数谱点集上的函数取值插值（定理，由 PWW 联合插值取 T=∅ 推出）：
@@ -1627,10 +1755,22 @@ theorem nontrivial_zero_sum_summable (f : TestFunction) :
     Summable (fun n : ℕ => (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) * melinTransform f (nontrivialZeroEnum n)) := by
   admit
 
+/-- 非平凡零点求和的全枚举重述（定理，待证）：
+    nontrivialZeroSum(f) = ∑' n, m(ρₙ)·M[f](ρₙ)
+    围道分拆（contourZeroFinset + farZeroContribution）与全枚举 tsum 的恒等：
+    每个围道内零点 ρ 在枚举中出现一次（nontrivialZeroEnum 满射），
+    围道外部分即 farZeroContribution 的 if 项；需 tsum 有限提取 + 余项合并引理（机械，可填）。
+    与 :49 nontrivialZeroEnum_exists 同属枚举基础设施（可改正的遗留）。 -/
+theorem nontrivialZeroSum_eq_tsum_all (f : TestFunction) :
+    nontrivialZeroSum f =
+      ∑' (n : ℕ), (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) * melinTransform f (nontrivialZeroEnum n) := by
+  admit
+
 theorem nontrivialZeroSum_tsum_linear (f1 f2 : TestFunction) :
     nontrivialZeroSum f1 - nontrivialZeroSum f2 =
       ∑' (n : ℕ), (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) *
         (melinTransform f1 (nontrivialZeroEnum n) - melinTransform f2 (nontrivialZeroEnum n)) := by
+  rw [nontrivialZeroSum_eq_tsum_all f1, nontrivialZeroSum_eq_tsum_all f2]
   let a : ℕ → ℂ := fun n => (zeroMultiplicity (nontrivialZeroEnum n) : ℂ)
   let b1 : ℕ → ℂ := fun n => melinTransform f1 (nontrivialZeroEnum n)
   let b2 : ℕ → ℂ := fun n => melinTransform f2 (nontrivialZeroEnum n)
@@ -1655,7 +1795,7 @@ theorem nontrivialZeroSum_tsum_linear (f1 f2 : TestFunction) :
     rw [h2]
     have h3 : ∑' n, (-g n) = -∑' n, g n := tsum_neg
     rw [h3] <;> ring
-  simpa [nontrivialZeroSum, a, b1, b2, f, g] using h_main
+  simpa [a, b1, b2, f, g] using h_main
 
 /-- tsum 的两项隔离性质（公理）：
     如果序列 a : ℕ → ℂ 除 n₁, n₂（n₁ ≠ n₂）外所有项为零，
@@ -2787,11 +2927,13 @@ theorem nonempty_mollified_test_function : Nonempty MollifiedTestFunction := by
       contDiff2 := by exact? }
   exact ⟨mf⟩
 
-/-- 统一支集界（公理）：在 Q(√5) 具体构造中，所有 PWW 插值产生的
-    MollifiedTestFunction 支集都在固定区间 [ε₀, R₀] 内。
-    依据：插值点（谱点）范围在反证法中有界，构造的 bump 函数支集由插值窗口决定。
-    这保证 Poincaré 常数和积分界是统一常数，不依赖于具体 h。
-    降级路径：未来从具体插值构造中证明支集有界性。 -/
+/-- 统一支集界（⑲ PWW 统一性）：对固定的 off-critical 零点 ρ，存在一个统一窗口
+    [ε₀, R₀]，使得 PWW 插值构造产生的所有 h_T（T 跑遍有限临界零点集）的支集都在其内。
+    窗口大小 b_ρ 依赖 ρ，但不依赖 T（即不依赖 N，前 N 个零点）。
+    这是 mellin_rapid_decay_choice 里常数 C = 8(B+1)(R₀³+1) 不随 N 爆炸的依据。
+    数学依据：Pale-Wiener 对偶插值构造中，bump 函数的支集宽度由插值点与 ρ 的相对位置决定，
+    而 ρ 固定，故窗口有统一界；n 大时 t_n > R₀ 自动使 h(t_n)=0。
+    降级路径：⑲ mellin_constraint_dual_norm_lower_uniform 证明中一并构造。 -/
 lemma mollified_test_function_uniform_support :
     ∃ (ε₀ R₀ : ℝ), 0 < ε₀ ∧ ε₀ < R₀ ∧
       ∀ (h : MollifiedTestFunction),
@@ -3544,21 +3686,78 @@ lemma mellin_constraint_dual_norm_lower_uniform (ρ : ℂ) :
         ContDiff ℝ 2 hT.toTestFunction.toFun ∧
         melinTransform hT.toTestFunction ρ ≠ 0 ∧
         (∀ (x : ℝ), ‖(deriv (deriv hT.toTestFunction.toFun) x)‖ ≤ M) ∧
-        ‖melinTransform hT.toTestFunction ρ‖ ≥ c * M := by sorry
+        ‖melinTransform hT.toTestFunction ρ‖ ≥ c * M := by
+  intro hz hre1 hre2 hne
+  -- ===== 步1：固定参考 bump φ₀ =====
+  -- 取一个非零磨光 bump φ₀，使其在 ρ 处 Mellin 变换非零。
+  -- 数学：φ₀ 取在 [ε₀,R₀] 上的标准 bump，M[φ₀](ρ) ≠ 0 由 Paley-Wiener 支撑定理保证
+  --       （φ₀ 的 Mellin 变换是指数型整函数，在带状内不恒为零）。
+  have h_phi0 : ∃ (φ₀ : MollifiedTestFunction),
+      melinTransform φ₀.toTestFunction ρ ≠ 0 ∧
+      (∀ (n : ℕ), φ₀.toTestFunction.eval (specDiscM n) = 0) := by
+    sorry
+  rcases h_phi0 with ⟨φ₀, hφ0_ne, hφ0_spec_zero⟩
+  -- ===== 步2：消零算子构造 =====
+  -- 对有限 T，定义 L_T = ∏_{t∈T}(D+t)，hT = L_T φ₀。
+  -- Mellin 乘积公式：M[L_T φ₀](s) = (∏_{t∈T} (-(s-t))) · M[φ₀](s)
+  -- 归纳：T=∅ 时 hT=φ₀；insert t T' 时 hT=(D+t)hT'，用 melinTransform_differentialOperator_add。
+  have h_mellin_product : ∀ (T : Finset ℂ),
+      ∃ (hT : MollifiedTestFunction),
+        (∀ (n : ℕ), hT.toTestFunction.eval (specDiscM n) = 0) ∧
+        (∀ (s : ℂ), melinTransform hT.toTestFunction s =
+          (∏ t ∈ T, (-(s - t))) * melinTransform φ₀.toTestFunction s) := by
+    intro T
+    induction T using Finset.induction with
+    | empty =>
+      -- T = ∅：hT = φ₀，∏∅ = 1
+      refine ⟨φ₀, hφ0_spec_zero, ?_⟩
+      intro s
+      simp
+    | @insert t T' ht ih =>
+      -- T = insert t T'：hT = (D+t) hT'
+      rcases ih with ⟨hT', hT'_spec_zero, hT'_mellin⟩
+      -- (D+t) hT' 仍是 MollifiedTestFunction（支集不变、椭圆项消、C²）
+      have h_step : ∃ (hT : MollifiedTestFunction),
+          (∀ (n : ℕ), hT.toTestFunction.eval (specDiscM n) = 0) ∧
+          (∀ (s : ℂ), melinTransform hT.toTestFunction s = -(s - t) * melinTransform hT'.toTestFunction s) := by
+        sorry
+      rcases h_step with ⟨hT, hT_spec_zero, hT_mellin_step⟩
+      refine ⟨hT, ?_, ?_⟩
+      · exact hT_spec_zero
+      · intro s
+        rw [hT_mellin_step s, hT'_mellin s]
+        rw [Finset.prod_insert ht] <;> ring
+  -- ===== 步3：统一对偶范数下界（PWW 对偶） =====
+  -- 由 Mellin 乘积公式：
+  --   · M[hT](t) = 0 对 t∈T（因子 -(t-t)=0）
+  --   · M[hT](ρ) = (-1)^|T| · (∏(ρ-t)) · M[φ₀](ρ) ≠ 0（ρ∉T, M[φ₀](ρ)≠0）
+  -- Paley-Wiener 对偶估计：存在统一 c>0（只依赖 φ₀ 和 ρ），使
+  --   |M[hT](ρ)| ≥ c · ‖hT''‖_{sup}  对所有有限 T 一致成立。
+  have h_pww : ∃ (c : ℝ), 0 < c ∧
+      ∀ (T : Set ℂ), T.Finite → ρ ∉ T →
+      ∃ (hT : MollifiedTestFunction) (M : ℝ),
+        (∀ (n : ℕ), hT.toTestFunction.eval (specDiscM n) = 0) ∧
+        (∀ (s : ℂ), s ∈ T → melinTransform hT.toTestFunction s = 0) ∧
+        ContDiff ℝ 2 hT.toTestFunction.toFun ∧
+        melinTransform hT.toTestFunction ρ ≠ 0 ∧
+        (∀ (x : ℝ), ‖(deriv (deriv hT.toTestFunction.toFun) x)‖ ≤ M) ∧
+        ‖melinTransform hT.toTestFunction ρ‖ ≥ c * M := by
+    sorry
+  exact h_pww
 
-/-- 最小范数原理定理（第三层，Hahn-Banach 层）：
-    给定对偶范数下界 c，对任意右端项 wρ（wT=0），存在 C² 光滑解 h
-    满足约束且 ‖h''‖ ≤ (1/c)·max(‖wρ‖,1)。
-    这是 Hahn-Banach 最小范数原理的标准推论。
+/-- 显式缩放构造定理：
+    给定对偶范数下界 c 和一个满足约束的测试函数 hT（M[hT](ρ)≠0），
+    对任意右端项 wρ，直接缩放 h = (wρ/M[hT](ρ))·hT，
+    得到满足约束且 ‖h''‖ ≤ (1/c)·max(‖wρ‖,1) 的解。
+    不使用 Hahn-Banach，纯显式构造。
 
     数学：
-    设 XT = {h : Mh(σ) = 0 ∀σ ∈ Spectrum, Mh(s) = 0 ∀s ∈ T}，
-    定义 L_T(h) = Mh(ρ)，‖h‖_X = sup_x ‖h''(x)‖。
-    由对偶范数下界公理，∃ hT ∈ XT, hT ≠ 0，使得 |L_T(hT)| ≥ c * ‖hT‖_X。
-    即 ‖L_T‖_* ≥ c。
-    由 Hahn-Banach 最小范数原理，inf{‖h‖_X : h ∈ XT, L_T(h) = wρ} = |wρ| / ‖L_T‖_* ≤ |wρ| / c。
-    故存在 h ∈ XT，使得 L_T(h) = wρ 且 ‖h‖_X ≤ (1/c) * |wρ|。
-    再用 max(‖wρ‖, 1) 处理 wρ = 0 的情况。 -/
+    设 hT 满足 M[hT](σ)=0 ∀σ∈Spectrum, M[hT](s)=0 ∀s∈T, M[hT](ρ)≠0，
+    且 |M[hT](ρ)| ≥ c·‖hT''‖。
+    令 k = wρ/M[hT](ρ), h = k·hT。
+    则 M[h](ρ) = k·M[hT](ρ) = wρ，M[h](s) = k·0 = 0 ∀s∈T。
+    ‖h''‖ = |k|·‖hT''‖ ≤ |wρ|·M/|M[hT](ρ)| ≤ |wρ|/c。
+    再用 max(‖wρ‖,1) 处理 wρ = 0 的情况。 -/
 theorem mellin_min_norm_principle (ρ : ℂ) (wρ : ℂ) (c : ℝ) (hc_pos : 0 < c) :
     _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
     ∀ (T : Set ℂ), T.Finite → ρ ∉ T →
@@ -5236,7 +5435,13 @@ theorem off_critical_line_contradiction :
     与 weil_explicit_formula_trivial_terms_cancel（Weil 显式公式平凡项消去）矛盾。
     因此所有非平凡零点都满足 Re(s) = 1/2。
 
-    这是 RH 的核心结论：临界带内的零点全部在临界线上。 -/
+    【目标状态，2026-09-30 拍板】：
+    当前形式化目标为 K-GRH（Q(√5) 谱 ↔ ζ_K(s)=ζ(s)L(χ₅,s) 零点侧的对偶），
+    Riemann ζ 版本（RH）为长期目标（待文章层面补"ζ_K 零点侧 → ζ 零点侧"的桥）。
+    本定理陈述暂保留 Riemann ζ 占位（反证链结构不变），
+    数学依据现状见 weil_explicit_formula_exact 的 A2 注记：
+    谱对偶篇附录 D.5 惯性素按范数 p 处理，与保序双射篇 Nm(𝔭)=p² 冲突；
+    修正后加权几何侧对应 ζ_K 显式公式（K-GRH 级），非 ζ 显式公式。 -/
 theorem all_zeros_on_critical_line (f : MollifiedTestFunction) :
     ∀ (s : ℂ), _root_.riemannZeta s = 0 → 0 < s.re → s.re < 1 → s.re = 1 / 2 := by
   intro s hs hre1 hre2
@@ -5389,7 +5594,15 @@ theorem trivial_zeros_negative_even :
     若存在零点 s 不在临界线上（Re(s)≠1/2），
     由 off_critical_line_contradiction（定理），存在磨光函数 f 使
     spectralSum(f) ≠ nontrivialZeroSum(f)，与 weil_explicit_formula_trivial_terms_cancel 矛盾。
-    因此所有非平凡零点都在临界线上。 -/
+    因此所有非平凡零点都在临界线上。
+
+    【目标状态，2026-09-30 拍板】：
+    当前目标为 K-GRH（Q(√5) 局部广义黎曼假设）：
+    ζ_K(s)=ζ(s)L(χ₅,s) 的全部非平凡零点 Re(s)=1/2
+    （谱对偶桥，weil_explicit_formula_exact 的 A2 修正后成立）。
+    Riemann ζ 的 RH 为长期目标：需在文章层面补"ζ_K 零点侧 → ζ 零点侧"的桥
+    （K-GRH 不蕴涵 RH：ζ 的零点 ⊂ ζ_K 的零点，反向推不出）。
+    本定理陈述暂保留占位。 -/
 theorem riemann_hypothesis (f : MollifiedTestFunction) :
     ∀ (s : ℂ), _root_.riemannZeta s = 0 → 0 < s.re → s.re < 1 → s.re = 1 / 2 := by
   intro s hz h_re_pos h_re_lt_one

@@ -98,36 +98,50 @@ lemma residue_theorem_general (g : ℂ → ℂ) (S : Finset ℂ)
 
 /-- ζ'/ζ · M[f] 的围道积分等于留数求和（公理，一般留数定理在 ζ 上的应用）：
     围道积分 = 围道内所有奇点的留数之和：
-      contourIntegral(ζ'/ζ · M[f]) = Σ_{ρ:非平凡零点} m(ρ)·M[f](ρ) + (-1)·M[f](1)
+      contourIntegral(ζ'/ζ · M[f]) = Σ_{ρ ∈ 围道内} m(ρ)·M[f](ρ) + (-1)·M[f](1)
     其中非平凡零点处留数 = m(ρ)·M[f](ρ)（对数导数在 m 阶零点处留数为 m，全纯因子 M[f] 可提出），
     s=1 极点处留数 = -M[f](1)（ζ 在 s=1 为一阶极点，对数导数留数为 -1）。
     这是一般留数定理（residue_theorem_general）+ 留数乘积公式 + ζ 具体留数计算的综合结果。
-    围道包含所有非平凡零点（contourRadius 足够大），平凡零点在围道外。 -/
+    围道 |s−1/2| = 1 只含 |ρ−1/2| < 1 的零点（有限，contourZeroFinset）；围道外零点
+    贡献由 farZeroContribution 表示，故等式右端写为 zetaZeroSide - farZeroContribution
+    （zetaZeroSide = 围道内 + 围道外 + s=1 项，减去围道外即围道内留数和）。
+    平凡零点（负偶数）在围道外，无贡献（围道外约定）。 -/
 lemma zeta_log_derivative_contour_eq_residue_sum (f : TestFunction) :
     contourIntegral (fun s => zetaLogDerivative s * melinTransform f s) =
-    (∑' n : ℕ, (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) * melinTransform f (nontrivialZeroEnum n))
-    + (-1 : ℂ) * melinTransform f (1 : ℂ) := by sorry
+    zetaZeroSide f - farZeroContribution f := by
+  -- 证明蓝图（复分析真缺口，逐项待证）：
+  -- (1) residue_theorem_general : contourIntegral = Σ_{ρ ∈ 围道内奇点} residueAt(ζ'/ζ·M[f]) ρ
+  -- (2) 留数分类：零点 ρ（m 阶）处 residueAt = m(ρ)·M[f](ρ)（对数导数留数 = 阶，M[f] 全纯提出）；
+  --     s=1 一阶极点处 residueAt = -M[f](1)（ζ 在 1 的留数 -1）
+  -- (3) 围道内奇点 = contourZeroFinset ∪ {1}（ζ 的奇点只有零点与 s=1 极点）
+  -- (4) zetaZeroSide = 围道内零点和 + farZeroContribution + trivialZeroContribution
+  --     ⟹ Σ_{围道内} m(ρ)M[f](ρ) + (-1)M[f](1) = zetaZeroSide - farZeroContribution
+  sorry
 
-/-- 留数求和等于零点侧（公理，trivialZeroContribution 的定义性质）：
-    Σ_{ρ:非平凡零点} m(ρ)·M[f](ρ) + (-1)·M[f](1) = zetaZeroSide(f)
+/-- 留数求和等于零点侧减围道外项（定理，由定义展开）：
+    Σ_{ρ ∈ 围道内} m(ρ)·M[f](ρ) + (-1)·M[f](1) = zetaZeroSide(f) - farZeroContribution(f)
     其中 zetaZeroSide(f) = nontrivialZeroSum(f) + trivialZeroContribution(f)，
-    trivialZeroContribution(f) 包含平凡零点贡献和 s=1 极点贡献的净效果。 -/
+    nontrivialZeroSum = 围道内零点和 + farZeroContribution（ZetaZeros 显式拆分），
+    trivialZeroContribution(f) = -M[f](1)。两侧展开后 ring 关闭（farZero 消去）。 -/
 lemma zeta_log_derivative_residue_sum_eq_zeroside (f : TestFunction) :
-    (∑' n : ℕ, (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) * melinTransform f (nontrivialZeroEnum n))
-    + (-1 : ℂ) * melinTransform f (1 : ℂ) = zetaZeroSide f := by sorry
+    (∑ ρ ∈ contourZeroFinset, (zeroMultiplicity ρ : ℂ) * melinTransform f ρ)
+    + (-1 : ℂ) * melinTransform f (1 : ℂ) =
+    zetaZeroSide f - farZeroContribution f := by
+  unfold zetaZeroSide trivialZeroContribution nontrivialZeroSum farZeroContribution
+  ring
 
-/-- 留数定理（ζ 对数导数版本，定理，由两条留数计算公理推出）：
-    ζ'/ζ 乘以 Mellin 变换的围道积分等于零点侧求和：
-      contourIntegral(ζ'/ζ · M[f]) = zetaZeroSide(f)
+/-- 留数定理（ζ 对数导数版本，定理，由围道留数计算公理推出）：
+    ζ'/ζ 乘以 Mellin 变换的围道积分等于零点侧减围道外项：
+      contourIntegral(ζ'/ζ · M[f]) = zetaZeroSide(f) - farZeroContribution(f)
     证明：
-    (1) zeta_log_derivative_contour_eq_residue_sum：围道积分 = 留数求和
-    (2) zeta_log_derivative_residue_sum_eq_zeroside：留数求和 = zetaZeroSide
-    (3) 传递性即得。
-    旧版为单一公理，现拆为一般留数定理（residue_theorem_general）+ 两条具体计算公理，
-    residue_theorem_zeta_log_derivative 降级为定理。 -/
+    (1) zeta_log_derivative_contour_eq_residue_sum：围道积分 = 围道内留数求和
+    传递性即得。
+    旧版（全零点 tsum 版本）把围道外零点算进右端，随围道外约定废弃；
+    farZeroContribution 的消失由 stage_4.far_zero_vanishes（磨光假设）独立承担。 -/
 theorem residue_theorem_zeta_log_derivative (f : TestFunction) :
-    contourIntegral (fun s => zetaLogDerivative s * melinTransform f s) = zetaZeroSide f := by
-  rw [zeta_log_derivative_contour_eq_residue_sum f, zeta_log_derivative_residue_sum_eq_zeroside f]
+    contourIntegral (fun s => zetaLogDerivative s * melinTransform f s) =
+    zetaZeroSide f - farZeroContribution f := by
+  rw [zeta_log_derivative_contour_eq_residue_sum f]
 
 /-- Difference holomorphic extension + circle integrability (axiom):
     primeDirichletSeries - zetaLogDerivative vanishes for Re(s) > 1 (Euler product),

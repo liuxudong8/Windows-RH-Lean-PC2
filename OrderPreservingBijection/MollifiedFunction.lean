@@ -32,9 +32,8 @@ noncomputable def ellipticTerm (f : TestFunction) : ℂ :=
 
 /-- 磨光测试函数：紧支集 + 支集有界 + 椭圆项消失。
     supportBounded：存在 ε₀, R₀ > 0，f 在 (-∞, ε₀] 和 [R₀, ∞) 上为 0。
-    ellipticVanishes：ellipticTerm(f) = 0。
-    contDiff2：f 是二次连续可微的。
-    这是 Weil 显式公式和 RH 反证法中使用的测试函数类。 -/
+    注意：具体窗口大小不写死——由 PWW 插值构造（⑲）对每个 ρ 给出统一界 b_ρ，
+    见 mollified_test_function_uniform_support。 -/
 structure MollifiedTestFunction extends TestFunction where
   supportBounded : ∃ (ε₀ R₀ : ℝ), 0 < ε₀ ∧ ε₀ < R₀ ∧
     (∀ x, x ≤ ε₀ → toFun x = 0) ∧

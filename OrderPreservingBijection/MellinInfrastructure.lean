@@ -175,7 +175,9 @@ noncomputable def differentialOperatorTestFunction (f : SmoothTestFunction) : Sm
     measurable := hmul.continuous.measurable
     contDiff := hmul }
 
-/-- 微分算子的 Mellin 变换公式：M(D f)(s) = -s * Mf(s)。 -/
+/-- 微分算子的 Mellin 变换公式：M(D f)(s) = -s * Mf(s)。
+    证明：令 g(x) = f(x)·x^s，则 g'(x) = f'(x)·x^s + s·f(x)·x^{s-1}。
+    f 紧支且在 0 附近消失，故 g 在积分边界为 0，∫ g' = 0，移项即得。 -/
 theorem melinTransform_differentialOperator (f : SmoothTestFunction) (s : ℂ) :
     melinTransform (differentialOperatorTestFunction f) s = -s * melinTransform f s := by
   have h1 : ∀ (x : ℝ), 0 < x →
@@ -194,7 +196,134 @@ theorem melinTransform_differentialOperator (f : SmoothTestFunction) (s : ℂ) :
     rw [h4]
     have h5 : (Real.log x : ℂ) + (s - 1) * (Real.log x : ℂ) = s * (Real.log x : ℂ) := by ring
     rw [h5]
-  sorry
+  -- 取支集界：f 在 x ≤ a 和 x ≥ b 时为 0
+  rcases f.vanishesNearZero with ⟨ε, hε_pos, hε⟩
+  rcases f.hasCompactSupport with ⟨R, hR_pos, hR⟩
+  let a : ℝ := ε / 2
+  let b : ℝ := R + ε + 2
+  have ha_pos : 0 < a := by dsimp only [a]; linarith
+  have hab : a < b := by dsimp only [a, b]; linarith
+  have hf_left : ∀ x, x ≤ a → f.eval x = 0 := by
+    intro x hx
+    have hlt : x < ε := by dsimp only [a] at hx; linarith
+    exact hε x hlt
+  have hf_right : ∀ x, x ≥ b → f.eval x = 0 := by
+    intro x hx
+    have hxpos : 0 < x := by dsimp only [b] at hx; linarith
+    have habs : |x| > R := by
+      rw [abs_of_pos hxpos]; dsimp only [b] at hx; linarith
+    exact hR x habs
+  -- g(x) = f(x) * x^s，x > 0
+  let g : ℝ → ℂ := fun x => f.eval x * Complex.exp (s * (Real.log x : ℂ))
+  have g_left : ∀ x, x ≤ a → g x = 0 := by
+    intro x hx; have := hf_left x hx; simp [g, this]
+  have g_right : ∀ x, x ≥ b → g x = 0 := by
+    intro x hx; have := hf_right x hx; simp [g, this]
+  -- g'(x) = f'(x) x^s + s f(x) x^{s-1}（链法则，详见 h_integral_deriv）
+  have hderiv : ∀ (x : ℝ), 0 < x →
+      HasDerivAt g (deriv f.eval x * Complex.exp (s * (Real.log x : ℂ)) +
+        s * f.eval x * Complex.exp ((s - 1) * (Real.log x : ℂ))) x := by
+    intro x hx; sorry
+  set A : ℝ → ℂ := fun x => deriv f.eval x * Complex.exp (s * (Real.log x : ℂ)) with hA
+  set B : ℝ → ℂ := fun x => f.eval x * Complex.exp ((s - 1) * (Real.log x : ℂ)) with hB
+  have h_integral_deriv : ∫ x in Set.Ioi (0:ℝ), (A x + s * B x) = 0 := by
+    -- g' = A + s*B 在 x>0 时（hderiv）
+    -- g 在 (0,a] 上恒为 0 ⇒ g' 在 (0,a) 上为 0
+    -- g 在 [b,∞) 上恒为 0 ⇒ g' 在 (b,∞) 上为 0
+    -- 故 ∫_{Ioi 0} g' = ∫_{Icc a b} g'
+    have h_left_zero : ∀ x ∈ Set.Ioc (0:ℝ) a, A x + s * B x = 0 := by sorry
+    have h_right_zero : ∀ x ∈ Set.Ioi b, A x + s * B x = 0 := by sorry
+    have h_split : ∫ x in Set.Ioi (0:ℝ), (A x + s * B x) =
+        ∫ x in Set.Icc a b, (A x + s * B x) := by
+      sorry
+    rw [h_split]
+    -- FTC: ∫_a^b g' = g(b) - g(a) = 0
+    have h_fTC : ∫ x in Set.Icc a b, (A x + s * B x) = g b - g a := by
+      -- a ≤ b
+      have hab : a ≤ b := by dsimp only [a, b]; linarith
+      -- ∫_{Icc a b} g' = ∫_a^b g'（Icc/Ioc 端点测度为零）
+      have h_set_to_interval : ∫ x in Set.Icc a b, (A x + s * B x) =
+          ∫ (x : ℝ) in a..b, (A x + s * B x) := by
+        sorry
+      rw [h_set_to_interval]
+      -- g 在 Icc a b 上逐点可导，g' = A + s*B
+      have hderiv' : ∀ x ∈ Set.uIcc a b, HasDerivAt g (A x + s * B x) x := by
+        intro x hx
+        have h_ab : a ≤ b := by dsimp only [a, b]; linarith
+        have hxa : a ≤ x := by
+          have h : x ∈ Set.uIcc a b := hx
+          rw [Set.uIcc_of_le h_ab] at h
+          exact h.1
+        have hxpos : 0 < x := by linarith [ha_pos, hxa]
+        have h := hderiv x hxpos
+        have h_eq : deriv f.eval x * Complex.exp (s * (Real.log x : ℂ)) +
+            s * f.eval x * Complex.exp ((s - 1) * (Real.log x : ℂ)) = A x + s * B x := by
+          simp [A, B] <;> ring
+        rw [h_eq] at h
+        exact h
+      have hint : IntervalIntegrable (fun x => A x + s * B x) MeasureTheory.volume a b := by
+        sorry
+      exact intervalIntegral.integral_eq_sub_of_hasDerivAt hderiv' hint
+    rw [h_fTC, g_right b (by linarith), g_left a (by linarith)] <;> ring
+  have hlin : ∫ x in Set.Ioi (0:ℝ), (A x + s * B x) =
+      (∫ x in Set.Ioi (0:ℝ), A x) + s * (∫ x in Set.Ioi (0:ℝ), B x) := by
+    -- B = f·x^{s-1}，其可积性由 mellin_integrand_integrable f s 给出
+    -- （B 在 Ioi 0 上等于 mellin_integrand_integrable 的被积函数）
+    have hB_int : MeasureTheory.Integrable B
+        (MeasureTheory.volume.restrict (Set.Ioi (0:ℝ))) := by
+      sorry
+    -- A = f'·x^s，deriv f 也是紧支光滑，故 A 同样可积
+    have hA_int : MeasureTheory.Integrable A
+        (MeasureTheory.volume.restrict (Set.Ioi (0:ℝ))) := by
+      sorry
+    have h_sB_int : MeasureTheory.Integrable (fun x => s * B x)
+        (MeasureTheory.volume.restrict (Set.Ioi (0:ℝ))) :=
+      hB_int.const_mul s
+    have h1 : ∫ x in Set.Ioi (0:ℝ), (A x + s * B x) =
+        (∫ x in Set.Ioi (0:ℝ), A x) + ∫ x in Set.Ioi (0:ℝ), (s * B x) :=
+      MeasureTheory.integral_add hA_int h_sB_int
+    have h2 : ∫ x in Set.Ioi (0:ℝ), (s * B x) = s * (∫ x in Set.Ioi (0:ℝ), B x) := by
+      exact?
+    rw [h1, h2]
+  have h_eq1 : melinTransform (differentialOperatorTestFunction f : TestFunction) s =
+      ∫ x in Set.Ioi (0:ℝ), A x := by
+    unfold melinTransform realIntegral
+    have h_ae : (fun x : ℝ => (if 0 < x then
+          (differentialOperatorTestFunction f : TestFunction).eval x *
+            Complex.exp ((s - 1) * (Real.log x : ℂ)) else 0)) =ᵐ[
+        MeasureTheory.volume.restrict (Set.Ioi (0:ℝ))] A := by
+      filter_upwards [MeasureTheory.self_mem_ae_restrict (by simp : MeasurableSet (Set.Ioi (0:ℝ)))]
+        with x hx
+      have hxpos : 0 < x := hx
+      simp only [if_pos hxpos]
+      have h_eval : (differentialOperatorTestFunction f : TestFunction).eval x =
+          (x : ℂ) * deriv f.eval x := by rfl
+      rw [h_eval, h1 x hxpos] <;> rfl
+    exact MeasureTheory.integral_congr_ae h_ae
+  have h_eq2 : melinTransform f s = ∫ x in Set.Ioi (0:ℝ), B x := by
+    unfold melinTransform realIntegral
+    have h_ae : (fun x : ℝ => (if 0 < x then
+          f.eval x * Complex.exp ((s - 1) * (Real.log x : ℂ)) else 0)) =ᵐ[
+        MeasureTheory.volume.restrict (Set.Ioi (0:ℝ))] B := by
+      filter_upwards [MeasureTheory.self_mem_ae_restrict (by simp : MeasurableSet (Set.Ioi (0:ℝ)))]
+        with x hx
+      have hxpos : 0 < x := hx
+      simp only [if_pos hxpos] <;> rfl
+    exact MeasureTheory.integral_congr_ae h_ae
+  have h_sum : (∫ x in Set.Ioi (0:ℝ), A x) + s * (∫ x in Set.Ioi (0:ℝ), B x) = 0 := by
+    rw [←hlin]; exact h_integral_deriv
+  have h_main : (∫ x in Set.Ioi (0:ℝ), A x) = -s * (∫ x in Set.Ioi (0:ℝ), B x) := by
+    calc
+      (∫ x in Set.Ioi (0:ℝ), A x)
+        = (∫ x in Set.Ioi (0:ℝ), A x) + s * (∫ x in Set.Ioi (0:ℝ), B x) -
+            s * (∫ x in Set.Ioi (0:ℝ), B x) := by ring
+      _ = 0 - s * (∫ x in Set.Ioi (0:ℝ), B x) := by rw [h_sum] <;> ring
+      _ = -s * (∫ x in Set.Ioi (0:ℝ), B x) := by ring
+  calc
+    melinTransform (differentialOperatorTestFunction f : TestFunction) s
+      = ∫ x in Set.Ioi (0:ℝ), A x := h_eq1
+    _ = -s * (∫ x in Set.Ioi (0:ℝ), B x) := h_main
+    _ = -s * melinTransform f s := by rw [h_eq2] <;> ring
 
 /-- 算子 (D + t) 的 Mellin 变换公式。 -/
 theorem melinTransform_differentialOperator_add (f : SmoothTestFunction) (t : ℂ) (s : ℂ) :
