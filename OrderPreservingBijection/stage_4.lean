@@ -771,12 +771,15 @@ lemma shimuraKernel_joint_measurable :
     Measurable (fun p : ManifoldM × ManifoldX => shimuraKernel p.1 p.2) := by sorry
 -- Shimura 提升算子（定义，类型化）：U : L²(X) → L²(M)。
 
-/-- Shimura 核 Hilbert-Schmidt 性质（公理）：
+/-- Shimura 核 Hilbert-Schmidt 性质（可改正的遗留，暂以 sorry 占位，禁止升格为 axiom）：
     核是 Hilbert-Schmidt 的：∫_M ∫_X |K(z,w)|² dw dz < ∞。
-    这保证了积分算子 U : L²(X) → L²(M) 是有界算子。 -/
-axiom shimuraKernel_hilbert_schmidt :
+    这保证了积分算子 U : L²(X) → L²(M) 是有界算子。
+    数学依据：Shimura/JL 提升核在紧商上的 L² 有界性（核光滑性 + 紧性），待证。
+    降级原因（2026-10-01）：axiom 会被 #print axioms 静默吞掉下游依赖，sorry 可追踪。 -/
+lemma shimuraKernel_hilbert_schmidt :
     MeasureTheory.Integrable (fun z : ManifoldM =>
-      ∫ w : ManifoldX, ‖shimuraKernel z w‖ ^ 2 ∂hyperbolicMeasure2) hyperbolicMeasure3
+      ∫ w : ManifoldX, ‖shimuraKernel z w‖ ^ 2 ∂hyperbolicMeasure2) hyperbolicMeasure3 := by
+  sorry
 -- (U f)(z) = ∫_X Θ(z,w) f(w) dw，其中 Θ = shimuraKernel。
 -- 类型安全：只接受二维 L² 函数，输出三维 L² 函数。
 noncomputable def shimuraLift (f : L2ManifoldX) : L2ManifoldM :=
@@ -1578,11 +1581,16 @@ theorem geometric_sum_log_derivative (f : MollifiedTestFunction) :
     因此积分 = Σ_{ρ: ζ(ρ)=0, 0<Re(ρ)<1} f̂(ρ) + T(f) = zetaZeroSide(f)，
     其中 T(f) 包含平凡零点和 s=1 极点的贡献。
     这是留数定理在 Weil 显式公式中的标准应用。 -/
-theorem log_derivative_integral_residues (f : MollifiedTestFunction) :
+theorem log_derivative_integral_residues (f : MollifiedTestFunction)
+    (hM : AnalyticOnNhd ℂ (melinTransform f.toTestFunction) (Metric.closedBall (1 / 2 : ℂ) contourRadius))
+    (h_no_boundary_zeros : ∀ z, z ∈ Metric.sphere (1 / 2 : ℂ) contourRadius →
+      _root_.riemannZeta z ≠ 0)
+    (h_zero_in_S : ∀ z, z ∈ Metric.closedBall (1 / 2 : ℂ) contourRadius →
+      _root_.riemannZeta z = 0 → z ∈ contourZeroFinset ∨ z = 1) :
     zetaLogDerivativeIntegral f.toTestFunction =
       zetaZeroSide f.toTestFunction - farZeroContribution f.toTestFunction := by
   simp only [zetaLogDerivativeIntegral]
-  exact residue_theorem_zeta_log_derivative f.toTestFunction
+  exact residue_theorem_zeta_log_derivative f.toTestFunction hM h_no_boundary_zeros h_zero_in_S
 
 /-- Weil 显式公式（截断版本，定理，由两步推出）：
     对磨光测试函数 f，几何侧（固定半径围道积分）= ζ 零点侧（围道内部分）：
@@ -1598,10 +1606,15 @@ theorem log_derivative_integral_residues (f : MollifiedTestFunction) :
     本定理与其联立推出 weyl_far_error_pairing（两侧截断余项配对）。
     对应 Weil (1952) "Sur les formules explicites relatives aux
     fonctions zêta des corps algébriques"。 -/
-theorem weil_explicit_formula (f : MollifiedTestFunction) :
+theorem weil_explicit_formula (f : MollifiedTestFunction)
+    (hM : AnalyticOnNhd ℂ (melinTransform f.toTestFunction) (Metric.closedBall (1 / 2 : ℂ) contourRadius))
+    (h_no_boundary_zeros : ∀ z, z ∈ Metric.sphere (1 / 2 : ℂ) contourRadius →
+      _root_.riemannZeta z ≠ 0)
+    (h_zero_in_S : ∀ z, z ∈ Metric.closedBall (1 / 2 : ℂ) contourRadius →
+      _root_.riemannZeta z = 0 → z ∈ contourZeroFinset ∨ z = 1) :
     geometricSum f.toTestFunction =
       zetaZeroSide f.toTestFunction - farZeroContribution f.toTestFunction := by
-  rw [geometric_sum_log_derivative f, log_derivative_integral_residues f]
+  rw [geometric_sum_log_derivative f, log_derivative_integral_residues f hM h_no_boundary_zeros h_zero_in_S]
 
 /-- 谱-ζ 对偶核心假设（admit，非标准定理）：
     spectralSum(f) = nontrivialZeroSum(f)   （f : MollifiedTestFunction）
@@ -1630,10 +1643,38 @@ theorem weil_explicit_formula (f : MollifiedTestFunction) :
     这是整个 RH 反证主链的核心假设：反证构造的正是它的反例。
     不可当作已知标准定理引用；待 A2 解决或文章修正后升级为定理。
     目标定位（2026-09-30 拍板）：A2 修正后本对偶对应 ζ_K 零点侧
-    （K-GRH，当前目标）；Riemann ζ 侧（RH）为长期目标，需额外论证。 -/
-theorem weil_explicit_formula_exact (f : MollifiedTestFunction) :
-    spectralSum f.toTestFunction = nontrivialZeroSum f.toTestFunction := by
-  sorry
+    （K-GRH，当前目标）；Riemann ζ 侧（RH）为长期目标，需额外论证。
+    形式化状态（2026-10-01 参数化）：本定理不再以 sorry 形式存在，
+    而是把对偶恒等式提升为显式前提 h_duality——主链各定理（weyl_far_error_pairing、
+    weil_explicit_formula_trivial_terms_cancel、all_zeros_on_critical_line、
+    riemann_hypothesis）均带该前提，#print axioms 检查点不再列出本假设。
+    数学上等价于"若谱-零点对偶成立，则（反证链给出）所有非平凡零点在临界线上"；
+    对偶本身的证明依赖三篇论文的 A2 修正（文章层面待办）。
+    数学依据审计（2026-10-01，对照《基于Arthur稳定迹谱对偶论证10_K-GRH正文修改版》）：
+    【强度判定】本假设（逐 f 精确全零点恒等）强于文档：文档正确建立的是
+    （a）Arthur 迹公式（谱侧=几何轨道侧，逐 f 精确，§2.2）+（b）几何侧权重化简
+    （|det(I−P_γ)|=4sinh²(ℓ/2)，W=N log N/(N−1)²，附录 B 代数正确）+
+    （c）JL 酉等价谱加权（§4.1）——即"谱-素数对偶"（Weil 型恒等式），不含零点位置。
+    文档未给出"谱侧=ζ_K 零点侧"的非循环证明：
+    【断裂 F1·循环论证】§5.1/§5.2"定义 Dedekind ζ_K 非平凡零点 ρ=1/2+it"——
+    零点位置是解析延拓的结论，不可"定义"；t∈ℝ ⟺ Re(ρ)=1/2 是从定义推出的同义反复，
+    等价于预设 K-GRH。Lean 侧对应风险：spectral_zero_set_match axiom（右侧含 ρ.re=1/2）。
+    【断裂 F2·映射缺失】"从迹公式到显式公式的映射关系"（§附录B/§5.2）无推导：
+    附录 B 仅做几何侧权重化简，显式公式 ∑x^ρK/ρK=−∑Λ_K(n)/n^(1/2)cos(t log n)+O(⋯)
+    的零点侧如何从迹公式谱侧出现，"逐项匹配即得"一句带过。
+    【断裂 F3·权重不匹配】几何侧权重 W(𝔭)=N log N/(N−1)² 与 von Mangoldt 权重
+    Λ_K(𝔭)=log N 差因子 N/(N−1)²≠1；且文档自相矛盾（"全程无近似无截断误差"
+    vs "O(log X) 项在标准截断显式公式中出现"）。
+    【结论】文档当前版本不构成 K-GRH 的有效证明：迹公式+JL+保序双射正确建立
+    "谱-素数对偶"，但从该对偶到零点临界线仅有 §5.1/§5.2 的循环"定义"。
+    本假设（h_duality）数学上等价于 K-GRH 本身（逐 f 精确恒等 ⟹ 谱-零点测度重合
+    ⟹ 零点全在临界线），故必须作为显式前提，不可当作已证定理或文档推论。 -/
+theorem weil_explicit_formula_exact
+    (h_duality : ∀ (f : MollifiedTestFunction),
+      spectralSum f.toTestFunction = nontrivialZeroSum f.toTestFunction)
+    (f : MollifiedTestFunction) :
+    spectralSum f.toTestFunction = nontrivialZeroSum f.toTestFunction :=
+  h_duality f
 
 /-- 截断余项配对（定理，由 Weil 精确公式 + 迹公式 + 截断 Weil 公式推出）：
     weylErrorTerm f = farZeroContribution f   （f : MollifiedTestFunction）
@@ -1644,7 +1685,15 @@ theorem weil_explicit_formula_exact (f : MollifiedTestFunction) :
     (3) spectralSum = nontrivialZeroSum = 围道内零点 + farZero（weil_explicit_formula_exact）
     (1)(2)(3) 代入消元：weylError = farZero。
     逐 f 的代数精确等式（非极限、非独立假设），是 Weil 精确公式的直接推论。 -/
-theorem weyl_far_error_pairing (f : MollifiedTestFunction) :
+theorem weyl_far_error_pairing
+    (h_duality : ∀ (f : MollifiedTestFunction),
+      spectralSum f.toTestFunction = nontrivialZeroSum f.toTestFunction)
+    (f : MollifiedTestFunction)
+    (hM : AnalyticOnNhd ℂ (melinTransform f.toTestFunction) (Metric.closedBall (1 / 2 : ℂ) contourRadius))
+    (h_no_boundary_zeros : ∀ z, z ∈ Metric.sphere (1 / 2 : ℂ) contourRadius →
+      _root_.riemannZeta z ≠ 0)
+    (h_zero_in_S : ∀ z, z ∈ Metric.closedBall (1 / 2 : ℂ) contourRadius →
+      _root_.riemannZeta z = 0 → z ∈ contourZeroFinset ∨ z = 1) :
     weylErrorTerm f.toTestFunction = farZeroContribution f.toTestFunction := by
   have h1 : spectralSum f.toTestFunction =
       geometricSum f.toTestFunction + melinTransform f.toTestFunction (1 : ℂ) +
@@ -1652,14 +1701,14 @@ theorem weyl_far_error_pairing (f : MollifiedTestFunction) :
     mollified_trace_equality f
   have h2 : geometricSum f.toTestFunction =
       zetaZeroSide f.toTestFunction - farZeroContribution f.toTestFunction :=
-    weil_explicit_formula f
+    weil_explicit_formula f hM h_no_boundary_zeros h_zero_in_S
   have h3 : zetaZeroSide f.toTestFunction =
       nontrivialZeroSum f.toTestFunction + trivialZeroContribution f.toTestFunction := by
     rw [zetaZeroSide]
   have h4 : trivialZeroContribution f.toTestFunction = - melinTransform f.toTestFunction (1 : ℂ) := by
     rfl
   have h5 : spectralSum f.toTestFunction = nontrivialZeroSum f.toTestFunction :=
-    weil_explicit_formula_exact f
+    weil_explicit_formula_exact h_duality f
   rw [h2, h3, h4] at h1
   have h1' : nontrivialZeroSum f.toTestFunction - farZeroContribution f.toTestFunction +
       weylErrorTerm f.toTestFunction = spectralSum f.toTestFunction := by
@@ -1683,9 +1732,12 @@ theorem weyl_far_error_pairing (f : MollifiedTestFunction) :
     本定理即 weil_explicit_formula_exact 的引用别名（保留历史名字，反证主链 :5380
     与 #print axioms 检查点引用此名）；weylErrorTerm 与 farZeroContribution 的配对
     由 weyl_far_error_pairing 单独陈述（从本定理 + 迹公式 + 截断 Weil 公式推出）。 -/
-theorem weil_explicit_formula_trivial_terms_cancel (f : MollifiedTestFunction) :
+theorem weil_explicit_formula_trivial_terms_cancel
+    (h_duality : ∀ (f : MollifiedTestFunction),
+      spectralSum f.toTestFunction = nontrivialZeroSum f.toTestFunction)
+    (f : MollifiedTestFunction) :
     spectralSum f.toTestFunction = nontrivialZeroSum f.toTestFunction := by
-  exact weil_explicit_formula_exact f
+  exact weil_explicit_formula_exact h_duality f
 
 
 /-- 可数谱点集上的函数取值插值（定理，由 PWW 联合插值取 T=∅ 推出）：
@@ -1748,188 +1800,27 @@ theorem spectral_sum_determined_by_points (f1 f2 : TestFunction) :
   simpa [spectralSum] using h_tsum
 
 
-/-- 非平凡零点加权级数的收敛性（公理，标准解析数论事实）：
-    对任意 TestFunction f，级数 ∑ m(ρ_n) * M[f](ρ_n) 绝对收敛。
-    数学依据：零点密度估计 + Mellin 变换在竖直线上的多项式增长（或速降）。 -/
-theorem nontrivial_zero_sum_summable (f : TestFunction) :
-    Summable (fun n : ℕ => (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) * melinTransform f (nontrivialZeroEnum n)) := by
-  admit
+/-
+## P0.2 退役：tsum 精确层（2026-10-02）
 
-/-- 非平凡零点求和的全枚举重述（定理，待证）：
-    nontrivialZeroSum(f) = ∑' n, m(ρₙ)·M[f](ρₙ)
-    围道分拆（contourZeroFinset + farZeroContribution）与全枚举 tsum 的恒等：
-    每个围道内零点 ρ 在枚举中出现一次（nontrivialZeroEnum 满射），
-    围道外部分即 farZeroContribution 的 if 项；需 tsum 有限提取 + 余项合并引理（机械，可填）。
-    与 :49 nontrivialZeroEnum_exists 同属枚举基础设施（可改正的遗留）。 -/
-theorem nontrivialZeroSum_eq_tsum_all (f : TestFunction) :
-    nontrivialZeroSum f =
-      ∑' (n : ℕ), (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) * melinTransform f (nontrivialZeroEnum n) := by
-  admit
+原 :1803-:1984 的六个定理（nontrivial_zero_sum_summable、
+nontrivialZeroSum_eq_tsum_all、nontrivialZeroSum_tsum_linear、
+tsum_two_point_isolation、nontrivialZeroSum_pair_localization、
+zero_side_melin_localization）已退役：
 
-theorem nontrivialZeroSum_tsum_linear (f1 f2 : TestFunction) :
-    nontrivialZeroSum f1 - nontrivialZeroSum f2 =
-      ∑' (n : ℕ), (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) *
-        (melinTransform f1 (nontrivialZeroEnum n) - melinTransform f2 (nontrivialZeroEnum n)) := by
-  rw [nontrivialZeroSum_eq_tsum_all f1, nontrivialZeroSum_eq_tsum_all f2]
-  let a : ℕ → ℂ := fun n => (zeroMultiplicity (nontrivialZeroEnum n) : ℂ)
-  let b1 : ℕ → ℂ := fun n => melinTransform f1 (nontrivialZeroEnum n)
-  let b2 : ℕ → ℂ := fun n => melinTransform f2 (nontrivialZeroEnum n)
-  have h_sum1 : Summable (fun n => a n * b1 n) := nontrivial_zero_sum_summable f1
-  have h_sum2 : Summable (fun n => a n * b2 n) := nontrivial_zero_sum_summable f2
-  have h_sum3 : Summable (fun n => a n * (b1 n - b2 n)) := by
-    have h_eq : (fun n : ℕ => a n * (b1 n - b2 n)) = (fun n => a n * b1 n) - (fun n => a n * b2 n) := by
-      funext n; simp [sub_eq_add_neg] <;> ring
-    rw [h_eq]
-    exact Summable.sub h_sum1 h_sum2
-  let f := fun n : ℕ => a n * b1 n
-  let g := fun n : ℕ => a n * b2 n
-  have hfg : (fun n => a n * (b1 n - b2 n)) = fun n => f n - g n := by
-    funext n; ring
-  have h_main : (∑' n, f n) - (∑' n, g n) = ∑' n, a n * (b1 n - b2 n) := by
-    rw [hfg]
-    have h_neg_sum : Summable (fun n => -g n) := h_sum2.neg
-    have h1 : ∑' n, (f n - g n) = ∑' n, (f n + -g n) := by
-      congr with n <;> simp [sub_eq_add_neg] <;> ring
-    rw [h1]
-    have h2 : ∑' n, (f n + -g n) = (∑' n, f n) + ∑' n, (-g n) := h_sum1.tsum_add h_neg_sum
-    rw [h2]
-    have h3 : ∑' n, (-g n) = -∑' n, g n := tsum_neg
-    rw [h3] <;> ring
-  simpa [a, b1, b2, f, g] using h_main
+- 它们是旧全枚举 ℕ 层（nontrivialZeroEnum 时代）的 tsum 精确化，
+  依赖 :49 枚举基础设施（S 无限/单射两缺口，mathlib 无）；
+- nontrivialZeroSum 已于 2026-10-01 重构为围道内 Finset + farZeroSubtype tsum，
+  本层在主链上零调用者（zero_side_melin_localization 无人消费）；
+- 两个 admit（nontrivial_zero_sum_summable、nontrivialZeroSum_eq_tsum_all）
+  随退役消除，不再进入 #print axioms。
 
-/-- tsum 的两项隔离性质（公理）：
-    如果序列 a : ℕ → ℂ 除 n₁, n₂（n₁ ≠ n₂）外所有项为零，
-    则 ∑' n, a n = a n₁ + a n₂。 -/
-theorem tsum_two_point_isolation (a : ℕ → ℂ) (n1 n2 : ℕ) :
-    n1 ≠ n2 →
-    (∀ (n : ℕ), n ≠ n1 → n ≠ n2 → a n = 0) →
-    ∑' (n : ℕ), a n = a n1 + a n2 := by
-  intro hne hvanish
-  rw [tsum_eq_sum (s := ({n1, n2} : Finset ℕ))]
-  · simp [hne, Finset.sum_insert, Finset.sum_singleton] <;> ring
-  · intro n hn
-    simp only [Finset.mem_insert, Finset.mem_singleton] at hn
-    have h1 : n ≠ n1 := by tauto
-    have h2 : n ≠ n2 := by tauto
-    exact hvanish n h1 h2
-
-theorem nontrivialZeroSum_pair_localization (ρ : ℂ) :
-    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ ≠ 1 - ρ →
-    ∀ (f1 f2 : TestFunction),
-      (∀ (ρ' : ℂ), _root_.riemannZeta ρ' = 0 → 0 < ρ'.re → ρ'.re < 1 →
-        ρ' ≠ ρ → ρ' ≠ 1 - ρ →
-        melinTransform f1 ρ' = melinTransform f2 ρ') →
-      nontrivialZeroSum f1 - nontrivialZeroSum f2 =
-        (zeroMultiplicity ρ : ℂ) *
-        ((melinTransform f1 ρ - melinTransform f2 ρ) +
-         (melinTransform f1 (1 - ρ) - melinTransform f2 (1 - ρ))) := by
-  intro hz hre1 hre2 h_ne_rho f1 f2 h_other
-  rcases nontrivialZeroEnum_covers_all ρ hz hre1 hre2 with ⟨n1, hn1⟩
-  have h_sym : _root_.riemannZeta (1 - ρ) = 0 ∧ 0 < (1 - ρ).re ∧ (1 - ρ).re < 1 :=
-    riemann_zeta_zero_symmetry ρ hz hre1 hre2
-  rcases nontrivialZeroEnum_covers_all (1 - ρ) h_sym.1 h_sym.2.1 h_sym.2.2 with ⟨n2, hn2⟩
-  have h_n1_ne_n2 : n1 ≠ n2 := by
-    intro h_eq
-    have h : nontrivialZeroEnum n1 = nontrivialZeroEnum n2 := by rw [h_eq]
-    rw [hn1, hn2] at h
-    exact h_ne_rho h
-  let a : ℕ → ℂ := fun n => (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) *
-    (melinTransform f1 (nontrivialZeroEnum n) - melinTransform f2 (nontrivialZeroEnum n))
-  have h_vanish : ∀ (n : ℕ), n ≠ n1 → n ≠ n2 → a n = 0 := by
-    intro n hne1 hne2
-    have h_enum_ne_rho : nontrivialZeroEnum n ≠ ρ := by
-      intro h
-      have h' : n = n1 := nontrivialZeroEnum_injective (by rw [h, hn1])
-      exact hne1 h'
-    have h_enum_ne_1mr : nontrivialZeroEnum n ≠ 1 - ρ := by
-      intro h
-      have h' : n = n2 := nontrivialZeroEnum_injective (by rw [h, hn2])
-      exact hne2 h'
-    have hz' : _root_.riemannZeta (nontrivialZeroEnum n) = 0 := (nontrivialZeroEnum_are_zeros n).1
-    have hre1' : 0 < (nontrivialZeroEnum n).re := (nontrivialZeroEnum_are_zeros n).2.1
-    have hre2' : (nontrivialZeroEnum n).re < 1 := (nontrivialZeroEnum_are_zeros n).2.2
-    have h_eq : melinTransform f1 (nontrivialZeroEnum n) = melinTransform f2 (nontrivialZeroEnum n) :=
-      h_other (nontrivialZeroEnum n) hz' hre1' hre2' h_enum_ne_rho h_enum_ne_1mr
-    simpa [a, h_eq, sub_eq_zero, mul_zero] using rfl
-  have h_main : nontrivialZeroSum f1 - nontrivialZeroSum f2 = ∑' (n : ℕ), a n :=
-    nontrivialZeroSum_tsum_linear f1 f2
-  rw [h_main]
-  have h_tsum : ∑' (n : ℕ), a n = a n1 + a n2 := tsum_two_point_isolation a n1 n2 h_n1_ne_n2 h_vanish
-  rw [h_tsum]
-  have h_m1 : (zeroMultiplicity (nontrivialZeroEnum n1) : ℂ) = (zeroMultiplicity ρ : ℂ) := by rw [hn1]
-  have h_m2 : (zeroMultiplicity (nontrivialZeroEnum n2) : ℂ) = (zeroMultiplicity (1 - ρ) : ℂ) := by rw [hn2]
-  have h_msym : (zeroMultiplicity (1 - ρ) : ℂ) = (zeroMultiplicity ρ : ℂ) := by
-    exact congr_arg (fun x : ℕ => (x : ℂ)) (zeroMultiplicity_symmetry ρ hz hre1 hre2).symm
-  have h1 : a n1 = (zeroMultiplicity ρ : ℂ) * (melinTransform f1 ρ - melinTransform f2 ρ) := by
-    simp [a, hn1, h_m1]
-  have h2 : a n2 = (zeroMultiplicity ρ : ℂ) * (melinTransform f1 (1 - ρ) - melinTransform f2 (1 - ρ)) := by
-    simp [a, hn2, h_m2, h_msym]
-  rw [h1, h2]
-  ring
-/-- 零点侧的 Melin 变换局部化（定理，由非平凡零点局部化+平凡贡献相同推出）：
-    对非临界线零点对 {ρ, 1-ρ}，如果两个测试函数的 Mellin 变换
-    在除 {ρ,1-ρ} 之外的所有非平凡零点处取值相同，且平凡贡献相同，
-    则它们的 zetaZeroSide 之差完全由 {ρ,1-ρ} 处的 Mellin 变换之和决定。
-
-    即：zetaZeroSide(f₁) = zetaZeroSide(f₂) 当且仅当
-    f̂₁(ρ) + f̂₁(1-ρ) = f̂₂(ρ) + f̂₂(1-ρ)。
-
-    注意：需要 trivialZeroContribution(f₁) = trivialZeroContribution(f₂)，
-    因为 zetaZeroSide(f) = nontrivialZeroSum(f) + trivialZeroContribution(f)。 -/
-theorem zero_side_melin_localization (ρ : ℂ) :
-    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
-    ∀ (f1 f2 : TestFunction),
-      (∀ (ρ' : ℂ), _root_.riemannZeta ρ' = 0 → 0 < ρ'.re → ρ'.re < 1 →
-        ρ' ≠ ρ → ρ' ≠ 1 - ρ →
-        melinTransform f1 ρ' = melinTransform f2 ρ') →
-      trivialZeroContribution f1 = trivialZeroContribution f2 →
-      (zetaZeroSide f1 = zetaZeroSide f2 ↔
-        melinTransform f1 ρ + melinTransform f1 (1 - ρ) =
-        melinTransform f2 ρ + melinTransform f2 (1 - ρ)) := by
-  intro hz hre1 hre2 hne f1 f2 h_other h_triv
-  have h_ne_rho : ρ ≠ 1 - ρ := by
-    intro h
-    have h_re : ρ.re = 1 / 2 := by
-      simp [Complex.ext_iff] at h <;> linarith
-    exact hne h_re
-  have h_m_pos : 0 < zeroMultiplicity ρ := zeroMultiplicity_positive_at_nontrivial_zeros ρ hz hre1 hre2
-  have h_m_ne_zero : (zeroMultiplicity ρ : ℂ) ≠ 0 := by
-    exact_mod_cast (Nat.ne_of_gt h_m_pos)
-  have h_nontriv := nontrivialZeroSum_pair_localization ρ hz hre1 hre2 h_ne_rho f1 f2 h_other
-  let pairDiff : ℂ := (melinTransform f1 ρ - melinTransform f2 ρ) +
-                      (melinTransform f1 (1 - ρ) - melinTransform f2 (1 - ρ))
-  constructor
-  · intro h_eq
-    have h : nontrivialZeroSum f1 + trivialZeroContribution f1 =
-             nontrivialZeroSum f2 + trivialZeroContribution f2 := by simpa [zetaZeroSide] using h_eq
-    rw [h_triv] at h
-    have h' : nontrivialZeroSum f1 = nontrivialZeroSum f2 := by simpa using h
-    have h_mul_zero : (zeroMultiplicity ρ : ℂ) * pairDiff = 0 := by
-      rw [←h_nontriv, h'] <;> ring
-    have h_zero : pairDiff = 0 := (mul_eq_zero.mp h_mul_zero).resolve_left h_m_ne_zero
-    have h_goal : melinTransform f1 ρ + melinTransform f1 (1 - ρ) =
-                  melinTransform f2 ρ + melinTransform f2 (1 - ρ) := by
-      calc
-        melinTransform f1 ρ + melinTransform f1 (1 - ρ)
-          = pairDiff + (melinTransform f2 ρ + melinTransform f2 (1 - ρ)) := by ring
-        _ = 0 + (melinTransform f2 ρ + melinTransform f2 (1 - ρ)) := by rw [h_zero]
-        _ = melinTransform f2 ρ + melinTransform f2 (1 - ρ) := by ring
-    exact h_goal
-  · intro h_pair
-    have h_diff_zero : pairDiff = 0 := by
-      have h_alg : pairDiff =
-                   (melinTransform f1 ρ + melinTransform f1 (1 - ρ)) -
-                   (melinTransform f2 ρ + melinTransform f2 (1 - ρ)) := by ring
-      rw [h_alg, h_pair] <;> ring
-    have h_nontriv_eq : nontrivialZeroSum f1 = nontrivialZeroSum f2 := by
-      have h_mul : (zeroMultiplicity ρ : ℂ) * pairDiff = 0 := by
-        rw [h_diff_zero] <;> ring
-      have h : nontrivialZeroSum f1 - nontrivialZeroSum f2 = 0 := by
-        rw [h_nontriv, h_mul]
-      exact sub_eq_zero.mp h
-    have h : zetaZeroSide f1 = zetaZeroSide f2 := by
-      simp [zetaZeroSide, h_nontriv_eq, h_triv]
-    exact h
+主链当前 summable 依赖是 farContribution_pair_diff_split（P0.2 已于 2026-10-02
+显式前提化并真证：加 h_sm1/h_sm2 可和性前提 + h_mdiff：M1(ρ)-M2(ρ)=1 前提，
+证明走 HasSum.sub + hasSum_single 单点挖除 + 误差消去；mollified 内由单 f 衰减
+（mellin_pair_uniform_decay_bound 输出 h_decay1/h_decay2）+ farZero_weighted_summable
+推出可和性前提，由 M[f1](ρ)=1、M[f2](ρ)=0 推出 h_mdiff）。
+-/
 
 /-- 非共轭点对的 Mellin 和非退化（子公理，Mellin 变换基本性质）：
     对任意两个复数 s₁, s₂，如果 s₂ ≠ conjugate(s₁)，
@@ -2058,14 +1949,15 @@ theorem mellin_pair_separation_construction (ρ : ℂ) :
 /-- ζ 零点计数与重数估计（合并公理）：
     (1) 零点计数：N(T) ≤ C·(T+1)·log(T+2)（Riemann-von Mangoldt）
     (2) 零点重数：m(ρ) ≤ C·(1+log(2+|Im ρ|))（Jensen 公式）
-    合并了 zero_counting_estimate 和 zero_multiplicity_log_growth 两条公理。 -/
+    2026-10-02 子类型化：分量 (2) 直接对 farZeroSubtype 陈述（数学内容不变），
+    消除对 nontrivialZeroEnum 枚举（:49）的表述依赖。 -/
 theorem zero_counting_and_multiplicity :
     (∃ (C : ℝ), 0 < C ∧
       ∀ (T : ℝ), 0 < T →
         Set.encard {s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ 0 ≤ s.im ∧ s.im ≤ T} ≤
         (Nat.ceil (C * (T + 1) * Real.log (T + 2)) : ENat)) ∧
     (∃ (C : ℝ), 0 < C ∧
-      ∀ (n : ℕ), (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) ≤ C * (1 + Real.log (2 + |(nontrivialZeroEnum n).im|))) := by
+      ∀ (ρ' : farZeroSubtype), (zeroMultiplicity ρ'.1 : ℝ) ≤ C * (1 + Real.log (2 + |ρ'.1.im|))) := by
   -- 数学：Riemann-von Mangoldt 公式 + Jensen 公式
   -- (1) 零点计数：N(T) ~ (T/2π) log(T/2π) - T/2π（Riemann-von Mangoldt）
   -- (2) 零点重数：m(ρ) ≤ C·(1+log(2+|Im ρ|))（Jensen 公式）
@@ -2079,10 +1971,10 @@ theorem zero_counting_estimate :
         (Nat.ceil (C * (T + 1) * Real.log (T + 2)) : ENat) :=
   zero_counting_and_multiplicity.1
 
-/-- 零点重数对数增长（定理，由合并公理推出）。 -/
+/-- 零点重数对数增长（定理，由合并公理推出，farZeroSubtype 版）。 -/
 theorem zero_multiplicity_log_growth :
     ∃ (C : ℝ), 0 < C ∧
-      ∀ (n : ℕ), (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) ≤ C * (1 + Real.log (2 + |(nontrivialZeroEnum n).im|)) :=
+      ∀ (ρ' : farZeroSubtype), (zeroMultiplicity ρ'.1 : ℝ) ≤ C * (1 + Real.log (2 + |ρ'.1.im|)) :=
   zero_counting_and_multiplicity.2
 
 
@@ -2174,15 +2066,17 @@ lemma star_inj (x y : ℂ) : star x = star y → x = y := by
 -- 每层基数上界（直接上界，不简化系数）
 lemma layer_card_bound_raw (C1 : ℝ) (hC1_pos : 0 < C1)
     (hC1 : ∀ (T : ℝ), 0 < T → Set.encard {s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ 0 ≤ s.im ∧ s.im ≤ T} ≤ (Nat.ceil (C1 * (T + 1) * Real.log (T + 2)) : ENat))
-    (k : ℕ) (h_layer_fin : ({n : ℕ | (2^k : ℝ) ≤ |(nontrivialZeroEnum n).im| ∧ |(nontrivialZeroEnum n).im| < (2^(k+1) : ℝ)}).Finite) :
+    (k : ℕ) (h_layer_fin : ({ρ' : farZeroSubtype | (2^k : ℝ) ≤ |ρ'.1.im| ∧ |ρ'.1.im| < (2^(k+1) : ℝ)}).Finite) :
     (h_layer_fin.toFinset.card : ℝ) ≤ 2 * (C1 * ((2^(k+1) : ℝ) + 1) * Real.log ((2^(k+1) : ℝ) + 2) + 1) := by
   let T := (2^(k+1) : ℝ)
   have hT_pos : 0 < T := by positivity
   let Upper : Set ℂ := {s | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ 0 ≤ s.im ∧ s.im ≤ T}
   let Lower : Set ℂ := {s | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ -T ≤ s.im ∧ s.im ≤ 0}
   let S_ℂ : Set ℂ := {s | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ |s.im| ≤ T}
-  let preimage : Set ℕ := {n | |(nontrivialZeroEnum n).im| ≤ T}
-  let layer_k : Set ℕ := {n | (2^k : ℝ) ≤ |(nontrivialZeroEnum n).im| ∧ |(nontrivialZeroEnum n).im| < (2^(k+1) : ℝ)}
+  let layer_k : Set farZeroSubtype :=
+    {ρ' | (2^k : ℝ) ≤ |ρ'.1.im| ∧ |ρ'.1.im| < (2^(k+1) : ℝ)}
+  have h_layer_sub : layer_k ⊆ {ρ' : farZeroSubtype | |ρ'.1.im| < T} := by
+    intro ρ' hρ'; exact hρ'.2
   have h_upper_encard : Set.encard Upper ≤ (Nat.ceil (C1 * (T + 1) * Real.log (T + 2)) : ENat) := hC1 T hT_pos
   have h_upper_fin : Upper.Finite := finite_of_encard_le h_upper_encard
   have h_eq_lower_upper : star '' Lower = Upper := lower_conj_eq_upper T
@@ -2195,33 +2089,30 @@ lemma layer_card_bound_raw (C1 : ℝ) (hC1_pos : 0 < C1)
       · exact Or.inl ⟨hs.1, hs.2.1, hs.2.2.1, h, by linarith [abs_le.mp him]⟩
       · exact Or.inr ⟨hs.1, hs.2.1, hs.2.2.1, by linarith [abs_le.mp him], by linarith⟩
     exact Set.Finite.subset (Set.Finite.union h_upper_fin h_lower_fin) h_decomp
-  have h_img_sub : nontrivialZeroEnum '' preimage ⊆ S_ℂ := by
-    intro s hs; rcases hs with ⟨n, hn, rfl⟩
-    have hz : _root_.riemannZeta (nontrivialZeroEnum n) = 0 ∧ 0 < (nontrivialZeroEnum n).re ∧ (nontrivialZeroEnum n).re < 1 := nontrivialZeroEnum_are_zeros n
-    exact ⟨hz.1, hz.2.1, hz.2.2, hn⟩
-  have h_preimg_fin : preimage.Finite := by
-    have h_img_fin : (nontrivialZeroEnum '' preimage).Finite := Set.Finite.subset h_S_fin h_img_sub
-    exact finite_preimage_of_injective nontrivialZeroEnum_injective h_img_fin
-  have h_sub_layer : layer_k ⊆ preimage := by intro n hn; exact le_of_lt hn.2
-  have h1 : h_layer_fin.toFinset.card ≤ h_preimg_fin.toFinset.card := by
-    have h11 : h_layer_fin.toFinset ⊆ h_preimg_fin.toFinset := by
-      intro x hx
-      have h23 : x ∈ layer_k := (Set.Finite.mem_toFinset h_layer_fin).mp hx
-      have h24 : x ∈ preimage := h_sub_layer h23
-      exact (Set.Finite.mem_toFinset h_preimg_fin).mpr h24
-    exact Finset.card_le_card h11
-  have h_img_fin : (nontrivialZeroEnum '' preimage).Finite := Set.Finite.subset h_S_fin h_img_sub
-  have h_eq_img : h_img_fin.toFinset = Finset.image nontrivialZeroEnum h_preimg_fin.toFinset :=
-    Set.Finite.toFinset_image nontrivialZeroEnum h_preimg_fin h_img_fin
-  have h2 : h_preimg_fin.toFinset.card = h_img_fin.toFinset.card := by
+  have h_img_sub : (fun ρ' : farZeroSubtype => ρ'.1) '' layer_k ⊆ S_ℂ := by
+    intro s hs
+    rcases hs with ⟨ρ', hρ', rfl⟩
+    have hz' : _root_.riemannZeta ρ'.1 = 0 := ρ'.2.1
+    have hre1' : 0 < ρ'.1.re := ρ'.2.2.1
+    have hre2' : ρ'.1.re < 1 := ρ'.2.2.2.1
+    have him' : |ρ'.1.im| ≤ T := by
+      have h : |ρ'.1.im| < (2^(k+1) : ℝ) := hρ'.2
+      simpa [T] using (le_of_lt h)
+    exact ⟨hz', hre1', hre2', him'⟩
+  have h_img_fin : ((fun ρ' : farZeroSubtype => ρ'.1) '' layer_k).Finite := Set.Finite.subset h_S_fin h_img_sub
+  have h_card_img : h_layer_fin.toFinset.card = h_img_fin.toFinset.card := by
+    have h_eq_img : h_img_fin.toFinset = Finset.image (fun ρ' : farZeroSubtype => ρ'.1) h_layer_fin.toFinset :=
+      Set.Finite.toFinset_image (fun ρ' : farZeroSubtype => ρ'.1) h_layer_fin h_img_fin
     rw [h_eq_img, Finset.card_image_of_injOn]
-    exact fun x _ y _ hxy => nontrivialZeroEnum_injective hxy
+    exact fun ρ' _ ρ'' _ h => Subtype.ext h
   have h3 : h_img_fin.toFinset ⊆ h_S_fin.toFinset := by
     intro z hz
-    have h4 : z ∈ nontrivialZeroEnum '' preimage := (Set.Finite.mem_toFinset h_img_fin).mp hz
+    have h4 : z ∈ (fun ρ' : farZeroSubtype => ρ'.1) '' layer_k := (Set.Finite.mem_toFinset h_img_fin).mp hz
     have h5 : z ∈ S_ℂ := h_img_sub h4
     exact (Set.Finite.mem_toFinset h_S_fin).mpr h5
-  have h4 : h_preimg_fin.toFinset.card ≤ h_S_fin.toFinset.card := by rw [h2]; exact Finset.card_le_card h3
+  have h4 : h_layer_fin.toFinset.card ≤ h_S_fin.toFinset.card := by
+    rw [h_card_img]
+    exact Finset.card_le_card h3
   have h_union_fin : (Upper ∪ Lower).Finite := Set.Finite.union h_upper_fin h_lower_fin
   have h_sub_S : S_ℂ ⊆ Upper ∪ Lower := by
     intro s hs; have him : |s.im| ≤ T := hs.2.2.2
@@ -2261,8 +2152,7 @@ lemma layer_card_bound_raw (C1 : ℝ) (hC1_pos : 0 < C1)
   have h11 : (Nat.ceil (C1 * (T + 1) * Real.log (T + 2)) : ℝ) ≤ C1 * (T + 1) * Real.log (T + 2) + 1 :=
     ceil_le_add_one (C1 * (T + 1) * Real.log (T + 2)) h_nonneg
   calc (h_layer_fin.toFinset.card : ℝ)
-    ≤ (h_preimg_fin.toFinset.card : ℝ) := by exact_mod_cast h1
-    _ ≤ (h_S_fin.toFinset.card : ℝ) := by exact_mod_cast h4
+    ≤ (h_S_fin.toFinset.card : ℝ) := by exact_mod_cast h4
     _ ≤ (h_union_fin.toFinset.card : ℝ) := by exact_mod_cast h5
     _ ≤ (h_upper_fin.toFinset.card : ℝ) + (h_lower_fin.toFinset.card : ℝ) := by exact_mod_cast h6
     _ = 2 * (h_upper_fin.toFinset.card : ℝ) := by rw [h9]; ring
@@ -2349,11 +2239,12 @@ lemma card_bound_simplified (C1 : ℝ) (hC1_pos : 0 < C1) (k : ℕ) :
     _ = 16 * C1 * (2 : ℝ)^k * ((k : ℝ) + 1) + 2 := h4
     _ ≤ (16 * C1 + 2) * (2 : ℝ)^k * ((k : ℝ) + 1) := h6
 
-lemma log_bound_for_layer (k : ℕ) {n : ℕ} (hn : (2^k : ℝ) ≤ |(nontrivialZeroEnum n).im| ∧ |(nontrivialZeroEnum n).im| < (2^(k+1) : ℝ)) :
-    Real.log (2 + |(nontrivialZeroEnum n).im|) ≤ ((k : ℝ) + 2) * Real.log 2 := by
-  have h_im2 : |(nontrivialZeroEnum n).im| < (2^(k+1) : ℝ) := hn.2
-  have h_log1 : 2 + |(nontrivialZeroEnum n).im| ≤ (2^(k+2) : ℝ) := by
-    have h : 2 + |(nontrivialZeroEnum n).im| < (2^(k+1) : ℝ) + 2 := by linarith
+lemma log_bound_for_layer (k : ℕ) {ρ' : farZeroSubtype}
+    (hn : (2^k : ℝ) ≤ |ρ'.1.im| ∧ |ρ'.1.im| < (2^(k+1) : ℝ)) :
+    Real.log (2 + |ρ'.1.im|) ≤ ((k : ℝ) + 2) * Real.log 2 := by
+  have h_im2 : |ρ'.1.im| < (2^(k+1) : ℝ) := hn.2
+  have h_log1 : 2 + |ρ'.1.im| ≤ (2^(k+2) : ℝ) := by
+    have h : 2 + |ρ'.1.im| < (2^(k+1) : ℝ) + 2 := by linarith
     have h2 : (2^(k+1) : ℝ) + 2 ≤ (2^(k+2) : ℝ) := by
       have h22 : (2^(k+1) : ℝ) = 2 * (2 : ℝ)^k := by simp [pow_succ] <;> ring
       have h23 : (2^(k+2) : ℝ) = 4 * (2 : ℝ)^k := by simp [pow_succ] <;> ring
@@ -2364,7 +2255,7 @@ lemma log_bound_for_layer (k : ℕ) {n : ℕ} (hn : (2^k : ℝ) ≤ |(nontrivial
         linarith
       exact h26
     linarith
-  have h3 : Real.log (2 + |(nontrivialZeroEnum n).im|) ≤ Real.log (2^(k+2) : ℝ) := Real.log_le_log (by positivity) h_log1
+  have h3 : Real.log (2 + |ρ'.1.im|) ≤ Real.log (2^(k+2) : ℝ) := Real.log_le_log (by positivity) h_log1
   have h4 : Real.log (2^(k+2) : ℝ) = ((k : ℝ) + 2) * Real.log 2 := by
     have h41 : Real.log (2^(k+2) : ℝ) = ((k + 2 : ℕ) : ℝ) * Real.log 2 := by rw [Real.log_pow]
     have h42 : ((k + 2 : ℕ) : ℝ) = (k : ℝ) + 2 := by simp
@@ -2378,50 +2269,50 @@ lemma pow2_sq (k : ℕ) : ((2^k : ℝ))^2 = (2 : ℝ)^(2 * k) := by
 
 lemma layer_sum_bound (C1 C2 : ℝ) (hC1_pos : 0 < C1) (hC2_pos : 0 < C2)
     (hC1 : ∀ (T : ℝ), 0 < T → Set.encard {s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ 0 ≤ s.im ∧ s.im ≤ T} ≤ (Nat.ceil (C1 * (T + 1) * Real.log (T + 2)) : ENat))
-    (hC2 : ∀ (n : ℕ), (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) ≤ C2 * (1 + Real.log (2 + |(nontrivialZeroEnum n).im|)))
-    (k : ℕ) (h_layer_fin : ({n : ℕ | (2^k : ℝ) ≤ |(nontrivialZeroEnum n).im| ∧ |(nontrivialZeroEnum n).im| < (2^(k+1) : ℝ)}).Finite) :
-    ∑ n ∈ h_layer_fin.toFinset, ((zeroMultiplicity (nontrivialZeroEnum n) : ℝ) / (1 + |(nontrivialZeroEnum n).im|) ^ 2) ≤
+    (hC2 : ∀ (ρ' : farZeroSubtype), (zeroMultiplicity ρ'.1 : ℝ) ≤ C2 * (1 + Real.log (2 + |ρ'.1.im|)))
+    (k : ℕ) (h_layer_fin : ({ρ' : farZeroSubtype | (2^k : ℝ) ≤ |ρ'.1.im| ∧ |ρ'.1.im| < (2^(k+1) : ℝ)}).Finite) :
+    ∑ ρ' ∈ h_layer_fin.toFinset, ((zeroMultiplicity ρ'.1 : ℝ) / (1 + |ρ'.1.im|) ^ 2) ≤
     ((16 * C1 + 2) * (C2 * 4 + 1)) * ((k : ℝ) + 1)^2 / (2 : ℝ)^k := by
-  let w : ℕ → ℝ := fun n => (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) / (1 + |(nontrivialZeroEnum n).im|) ^ 2
-  let layer_k : Set ℕ := {n | (2^k : ℝ) ≤ |(nontrivialZeroEnum n).im| ∧ |(nontrivialZeroEnum n).im| < (2^(k+1) : ℝ)}
-  have h_point : ∀ n ∈ layer_k, w n ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := by
-    intro n hn
-    have h_im1 : (2^k : ℝ) ≤ |(nontrivialZeroEnum n).im| := hn.1
-    have h_log : Real.log (2 + |(nontrivialZeroEnum n).im|) ≤ ((k : ℝ) + 2) * Real.log 2 := log_bound_for_layer k hn
-    have h_m : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) ≤ C2 * (1 + Real.log (2 + |(nontrivialZeroEnum n).im|)) := hC2 n
-    have h_m2 : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) ≤ C2 * (1 + ((k : ℝ) + 2) * Real.log 2) := by
-      calc _ ≤ C2 * (1 + Real.log (2 + |(nontrivialZeroEnum n).im|)) := h_m
+  let w : farZeroSubtype → ℝ := fun ρ' => (zeroMultiplicity ρ'.1 : ℝ) / (1 + |ρ'.1.im|) ^ 2
+  let layer_k : Set farZeroSubtype := {ρ' | (2^k : ℝ) ≤ |ρ'.1.im| ∧ |ρ'.1.im| < (2^(k+1) : ℝ)}
+  have h_point : ∀ ρ' ∈ layer_k, w ρ' ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := by
+    intro ρ' hρ'
+    have h_im1 : (2^k : ℝ) ≤ |ρ'.1.im| := hρ'.1
+    have h_log : Real.log (2 + |ρ'.1.im|) ≤ ((k : ℝ) + 2) * Real.log 2 := log_bound_for_layer k hρ'
+    have h_m : (zeroMultiplicity ρ'.1 : ℝ) ≤ C2 * (1 + Real.log (2 + |ρ'.1.im|)) := hC2 ρ'
+    have h_m2 : (zeroMultiplicity ρ'.1 : ℝ) ≤ C2 * (1 + ((k : ℝ) + 2) * Real.log 2) := by
+      calc _ ≤ C2 * (1 + Real.log (2 + |ρ'.1.im|)) := h_m
            _ ≤ C2 * (1 + ((k : ℝ) + 2) * Real.log 2) := by gcongr
-    have h_m3 : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) := by
+    have h_m3 : (zeroMultiplicity ρ'.1 : ℝ) ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) := by
       calc _ ≤ C2 * (1 + ((k : ℝ) + 2) * Real.log 2) := h_m2
            _ ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) := point_bound_algebra C2 hC2_pos k
-    have h_denom : (1 + |(nontrivialZeroEnum n).im|)^2 ≥ (2 : ℝ)^(2 * k) := by
+    have h_denom : (1 + |ρ'.1.im|)^2 ≥ (2 : ℝ)^(2 * k) := by
       have h8 : (1 : ℝ) ≤ (2^k : ℝ) := by have h9 : (1 : ℕ) ≤ 2^k := Nat.one_le_pow k 2 (by norm_num); exact_mod_cast h9
-      have h10 : (1 : ℝ) ≤ |(nontrivialZeroEnum n).im| := by linarith
-      have h11 : (1 + |(nontrivialZeroEnum n).im|)^2 ≥ ((2^k : ℝ))^2 := by nlinarith
+      have h10 : (1 : ℝ) ≤ |ρ'.1.im| := by linarith
+      have h11 : (1 + |ρ'.1.im|)^2 ≥ ((2^k : ℝ))^2 := by nlinarith
       rw [pow2_sq k] at h11; exact h11
-    have h_w : w n ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := by
+    have h_w : w ρ' ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := by
       dsimp only [w]
-      calc _ ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) / (1 + |(nontrivialZeroEnum n).im|)^2 := by gcongr
+      calc _ ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) / (1 + |ρ'.1.im|)^2 := by gcongr
            _ ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := by gcongr
     exact h_w
   have h_card : (h_layer_fin.toFinset.card : ℝ) ≤ (16 * C1 + 2) * (2 : ℝ)^k * ((k : ℝ) + 1) := by
     have h_card_raw := layer_card_bound_raw C1 hC1_pos hC1 k h_layer_fin
     have h_simp := card_bound_simplified C1 hC1_pos k
     linarith
-  have h_sum1 : ∑ n ∈ h_layer_fin.toFinset, w n ≤ ∑ n ∈ h_layer_fin.toFinset, (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := by
+  have h_sum1 : ∑ ρ' ∈ h_layer_fin.toFinset, w ρ' ≤ ∑ ρ' ∈ h_layer_fin.toFinset, (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := by
     apply Finset.sum_le_sum
-    intro n hn
-    have hn' : n ∈ layer_k := (Set.Finite.mem_toFinset h_layer_fin).mp hn
-    exact h_point n hn'
-  have h_sum2 : ∑ n ∈ h_layer_fin.toFinset, (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) = (h_layer_fin.toFinset.card : ℝ) * ((C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k)) := by
+    intro ρ' hρ'
+    have hρ'' : ρ' ∈ layer_k := (Set.Finite.mem_toFinset h_layer_fin).mp hρ'
+    exact h_point ρ' hρ''
+  have h_sum2 : ∑ ρ' ∈ h_layer_fin.toFinset, (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) = (h_layer_fin.toFinset.card : ℝ) * ((C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k)) := by
     simp [Finset.sum_const] <;> ring
-  have h_sum : ∑ n ∈ h_layer_fin.toFinset, w n ≤ (h_layer_fin.toFinset.card : ℝ) * ((C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k)) := by
-    calc ∑ n ∈ h_layer_fin.toFinset, w n
-      ≤ ∑ n ∈ h_layer_fin.toFinset, (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := h_sum1
+  have h_sum : ∑ ρ' ∈ h_layer_fin.toFinset, w ρ' ≤ (h_layer_fin.toFinset.card : ℝ) * ((C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k)) := by
+    calc ∑ ρ' ∈ h_layer_fin.toFinset, w ρ'
+      ≤ ∑ ρ' ∈ h_layer_fin.toFinset, (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := h_sum1
       _ = (h_layer_fin.toFinset.card : ℝ) * ((C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k)) := h_sum2
   have h_pos : (2 : ℝ)^k > 0 := by positivity
-  calc ∑ n ∈ h_layer_fin.toFinset, w n
+  calc ∑ ρ' ∈ h_layer_fin.toFinset, w ρ'
     ≤ (h_layer_fin.toFinset.card : ℝ) * ((C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k)) := h_sum
     _ ≤ ((16 * C1 + 2) * (2 : ℝ)^k * ((k : ℝ) + 1)) * ((C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k)) := by gcongr
     _ = ((16 * C1 + 2) * (C2 * 4 + 1)) * ((k : ℝ) + 1)^2 / (2 : ℝ)^k := by
@@ -2430,71 +2321,71 @@ lemma layer_sum_bound (C1 C2 : ℝ) (hC1_pos : 0 < C1) (hC2_pos : 0 < C2)
 
 lemma layer_sum_bound2 (C1 C2 : ℝ) (hC1_pos : 0 < C1) (hC2_pos : 0 < C2)
     (hC1 : ∀ (T : ℝ), 0 < T → Set.encard {s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ 0 ≤ s.im ∧ s.im ≤ T} ≤ (Nat.ceil (C1 * (T + 1) * Real.log (T + 2)) : ENat))
-    (hC2 : ∀ (n : ℕ), (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) ≤ C2 * (1 + Real.log (2 + |(nontrivialZeroEnum n).im|)))
-    (k : ℕ) (h_layer_fin : ({n : ℕ | (2^k : ℝ) ≤ |(nontrivialZeroEnum n).im| ∧ |(nontrivialZeroEnum n).im| < (2^(k+1) : ℝ)}).Finite) :
-    ∑ n ∈ h_layer_fin.toFinset, ((zeroMultiplicity (nontrivialZeroEnum n) : ℝ) / (nontrivialZeroEnum n).im ^ 2) ≤
+    (hC2 : ∀ (ρ' : farZeroSubtype), (zeroMultiplicity ρ'.1 : ℝ) ≤ C2 * (1 + Real.log (2 + |ρ'.1.im|)))
+    (k : ℕ) (h_layer_fin : ({ρ' : farZeroSubtype | (2^k : ℝ) ≤ |ρ'.1.im| ∧ |ρ'.1.im| < (2^(k+1) : ℝ)}).Finite) :
+    ∑ ρ' ∈ h_layer_fin.toFinset, ((zeroMultiplicity ρ'.1 : ℝ) / ρ'.1.im ^ 2) ≤
     ((16 * C1 + 2) * (C2 * 4 + 1)) * ((k : ℝ) + 1)^2 / (2 : ℝ)^k := by
-  let w : ℕ → ℝ := fun n => (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) / (nontrivialZeroEnum n).im ^ 2
-  let layer_k : Set ℕ := {n | (2^k : ℝ) ≤ |(nontrivialZeroEnum n).im| ∧ |(nontrivialZeroEnum n).im| < (2^(k+1) : ℝ)}
-  have h_abs_eq : ∀ n, |(nontrivialZeroEnum n).im|^2 = (nontrivialZeroEnum n).im^2 := by
-    intro n
+  let w : farZeroSubtype → ℝ := fun ρ' => (zeroMultiplicity ρ'.1 : ℝ) / ρ'.1.im ^ 2
+  let layer_k : Set farZeroSubtype := {ρ' | (2^k : ℝ) ≤ |ρ'.1.im| ∧ |ρ'.1.im| < (2^(k+1) : ℝ)}
+  have h_abs_eq : ∀ ρ' : farZeroSubtype, |ρ'.1.im|^2 = ρ'.1.im^2 := by
+    intro ρ'
     simp [sq_abs]
-  have h_point : ∀ n ∈ layer_k, w n ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := by
-    intro n hn
-    have h_im1 : (2^k : ℝ) ≤ |(nontrivialZeroEnum n).im| := hn.1
-    have h_log : Real.log (2 + |(nontrivialZeroEnum n).im|) ≤ ((k : ℝ) + 2) * Real.log 2 := log_bound_for_layer k hn
-    have h_m : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) ≤ C2 * (1 + Real.log (2 + |(nontrivialZeroEnum n).im|)) := hC2 n
-    have h_m2 : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) ≤ C2 * (1 + ((k : ℝ) + 2) * Real.log 2) := by
-      calc _ ≤ C2 * (1 + Real.log (2 + |(nontrivialZeroEnum n).im|)) := h_m
+  have h_point : ∀ ρ' ∈ layer_k, w ρ' ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := by
+    intro ρ' hρ'
+    have h_im1 : (2^k : ℝ) ≤ |ρ'.1.im| := hρ'.1
+    have h_log : Real.log (2 + |ρ'.1.im|) ≤ ((k : ℝ) + 2) * Real.log 2 := log_bound_for_layer k hρ'
+    have h_m : (zeroMultiplicity ρ'.1 : ℝ) ≤ C2 * (1 + Real.log (2 + |ρ'.1.im|)) := hC2 ρ'
+    have h_m2 : (zeroMultiplicity ρ'.1 : ℝ) ≤ C2 * (1 + ((k : ℝ) + 2) * Real.log 2) := by
+      calc _ ≤ C2 * (1 + Real.log (2 + |ρ'.1.im|)) := h_m
            _ ≤ C2 * (1 + ((k : ℝ) + 2) * Real.log 2) := by gcongr
-    have h_m3 : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) := by
+    have h_m3 : (zeroMultiplicity ρ'.1 : ℝ) ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) := by
       calc _ ≤ C2 * (1 + ((k : ℝ) + 2) * Real.log 2) := h_m2
            _ ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) := point_bound_algebra C2 hC2_pos k
-    have h_denom : |(nontrivialZeroEnum n).im|^2 ≥ (2 : ℝ)^(2 * k) := by
-      have h11 : |(nontrivialZeroEnum n).im|^2 ≥ ((2^k : ℝ))^2 := by gcongr
+    have h_denom : |ρ'.1.im|^2 ≥ (2 : ℝ)^(2 * k) := by
+      have h11 : |ρ'.1.im|^2 ≥ ((2^k : ℝ))^2 := by gcongr
       rw [pow2_sq k] at h11; exact h11
-    have h_denom2 : (nontrivialZeroEnum n).im^2 ≥ (2 : ℝ)^(2 * k) := by
-      rw [← h_abs_eq n]
+    have h_denom2 : ρ'.1.im^2 ≥ (2 : ℝ)^(2 * k) := by
+      rw [← h_abs_eq ρ']
       exact h_denom
-    have h_w : w n ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := by
+    have h_w : w ρ' ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := by
       dsimp only [w]
-      have h_im_ne_zero : (nontrivialZeroEnum n).im ≠ 0 := by
-        have h1 : 0 < |(nontrivialZeroEnum n).im| := by
-          have h2 : (2^k : ℝ) ≤ |(nontrivialZeroEnum n).im| := h_im1
+      have h_im_ne_zero : ρ'.1.im ≠ 0 := by
+        have h1 : 0 < |ρ'.1.im| := by
+          have h2 : (2^k : ℝ) ≤ |ρ'.1.im| := h_im1
           have h3 : (0 : ℝ) < (2^k : ℝ) := by positivity
           linarith
         exact abs_pos.mp h1
-      have h_pos : 0 < (nontrivialZeroEnum n).im^2 := by
+      have h_pos : 0 < ρ'.1.im^2 := by
         exact sq_pos_of_ne_zero h_im_ne_zero
-      have h_first : w n ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) / (nontrivialZeroEnum n).im^2 := by
-        have h : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) := h_m3
-        have h_goal : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) / (nontrivialZeroEnum n).im^2 ≤ ((C2 * 4 + 1) * ((k : ℝ) + 1)) / (nontrivialZeroEnum n).im^2 := by
+      have h_first : w ρ' ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) / ρ'.1.im^2 := by
+        have h : (zeroMultiplicity ρ'.1 : ℝ) ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) := h_m3
+        have h_goal : (zeroMultiplicity ρ'.1 : ℝ) / ρ'.1.im^2 ≤ ((C2 * 4 + 1) * ((k : ℝ) + 1)) / ρ'.1.im^2 := by
           apply div_le_div_of_nonneg_right h
           <;> positivity
         exact h_goal
-      have h_second : ((C2 * 4 + 1) * ((k : ℝ) + 1)) / (nontrivialZeroEnum n).im^2 ≤ ((C2 * 4 + 1) * ((k : ℝ) + 1)) / (2 : ℝ)^(2 * k) := by
+      have h_second : ((C2 * 4 + 1) * ((k : ℝ) + 1)) / ρ'.1.im^2 ≤ ((C2 * 4 + 1) * ((k : ℝ) + 1)) / (2 : ℝ)^(2 * k) := by
         gcongr
         <;> linarith [h_denom2]
-      calc w n ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) / (nontrivialZeroEnum n).im^2 := h_first
+      calc w ρ' ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) / ρ'.1.im^2 := h_first
            _ ≤ (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := h_second
     exact h_w
   have h_card : (h_layer_fin.toFinset.card : ℝ) ≤ (16 * C1 + 2) * (2 : ℝ)^k * ((k : ℝ) + 1) := by
     have h_card_raw := layer_card_bound_raw C1 hC1_pos hC1 k h_layer_fin
     have h_simp := card_bound_simplified C1 hC1_pos k
     linarith
-  have h_sum1 : ∑ n ∈ h_layer_fin.toFinset, w n ≤ ∑ n ∈ h_layer_fin.toFinset, (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := by
+  have h_sum1 : ∑ ρ' ∈ h_layer_fin.toFinset, w ρ' ≤ ∑ ρ' ∈ h_layer_fin.toFinset, (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := by
     apply Finset.sum_le_sum
-    intro n hn
-    have hn' : n ∈ layer_k := (Set.Finite.mem_toFinset h_layer_fin).mp hn
-    exact h_point n hn'
-  have h_sum2 : ∑ n ∈ h_layer_fin.toFinset, (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) = (h_layer_fin.toFinset.card : ℝ) * ((C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k)) := by
+    intro ρ' hρ'
+    have hρ'' : ρ' ∈ layer_k := (Set.Finite.mem_toFinset h_layer_fin).mp hρ'
+    exact h_point ρ' hρ''
+  have h_sum2 : ∑ ρ' ∈ h_layer_fin.toFinset, (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) = (h_layer_fin.toFinset.card : ℝ) * ((C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k)) := by
     simp [Finset.sum_const] <;> ring
-  have h_sum : ∑ n ∈ h_layer_fin.toFinset, w n ≤ (h_layer_fin.toFinset.card : ℝ) * ((C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k)) := by
-    calc ∑ n ∈ h_layer_fin.toFinset, w n
-      ≤ ∑ n ∈ h_layer_fin.toFinset, (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := h_sum1
+  have h_sum : ∑ ρ' ∈ h_layer_fin.toFinset, w ρ' ≤ (h_layer_fin.toFinset.card : ℝ) * ((C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k)) := by
+    calc ∑ ρ' ∈ h_layer_fin.toFinset, w ρ'
+      ≤ ∑ ρ' ∈ h_layer_fin.toFinset, (C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k) := h_sum1
       _ = (h_layer_fin.toFinset.card : ℝ) * ((C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k)) := h_sum2
   have h_pos : (2 : ℝ)^k > 0 := by positivity
-  calc ∑ n ∈ h_layer_fin.toFinset, w n
+  calc ∑ ρ' ∈ h_layer_fin.toFinset, w ρ'
     ≤ (h_layer_fin.toFinset.card : ℝ) * ((C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k)) := h_sum
     _ ≤ ((16 * C1 + 2) * (2 : ℝ)^k * ((k : ℝ) + 1)) * ((C2 * 4 + 1) * ((k : ℝ) + 1) / (2 : ℝ)^(2 * k)) := by gcongr
     _ = ((16 * C1 + 2) * (C2 * 4 + 1)) * ((k : ℝ) + 1)^2 / (2 : ℝ)^k := by
@@ -2524,7 +2415,7 @@ lemma summable_quadratic_over_geometric : Summable (fun (k : ℕ) => ((k : ℝ) 
 
 -- === zero_weighted_series_summable 降级证明基础设施 ===
 
-lemma small_finite : ({n : ℕ | |(nontrivialZeroEnum n).im| < 1}).Finite := by
+lemma small_finite : ({ρ' : farZeroSubtype | |ρ'.1.im| < 1}).Finite := by
   rcases zero_counting_estimate with ⟨C1, hC1_pos, hC1⟩
   let S_up : Set ℂ := {s | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ 0 ≤ s.im ∧ s.im ≤ 1}
   have h_up_fin : S_up.Finite := finite_of_encard_le (hC1 1 (by norm_num))
@@ -2561,15 +2452,19 @@ lemma small_finite : ({n : ℕ | |(nontrivialZeroEnum n).im| < 1}).Finite := by
       simpa [S_low] using h_goal
   have h_band_fin : ({s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ |s.im| < 1}).Finite :=
     (h_up_fin.union h_low_fin).subset h_band
-  let img_set : Set ℂ := nontrivialZeroEnum '' ({n : ℕ | |(nontrivialZeroEnum n).im| < 1})
-  have h_img_subset : img_set ⊆ {s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ |s.im| < 1} := by
+  let small : Set farZeroSubtype := {ρ' | |ρ'.1.im| < 1}
+  have h_img_subset : (fun ρ' : farZeroSubtype => ρ'.1) '' small ⊆
+      {s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ |s.im| < 1} := by
     intro s hs
-    rcases hs with ⟨n, hn, rfl⟩
-    have h_z := nontrivialZeroEnum_are_zeros n
-    exact ⟨h_z.1, h_z.2.1, h_z.2.2, hn⟩
-  have h_img_fin : img_set.Finite := h_band_fin.subset h_img_subset
-  have h_inj : Set.InjOn nontrivialZeroEnum ({n : ℕ | |(nontrivialZeroEnum n).im| < 1}) := by
-    intro n _ m _ h; exact nontrivialZeroEnum_injective h
+    rcases hs with ⟨ρ', hρ', rfl⟩
+    have hz' : _root_.riemannZeta ρ'.1 = 0 := ρ'.2.1
+    have hre1' : 0 < ρ'.1.re := ρ'.2.2.1
+    have hre2' : ρ'.1.re < 1 := ρ'.2.2.2.1
+    exact ⟨hz', hre1', hre2', hρ'⟩
+  have h_img_fin : ((fun ρ' : farZeroSubtype => ρ'.1) '' small).Finite := h_band_fin.subset h_img_subset
+  have h_inj : Set.InjOn (fun ρ' : farZeroSubtype => ρ'.1) small := by
+    intro ρ' _ ρ'' _ h
+    exact Subtype.ext h
   exact Set.Finite.of_finite_image h_img_fin h_inj
 
 lemma exists_layer_index (t : ℝ) (ht : 1 ≤ t) : ∃ (k : ℕ), (2^k : ℝ) ≤ t ∧ t < (2^(k+1) : ℝ) := by
@@ -2608,207 +2503,267 @@ lemma exists_layer_index (t : ℝ) (ht : 1 ≤ t) : ∃ (k : ℕ), (2^k : ℝ) �
   exact ⟨k, h_k_ge, h_k_prop⟩
 
 
-/-- ζ 非平凡零点的加权级数收敛性（定理，已降级）：
-    分层估计 A_k = {n : 2^k ≤ |Im(ρₙ)| < 2^(k+1)}，每层贡献 O(k²/2^k)，∑ k²/2^k < ∞。
-    依赖 zero_counting_estimate + zero_multiplicity_log_growth + layer_sum_bound + summable_quadratic_over_geometric。 -/
-theorem zero_weighted_series_summable :
-    Summable (fun n : ℕ => (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) / (1 + |(nontrivialZeroEnum n).im|)^2) := by
+/-- P0.3（2026-10-02）：far 零点加权和（分母 |Im|²）可和——真证，替代原枚举版。
+    数学依据：零点密度估计（zero_counting_estimate）+ 重数对数增长（zero_multiplicity_log_growth）
+    + |Im| 几何分层（层有限由投影单射 + 零点带有限直接推出，不再依赖 :49 枚举）。
+    证明结构：summable_iff_vanishing_norm（ℝ 完备）——对任意 ε，取
+    s₀ = small ∪ (∪_{k ≤ K} layer k)（K 使几何尾 ∑'_{m > K} G m < ε/2），
+    任意与 s₀ 不交的有限集 t 的加权和 ≤ 几何尾 < ε。 -/
+theorem farZero_weighted_summable :
+    Summable (fun ρ' : farZeroSubtype => (zeroMultiplicity ρ'.1 : ℝ) / |ρ'.1.im| ^ 2) := by
+  let w : farZeroSubtype → ℝ := fun ρ' => (zeroMultiplicity ρ'.1 : ℝ) / |ρ'.1.im| ^ 2
+  have h_w_nonneg : ∀ ρ', 0 ≤ w ρ' := by
+    intro ρ'; dsimp [w]; apply div_nonneg <;> positivity
+  rw [summable_iff_vanishing_norm]
+  intro ε hε
+  let ε' := ε / 2
+  have hε' : 0 < ε' := by positivity
   rcases zero_counting_estimate with ⟨C1, hC1_pos, hC1⟩
   rcases zero_multiplicity_log_growth with ⟨C2, hC2_pos, hC2⟩
-  let w : ℕ → ℝ := fun n => (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) / (1 + |(nontrivialZeroEnum n).im|)^2
-  let small : Set ℕ := {n | |(nontrivialZeroEnum n).im| < 1}
-  let layer : ℕ → Set ℕ := fun k => {n | (2^k : ℝ) ≤ |(nontrivialZeroEnum n).im| ∧ |(nontrivialZeroEnum n).im| < (2^(k+1) : ℝ)}
+  let small : Set farZeroSubtype := {ρ' | |ρ'.1.im| < 1}
+  let layer : ℕ → Set farZeroSubtype := fun k => {ρ' | (2^k : ℝ) ≤ |ρ'.1.im| ∧ |ρ'.1.im| < (2^(k+1) : ℝ)}
   have h_small_fin : small.Finite := small_finite
   have h_layer_fin : ∀ k, (layer k).Finite := by
     intro k
-    have h1 : (layer k) ⊆ {n : ℕ | |(nontrivialZeroEnum n).im| < (2^(k+1) : ℝ)} := by
-      intro n hn; exact hn.2
-    have h2 : ({n : ℕ | |(nontrivialZeroEnum n).im| < (2^(k+1) : ℝ)}).Finite := by
-      let T := (2^(k+1) : ℝ)
-      have hT_pos : 0 < (2^(k+1) : ℝ) := by positivity
-      let S_up : Set ℂ := {s | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ 0 ≤ s.im ∧ s.im ≤ T}
-      have h_up_fin : S_up.Finite := finite_of_encard_le (hC1 T hT_pos)
-      let S_low : Set ℂ := {s | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ -T ≤ s.im ∧ s.im ≤ 0}
-      have h_low_fin : S_low.Finite := by
-        have h_conj_map : S_low = (fun s : ℂ => star s) '' S_up := by
-          ext s
-          simp only [S_up, S_low, Set.mem_image]
-          constructor
-          · intro h
-            refine ⟨star s, ?_, by simp⟩
-            have h_zeta : _root_.riemannZeta (star s) = 0 := by rw [riemannZeta_conj, h.1]; simp
-            have h_im1 : 0 ≤ (star s).im := by simp [Complex.ext_iff] at h ⊢ <;> linarith
-            have h_im2 : (star s).im ≤ T := by simp [Complex.ext_iff] at h ⊢ <;> linarith
-            exact ⟨h_zeta, h.2.1, h.2.2.1, h_im1, h_im2⟩
-          · rintro ⟨t, ht, rfl⟩
-            have h_zeta : _root_.riemannZeta (star t) = 0 := by rw [riemannZeta_conj, ht.1]; simp
-            have h_im1 : -T ≤ (star t).im := by simp [Complex.ext_iff] at ht ⊢ <;> linarith
-            have h_im2 : (star t).im ≤ 0 := by simp [Complex.ext_iff] at ht ⊢ <;> linarith
-            exact ⟨h_zeta, ht.2.1, ht.2.2.1, h_im1, h_im2⟩
-        rw [h_conj_map]; exact h_up_fin.image _
-      have h_band : {s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ |s.im| < T} ⊆ S_up ∪ S_low := by
-        intro s hs
-        have h2 : |s.im| < T := hs.2.2.2
-        have h2' : -T < s.im ∧ s.im < T := abs_lt.mp h2
-        by_cases h3 : 0 ≤ s.im
-        · left; exact ⟨hs.1, hs.2.1, hs.2.2.1, h3, by linarith⟩
-        · right
-          have h4 : s.im < 0 := by linarith
-          have h5 : -T ≤ s.im := by linarith
-          have h6 : s.im ≤ 0 := by linarith
-          have h_goal : _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ -T ≤ s.im ∧ s.im ≤ 0 :=
-            ⟨hs.1, hs.2.1, hs.2.2.1, h5, h6⟩
-          simpa [S_low] using h_goal
-      have h_band_fin : ({s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ |s.im| < T}).Finite :=
-        (h_up_fin.union h_low_fin).subset h_band
-      let img_set : Set ℂ := nontrivialZeroEnum '' ({n : ℕ | |(nontrivialZeroEnum n).im| < T})
-      have h_img_subset : img_set ⊆ {s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ |s.im| < T} := by
-        intro s hs
-        rcases hs with ⟨n, hn, rfl⟩
-        have h_z := nontrivialZeroEnum_are_zeros n
-        exact ⟨h_z.1, h_z.2.1, h_z.2.2, hn⟩
-      have h_img_fin : img_set.Finite := h_band_fin.subset h_img_subset
-      have h_inj : Set.InjOn nontrivialZeroEnum ({n : ℕ | |(nontrivialZeroEnum n).im| < T}) := by
-        intro n _ m _ h; exact nontrivialZeroEnum_injective h
-      exact Set.Finite.of_finite_image h_img_fin h_inj
-    exact h2.subset h1
+    let T := (2^(k+1) : ℝ)
+    have hT_pos : 0 < T := by positivity
+    let S_up : Set ℂ := {s | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ 0 ≤ s.im ∧ s.im ≤ T}
+    have h_up_fin : S_up.Finite := finite_of_encard_le (hC1 T hT_pos)
+    let S_low : Set ℂ := {s | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ -T ≤ s.im ∧ s.im ≤ 0}
+    have h_low_fin : S_low.Finite := by
+      have h_conj_map : S_low = (fun s : ℂ => star s) '' S_up := by
+        ext s
+        simp only [S_up, S_low, Set.mem_image]
+        constructor
+        · intro h
+          refine ⟨star s, ?_, by simp⟩
+          have h_zeta : _root_.riemannZeta (star s) = 0 := by rw [riemannZeta_conj, h.1]; simp
+          have h_im1 : 0 ≤ (star s).im := by simp [Complex.ext_iff] at h ⊢ <;> linarith
+          have h_im2 : (star s).im ≤ T := by simp [Complex.ext_iff] at h ⊢ <;> linarith
+          exact ⟨h_zeta, h.2.1, h.2.2.1, h_im1, h_im2⟩
+        · rintro ⟨t, ht, rfl⟩
+          have h_zeta : _root_.riemannZeta (star t) = 0 := by rw [riemannZeta_conj, ht.1]; simp
+          have h_im1 : -T ≤ (star t).im := by simp [Complex.ext_iff] at ht ⊢ <;> linarith
+          have h_im2 : (star t).im ≤ 0 := by simp [Complex.ext_iff] at ht ⊢ <;> linarith
+          exact ⟨h_zeta, ht.2.1, ht.2.2.1, h_im1, h_im2⟩
+      rw [h_conj_map]; exact h_up_fin.image _
+    have h_band : {s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ |s.im| < T} ⊆ S_up ∪ S_low := by
+      intro s hs
+      have h2 : |s.im| < T := hs.2.2.2
+      have h2' : -T < s.im ∧ s.im < T := abs_lt.mp h2
+      by_cases h3 : 0 ≤ s.im
+      · left; exact ⟨hs.1, hs.2.1, hs.2.2.1, h3, by linarith⟩
+      · right
+        have h4 : s.im < 0 := by linarith
+        have h5 : -T ≤ s.im := by linarith
+        have h6 : s.im ≤ 0 := by linarith
+        have h_goal : _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ -T ≤ s.im ∧ s.im ≤ 0 :=
+          ⟨hs.1, hs.2.1, hs.2.2.1, h5, h6⟩
+        simpa [S_low] using h_goal
+    have h_band_fin : ({s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ |s.im| < T}).Finite :=
+      (h_up_fin.union h_low_fin).subset h_band
+    have h_img_subset : (fun ρ' : farZeroSubtype => ρ'.1) '' (layer k) ⊆
+        {s : ℂ | _root_.riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ |s.im| < T} := by
+      intro s hs
+      rcases hs with ⟨ρ', hρ', rfl⟩
+      have hz' : _root_.riemannZeta ρ'.1 = 0 := ρ'.2.1
+      have hre1' : 0 < ρ'.1.re := ρ'.2.2.1
+      have hre2' : ρ'.1.re < 1 := ρ'.2.2.2.1
+      have him' : |ρ'.1.im| < T := by
+        have h : |ρ'.1.im| < (2^(k+1) : ℝ) := hρ'.2
+        simpa [T] using h
+      exact ⟨hz', hre1', hre2', him'⟩
+    have h_img_fin : ((fun ρ' : farZeroSubtype => ρ'.1) '' (layer k)).Finite := h_band_fin.subset h_img_subset
+    have h_inj : Set.InjOn (fun ρ' : farZeroSubtype => ρ'.1) (layer k) := by
+      intro ρ' _ ρ'' _ h
+      exact Subtype.ext h
+    exact Set.Finite.of_finite_image h_img_fin h_inj
   let C := (16 * C1 + 2) * (C2 * 4 + 1)
-  have h_layer_sum : ∀ (k : ℕ), ∑ n ∈ (h_layer_fin k).toFinset, w n ≤ C * ((k : ℝ) + 1)^2 / (2^k : ℝ) := by
+  have h_layer_sum : ∀ (k : ℕ), ∑ ρ' ∈ (h_layer_fin k).toFinset, w ρ' ≤ C * ((k : ℝ) + 1)^2 / (2^k : ℝ) := by
     intro k
-    have h := layer_sum_bound C1 C2 hC1_pos hC2_pos hC1 hC2 k (h_layer_fin k)
-    convert h using 1
-    <;> field_simp <;> ring
-  have h_nonneg_g : ∀ (k : ℕ), 0 ≤ C * ((k : ℝ) + 1)^2 / (2^k : ℝ) := by intro k; positivity
-  have h_summable_geom : Summable (fun (k : ℕ) => C * ((k : ℝ) + 1)^2 / (2^k : ℝ)) := by
+    have h := layer_sum_bound2 C1 C2 hC1_pos hC2_pos hC1 hC2 k (h_layer_fin k)
+    simpa [w, C, sq_abs] using h
+  let G : ℕ → ℝ := fun k => C * ((k : ℝ) + 1)^2 / (2^k : ℝ)
+  have hG_nonneg : ∀ k, 0 ≤ G k := by intro k; dsimp [G]; positivity
+  have hG_summable : Summable G := by
     have h : Summable (fun k : ℕ => ((k : ℝ) + 1)^2 / (2^k : ℝ)) := summable_quadratic_over_geometric
     have h_eq : (fun (k : ℕ) => C * (((k : ℝ) + 1)^2 / (2^k : ℝ))) = (fun (k : ℕ) => C * ((k : ℝ) + 1)^2 / (2^k : ℝ)) := by
       funext k
       field_simp
       <;> ring
-    rw [← h_eq]
-    exact Summable.mul_left C h
-  set G : ℕ → ℝ := fun (k : ℕ) => C * ((k : ℝ) + 1)^2 / (2^k : ℝ) with hG
-  have hG_summable : Summable G := by
-    rw [hG]
-    exact h_summable_geom
-  have h_nonneg_G : ∀ k, 0 ≤ G k := by
-    intro k
-    rw [hG]
-    positivity
-  have h_nonneg_w : ∀ n, 0 ≤ w n := by intro n; positivity
-  let B := (∑ n ∈ h_small_fin.toFinset, w n) + ∑' k : ℕ, G k
-  have h_range_bound : ∀ N : ℕ, ∑ i ∈ Finset.range N, w i ≤ B := by
-    intro N
-    let s := Finset.range N
-    let M := s.fold max 0 (fun n => |(nontrivialZeroEnum n).im|)
-    have hM_in : ∀ n ∈ s, |(nontrivialZeroEnum n).im| ≤ M := by
-      intro n hn
-      rw [Finset.le_fold_max]
-      right
-      exact ⟨n, hn, by linarith⟩
-    by_cases hM_lt1 : M < 1
-    · have h_sub : s ⊆ h_small_fin.toFinset := by
-        intro n hn
-        have h2 : |(nontrivialZeroEnum n).im| ≤ M := hM_in n hn
-        have h3 : |(nontrivialZeroEnum n).im| < 1 := by linarith
-        simpa [small, Set.Finite.mem_toFinset] using h3
-      have h4 : ∑ n ∈ s, w n ≤ ∑ n ∈ h_small_fin.toFinset, w n :=
-        Finset.sum_le_sum_of_subset_of_nonneg h_sub (fun _ _ _ => by positivity)
-      have h5 : 0 ≤ ∑' k : ℕ, G k := by positivity
-      have h6 : ∑ n ∈ h_small_fin.toFinset, w n ≤ B := by
-        dsimp only [B]; linarith
-      linarith
-    · have hM_ge1 : 1 ≤ M := by linarith
-      rcases exists_layer_index M hM_ge1 with ⟨K, hK1, hK2⟩
-      let U := h_small_fin.toFinset ∪ (Finset.biUnion (Finset.range (K + 1)) (fun k => (h_layer_fin k).toFinset))
-      have h_cover : s ⊆ U := by
-        intro n hn
-        have h2 : |(nontrivialZeroEnum n).im| ≤ M := hM_in n hn
-        by_cases h3 : |(nontrivialZeroEnum n).im| < 1
-        · have h4 : n ∈ h_small_fin.toFinset := by
-            simpa [small, Set.Finite.mem_toFinset] using h3
-          exact Finset.mem_union_left _ h4
-        · have h4 : 1 ≤ |(nontrivialZeroEnum n).im| := by linarith
-          rcases exists_layer_index |(nontrivialZeroEnum n).im| h4 with ⟨k, hk1, hk2⟩
-          have h5 : k ≤ K := by
-            by_contra h6
-            have h7 : K < k := by omega
-            have h8 : (2^(K+1) : ℝ) ≤ (2^k : ℝ) := by
-              apply pow_le_pow_right₀ <;> norm_num <;> omega
-            have h9 : (2^k : ℝ) ≤ |(nontrivialZeroEnum n).im| := hk1
-            have h10 : (2^(K+1) : ℝ) ≤ |(nontrivialZeroEnum n).im| := by linarith
-            have h11 : |(nontrivialZeroEnum n).im| < (2^(K+1) : ℝ) := by linarith [hK2, h2]
-            linarith
-          have h6 : k ∈ Finset.range (K + 1) := by simp [Finset.mem_range]; omega
-          have h7 : n ∈ (h_layer_fin k).toFinset := by
-            simpa [layer, Set.Finite.mem_toFinset] using ⟨hk1, hk2⟩
-          have h8 : n ∈ Finset.biUnion (Finset.range (K + 1)) (fun k => (h_layer_fin k).toFinset) :=
-            Finset.mem_biUnion.mpr ⟨k, h6, h7⟩
-          exact Finset.mem_union_right _ h8
-      have h_disj_layers : ∀ k1 k2, k1 ≠ k2 → Disjoint ((h_layer_fin k1).toFinset) ((h_layer_fin k2).toFinset) := by
-        intro k1 k2 hne
-        rw [Finset.disjoint_left]
-        intro n hn1 hn2
-        have h1' : (2^k1 : ℝ) ≤ |(nontrivialZeroEnum n).im| ∧ |(nontrivialZeroEnum n).im| < (2^(k1+1) : ℝ) := by
-          simpa [layer, Set.Finite.mem_toFinset] using hn1
-        have h2' : (2^k2 : ℝ) ≤ |(nontrivialZeroEnum n).im| ∧ |(nontrivialZeroEnum n).im| < (2^(k2+1) : ℝ) := by
-          simpa [layer, Set.Finite.mem_toFinset] using hn2
-        have h1 := h1'.1
-        have h2 := h1'.2
-        have h3 := h2'.1
-        have h4 := h2'.2
-        by_cases h_lt : k1 < k2
-        · have h5 : k1 + 1 ≤ k2 := by omega
-          have h6 : (2^(k1+1) : ℝ) ≤ (2^k2 : ℝ) := by
-            apply pow_le_pow_right₀ <;> norm_num <;> omega
+    have hmul : Summable (fun k : ℕ => C * (((k : ℝ) + 1)^2 / (2^k : ℝ))) := Summable.mul_left C h
+    rw [h_eq] at hmul
+    simpa [G] using hmul
+  have hK_exists : ∃ K : ℕ, ∑' m : ℕ, (if K < m then G m else 0) < ε' := by
+    have h_tend : Tendsto (fun s : Finset ℕ => ∑' (m : {m // m ∉ s}), G m) atTop (𝓝 0) :=
+      tendsto_tsum_compl_atTop_zero G
+    have h_event : ∀ᶠ s : Finset ℕ in atTop, (∑' (m : {m // m ∉ s}), G m) < ε' :=
+      (tendsto_order.mp h_tend).2 ε' hε'
+    rcases eventually_atTop.mp h_event with ⟨N, hN⟩
+    let K := N.sup id
+    refine ⟨K, ?_⟩
+    have h_eq_N : ∑' m : ℕ, (if m ∉ N then G m else 0) = ∑' (m : {m // m ∉ N}), G m := by
+      calc
+        (∑' m : ℕ, (if m ∉ N then G m else 0)) = ∑' m : ℕ, {m : ℕ | m ∉ N}.indicator G m := by
+          apply tsum_congr
+          intro m
+          by_cases h : m ∉ N <;> simp [h]
+        _ = ∑' (x : ↑{m : ℕ | m ∉ N}), G x := (tsum_subtype (s := {m : ℕ | m ∉ N}) (f := G)).symm
+        _ = ∑' (m : {m // m ∉ N}), G m := by rfl
+    have h_le_indic : (fun m : ℕ => if K < m then G m else 0) ≤ (fun m : ℕ => if m ∉ N then G m else 0) := by
+      intro m
+      by_cases h : K < m
+      · have hnot : m ∉ N := by
+          intro hm
+          have hle : m ≤ N.sup id := by
+            simpa using (Finset.le_sup hm : id m ≤ N.sup id)
           linarith
-        · have h_ge : k2 ≤ k1 := by omega
-          have h_eq : k2 < k1 := by omega
-          have h5 : k2 + 1 ≤ k1 := by omega
-          have h6 : (2^(k2+1) : ℝ) ≤ (2^k1 : ℝ) := by
-            apply pow_le_pow_right₀ <;> norm_num <;> omega
-          linarith
-      have h_disj_small : Disjoint h_small_fin.toFinset (Finset.biUnion (Finset.range (K + 1)) (fun k => (h_layer_fin k).toFinset)) := by
-        rw [Finset.disjoint_left]
-        intro n hn1 hn2
-        have h9 : |(nontrivialZeroEnum n).im| < 1 := by simpa [small, Set.Finite.mem_toFinset] using hn1
-        rcases Finset.mem_biUnion.mp hn2 with ⟨k, _, hnk⟩
-        have h10' : (2^k : ℝ) ≤ |(nontrivialZeroEnum n).im| ∧ |(nontrivialZeroEnum n).im| < (2^(k+1) : ℝ) := by
-          simpa [layer, Set.Finite.mem_toFinset] using hnk
-        have h10 := h10'.1
-        have h11 : (1 : ℝ) ≤ (2^k : ℝ) := by
-          have h12 : ∀ k : ℕ, (1 : ℝ) ≤ (2^k : ℝ) := by
-            intro k; induction k <;> simp [*, pow_succ] <;> norm_num <;> linarith
-          exact h12 k
-        linarith
-      have h_sum_layers : ∑ n ∈ (Finset.biUnion (Finset.range (K + 1)) (fun k => (h_layer_fin k).toFinset)), w n =
-          ∑ k ∈ Finset.range (K + 1), ∑ n ∈ (h_layer_fin k).toFinset, w n := by
-        rw [Finset.sum_biUnion]
-        intro k _ k2 _ hne
-        exact h_disj_layers k k2 hne
-      have h_sum_U : ∑ n ∈ U, w n = (∑ n ∈ h_small_fin.toFinset, w n) + ∑ k ∈ Finset.range (K + 1), ∑ n ∈ (h_layer_fin k).toFinset, w n := by
-        rw [Finset.sum_union h_disj_small, h_sum_layers]
-      have h4 : ∑ n ∈ s, w n ≤ ∑ n ∈ U, w n :=
-        Finset.sum_le_sum_of_subset_of_nonneg h_cover (fun _ _ _ => by positivity)
-      rw [h_sum_U] at h4
-      have h7 : ∑ k ∈ Finset.range (K + 1), ∑ n ∈ (h_layer_fin k).toFinset, w n ≤ ∑ k ∈ Finset.range (K + 1), G k := by
-        apply Finset.sum_le_sum
-        intro k _
-        exact h_layer_sum k
-      have h8 : ∑ k ∈ Finset.range (K + 1), G k ≤ ∑' k : ℕ, G k :=
-        Summable.sum_le_tsum (Finset.range (K + 1)) (fun i _ => h_nonneg_G i) hG_summable
-      have h10 : 0 ≤ ∑' k : ℕ, G k := by positivity
-      linarith
-  exact summable_of_sum_range_le h_nonneg_w h_range_bound
+        simp [h, hnot]
+      · simp [h]
+        split <;> simp [hG_nonneg m]
+    have h_tail_summable_N : Summable (fun m : ℕ => if m ∉ N then G m else 0) := by
+      refine Summable.of_nonneg_of_le ?_ ?_ hG_summable
+      · intro m; by_cases h : m ∉ N <;> simp [h]; simpa using hG_nonneg m
+      · intro m; by_cases h : m ∉ N <;> simp [h]; simpa using hG_nonneg m
+    have h_tail_summable_K : Summable (fun m : ℕ => if K < m then G m else 0) := by
+      refine Summable.of_nonneg_of_le ?_ ?_ hG_summable
+      · intro m; by_cases h : K < m <;> simp [h]; simpa using hG_nonneg m
+      · intro m; by_cases h : K < m <;> simp [h]; simpa using hG_nonneg m
+    have h_ineq : ∑' m : ℕ, (if K < m then G m else 0) ≤ ∑' m : ℕ, (if m ∉ N then G m else 0) :=
+      Summable.tsum_le_tsum h_le_indic h_tail_summable_K h_tail_summable_N
+    calc
+      ∑' m : ℕ, (if K < m then G m else 0) ≤ ∑' m : ℕ, (if m ∉ N then G m else 0) := h_ineq
+      _ = ∑' (m : {m // m ∉ N}), G m := h_eq_N
+      _ < ε' := hN N (subset_rfl)
+  rcases hK_exists with ⟨K, hK_tail⟩
+  let s₀ : Finset farZeroSubtype := h_small_fin.toFinset ∪
+    Finset.biUnion (Finset.range (K + 1)) (fun k => (h_layer_fin k).toFinset)
+  refine ⟨s₀, ?_⟩
+  intro t ht
+  let idx : farZeroSubtype → ℕ := fun ρ' =>
+    if h : 1 ≤ |ρ'.1.im| then (exists_layer_index |ρ'.1.im| h).choose else 0
+  have h_t_idx : ∀ i ∈ t, K < idx i ∧ i ∈ layer (idx i) := by
+    intro i hi
+    have h_not_union : i ∉ h_small_fin.toFinset ∪ (Finset.biUnion (Finset.range (K + 1)) (fun k => (h_layer_fin k).toFinset)) :=
+      (Finset.disjoint_left.mp ht) hi
+    have h_not_small : i ∉ h_small_fin.toFinset := by
+      intro hs; exact h_not_union (Finset.mem_union_left _ hs)
+    have h_not_small_set : ¬ i ∈ small := by
+      intro hs
+      exact h_not_small ((Set.Finite.mem_toFinset h_small_fin).mpr hs)
+    have hge : 1 ≤ |i.1.im| := by
+      by_contra h
+      have hlt : |i.1.im| < 1 := by linarith
+      exact h_not_small_set (by simpa [small] using hlt)
+    have h_layer_mem : i ∈ layer (idx i) := by
+      have hspec := (exists_layer_index |i.1.im| hge).choose_spec
+      dsimp [idx]
+      simp [hge]
+      exact hspec
+    have h_not_layer_le : ∀ k ≤ K, i ∉ (h_layer_fin k).toFinset := by
+      intro k hk
+      intro hmem
+      have h_in_bi : i ∈ Finset.biUnion (Finset.range (K + 1)) (fun k => (h_layer_fin k).toFinset) :=
+        Finset.mem_biUnion.mpr ⟨k, by simp [Finset.mem_range]; omega, hmem⟩
+      exact h_not_union (Finset.mem_union_right _ h_in_bi)
+    have hK_lt : K < idx i := by
+      by_contra h
+      have hle : idx i ≤ K := by omega
+      have him_mem : i ∈ (h_layer_fin (idx i)).toFinset :=
+        (Set.Finite.mem_toFinset (h_layer_fin (idx i))).mpr h_layer_mem
+      exact (h_not_layer_le (idx i) hle) him_mem
+    exact ⟨hK_lt, h_layer_mem⟩
+  let Ks : Finset ℕ := t.image idx
+  have h_sum_decomp : (∑ k ∈ Ks, ∑ i ∈ t, (if idx i = k then w i else 0)) = ∑ i ∈ t, w i := by
+    rw [Finset.sum_comm]
+    apply Finset.sum_congr rfl
+    intro i hi
+    have h_mem : idx i ∈ Ks := Finset.mem_image.mpr ⟨i, hi, rfl⟩
+    rw [Finset.sum_eq_single (idx i)]
+    · simp
+    · intro b hb hbne
+      simp [hbne.symm]
+    · intro hnot
+      exact (hnot h_mem).elim
+  have h_bound1 : (∑ k ∈ Ks, ∑ i ∈ t, (if idx i = k then w i else 0)) ≤
+      ∑ k ∈ Ks, ∑ i ∈ (h_layer_fin k).toFinset, w i := by
+    apply Finset.sum_le_sum
+    intro k hk
+    have h_sub : t.filter (fun i => idx i = k) ⊆ (h_layer_fin k).toFinset := by
+      intro i hi
+      have hik : idx i = k := (Finset.mem_filter.mp hi).2
+      have hit : i ∈ t := (Finset.mem_filter.mp hi).1
+      have hli : i ∈ layer (idx i) := (h_t_idx i hit).2
+      have hmem : i ∈ layer k := by
+        simpa [hik] using hli
+      exact (Set.Finite.mem_toFinset (h_layer_fin k)).mpr hmem
+    calc
+      ∑ i ∈ t, (if idx i = k then w i else 0)
+        = ∑ i ∈ t.filter (fun i => idx i = k), w i := by rw [Finset.sum_filter]
+      _ ≤ ∑ i ∈ (h_layer_fin k).toFinset, w i :=
+        Finset.sum_le_sum_of_subset_of_nonneg h_sub (fun i _ _ => h_w_nonneg i)
+  have h_bound2 : (∑ k ∈ Ks, ∑ i ∈ (h_layer_fin k).toFinset, w i) ≤ ∑ k ∈ Ks, G k := by
+    apply Finset.sum_le_sum
+    intro k hk
+    exact h_layer_sum k
+  have h_bound3 : ∑ k ∈ Ks, G k ≤ ∑' m : ℕ, (if K < m then G m else 0) := by
+    have h_sub : ∀ k ∈ Ks, K < k := by
+      intro k hk
+      rcases Finset.mem_image.mp hk with ⟨i, hi, rfl⟩
+      exact (h_t_idx i hi).1
+    have h_eq : (∑ k ∈ Ks, G k) = ∑ k ∈ Ks, (if K < k then G k else 0) := by
+      apply Finset.sum_congr rfl
+      intro k hk
+      have hlt : K < k := h_sub k hk
+      simp [hlt]
+    have h_tail_summable_K : Summable (fun m : ℕ => if K < m then G m else 0) := by
+      refine Summable.of_nonneg_of_le ?_ ?_ hG_summable
+      · intro m; by_cases h : K < m <;> simp [h]; simpa using hG_nonneg m
+      · intro m; by_cases h : K < m <;> simp [h]; simpa using hG_nonneg m
+    rw [h_eq]
+    exact Summable.sum_le_tsum Ks (by intro m hm; by_cases h : K < m <;> simp [h]; simpa using hG_nonneg m) h_tail_summable_K
+  have h_sum_lt : (∑ i ∈ t, w i) < ε' := by
+    calc
+      (∑ i ∈ t, w i) = (∑ k ∈ Ks, ∑ i ∈ t, (if idx i = k then w i else 0)) := h_sum_decomp.symm
+      _ ≤ ∑ k ∈ Ks, ∑ i ∈ (h_layer_fin k).toFinset, w i := h_bound1
+      _ ≤ ∑ k ∈ Ks, G k := h_bound2
+      _ ≤ ∑' m : ℕ, (if K < m then G m else 0) := h_bound3
+      _ < ε' := hK_tail
+  have h_pos_sum : 0 ≤ ∑ i ∈ t, w i := Finset.sum_nonneg (by intro i hi; exact h_w_nonneg i)
+  have h_abs : |∑ i ∈ t, w i| < ε := by
+    rw [abs_of_nonneg h_pos_sum]
+    dsimp [ε'] at h_sum_lt ⊢
+    linarith
+  exact h_abs
 
-
-
-theorem zero_weighted_series_summable2 :
-    Summable (fun n : ℕ => (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) / |(nontrivialZeroEnum n).im| ^ 2) := by
-  -- For |Im| >= 1: |Im|^2 >= (1+|Im|)^2/4, so m/|Im|^2 <= 4m/(1+|Im|)^2
-  -- The set {n : |Im| < 1} is finite (small_finite), so doesn't affect summability
-  -- Follows from zero_weighted_series_summable + small_finite
-  admit
+/-- P0.3（2026-10-02）：围道外加权和的"有限余项可任意小"——真证，替代原 admit。
+    由 tendsto_tsum_compl_atTop_zero（有限集补集上的 tsum 趋于 0）直接给出：
+    存在有限集 F，使 F 外的加权余项 < threshold。 -/
+theorem farZero_weighted_tail_small (threshold : ℝ) (hthr : 0 < threshold) :
+    ∃ F : Finset farZeroSubtype,
+      ∑' ρ' : farZeroSubtype, (if ρ' ∈ F then (0 : ℝ) else
+        (zeroMultiplicity ρ'.1 : ℝ) / |ρ'.1.im| ^ 2) < threshold := by
+  let w : farZeroSubtype → ℝ := fun ρ' => (zeroMultiplicity ρ'.1 : ℝ) / |ρ'.1.im| ^ 2
+  have h_tend : Tendsto (fun s : Finset farZeroSubtype => ∑' (a : {a // a ∉ s}), w a) atTop (𝓝 0) :=
+    tendsto_tsum_compl_atTop_zero w
+  have h_event : ∀ᶠ s : Finset farZeroSubtype in atTop, (∑' (a : {a // a ∉ s}), w a) < threshold :=
+    (tendsto_order.mp h_tend).2 threshold hthr
+  rcases eventually_atTop.mp h_event with ⟨F, hF⟩
+  have hF_self : ∑' (a : {a // a ∉ F}), w a < threshold := hF F (subset_rfl)
+  refine ⟨F, ?_⟩
+  have h_eq : (∑' ρ' : farZeroSubtype, (if ρ' ∈ F then (0 : ℝ) else w ρ')) =
+      ∑' (a : {a // a ∉ F}), w a := by
+    calc
+      (∑' ρ' : farZeroSubtype, (if ρ' ∈ F then (0 : ℝ) else w ρ'))
+        = ∑' ρ' : farZeroSubtype, {a : farZeroSubtype | a ∉ F}.indicator w ρ' := by
+          apply tsum_congr
+          intro ρ'
+          by_cases h : ρ' ∈ F <;> simp [h]
+      _ = ∑' (a : ↑{a : farZeroSubtype | a ∉ F}), w a :=
+          (tsum_subtype (s := {a : farZeroSubtype | a ∉ F}) (f := w)).symm
+      _ = ∑' (a : {a // a ∉ F}), w a := by rfl
+  rw [h_eq]
+  exact hF_self
 
 
 /-- 单点 Mellin 分离的存在性（定理，由 mellin_finite_surjectivity_zero_sum 推出）。零 sorry。
@@ -2927,39 +2882,37 @@ theorem nonempty_mollified_test_function : Nonempty MollifiedTestFunction := by
       contDiff2 := by exact? }
   exact ⟨mf⟩
 
-/-- 统一支集界（⑲ PWW 统一性）：对固定的 off-critical 零点 ρ，存在一个统一窗口
-    [ε₀, R₀]，使得 PWW 插值构造产生的所有 h_T（T 跑遍有限临界零点集）的支集都在其内。
-    窗口大小 b_ρ 依赖 ρ，但不依赖 T（即不依赖 N，前 N 个零点）。
-    这是 mellin_rapid_decay_choice 里常数 C = 8(B+1)(R₀³+1) 不随 N 爆炸的依据。
-    数学依据：Pale-Wiener 对偶插值构造中，bump 函数的支集宽度由插值点与 ρ 的相对位置决定，
-    而 ρ 固定，故窗口有统一界；n 大时 t_n > R₀ 自动使 h(t_n)=0。
-    降级路径：⑲ mellin_constraint_dual_norm_lower_uniform 证明中一并构造。 -/
-lemma mollified_test_function_uniform_support :
+/-- 统一窗口模型层前提（⑲ PWW 统一性）：存在统一窗口 [ε₀, R₀] 使所有磨光函数
+    在 (-∞,ε₀)∪(R₀,∞) 上为零。
+
+    数学状态（2026-10-02 定案）：不可由 supportBounded 证明——supportBounded 是逐 h 窗口
+    （∃ 窗口对每个 h），而本前提要求 ∀ h 共享同一窗口；窄支撑 bump 族（支撑 [1/(n+1), 2/(n+1)]）
+    使统一 ε₀ 必须 ≤ 1/(n+1) 对 ∀n，即 ε₀=0，矛盾。它是 PWW 插值构造的模型层属性
+    （窗口依赖 ρ 不依赖 T），与 h_duality 同层，作为显式前提沿主链传递（P0.4 参数化）。
+    禁止升格为 axiom（潜在不一致）。 -/
+def UniformSupport : Prop :=
+  ∃ (ε₀ R₀ : ℝ), 0 < ε₀ ∧ ε₀ < R₀ ∧
+    ∀ (h : MollifiedTestFunction),
+      (∀ x, x < ε₀ → h.toFun x = 0) ∧
+      (∀ x, x > R₀ → h.toFun x = 0)
+
+/-- 逐函数支集界（由 supportBounded 直接推出，闭→开条件）：每个磨光函数 h
+    有窗口 [ε₀, R₀] 使 h 在 (-∞,ε₀)∪(R₀,∞) 上为零。
+    注：这只是逐 h 版本；统一窗口见 UniformSupport（模型层前提，不可由本引理推出）。 -/
+lemma mollified_test_function_individual_support (h : MollifiedTestFunction) :
     ∃ (ε₀ R₀ : ℝ), 0 < ε₀ ∧ ε₀ < R₀ ∧
-      ∀ (h : MollifiedTestFunction),
-        (∀ x, x < ε₀ → h.toFun x = 0) ∧
-        (∀ x, x > R₀ → h.toFun x = 0) := by sorry
+      (∀ x, x < ε₀ → h.toFun x = 0) ∧
+      (∀ x, x > R₀ → h.toFun x = 0) := by
+  rcases h.supportBounded with ⟨ε₀, R₀, hε₀_pos, hε₀_lt_R₀, h_left, h_right⟩
+  refine ⟨ε₀, R₀, hε₀_pos, hε₀_lt_R₀, ?_, ?_⟩
+  · intro x hx
+    exact h_left x (le_of_lt hx)
+  · intro x hx
+    exact h_right x (le_of_lt hx)
 
-
-/-- 全局常数：统一支集的下界 ε₀ -/
-noncomputable def globalε₀ : ℝ := Classical.choose mollified_test_function_uniform_support
-
-/-- 全局常数：统一支集的上界 R₀ -/
-noncomputable def globalR₀ : ℝ := Classical.choose (Classical.choose_spec mollified_test_function_uniform_support)
-
-/-- globalε₀ > 0 -/
 lemma nontrivialZeroEnum_im_ne_zero (n : ℕ) : (nontrivialZeroEnum n).im ≠ 0 := by
   have hz := nontrivialZeroEnum_are_zeros n
   exact nontrivialZero_im_ne_zero (nontrivialZeroEnum n) hz.1 hz.2.1 hz.2.2
-
-lemma globalε₀_pos : 0 < globalε₀ := (Classical.choose_spec (Classical.choose_spec mollified_test_function_uniform_support)).1
-
-/-- globalε₀ < globalR₀ -/
-lemma globalε₀_lt_globalR₀ : globalε₀ < globalR₀ := (Classical.choose_spec (Classical.choose_spec mollified_test_function_uniform_support)).2.1
-
-/-- globalε₀ 和 globalR₀ 的主要性质 -/
-lemma h_main_support : 0 < globalε₀ ∧ globalε₀ < globalR₀ ∧ ∀ (h : MollifiedTestFunction), (∀ x, x < globalε₀ → h.toFun x = 0) ∧ (∀ x, x > globalR₀ → h.toFun x = 0) :=
-  Classical.choose_spec (Classical.choose_spec mollified_test_function_uniform_support)
 /-- Poincaré 不等式公理（固定支集）：
     若 h 在 [ε₀, R₀] 外为 0，h 是 C² 光滑的，且 ‖h''(x)‖ ≤ B，
     则 ‖h‖_∞ ≤ (R₀-ε₀)² · B。
@@ -3535,13 +3488,14 @@ theorem mellin_smooth_surjectivity (ρ : ℂ) :
     支集有界 [ε,R]，故 ∫ x^{Re(s)+1}dx 有限。
     谱点取值界由 Poincaré 不等式：‖h‖_∞ ≤ (R-ε)²·‖h''‖_∞。
     注：C(s) 依赖于 s，当 s.re→0 时 C(s)→∞（因 |s(s+1)|→0）。 -/
-theorem mellin_pointwise_dual_norm_bound (s : ℂ) (hs_re1 : 0 < s.re) (hs_re2 : s.re < 1) :
+theorem mellin_pointwise_dual_norm_bound (s : ℂ) (hs_re1 : 0 < s.re) (hs_re2 : s.re < 1)
+    (h_win : UniformSupport) :
     ∃ (C : ℝ), 0 < C ∧
       ∀ (h : MollifiedTestFunction) (B : ℝ),
         ContDiff ℝ 2 h.toTestFunction.toFun →
         (∀ (x : ℝ), ‖(deriv (deriv h.toTestFunction.toFun) x)‖ ≤ B) →
         ‖melinTransform h.toTestFunction s‖ ≤ C * B := by
-  rcases mollified_test_function_uniform_support with ⟨ε₀, R₀, hε₀_pos, hε₀_lt_R₀, h_support⟩
+  rcases h_win with ⟨ε₀, R₀, hε₀_pos, hε₀_lt_R₀, h_support⟩
   let C : ℝ := (R₀ - ε₀)^2 * max (Real.log (R₀ / ε₀)) (R₀ - ε₀)
   have hC_pos : 0 < C := by
     dsimp only [C]
@@ -3577,7 +3531,7 @@ theorem mellin_pointwise_dual_norm_bound (s : ℂ) (hs_re1 : 0 < s.re) (hs_re2 :
         再用 Poincaré 不等式得 |M[h](s)| ≤ C₂·B。
     注：分部积分给出的界在 s.re→0 时发散，但直接估计 + Poincaré 给出统一界。 -/
 theorem mellin_constraint_dual_norm_uniform (ρ : ℂ) :
-    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 → UniformSupport →
     ∃ (C : ℝ), 0 < C ∧
       ∀ (T : Set ℂ), T.Finite → ρ ∉ T →
       ∀ (h : MollifiedTestFunction) (B : ℝ),
@@ -3586,8 +3540,8 @@ theorem mellin_constraint_dual_norm_uniform (ρ : ℂ) :
         (∀ (n : ℕ), ‖h.toTestFunction.eval (specDiscM n)‖ ≤ C * B) ∧
         (∀ (s : ℂ), s ∈ insert ρ T → 0 < s.re → s.re < 1 →
           ‖melinTransform h.toTestFunction s‖ ≤ C * B) := by
-  intro hz hre1 hre2 hne
-  rcases mollified_test_function_uniform_support with ⟨ε₀, R₀, hε₀_pos, hε₀_lt_R₀, h_support⟩
+  intro hz hre1 hre2 hne h_win
+  rcases h_win with ⟨ε₀, R₀, hε₀_pos, hε₀_lt_R₀, h_support⟩
   -- 选择足够大的统一常数 C = (R₀-ε₀)² · (max(log(R₀/ε₀), R₀-ε₀) + 1)
   let C : ℝ := (R₀ - ε₀)^2 * (max (Real.log (R₀ / ε₀)) (R₀ - ε₀) + 1)
   have hC_pos : 0 < C := by
@@ -4885,17 +4839,14 @@ theorem mellin_rapid_decay_bound (h : MollifiedTestFunction) (B' : ℝ)
       _ ≤ 8 * B' * (R₀ ^ 3 + 1) / |s.im| ^ 2 := h9
   exact h10
 theorem mellin_transform_C2_rapid_decay (h : MollifiedTestFunction) (B' : ℝ)
+    (ε₀ R₀ : ℝ) (hε₀_pos : 0 < ε₀) (hε₀_lt_R₀ : ε₀ < R₀)
+    (h_left : ∀ x, x < ε₀ → h.toFun x = 0) (h_right : ∀ x, x > R₀ → h.toFun x = 0)
     (hC2 : ContDiff ℝ 2 h.toTestFunction.toFun)
     (hB : ∀ x, ‖(deriv (deriv h.toTestFunction.toFun) x)‖ ≤ B') (hB_pos : 0 < B') :
     ∀ (s : ℂ), 0 < s.re → s.re < 1 → s.im ≠ 0 →
-      ‖melinTransform h.toTestFunction s‖ ≤ 8 * B' * (globalR₀ ^ 3 + 1) / |s.im| ^ 2 := by
-  let ε₀ := globalε₀
-  let R₀ := globalR₀
-  have hε₀_pos : 0 < ε₀ := globalε₀_pos
-  have hε₀_lt_R₀ : ε₀ < R₀ := globalε₀_lt_globalR₀
-  have h_all : ∀ (h : MollifiedTestFunction), (∀ x, x < ε₀ → h.toFun x = 0) ∧ (∀ x, x > R₀ → h.toFun x = 0) := h_main_support.2.2
-  have h_h_left : ∀ x, x < ε₀ → h.toFun x = 0 := (h_all h).1
-  have h_h_right : ∀ x, x > R₀ → h.toFun x = 0 := (h_all h).2
+      ‖melinTransform h.toTestFunction s‖ ≤ 8 * B' * (R₀ ^ 3 + 1) / |s.im| ^ 2 := by
+  have h_h_left : ∀ x, x < ε₀ → h.toFun x = 0 := h_left
+  have h_h_right : ∀ x, x > R₀ → h.toFun x = 0 := h_right
   have h_u_eps0_zero : h.toFun ε₀ = 0 := by
     have h_cont : Continuous h.toFun := hC2.continuous
     have h1 : Set.EqOn h.toFun 0 (Set.Iio ε₀) := by
@@ -4998,7 +4949,7 @@ theorem mellin_transform_C2_rapid_decay (h : MollifiedTestFunction) (B' : ℝ)
     存在磨光函数 h 满足零谱点插值条件且 Mellin 变换速降：
     ‖M[h](s)‖ ≤ C·max(‖wρ‖,1)/(1+|Im s|)²。 -/
 theorem mellin_rapid_decay_choice (ρ : ℂ) (wρ : ℂ) :
-    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 → UniformSupport →
     ∃ (C : ℝ), 0 < C ∧
       ∀ (T : Set ℂ), T.Finite → ρ ∉ T →
       ∃ (h : MollifiedTestFunction),
@@ -5007,14 +4958,14 @@ theorem mellin_rapid_decay_choice (ρ : ℂ) (wρ : ℂ) :
         (∀ (s : ℂ), s ∈ T → melinTransform h.toTestFunction s = 0) ∧
         (∀ (s : ℂ), 0 < s.re → s.re < 1 → s.im ≠ 0 →
           ‖melinTransform h.toTestFunction s‖ ≤ C * max ‖wρ‖ 1 / |s.im| ^ 2) := by
-  intro hz hre1 hre2 hne
+  intro hz hre1 hre2 hne h_win
   rcases mellin_smooth_interpolation ρ wρ hz hre1 hre2 hne with ⟨B, hB_pos, h_choice⟩
-  rcases mollified_test_function_uniform_support with ⟨ε₀, R₀, hε₀_pos, hε₀_lt_R₀, h_all⟩
-  let C := 8 * (B + 1) * (globalR₀ ^ 3 + 1)
+  rcases h_win with ⟨ε₀, R₀, hε₀_pos, hε₀_lt_R₀, h_all⟩
+  let C := 8 * (B + 1) * (R₀ ^ 3 + 1)
   have hB1_pos : 0 < B + 1 := by linarith
-  have hR0_pos : 0 < globalR₀ := by linarith [globalε₀_pos, globalε₀_lt_globalR₀]
-  have hR_pos : 0 < globalR₀ ^ 3 + 1 := by
-    have h : 0 < globalR₀ ^ 3 := by positivity
+  have hR0_pos : 0 < R₀ := by linarith [hε₀_pos, hε₀_lt_R₀]
+  have hR_pos : 0 < R₀ ^ 3 + 1 := by
+    have h : 0 < R₀ ^ 3 := by positivity
     linarith
   have hC_pos : 0 < C := by
     dsimp only [C]
@@ -5023,18 +4974,18 @@ theorem mellin_rapid_decay_choice (ρ : ℂ) (wρ : ℂ) :
   rcases h_choice T hT hρ_notin with ⟨h, h_spec, h_mel_ρ, h_mel_T, hC2, h_deriv_bound⟩
   refine ⟨h, h_spec, h_mel_ρ, h_mel_T, ?_⟩
   intro s hs_re1 hs_re2 hs_im_ne_zero
-  have h_decay : ‖melinTransform h.toTestFunction s‖ ≤ 8 * (B * max ‖wρ‖ 1) * (globalR₀ ^ 3 + 1) / |s.im| ^ 2 :=
-    mellin_transform_C2_rapid_decay h (B * max ‖wρ‖ 1) hC2 h_deriv_bound (by positivity) s hs_re1 hs_re2 hs_im_ne_zero
-  have h_final : 8 * (B * max ‖wρ‖ 1) * (globalR₀ ^ 3 + 1) / |s.im| ^ 2 ≤ C * max ‖wρ‖ 1 / |s.im| ^ 2 := by
+  have h_decay : ‖melinTransform h.toTestFunction s‖ ≤ 8 * (B * max ‖wρ‖ 1) * (R₀ ^ 3 + 1) / |s.im| ^ 2 :=
+    mellin_transform_C2_rapid_decay h (B * max ‖wρ‖ 1) ε₀ R₀ hε₀_pos hε₀_lt_R₀ (h_all h).1 (h_all h).2 hC2 h_deriv_bound (by positivity) s hs_re1 hs_re2 hs_im_ne_zero
+  have h_final : 8 * (B * max ‖wρ‖ 1) * (R₀ ^ 3 + 1) / |s.im| ^ 2 ≤ C * max ‖wρ‖ 1 / |s.im| ^ 2 := by
     dsimp only [C]
     have h1 : 1 ≤ max ‖wρ‖ 1 := by apply le_max_right
     have h2 : B * max ‖wρ‖ 1 ≤ (B + 1) * max ‖wρ‖ 1 := by
       have h3 : 0 ≤ max ‖wρ‖ 1 := by positivity
       nlinarith
-    have h4 : 8 * (B * max ‖wρ‖ 1) * (globalR₀ ^ 3 + 1) ≤ 8 * ((B + 1) * max ‖wρ‖ 1) * (globalR₀ ^ 3 + 1) := by
+    have h4 : 8 * (B * max ‖wρ‖ 1) * (R₀ ^ 3 + 1) ≤ 8 * ((B + 1) * max ‖wρ‖ 1) * (R₀ ^ 3 + 1) := by
       gcongr
       <;> linarith
-    have h5 : 8 * ((B + 1) * max ‖wρ‖ 1) * (globalR₀ ^ 3 + 1) = 8 * (B + 1) * (globalR₀ ^ 3 + 1) * max ‖wρ‖ 1 := by ring
+    have h5 : 8 * ((B + 1) * max ‖wρ‖ 1) * (R₀ ^ 3 + 1) = 8 * (B + 1) * (R₀ ^ 3 + 1) * max ‖wρ‖ 1 := by ring
     rw [h5] at h4
     gcongr
   exact le_trans h_decay h_final
@@ -5046,7 +4997,7 @@ theorem mellin_rapid_decay_choice (ρ : ℂ) (wρ : ℂ) :
     证明：用 mellin_rapid_decay_choice 分别构造 h₁(wρ=1) 和 h₂(wρ=0)，
     则 ‖M[h₁]-M[h₂]‖ ≤ ‖M[h₁]‖+‖M[h₂]‖ ≤ 2C/(1+|Im|)²。 -/
 theorem mellin_pair_uniform_decay_bound (ρ : ℂ) :
-    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 → UniformSupport →
     ∃ (C : ℝ), 0 < C ∧
       ∀ (T : Set ℂ), T.Finite → ρ ∉ T →
       ∃ (f1 f2 : MollifiedTestFunction),
@@ -5055,10 +5006,14 @@ theorem mellin_pair_uniform_decay_bound (ρ : ℂ) :
         melinTransform f2.toTestFunction ρ = 0 ∧
         (∀ (s : ℂ), s ∈ T → melinTransform f1.toTestFunction s = melinTransform f2.toTestFunction s) ∧
         (∀ (s : ℂ), 0 < s.re → s.re < 1 → s.im ≠ 0 →
+          ‖melinTransform f1.toTestFunction s‖ ≤ C / |s.im| ^ 2) ∧
+        (∀ (s : ℂ), 0 < s.re → s.re < 1 → s.im ≠ 0 →
+          ‖melinTransform f2.toTestFunction s‖ ≤ C / |s.im| ^ 2) ∧
+        (∀ (s : ℂ), 0 < s.re → s.re < 1 → s.im ≠ 0 →
           ‖melinTransform f1.toTestFunction s - melinTransform f2.toTestFunction s‖ ≤ C / |s.im| ^ 2) := by
-  intro hz hre1 hre2 hne
-  rcases mellin_rapid_decay_choice ρ (1 : ℂ) hz hre1 hre2 hne with ⟨C1, hC1_pos, h_choice1⟩
-  rcases mellin_rapid_decay_choice ρ (0 : ℂ) hz hre1 hre2 hne with ⟨C2, hC2_pos, h_choice2⟩
+  intro hz hre1 hre2 hne h_win
+  rcases mellin_rapid_decay_choice ρ (1 : ℂ) hz hre1 hre2 hne h_win with ⟨C1, hC1_pos, h_choice1⟩
+  rcases mellin_rapid_decay_choice ρ (0 : ℂ) hz hre1 hre2 hne h_win with ⟨C2, hC2_pos, h_choice2⟩
   let C := 2 * max C1 C2
   have hC_pos : 0 < C := by positivity
   refine ⟨C, hC_pos, fun T hT hρ_notin => ?_⟩
@@ -5070,6 +5025,42 @@ theorem mellin_pair_uniform_decay_bound (ρ : ℂ) :
   have h_mT : ∀ (s : ℂ), s ∈ T → melinTransform f1.toTestFunction s = melinTransform f2.toTestFunction s := by
     intro s hs
     rw [h_m1T s hs, h_m2T s hs]
+  have h_decay1_C : ∀ (s : ℂ), 0 < s.re → s.re < 1 → s.im ≠ 0 →
+      ‖melinTransform f1.toTestFunction s‖ ≤ C / |s.im| ^ 2 := by
+    intro s hs_re1 hs_re2 hs_im_ne_zero
+    have h1 : ‖melinTransform f1.toTestFunction s‖ ≤ C1 / |s.im| ^ 2 := by
+      have h11 := h_decay1 s hs_re1 hs_re2 hs_im_ne_zero
+      simpa using h11
+    calc
+      ‖melinTransform f1.toTestFunction s‖ ≤ C1 / |s.im| ^ 2 := h1
+      _ ≤ C / |s.im| ^ 2 := by
+        have h5 : C1 ≤ C := by
+          have h5a : C1 ≤ C1 + C2 := by linarith
+          have h4 : C1 + C2 ≤ C := by
+            dsimp only [C]
+            have h5' : C1 ≤ max C1 C2 := le_max_left _ _
+            have h6 : C2 ≤ max C1 C2 := le_max_right _ _
+            linarith
+          exact le_trans h5a h4
+        gcongr
+  have h_decay2_C : ∀ (s : ℂ), 0 < s.re → s.re < 1 → s.im ≠ 0 →
+      ‖melinTransform f2.toTestFunction s‖ ≤ C / |s.im| ^ 2 := by
+    intro s hs_re1 hs_re2 hs_im_ne_zero
+    have h2 : ‖melinTransform f2.toTestFunction s‖ ≤ C2 / |s.im| ^ 2 := by
+      have h22 := h_decay2 s hs_re1 hs_re2 hs_im_ne_zero
+      simpa using h22
+    calc
+      ‖melinTransform f2.toTestFunction s‖ ≤ C2 / |s.im| ^ 2 := h2
+      _ ≤ C / |s.im| ^ 2 := by
+        have h5 : C2 ≤ C := by
+          have h5a : C2 ≤ C1 + C2 := by linarith
+          have h4 : C1 + C2 ≤ C := by
+            dsimp only [C]
+            have h5' : C1 ≤ max C1 C2 := le_max_left _ _
+            have h6 : C2 ≤ max C1 C2 := le_max_right _ _
+            linarith
+          exact le_trans h5a h4
+        gcongr
   have h_decay : ∀ (s : ℂ), 0 < s.re → s.re < 1 → s.im ≠ 0 →
       ‖melinTransform f1.toTestFunction s - melinTransform f2.toTestFunction s‖ ≤ C / |s.im| ^ 2 := by
     intro s hs_re1 hs_re2 hs_im_ne_zero
@@ -5094,294 +5085,523 @@ theorem mellin_pair_uniform_decay_bound (ρ : ℂ) :
           have h6 : C2 ≤ max C1 C2 := le_max_right _ _
           linarith
         gcongr
-  exact ⟨f1, f2, h_spec, h_m1ρ, h_m2ρ, h_mT, h_decay⟩
+  exact ⟨f1, f2, h_spec, h_m1ρ, h_m2ρ, h_mT, h_decay1_C, h_decay2_C, h_decay⟩
 
-/-- 磨光函数对的尾部和可忽略（定理，由统一速降 + 加权级数收敛推出）。零 sorry。
-    对非临界线零点 ρ，存在 f₁, f₂ 使得：
+/-- far 贡献对差的“挖 ρ 拆分”（定理，P0.2 显式前提化 2026-10-02）：
+    farZeroContribution f1 - farZeroContribution f2 = (ρ 项 if IsFarZero ρ) + ∑' farDelta，
+    其中 farDelta 挖掉 ρ 项。显式前提（P0.2 之前被 admit 掩盖的数学要求）：
+    - h_sm1/h_sm2：m·M[f1]、m·M[f2] 的 farZeroSubtype 加权可和（模型层：M 超衰减 + 零点密度）
+    - h_mdiff：M[f1](ρ) - M[f2](ρ) = 1（局部化消去误差项 δ·m(ρ)·((M1-M2)(ρ)-1)）
+    证明：tsum 线性（HasSum.sub）+ 单点挖除（hasSum_single，IsFarZero 两分支）+ h_mdiff 消误差项。
+    不涉及 nontrivialZeroEnum 枚举（:49 已摘除）。 -/
+theorem farContribution_pair_diff_split (f1 f2 : TestFunction) (ρ : ℂ)
+    (h_sm1 : Summable (fun ρ' : farZeroSubtype =>
+      (zeroMultiplicity ρ'.1 : ℂ) * melinTransform f1 ρ'.1))
+    (h_sm2 : Summable (fun ρ' : farZeroSubtype =>
+      (zeroMultiplicity ρ'.1 : ℂ) * melinTransform f2 ρ'.1))
+    (h_mdiff : melinTransform f1 ρ - melinTransform f2 ρ = 1) :
+    farZeroContribution f1 - farZeroContribution f2
+      - (if IsFarZero ρ then (zeroMultiplicity ρ : ℂ) else 0)
+      = ∑' ρ' : farZeroSubtype, (zeroMultiplicity ρ'.1 : ℂ) *
+          (melinTransform f1 ρ'.1 - melinTransform f2 ρ'.1) * (if ρ'.1 = ρ then 0 else 1) := by
+  unfold farZeroContribution
+  -- (1) farDelta（挖 ρ 余项）与 point（单点项）的定义
+  let farDelta : farZeroSubtype → ℂ := fun ρ' =>
+    (zeroMultiplicity ρ'.1 : ℂ) * (melinTransform f1 ρ'.1 - melinTransform f2 ρ'.1) *
+      (if ρ'.1 = ρ then (0 : ℂ) else 1)
+  let point : farZeroSubtype → ℂ := fun ρ' =>
+    (zeroMultiplicity ρ : ℂ) * (melinTransform f1 ρ - melinTransform f2 ρ) *
+      (if ρ'.1 = ρ then (1 : ℂ) else 0)
+  -- (2) 逐点分解：m·(M1-M2) = farDelta + point
+  have h_decomp : (fun ρ' : farZeroSubtype =>
+        (zeroMultiplicity ρ'.1 : ℂ) * (melinTransform f1 ρ'.1 - melinTransform f2 ρ'.1))
+      = fun ρ' => farDelta ρ' + point ρ' := by
+    funext ρ'
+    by_cases h : ρ'.1 = ρ
+    · simp [farDelta, point, h]
+    · simp [farDelta, point, h]
+  -- (3) point 的 HasSum（单点：hasSum_single，IsFarZero 两分支）
+  have h_has_point : HasSum point
+      (if IsFarZero ρ then (zeroMultiplicity ρ : ℂ) * (melinTransform f1 ρ - melinTransform f2 ρ) else 0) := by
+    by_cases hρ : IsFarZero ρ
+    · have h_supp : ∀ ρ' : farZeroSubtype, ρ' ≠ ⟨ρ, hρ⟩ → point ρ' = 0 := by
+        intro ρ' hne
+        have hρ'ne : ρ'.1 ≠ ρ := by
+          intro h
+          exact hne (Subtype.ext h)
+        simp [point, hρ'ne]
+      rw [if_pos hρ]
+      have h_val : point ⟨ρ, hρ⟩ = (zeroMultiplicity ρ : ℂ) * (melinTransform f1 ρ - melinTransform f2 ρ) := by
+        simp [point]
+      rw [← h_val]
+      exact hasSum_single (f := point) ⟨ρ, hρ⟩ h_supp
+    · have h0 : point = 0 := by
+        funext ρ'
+        have hρne : ρ'.1 ≠ ρ := by
+          intro h
+          exact hρ (by simpa [← h] using ρ'.2)
+        simp [point, hρne]
+      rw [h0]
+      simp [hρ]
+      exact hasSum_zero
+  -- (4) m·(M1-M2) 可和（h_sm1.sub h_sm2）
+  have h_sm_diff : Summable (fun ρ' : farZeroSubtype =>
+      (zeroMultiplicity ρ'.1 : ℂ) * (melinTransform f1 ρ'.1 - melinTransform f2 ρ'.1)) := by
+    have h_eq : (fun ρ' : farZeroSubtype =>
+          (zeroMultiplicity ρ'.1 : ℂ) * melinTransform f1 ρ'.1
+            - (zeroMultiplicity ρ'.1 : ℂ) * melinTransform f2 ρ'.1)
+        = fun ρ' => (zeroMultiplicity ρ'.1 : ℂ) * (melinTransform f1 ρ'.1 - melinTransform f2 ρ'.1) := by
+      funext ρ'; ring
+    rw [← h_eq]
+    exact h_sm1.sub h_sm2
+  -- (5) point 可和、farDelta 可和
+  have h_point_sm : Summable point := h_has_point.summable
+  have h_farDelta_eq : farDelta = (fun ρ' : farZeroSubtype =>
+      (zeroMultiplicity ρ'.1 : ℂ) * (melinTransform f1 ρ'.1 - melinTransform f2 ρ'.1) - point ρ') := by
+    funext ρ'
+    by_cases h : ρ'.1 = ρ
+    · simp [farDelta, point, h]
+    · simp [farDelta, point, h]
+  have h_sm_farDelta : Summable farDelta := by
+    rw [h_farDelta_eq]
+    exact h_sm_diff.sub h_point_sm
+  -- (6) tsum 线性：∑' m·(M1-M2) = ∑' m·M1 - ∑' m·M2（HasSum.sub）
+  have h_tsum_diff : ∑' ρ' : farZeroSubtype, (zeroMultiplicity ρ'.1 : ℂ) * (melinTransform f1 ρ'.1 - melinTransform f2 ρ'.1)
+      = (∑' ρ' : farZeroSubtype, (zeroMultiplicity ρ'.1 : ℂ) * melinTransform f1 ρ'.1)
+        - (∑' ρ' : farZeroSubtype, (zeroMultiplicity ρ'.1 : ℂ) * melinTransform f2 ρ'.1) := by
+    have h_eq : (fun ρ' : farZeroSubtype =>
+          (zeroMultiplicity ρ'.1 : ℂ) * melinTransform f1 ρ'.1
+            - (zeroMultiplicity ρ'.1 : ℂ) * melinTransform f2 ρ'.1)
+        = fun ρ' : farZeroSubtype => (zeroMultiplicity ρ'.1 : ℂ) * (melinTransform f1 ρ'.1 - melinTransform f2 ρ'.1) := by
+      funext ρ'; ring
+    have h_has : HasSum (fun ρ' : farZeroSubtype => (zeroMultiplicity ρ'.1 : ℂ) * (melinTransform f1 ρ'.1 - melinTransform f2 ρ'.1))
+        ((∑' ρ' : farZeroSubtype, (zeroMultiplicity ρ'.1 : ℂ) * melinTransform f1 ρ'.1)
+          - (∑' ρ' : farZeroSubtype, (zeroMultiplicity ρ'.1 : ℂ) * melinTransform f2 ρ'.1)) := by
+      simpa [h_eq] using (h_sm1.hasSum.sub h_sm2.hasSum)
+    exact h_has.tsum_eq
+  -- (7) 汇总：LHS = ∑' farDelta（h_mdiff 消误差项）
+  calc
+    (∑' ρ' : farZeroSubtype, (zeroMultiplicity ρ'.1 : ℂ) * melinTransform f1 ρ'.1)
+        - (∑' ρ' : farZeroSubtype, (zeroMultiplicity ρ'.1 : ℂ) * melinTransform f2 ρ'.1)
+        - (if IsFarZero ρ then (zeroMultiplicity ρ : ℂ) else 0)
+        = ∑' ρ' : farZeroSubtype, (zeroMultiplicity ρ'.1 : ℂ) * (melinTransform f1 ρ'.1 - melinTransform f2 ρ'.1)
+          - (if IsFarZero ρ then (zeroMultiplicity ρ : ℂ) else 0) := by
+          rw [h_tsum_diff]
+    _ = (∑' ρ' : farZeroSubtype, (farDelta ρ' + point ρ'))
+          - (if IsFarZero ρ then (zeroMultiplicity ρ : ℂ) else 0) := by
+          rw [h_decomp]
+    _ = ((∑' ρ' : farZeroSubtype, farDelta ρ') + (∑' ρ' : farZeroSubtype, point ρ'))
+          - (if IsFarZero ρ then (zeroMultiplicity ρ : ℂ) else 0) := by
+          rw [h_sm_farDelta.tsum_add h_point_sm]
+    _ = ((∑' ρ' : farZeroSubtype, farDelta ρ')
+          + (if IsFarZero ρ then (zeroMultiplicity ρ : ℂ) * (melinTransform f1 ρ - melinTransform f2 ρ) else 0))
+          - (if IsFarZero ρ then (zeroMultiplicity ρ : ℂ) else 0) := by
+          rw [h_has_point.tsum_eq]
+    _ = ∑' ρ' : farZeroSubtype, farDelta ρ' := by
+          by_cases hρ : IsFarZero ρ
+          · have h_cancel : (zeroMultiplicity ρ : ℂ) * (melinTransform f1 ρ - melinTransform f2 ρ)
+                = (zeroMultiplicity ρ : ℂ) := by
+              rw [h_mdiff] <;> ring
+            simp [hρ, h_cancel]
+          · simp [hρ]
+
+/-- 磨光函数对的尾部和可忽略（子类型版，2026-10-01 重写）：对非临界线零点 ρ，
+    存在 f₁, f₂ 使得：
     (1) 谱点取值相同
     (2) M[f₁](ρ) = 1，M[f₂](ρ) = 0
-    (3) ρ 外零点的贡献绝对值和 < m_ρ / 2
+    (3) 围道内（contourZeroFinset）其余零点上 M[f₁]=M[f₂]
+    (4) 围道外（farZeroSubtype）差的“挖 ρ 余项”绝对值和 < m_ρ / 2
 
-    证明路径：
-    (a) 由 zero_weighted_series_summable，∑ m(ρₙ)/(1+|Im|)² 收敛
-    (b) 由 mellin_pair_uniform_decay_bound，存在统一速降界 C
-    (c) 由 tendsto_sum_nat_add，存在 N 使尾部加权和 < m_ρ/(2C)
-    (d) 取 T = {ρₙ | n < N, ρₙ ≠ ρ}，PWW 构造使 M[f₁]=M[f₂] 在 T 上
-    (e) n < N 时贡献为 0；n ≥ N 时贡献 ≤ C * w(n)
-    (f) 尾部和 ≤ C * ∑_{n≥N} w(n) < m_ρ/2 -/
+    证明路径（不再依赖 nontrivialZeroEnum 枚举）：
+    (a) farZero_weighted_summable：∑ m(ρ')/|Im|² 收敛（子类型，零点密度）
+    (b) farZero_weighted_tail_small：有限集 F 外的加权余项 < threshold（可和性直接推论）
+    (c) T = contourZeroFinset\{ρ} ∪ (F 的像 \ {ρ})，PWW 构造 M[f₁]=M[f₂] 在 T 上
+    (d) F 内贡献为 0（T 上相等或挖 ρ）；F 外贡献 ≤ C * w(ρ')
+    (e) ‖∑' farDelta‖ ≤ C * (F 外余项) < m_ρ/2；far 差由 farContribution_pair_diff_split 拆项 -/
 theorem mollified_pair_tail_sum_negligible (ρ : ℂ) :
-    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 → UniformSupport →
     ∃ (f1 f2 : MollifiedTestFunction),
       (∀ (n : ℕ), f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n)) ∧
       melinTransform f1.toTestFunction ρ = 1 ∧
       melinTransform f2.toTestFunction ρ = 0 ∧
-      Summable (fun (n : ℕ) => (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) *
-        (melinTransform f1.toTestFunction (nontrivialZeroEnum n) -
-          melinTransform f2.toTestFunction (nontrivialZeroEnum n))) ∧
-      Summable (fun (n : ℕ) => (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) *
-        (melinTransform f1.toTestFunction (nontrivialZeroEnum n) -
-          melinTransform f2.toTestFunction (nontrivialZeroEnum n)) *
-        (if nontrivialZeroEnum n = ρ then (0 : ℂ) else 1)) ∧
-      ∑' (n : ℕ), (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) *
-        ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) -
-          melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ *
-        (if nontrivialZeroEnum n = ρ then 0 else 1) <
-        (zeroMultiplicity ρ : ℝ) / 2 := by
-  intro hz hre1 hre2 hne
-  let w : ℕ → ℝ := fun n => (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) / |(nontrivialZeroEnum n).im| ^ 2
-  have hw_nonneg : ∀ n, 0 ≤ w n := by
-    intro n
-    apply div_nonneg <;> positivity
-  have h_summable_w : Summable w := zero_weighted_series_summable2
+      (∀ (ρ' : ℂ), ρ' ∈ contourZeroFinset → ρ' ≠ ρ →
+        melinTransform f1.toTestFunction ρ' = melinTransform f2.toTestFunction ρ') ∧
+      Summable (fun (ρ' : farZeroSubtype) => (zeroMultiplicity ρ'.1 : ℂ) *
+        (melinTransform f1.toTestFunction ρ'.1 - melinTransform f2.toTestFunction ρ'.1) *
+        (if ρ'.1 = ρ then (0 : ℂ) else 1)) ∧
+      Summable (fun (ρ' : farZeroSubtype) =>
+        (zeroMultiplicity ρ'.1 : ℂ) * melinTransform f1.toTestFunction ρ'.1) ∧
+      Summable (fun (ρ' : farZeroSubtype) =>
+        (zeroMultiplicity ρ'.1 : ℂ) * melinTransform f2.toTestFunction ρ'.1) ∧
+      ‖farZeroContribution f1.toTestFunction - farZeroContribution f2.toTestFunction
+        - (if IsFarZero ρ then (zeroMultiplicity ρ : ℂ) else 0)‖
+        < (zeroMultiplicity ρ : ℝ) / 2 := by
+  intro hz hre1 hre2 hne h_win
+  -- (1) far 权重可和
+  have hw_nonneg : ∀ ρ' : farZeroSubtype,
+      0 ≤ (zeroMultiplicity ρ'.1 : ℝ) / |ρ'.1.im| ^ 2 := by
+    intro ρ'; apply div_nonneg <;> positivity
+  have h_summable_w : Summable (fun ρ' : farZeroSubtype =>
+      (zeroMultiplicity ρ'.1 : ℝ) / |ρ'.1.im| ^ 2) := farZero_weighted_summable
   have h_mρ_pos : 0 < (zeroMultiplicity ρ : ℝ) := by
-    have h : 0 < zeroMultiplicity ρ := zeroMultiplicity_positive_at_nontrivial_zeros ρ hz hre1 hre2
+    have h : 0 < zeroMultiplicity ρ :=
+      zeroMultiplicity_positive_at_nontrivial_zeros ρ hz hre1 hre2
     exact_mod_cast h
-  rcases mellin_pair_uniform_decay_bound ρ hz hre1 hre2 hne with ⟨C, hC_pos, h_uniform⟩
+  rcases mellin_pair_uniform_decay_bound ρ hz hre1 hre2 hne h_win with ⟨C, hC_pos, h_uniform⟩
   set threshold : ℝ := (zeroMultiplicity ρ : ℝ) / (2 * C) with hthreshold_def
   have h_threshold_pos : 0 < threshold := by
     rw [hthreshold_def]
     have hC_pos' : 0 < C := hC_pos
     have h_mρ_pos' : 0 < (zeroMultiplicity ρ : ℝ) := h_mρ_pos
     positivity
-  have h_tendsto : Filter.Tendsto (fun N : ℕ => ∑' (n : ℕ), w (n + N)) Filter.atTop (nhds 0) :=
-    tendsto_sum_nat_add w
-  have h_exists_N : ∃ (N : ℕ), ∑' (n : ℕ), w (n + N) < threshold := by
-    have h_eventual_ball : ∀ᶠ (N : ℕ) in Filter.atTop, (∑' (n : ℕ), w (n + N)) ∈ Metric.ball (0 : ℝ) threshold :=
-      h_tendsto (Metric.ball_mem_nhds 0 h_threshold_pos)
-    have h_eventual : ∀ᶠ (N : ℕ) in Filter.atTop, ∑' (n : ℕ), w (n + N) < threshold := by
-      filter_upwards [h_eventual_ball] with N hN
-      have h_abs : |∑' (n : ℕ), w (n + N)| < threshold := by simpa [Metric.mem_ball, dist_zero_right] using hN
-      have h_nonneg : 0 ≤ ∑' (n : ℕ), w (n + N) := tsum_nonneg (fun n => hw_nonneg (n + N))
-      rw [abs_of_nonneg h_nonneg] at h_abs
-      exact h_abs
-    exact h_eventual.exists
-  rcases h_exists_N with ⟨N, h_tail_w⟩
-  let T : Set ℂ := {s | ∃ (n : ℕ), n < N ∧ nontrivialZeroEnum n = s ∧ s ≠ ρ}
-  have hT_finite : T.Finite := by
-    have h1 : Set.Finite (Set.image nontrivialZeroEnum (Set.Iio N)) := Set.Finite.image nontrivialZeroEnum (Set.finite_lt_nat N)
-    apply Set.Finite.subset h1
-    intro s hs
-    rcases hs with ⟨n, hn, rfl, _⟩
-    exact ⟨n, hn, rfl⟩
-  have hρ_notin_T : ρ ∉ T := by
+  -- (2) 有限逼近 F
+  rcases farZero_weighted_tail_small threshold h_threshold_pos with ⟨F, h_rem⟩
+  -- (3) 有限 T = contourZeroFinset\{ρ} ∪ (F 像 \ {ρ})
+  let Fimg : Set ℂ := (Finset.image (fun ρ' : farZeroSubtype => ρ'.1) F : Set ℂ)
+  let T0 : Set ℂ := {ρ' | ρ' ∈ contourZeroFinset ∧ ρ' ≠ ρ} ∪ (Fimg \ {ρ})
+  have hT0_finite : T0.Finite := by
+    apply Set.Finite.union
+    · exact Set.Finite.subset contourZeroFinset_finite
+        (by intro s hs
+            have hmem := (contourZeroFinset_mem s).mp hs.1
+            exact ⟨hmem.1, hmem.2.1, hmem.2.2.1, hmem.2.2.2⟩)
+    · exact Set.Finite.subset (Finset.image (fun ρ' : farZeroSubtype => ρ'.1) F).finite_toSet
+        (by intro s hs; exact hs.1)
+  have hρ_notin_T0 : ρ ∉ T0 := by
     intro h
-    rcases h with ⟨n, _, h_eq, h_ne⟩
-    exact h_ne rfl
-  rcases h_uniform T hT_finite hρ_notin_T with ⟨f1, f2, h_pts, h_m1, h_m2, h_T_eq, h_decay⟩
-  let a : ℕ → ℂ := fun n =>
-    (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) *
-      (melinTransform f1.toTestFunction (nontrivialZeroEnum n) -
-       melinTransform f2.toTestFunction (nontrivialZeroEnum n))
-  let b : ℕ → ℂ := fun n => a n * (if nontrivialZeroEnum n = ρ then (0 : ℂ) else 1)
-  let tail_real : ℕ → ℝ := fun n =>
-    (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) *
-      ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) -
-        melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ *
-      (if nontrivialZeroEnum n = ρ then 0 else 1)
-  have h_zero_low : ∀ n < N, tail_real n = 0 := by
-    intro n hn
-    by_cases h : nontrivialZeroEnum n = ρ
-    · have h_if : (if nontrivialZeroEnum n = ρ then (0 : ℝ) else 1) = 0 := by simp [h]
-      simp only [tail_real, h_if] <;> ring
-    · have h_in_T : nontrivialZeroEnum n ∈ T := ⟨n, hn, rfl, h⟩
-      have h_eq : melinTransform f1.toTestFunction (nontrivialZeroEnum n) = melinTransform f2.toTestFunction (nontrivialZeroEnum n) := h_T_eq (nontrivialZeroEnum n) h_in_T
-      have h_if : (if nontrivialZeroEnum n = ρ then (0 : ℝ) else 1) = 1 := by simp [h]
-      simp only [tail_real, h_if, h_eq] <;> simp
-  have h_bound : ∀ n, tail_real n ≤ C * w n := by
-    intro n
-    by_cases h : nontrivialZeroEnum n = ρ
-    · have h_if : (if nontrivialZeroEnum n = ρ then (0 : ℝ) else 1) = 0 := by simp [h]
-      have h_nonneg : 0 ≤ C * w n := by
-        apply mul_nonneg
-        · exact le_of_lt hC_pos
-        · exact hw_nonneg n
-      simp only [tail_real, h_if]
-      <;> linarith
-    · have h_re1 : 0 < (nontrivialZeroEnum n).re := (nontrivialZeroEnum_are_zeros n).2.1
-      have h_re2 : (nontrivialZeroEnum n).re < 1 := (nontrivialZeroEnum_are_zeros n).2.2
-      have h_decay' : ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ ≤ C / |(nontrivialZeroEnum n).im| ^ 2 := h_decay (nontrivialZeroEnum n) h_re1 h_re2 (nontrivialZeroEnum_im_ne_zero n)
-      have h_if : (if nontrivialZeroEnum n = ρ then (0 : ℝ) else 1) = 1 := by simp [h]
-      simp only [tail_real, h_if]
-      have h_abs_eq : |(nontrivialZeroEnum n).im|^2 = (nontrivialZeroEnum n).im^2 := by
-        simp [sq_abs]
-      have h_goal : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ * 1 ≤ C * w n := by
-        dsimp only [w]
-        have h1 : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ ≤ (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * (C / |(nontrivialZeroEnum n).im| ^ 2) := by gcongr
-        have h1' : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ ≤ (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * (C / (nontrivialZeroEnum n).im ^ 2) := by
-          convert h1 using 1
-          rw [h_abs_eq]
-        have h2 : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * (C / (nontrivialZeroEnum n).im ^ 2) = C * w n := by
-          simp [w, h_abs_eq] <;> ring
-        rw [h2] at h1'
-        have h_final : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ * 1 ≤ C * w n := by
-          simpa [w, h_abs_eq, mul_one] using h1'
-        exact h_final
-      exact h_goal
-  have h_norm_a_bound : ∀ n, ‖a n‖ ≤ C * w n := by
-    intro n
-    have h_re1 : 0 < (nontrivialZeroEnum n).re := (nontrivialZeroEnum_are_zeros n).2.1
-    have h_re2 : (nontrivialZeroEnum n).re < 1 := (nontrivialZeroEnum_are_zeros n).2.2
-    have h_d : ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ ≤ C / |(nontrivialZeroEnum n).im| ^ 2 := h_decay (nontrivialZeroEnum n) h_re1 h_re2 (nontrivialZeroEnum_im_ne_zero n)
-    have h_goal : ‖a n‖ ≤ C * w n := by
-      dsimp only [a, w]
-      have h1 : ‖a n‖ = (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ := by
-        simp [a, norm_mul] <;> ring
-      rw [h1]
-      have h2 : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) - melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ ≤ (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * (C / |(nontrivialZeroEnum n).im| ^ 2) := by gcongr
-      have h3 : (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) * (C / |(nontrivialZeroEnum n).im| ^ 2) = C * w n := by simp [w] <;> ring
-      rw [h3] at h2
-      exact h2
-    exact h_goal
-  have h_summable_Cw : Summable (fun n => C * w n) := Summable.mul_left C h_summable_w
-  have h_summable_norm_a : Summable (fun n => ‖a n‖) := Summable.of_nonneg_of_le (fun n => by positivity) h_norm_a_bound h_summable_Cw
-  have h_summable_a : Summable a := Summable.of_norm h_summable_norm_a
-  have h_norm_b_bound : ∀ n, ‖b n‖ ≤ ‖a n‖ := by
-    intro n
-    by_cases h : nontrivialZeroEnum n = ρ
-    · simp [b, h, norm_mul] <;> positivity
-    · simp [b, h, norm_mul] <;> ring
-  have h_summable_norm_b : Summable (fun n => ‖b n‖) := Summable.of_nonneg_of_le (fun n => by positivity) h_norm_b_bound h_summable_norm_a
-  have h_summable_b : Summable b := Summable.of_norm h_summable_norm_b
-  have h_summable_tail : Summable tail_real := Summable.of_nonneg_of_le (fun n => by positivity) h_bound h_summable_Cw
-  have h_sum_range_zero : ∑ i ∈ Finset.range N, tail_real i = 0 := by
-    have h : ∀ i ∈ Finset.range N, tail_real i = 0 := by
-      intro i hi
-      have h_i_lt_N : i < N := Finset.mem_range.mp hi
-      exact h_zero_low i h_i_lt_N
-    rw [Finset.sum_congr rfl h]
-    simp
-  have h_tail_sum_eq : ∑' (n : ℕ), tail_real n = ∑' (n : ℕ), tail_real (n + N) := by
-    have h_hasSum : HasSum (fun n : ℕ => tail_real (n + N)) (∑' (n : ℕ), tail_real n) := by
-      rw [hasSum_nat_add_iff N]
-      rw [h_sum_range_zero, add_zero]
-      exact h_summable_tail.hasSum
-    have h_tsum_shift : ∑' (n : ℕ), tail_real (n + N) = ∑' (n : ℕ), tail_real n := h_hasSum.tsum_eq
-    exact h_tsum_shift.symm
-  have h_summable_tail_shift : Summable (fun n : ℕ => tail_real (n + N)) := by
-    have h : HasSum (fun n : ℕ => tail_real (n + N)) (∑' (n : ℕ), tail_real n) := by
-      rw [hasSum_nat_add_iff N]
-      rw [h_sum_range_zero, add_zero]
-      exact h_summable_tail.hasSum
-    exact h.summable
-  have h_summable_w_shift : Summable (fun n : ℕ => w (n + N)) := by
-    apply Summable.comp_injective h_summable_w
-    intro n m h
-    simpa using h
-  have h_summable_Cw_shift : Summable (fun n : ℕ => C * w (n + N)) := Summable.mul_left C h_summable_w_shift
-  have h_tail_sum_bound : ∑' (n : ℕ), tail_real (n + N) ≤ C * ∑' (n : ℕ), w (n + N) := by
-    have h_le : ∀ n, tail_real (n + N) ≤ C * w (n + N) := by
-      intro n
-      exact h_bound (n + N)
-    have h1 : ∑' (n : ℕ), tail_real (n + N) ≤ ∑' (n : ℕ), C * w (n + N) := Summable.tsum_le_tsum h_le h_summable_tail_shift h_summable_Cw_shift
-    have h2 : ∑' (n : ℕ), C * w (n + N) = C * ∑' (n : ℕ), w (n + N) := by
-      rw [tsum_mul_left]
-    rw [h2] at h1
-    exact h1
-  have h_final : ∑' (n : ℕ), tail_real n < (zeroMultiplicity ρ : ℝ) / 2 := by
-    rw [h_tail_sum_eq]
-    have h_calc1 : ∑' (n : ℕ), tail_real (n + N) ≤ C * ∑' (n : ℕ), w (n + N) := h_tail_sum_bound
-    have h_calc2 : C * ∑' (n : ℕ), w (n + N) < C * threshold := by gcongr
-    have h_calc3 : C * threshold = (zeroMultiplicity ρ : ℝ) / 2 := by
+    rcases h with h1 | h2
+    · exact h1.2 rfl
+    · exact h2.2 rfl
+  rcases h_uniform T0 hT0_finite hρ_notin_T0 with ⟨f1, f2, h_pts, h_m1, h_m2, h_T_eq, h_decay1, h_decay2, h_decay⟩
+  -- 围道内条件（T0 ⊇ contourZeroFinset\{ρ}）
+  have h_fin_eq : ∀ ρ' : ℂ, ρ' ∈ contourZeroFinset → ρ' ≠ ρ →
+      melinTransform f1.toTestFunction ρ' = melinTransform f2.toTestFunction ρ' := by
+    intro ρ' hρ' hne'
+    exact h_T_eq ρ' (Or.inl ⟨hρ', hne'⟩)
+  -- (4) far 差项（挖 ρ）与 F 内外分解
+  let farDelta : farZeroSubtype → ℂ := fun ρ' =>
+    (zeroMultiplicity ρ'.1 : ℂ) *
+      (melinTransform f1.toTestFunction ρ'.1 - melinTransform f2.toTestFunction ρ'.1) *
+      (if ρ'.1 = ρ then (0 : ℂ) else 1)
+  let wδF : farZeroSubtype → ℝ := fun ρ' =>
+    (zeroMultiplicity ρ'.1 : ℝ) / |ρ'.1.im| ^ 2 * (if ρ'.1 = ρ then 0 else 1) *
+      (if ρ' ∈ F then 0 else 1)
+  have hwδF_nonneg : ∀ ρ', 0 ≤ wδF ρ' := by
+    intro ρ'
+    dsimp [wδF]
+    apply mul_nonneg
+    · positivity
+    · by_cases hρ : ρ'.1 = ρ <;> by_cases hF : ρ' ∈ F <;> simp [hρ, hF]
+  have h_summable_wδF : Summable wδF := by
+    refine Summable.of_nonneg_of_le hwδF_nonneg ?_ h_summable_w
+    · intro ρ'
+      dsimp [wδF]
+      by_cases hρ : ρ'.1 = ρ <;> by_cases hF : ρ' ∈ F <;> simp [hρ, hF] <;> positivity
+  -- ‖farDelta‖ ≤ C * wδF（F 内 farDelta = 0：T 上相等或挖 ρ）
+  have h_norm_delta_bound : ∀ ρ', ‖farDelta ρ'‖ ≤ C * wδF ρ' := by
+    intro ρ'
+    by_cases hF : ρ' ∈ F
+    · -- F 内：farDelta = 0
+      have h0 : farDelta ρ' = 0 := by
+        by_cases hρ : ρ'.1 = ρ
+        · simp [farDelta, hρ]
+        · -- ρ'.1 ∈ Fimg \ {ρ} ⊆ T0 ⟹ ΔM = 0
+          have hT : ρ'.1 ∈ T0 := by
+            right
+            exact ⟨Finset.mem_image.mpr ⟨ρ', hF, rfl⟩, hρ⟩
+          have h_eq : melinTransform f1.toTestFunction ρ'.1 = melinTransform f2.toTestFunction ρ'.1 :=
+            h_T_eq ρ'.1 hT
+          simp [farDelta, hρ, h_eq]
+      rw [h0]
+      have h_nonneg : 0 ≤ C * wδF ρ' :=
+        mul_nonneg (le_of_lt hC_pos) (hwδF_nonneg ρ')
+      simpa using h_nonneg
+    · -- F 外：wδF = w·(if ρ'=ρ)；h_decay 给单项界
+      by_cases hρ : ρ'.1 = ρ
+      · -- 挖 ρ：farDelta = 0
+        have h0 : farDelta ρ' = 0 := by simp [farDelta, hρ]
+        rw [h0]
+        have h_nonneg : 0 ≤ C * wδF ρ' :=
+          mul_nonneg (le_of_lt hC_pos) (hwδF_nonneg ρ')
+        simpa using h_nonneg
+      · -- 非 ρ：h_decay
+        have hz' : _root_.riemannZeta ρ'.1 = 0 := ρ'.2.1
+        have hre1' : 0 < ρ'.1.re := ρ'.2.2.1
+        have hre2' : ρ'.1.re < 1 := ρ'.2.2.2.1
+        have him : ρ'.1.im ≠ 0 := nontrivialZero_im_ne_zero ρ'.1 hz' hre1' hre2'
+        have h_d : ‖melinTransform f1.toTestFunction ρ'.1 - melinTransform f2.toTestFunction ρ'.1‖ ≤ C / |ρ'.1.im| ^ 2 :=
+          h_decay ρ'.1 hre1' hre2' him
+        have h_norm_le : ‖farDelta ρ'‖ ≤ (zeroMultiplicity ρ'.1 : ℝ) *
+            ‖melinTransform f1.toTestFunction ρ'.1 - melinTransform f2.toTestFunction ρ'.1‖ := by
+          calc
+            ‖farDelta ρ'‖ = ‖(zeroMultiplicity ρ'.1 : ℂ) *
+                (melinTransform f1.toTestFunction ρ'.1 - melinTransform f2.toTestFunction ρ'.1) * (1 : ℂ)‖ := by
+              dsimp [farDelta]
+              simp [hρ]
+            _ ≤ ‖(zeroMultiplicity ρ'.1 : ℂ) *
+                (melinTransform f1.toTestFunction ρ'.1 - melinTransform f2.toTestFunction ρ'.1)‖ * ‖(1 : ℂ)‖ :=
+              norm_mul_le _ _
+            _ ≤ (‖(zeroMultiplicity ρ'.1 : ℂ)‖ *
+                ‖melinTransform f1.toTestFunction ρ'.1 - melinTransform f2.toTestFunction ρ'.1‖) * ‖(1 : ℂ)‖ := by
+              exact mul_le_mul_of_nonneg_right (norm_mul_le _ _) (norm_nonneg _)
+            _ = (zeroMultiplicity ρ'.1 : ℝ) *
+                ‖melinTransform f1.toTestFunction ρ'.1 - melinTransform f2.toTestFunction ρ'.1‖ := by
+              rw [_root_.norm_natCast, norm_one]
+              ring
+        calc
+          ‖farDelta ρ'‖ ≤ (zeroMultiplicity ρ'.1 : ℝ) *
+              ‖melinTransform f1.toTestFunction ρ'.1 - melinTransform f2.toTestFunction ρ'.1‖ := h_norm_le
+          _ ≤ (zeroMultiplicity ρ'.1 : ℝ) * (C / |ρ'.1.im| ^ 2) := by gcongr
+          _ = C * wδF ρ' := by
+            dsimp [wδF]
+            simp [hF, hρ]
+            ring
+  have h_summable_CwδF : Summable (fun ρ' => C * wδF ρ') := Summable.mul_left C h_summable_wδF
+  have h_summable_norm_delta : Summable (fun ρ' => ‖farDelta ρ'‖) :=
+    Summable.of_nonneg_of_le (fun ρ' => by positivity) h_norm_delta_bound h_summable_CwδF
+  have h_summable_farDelta : Summable farDelta := Summable.of_norm h_summable_norm_delta
+  -- (4b) m·M[f1]、m·M[f2] 的 farZeroSubtype 可和性（单 f 衰减 + far 权重可和，P0.2）
+  have h_decay1' : ∀ ρ' : farZeroSubtype, ‖melinTransform f1.toTestFunction ρ'.1‖ ≤ C / |ρ'.1.im| ^ 2 := by
+    intro ρ'
+    have hz' : _root_.riemannZeta ρ'.1 = 0 := ρ'.2.1
+    have hre1' : 0 < ρ'.1.re := ρ'.2.2.1
+    have hre2' : ρ'.1.re < 1 := ρ'.2.2.2.1
+    have him : ρ'.1.im ≠ 0 := nontrivialZero_im_ne_zero ρ'.1 hz' hre1' hre2'
+    exact h_decay1 ρ'.1 hre1' hre2' him
+  have h_decay2' : ∀ ρ' : farZeroSubtype, ‖melinTransform f2.toTestFunction ρ'.1‖ ≤ C / |ρ'.1.im| ^ 2 := by
+    intro ρ'
+    have hz' : _root_.riemannZeta ρ'.1 = 0 := ρ'.2.1
+    have hre1' : 0 < ρ'.1.re := ρ'.2.2.1
+    have hre2' : ρ'.1.re < 1 := ρ'.2.2.2.1
+    have him : ρ'.1.im ≠ 0 := nontrivialZero_im_ne_zero ρ'.1 hz' hre1' hre2'
+    exact h_decay2 ρ'.1 hre1' hre2' him
+  have h_sm_M1 : Summable (fun ρ' : farZeroSubtype =>
+      (zeroMultiplicity ρ'.1 : ℂ) * melinTransform f1.toTestFunction ρ'.1) := by
+    have h_norm : Summable (fun ρ' : farZeroSubtype =>
+        ‖(zeroMultiplicity ρ'.1 : ℂ) * melinTransform f1.toTestFunction ρ'.1‖) := by
+      refine Summable.of_nonneg_of_le (fun ρ' => by positivity) ?_ (Summable.mul_left C h_summable_w)
+      intro ρ'
+      calc
+        ‖(zeroMultiplicity ρ'.1 : ℂ) * melinTransform f1.toTestFunction ρ'.1‖
+            ≤ ‖(zeroMultiplicity ρ'.1 : ℂ)‖ * ‖melinTransform f1.toTestFunction ρ'.1‖ := norm_mul_le _ _
+        _ = (zeroMultiplicity ρ'.1 : ℝ) * ‖melinTransform f1.toTestFunction ρ'.1‖ := by rw [norm_natCast]
+        _ ≤ (zeroMultiplicity ρ'.1 : ℝ) * (C / |ρ'.1.im| ^ 2) := by
+          gcongr
+          exact h_decay1' ρ'
+        _ = C * ((zeroMultiplicity ρ'.1 : ℝ) / |ρ'.1.im| ^ 2) := by ring
+    exact Summable.of_norm h_norm
+  have h_sm_M2 : Summable (fun ρ' : farZeroSubtype =>
+      (zeroMultiplicity ρ'.1 : ℂ) * melinTransform f2.toTestFunction ρ'.1) := by
+    have h_norm : Summable (fun ρ' : farZeroSubtype =>
+        ‖(zeroMultiplicity ρ'.1 : ℂ) * melinTransform f2.toTestFunction ρ'.1‖) := by
+      refine Summable.of_nonneg_of_le (fun ρ' => by positivity) ?_ (Summable.mul_left C h_summable_w)
+      intro ρ'
+      calc
+        ‖(zeroMultiplicity ρ'.1 : ℂ) * melinTransform f2.toTestFunction ρ'.1‖
+            ≤ ‖(zeroMultiplicity ρ'.1 : ℂ)‖ * ‖melinTransform f2.toTestFunction ρ'.1‖ := norm_mul_le _ _
+        _ = (zeroMultiplicity ρ'.1 : ℝ) * ‖melinTransform f2.toTestFunction ρ'.1‖ := by rw [norm_natCast]
+        _ ≤ (zeroMultiplicity ρ'.1 : ℝ) * (C / |ρ'.1.im| ^ 2) := by
+          gcongr
+          exact h_decay2' ρ'
+        _ = C * ((zeroMultiplicity ρ'.1 : ℝ) / |ρ'.1.im| ^ 2) := by ring
+    exact Summable.of_norm h_norm
+  -- (5) 尾部界：∑'‖farDelta‖ ≤ C·∑'wδF ≤ C·(F 外余项) < C·threshold = m/2
+  have h_sum_delta_le : ∑' ρ', ‖farDelta ρ'‖ ≤ C * ∑' ρ', wδF ρ' := by
+    calc
+      ∑' ρ', ‖farDelta ρ'‖ ≤ ∑' ρ', C * wδF ρ' :=
+        Summable.tsum_le_tsum h_norm_delta_bound h_summable_norm_delta h_summable_CwδF
+      _ = C * ∑' ρ', wδF ρ' := by
+        rw [← tsum_mul_left]
+  have h_wδF_le_out : ∑' ρ', wδF ρ' ≤ ∑' ρ',
+      (if ρ' ∈ F then (0 : ℝ) else (zeroMultiplicity ρ'.1 : ℝ) / |ρ'.1.im| ^ 2) := by
+    refine Summable.tsum_le_tsum ?_ h_summable_wδF ?_
+    · intro ρ'
+      dsimp [wδF]
+      by_cases hF : ρ' ∈ F <;> by_cases hρ : ρ'.1 = ρ <;> simp [hF, hρ] <;> positivity
+    · have h_rem_sum : Summable (fun ρ' : farZeroSubtype => (if ρ' ∈ F then (0 : ℝ) else
+          (zeroMultiplicity ρ'.1 : ℝ) / |ρ'.1.im| ^ 2)) := by
+        refine Summable.of_nonneg_of_le ?_ ?_ h_summable_w
+        · intro ρ'; by_cases h : ρ' ∈ F <;> simp [h] <;> apply div_nonneg <;> positivity
+        · intro ρ'
+          by_cases h : ρ' ∈ F
+          · simp [h]; positivity
+          · simp [h]
+      exact h_rem_sum
+  have h_sum_delta_lt : ∑' ρ', ‖farDelta ρ'‖ < C * threshold := by
+    calc
+      ∑' ρ', ‖farDelta ρ'‖ ≤ C * ∑' ρ', wδF ρ' := h_sum_delta_le
+      _ ≤ C * ∑' ρ', (if ρ' ∈ F then (0 : ℝ) else (zeroMultiplicity ρ'.1 : ℝ) / |ρ'.1.im| ^ 2) := by gcongr
+      _ < C * threshold := by
+        exact mul_lt_mul_of_pos_left h_rem hC_pos
+  have h_sum_delta_bound : ∑' ρ', ‖farDelta ρ'‖ < (zeroMultiplicity ρ : ℝ) / 2 := by
+    have h_calc : C * threshold = (zeroMultiplicity ρ : ℝ) / 2 := by
       rw [hthreshold_def]
       field_simp [hC_pos.ne'] <;> ring
     calc
-      ∑' (n : ℕ), tail_real (n + N) ≤ C * ∑' (n : ℕ), w (n + N) := h_calc1
-      _ < C * threshold := h_calc2
-      _ = (zeroMultiplicity ρ : ℝ) / 2 := h_calc3
-  exact ⟨f1, f2, h_pts, h_m1, h_m2, h_summable_a, h_summable_b, h_final⟩
+      ∑' ρ', ‖farDelta ρ'‖ < C * threshold := h_sum_delta_lt
+      _ = (zeroMultiplicity ρ : ℝ) / 2 := h_calc
+  -- (6) far 差界（farContribution_pair_diff_split + 三角）
+  have h_mdiff : melinTransform f1.toTestFunction ρ - melinTransform f2.toTestFunction ρ = 1 := by
+    rw [h_m1, h_m2]
+    norm_num
+  have h_split := farContribution_pair_diff_split f1.toTestFunction f2.toTestFunction ρ h_sm_M1 h_sm_M2 h_mdiff
+  have h_norm_tsum_delta : ‖∑' ρ', farDelta ρ'‖ ≤ ∑' ρ', ‖farDelta ρ'‖ :=
+    norm_tsum_le_tsum_norm h_summable_norm_delta
+  have h_tail_lt : ‖farZeroContribution f1.toTestFunction - farZeroContribution f2.toTestFunction
+      - (if IsFarZero ρ then (zeroMultiplicity ρ : ℂ) else 0)‖
+      < (zeroMultiplicity ρ : ℝ) / 2 := by
+    rw [h_split]
+    exact lt_of_le_of_lt h_norm_tsum_delta h_sum_delta_bound
+  exact ⟨f1, f2, h_pts, h_m1, h_m2, h_fin_eq, h_summable_farDelta, h_sm_M1, h_sm_M2, h_tail_lt⟩
 
-/-- 非临界线零点的尾部贡献主导性（定理，由尾部和可忽略 + 三角不等式推出）。零 sorry。 -/
+
+/-- 非临界线零点的尾部贡献主导性（子类型版，2026-10-01 重写）：由 mollified 尾部和可忽略
+    + 围道内/外两分支拆分 + 三角不等式推出。不再依赖 nontrivialZeroEnum 枚举（:49 已摘除）。 -/
 theorem off_critical_zero_tail_dominated (ρ : ℂ) :
-    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 → UniformSupport →
     ∃ (f1 f2 : MollifiedTestFunction),
       (∀ (n : ℕ), f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n)) ∧
       melinTransform f1.toTestFunction ρ = 1 ∧
       melinTransform f2.toTestFunction ρ = 0 ∧
       nontrivialZeroSum f1.toTestFunction ≠ nontrivialZeroSum f2.toTestFunction := by
-  intro hz hre1 hre2 hne
-  rcases mollified_pair_tail_sum_negligible ρ hz hre1 hre2 hne with ⟨f1, f2, h_pts, h_m1, h_m2, h_summable_a, h_summable_b, h_tail⟩
-  rcases nontrivialZeroEnum_covers_all ρ hz hre1 hre2 with ⟨k, hk⟩
-  let a : ℕ → ℂ := fun n =>
-    (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) *
-      (melinTransform f1.toTestFunction (nontrivialZeroEnum n) -
-       melinTransform f2.toTestFunction (nontrivialZeroEnum n))
-  let b : ℕ → ℂ := fun n =>
-    (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) *
-      (melinTransform f1.toTestFunction (nontrivialZeroEnum n) -
-       melinTransform f2.toTestFunction (nontrivialZeroEnum n)) *
-      (if nontrivialZeroEnum n = ρ then (0 : ℂ) else 1)
-  let d : ℕ → ℂ := fun n => a n - b n
-  have h_ak : a k = (zeroMultiplicity ρ : ℂ) := by
-    simp only [a, hk, h_m1, h_m2] <;> ring
-  have h_iff : ∀ (n : ℕ), (nontrivialZeroEnum n = ρ) ↔ (n = k) := by
-    intro n; constructor
-    · intro h; exact nontrivialZeroEnum_injective (by rw [h, hk])
-    · intro h; rw [h, hk]
-  have h_b_eq : ∀ (n : ℕ), b n = a n * (if n = k then (0 : ℂ) else 1) := by
-    intro n
-    by_cases h : n = k
-    · simp [b, a, h, h_iff] <;> ring
-    · have hne2 : nontrivialZeroEnum n ≠ ρ := by
-        intro h2; exact h ((h_iff n).mp h2)
-      simp [b, a, h, hne2] <;> ring
-  have h_d_eq : ∀ (n : ℕ), d n = (if n = k then a k else 0) := by
-    intro n
-    by_cases h : n = k
-    · simp [d, h, h_b_eq, h_iff] <;> ring
-    · simp [d, h, h_b_eq] <;> ring
-  have h_norm_b_eq : ∀ (n : ℕ), ‖b n‖ = (zeroMultiplicity (nontrivialZeroEnum n) : ℝ) *
-      ‖melinTransform f1.toTestFunction (nontrivialZeroEnum n) -
-        melinTransform f2.toTestFunction (nontrivialZeroEnum n)‖ *
-      (if nontrivialZeroEnum n = ρ then 0 else 1) := by
-    intro n
-    by_cases h : n = k
-    · simp [b, a, h, h_iff] <;> ring
-    · have hne2 : nontrivialZeroEnum n ≠ ρ := by
-        intro h2; exact h ((h_iff n).mp h2)
-      simp [b, a, h, hne2, norm_mul] <;> ring
-  have h_summable_d : Summable d := Summable.sub h_summable_a h_summable_b
-  have h_split : a = d + b := by
-    funext n; simp [d] <;> ring
-  have h_single : ∀ n ≠ k, d n = 0 := by
-    intro n hn
-    rw [h_d_eq n]; simp [hn] <;> ring
-  have h_tsum_d : ∑' (n : ℕ), d n = a k := by
-    rw [tsum_eq_single k h_single, h_d_eq k] <;> simp <;> ring
-  have h_main : ∑' (n : ℕ), a n ≠ 0 := by
-    by_contra h_sum
-    have h_decomp : ∑' (n : ℕ), a n = (∑' (n : ℕ), d n) + (∑' (n : ℕ), b n) := by
-      rw [h_split]
-      exact Summable.tsum_add h_summable_d h_summable_b
-    have h_sum2 : (zeroMultiplicity ρ : ℂ) + ∑' (n : ℕ), b n = 0 := by
-      rw [h_decomp, h_tsum_d, h_ak] at h_sum
-      exact h_sum
-    have h_tail_eq : ∑' (n : ℕ), b n = -((zeroMultiplicity ρ : ℂ)) := by
-      have h : (zeroMultiplicity ρ : ℂ) + ∑' (n : ℕ), b n = 0 := h_sum2
-      calc
-        ∑' (n : ℕ), b n
-          = (zeroMultiplicity ρ : ℂ) + ∑' (n : ℕ), b n - (zeroMultiplicity ρ : ℂ) := by ring
-        _ = 0 - (zeroMultiplicity ρ : ℂ) := by rw [h]
-        _ = -((zeroMultiplicity ρ : ℂ)) := by ring
-    have h_summable_norm_b : Summable (fun n => ‖b n‖) := Summable.norm h_summable_b
-    have h_tail_norm : ‖∑' (n : ℕ), b n‖ ≤ ∑' (n : ℕ), ‖b n‖ :=
-      norm_tsum_le_tsum_norm h_summable_norm_b
-    rw [h_tail_eq] at h_tail_norm
-    have h_norm_neg : ‖-((zeroMultiplicity ρ : ℂ))‖ = (zeroMultiplicity ρ : ℝ) := by
-      simp [norm_neg] <;> exact?
-    rw [h_norm_neg] at h_tail_norm
-    rw [tsum_congr h_norm_b_eq] at h_tail_norm
-    linarith
-  have h_final : nontrivialZeroSum f1.toTestFunction ≠ nontrivialZeroSum f2.toTestFunction := by
+  intro hz hre1 hre2 hne h_win
+  rcases mollified_pair_tail_sum_negligible ρ hz hre1 hre2 hne h_win with
+    ⟨f1, f2, h_pts, h_m1, h_m2, h_fin_eq, h_summable_delta, h_sm_M1, h_sm_M2, h_tail⟩
+  -- (1) 围道内 Finset 差 = (if ρ ∈ contourZeroFinset then m(ρ) else 0)
+  have h_fin_diff : (∑ ρ' ∈ contourZeroFinset, (zeroMultiplicity ρ' : ℂ) * melinTransform f1.toTestFunction ρ')
+      - (∑ ρ' ∈ contourZeroFinset, (zeroMultiplicity ρ' : ℂ) * melinTransform f2.toTestFunction ρ')
+      = (if ρ ∈ contourZeroFinset then (zeroMultiplicity ρ : ℂ) else 0) := by
+    by_cases hρin : ρ ∈ contourZeroFinset
+    · let g1 : ℂ → ℂ := fun ρ' => (zeroMultiplicity ρ' : ℂ) * melinTransform f1.toTestFunction ρ'
+      let g2 : ℂ → ℂ := fun ρ' => (zeroMultiplicity ρ' : ℂ) * melinTransform f2.toTestFunction ρ'
+      have h_rest : ∀ ρ' ∈ contourZeroFinset.erase ρ, g1 ρ' = g2 ρ' := by
+        intro ρ' hρ'
+        have hρ'c : ρ' ∈ contourZeroFinset := (Finset.mem_erase.mp hρ').2
+        have hne' : ρ' ≠ ρ := (Finset.mem_erase.mp hρ').1
+        dsimp [g1, g2]
+        rw [h_fin_eq ρ' hρ'c hne'] <;> ring
+      have h_e1 : (∑ ρ' ∈ contourZeroFinset, g1 ρ') = g1 ρ + (∑ ρ' ∈ contourZeroFinset.erase ρ, g1 ρ') := by
+        simpa [add_comm] using (Finset.sum_erase_add (s := contourZeroFinset) (a := ρ) (f := g1) hρin).symm
+      have h_e2 : (∑ ρ' ∈ contourZeroFinset, g2 ρ') = g2 ρ + (∑ ρ' ∈ contourZeroFinset.erase ρ, g2 ρ') := by
+        simpa [add_comm] using (Finset.sum_erase_add (s := contourZeroFinset) (a := ρ) (f := g2) hρin).symm
+      have h_erase_eq : (∑ ρ' ∈ contourZeroFinset.erase ρ, g1 ρ') = (∑ ρ' ∈ contourZeroFinset.erase ρ, g2 ρ') := by
+        rw [Finset.sum_congr rfl h_rest]
+      have h_g1ρ : g1 ρ = (zeroMultiplicity ρ : ℂ) := by
+        dsimp [g1]
+        rw [h_m1] <;> ring
+      have h_g2ρ : g2 ρ = 0 := by
+        dsimp [g2]
+        rw [h_m2] <;> ring
+      have h_calc : (∑ ρ' ∈ contourZeroFinset, g1 ρ') - (∑ ρ' ∈ contourZeroFinset, g2 ρ') = (zeroMultiplicity ρ : ℂ) := by
+        calc
+          (∑ ρ' ∈ contourZeroFinset, g1 ρ') - (∑ ρ' ∈ contourZeroFinset, g2 ρ')
+              = (g1 ρ + ∑ ρ' ∈ contourZeroFinset.erase ρ, g1 ρ') - (g2 ρ + ∑ ρ' ∈ contourZeroFinset.erase ρ, g2 ρ') := by rw [h_e1, h_e2]
+          _ = g1 ρ - g2 ρ := by rw [h_erase_eq] <;> ring
+          _ = (zeroMultiplicity ρ : ℂ) := by rw [h_g1ρ, h_g2ρ] <;> ring
+      simpa [hρin] using h_calc
+    · let g1 : ℂ → ℂ := fun ρ' => (zeroMultiplicity ρ' : ℂ) * melinTransform f1.toTestFunction ρ'
+      let g2 : ℂ → ℂ := fun ρ' => (zeroMultiplicity ρ' : ℂ) * melinTransform f2.toTestFunction ρ'
+      have h_all : ∀ ρ' ∈ contourZeroFinset, g1 ρ' = g2 ρ' := by
+        intro ρ' hρ'
+        have hne' : ρ' ≠ ρ := by
+          intro h'
+          rw [h'] at hρ'
+          exact hρin hρ'
+        dsimp [g1, g2]
+        rw [h_fin_eq ρ' hρ' hne'] <;> ring
+      have h_eq : (∑ ρ' ∈ contourZeroFinset, g1 ρ') = (∑ ρ' ∈ contourZeroFinset, g2 ρ') := by
+        rw [Finset.sum_congr rfl h_all]
+      have h_zero : (∑ ρ' ∈ contourZeroFinset, g1 ρ') - (∑ ρ' ∈ contourZeroFinset, g2 ρ') = 0 := by
+        rw [h_eq] <;> ring
+      simpa [hρin] using h_zero
+  -- (2) far 差拆 ρ 项（farContribution_pair_diff_split）
+  let farDelta : farZeroSubtype → ℂ := fun ρ' =>
+    (zeroMultiplicity ρ'.1 : ℂ) *
+      (melinTransform f1.toTestFunction ρ'.1 - melinTransform f2.toTestFunction ρ'.1) *
+      (if ρ'.1 = ρ then (0 : ℂ) else 1)
+  have h_mdiff : melinTransform f1.toTestFunction ρ - melinTransform f2.toTestFunction ρ = 1 := by
+    rw [h_m1, h_m2]
+    norm_num
+  have h_split_far : farZeroContribution f1.toTestFunction - farZeroContribution f2.toTestFunction
+      = (if IsFarZero ρ then (zeroMultiplicity ρ : ℂ) else 0)
+        + (∑' ρ' : farZeroSubtype, farDelta ρ') := by
+    rw [← farContribution_pair_diff_split f1.toTestFunction f2.toTestFunction ρ h_sm_M1 h_sm_M2 h_mdiff]
+    ring
+  -- (3) ρ ∈ contourZeroFinset ⟺ ρ ∉ far（互斥完备）
+  have h_excl : (if ρ ∈ contourZeroFinset then (zeroMultiplicity ρ : ℂ) else 0)
+      + (if IsFarZero ρ then (zeroMultiplicity ρ : ℂ) else 0)
+      = (zeroMultiplicity ρ : ℂ) := by
+    by_cases hc : ‖ρ - (1 / 2 : ℂ)‖ < 1
+    · have hρin_c : ρ ∈ contourZeroFinset := (contourZeroFinset_mem ρ).mpr ⟨hz, hre1, hre2, hc⟩
+      have hρnot_far : ¬ IsFarZero ρ := by
+        intro h
+        have hge : ‖ρ - (1 / 2 : ℂ)‖ ≥ 1 := h.2.2.2
+        linarith
+      have h1 : (if ρ ∈ contourZeroFinset then (zeroMultiplicity ρ : ℂ) else 0) =
+          (zeroMultiplicity ρ : ℂ) := by
+        exact if_pos hρin_c
+      have h2 : (if IsFarZero ρ then (zeroMultiplicity ρ : ℂ) else 0) = 0 := by
+        exact if_neg hρnot_far
+      rw [h1, h2]
+      ring
+    · have hge : ‖ρ - (1 / 2 : ℂ)‖ ≥ 1 := not_lt.mp hc
+      have hρin_f : IsFarZero ρ := ⟨hz, hre1, hre2, hge⟩
+      have hρnot_c : ρ ∉ contourZeroFinset := by
+        intro h
+        have hl : ‖ρ - (1 / 2 : ℂ)‖ < 1 := (contourZeroFinset_mem ρ).mp h |>.2.2.2
+        linarith
+      have h1 : (if ρ ∈ contourZeroFinset then (zeroMultiplicity ρ : ℂ) else 0) = 0 := by
+        exact if_neg hρnot_c
+      have h2 : (if IsFarZero ρ then (zeroMultiplicity ρ : ℂ) else 0) =
+          (zeroMultiplicity ρ : ℂ) := by
+        exact if_pos hρin_f
+      rw [h1, h2]
+      ring
+  -- (4) 总差 = m(ρ) + ∑'farDelta
+  have h_total_eq : nontrivialZeroSum f1.toTestFunction - nontrivialZeroSum f2.toTestFunction
+      = (zeroMultiplicity ρ : ℂ) + (∑' ρ' : farZeroSubtype, farDelta ρ') := by
+    unfold nontrivialZeroSum
+    have h_re : (∑ ρ ∈ contourZeroFinset, (zeroMultiplicity ρ : ℂ) * melinTransform f1.toTestFunction ρ)
+          + farZeroContribution f1.toTestFunction
+          - ((∑ ρ ∈ contourZeroFinset, (zeroMultiplicity ρ : ℂ) * melinTransform f2.toTestFunction ρ)
+            + farZeroContribution f2.toTestFunction)
+        = ((∑ ρ ∈ contourZeroFinset, (zeroMultiplicity ρ : ℂ) * melinTransform f1.toTestFunction ρ)
+          - (∑ ρ ∈ contourZeroFinset, (zeroMultiplicity ρ : ℂ) * melinTransform f2.toTestFunction ρ))
+          + (farZeroContribution f1.toTestFunction - farZeroContribution f2.toTestFunction) := by
+        ring
+    rw [h_re, h_fin_diff, h_split_far]
+    rw [← add_assoc, h_excl]
+  -- (5) 尾部界（改写为 farDelta 的 tsum）
+  have h_tail' : ‖∑' ρ' : farZeroSubtype, farDelta ρ'‖ < (zeroMultiplicity ρ : ℝ) / 2 := by
+    rw [farContribution_pair_diff_split f1.toTestFunction f2.toTestFunction ρ h_sm_M1 h_sm_M2 h_mdiff] at h_tail
+    dsimp [farDelta] at h_tail ⊢
+    exact h_tail
+  -- (6) 主矛盾：若总差 = 0 ⟹ ∑'farDelta = -m(ρ) ⟹ ‖∑'farDelta‖ = m(ρ) > m/2，与 (5) 矛盾
+  have h_main : nontrivialZeroSum f1.toTestFunction ≠ nontrivialZeroSum f2.toTestFunction := by
     intro h
     have h_diff : nontrivialZeroSum f1.toTestFunction - nontrivialZeroSum f2.toTestFunction = 0 := by
       rw [h] <;> ring
-    have h_tsum_diff : ∑' (n : ℕ), a n = nontrivialZeroSum f1.toTestFunction - nontrivialZeroSum f2.toTestFunction := by
-      rw [←nontrivialZeroSum_tsum_linear f1.toTestFunction f2.toTestFunction]
-      <;> rfl
-    have h_eq : ∑' (n : ℕ), a n = 0 := by
-      rw [h_tsum_diff, h_diff]
-    exact h_main h_eq
-  exact ⟨f1, f2, h_pts, h_m1, h_m2, h_final⟩
+    have h_zero_total : (zeroMultiplicity ρ : ℂ) + (∑' ρ' : farZeroSubtype, farDelta ρ') = 0 := by
+      rw [h_total_eq] at h_diff
+      exact h_diff
+    have h_small : (∑' ρ' : farZeroSubtype, farDelta ρ') = -((zeroMultiplicity ρ : ℂ)) := by
+      calc
+        (∑' ρ' : farZeroSubtype, farDelta ρ')
+            = (zeroMultiplicity ρ : ℂ) + (∑' ρ' : farZeroSubtype, farDelta ρ') - (zeroMultiplicity ρ : ℂ) := by ring
+        _ = 0 - (zeroMultiplicity ρ : ℂ) := by rw [h_zero_total]
+        _ = -((zeroMultiplicity ρ : ℂ)) := by ring
+    have h_small_norm : ‖∑' ρ' : farZeroSubtype, farDelta ρ'‖ = (zeroMultiplicity ρ : ℝ) := by
+      rw [h_small]
+      simp [norm_neg]
+    have h_contra : (zeroMultiplicity ρ : ℝ) < (zeroMultiplicity ρ : ℝ) / 2 := by
+      rw [h_small_norm] at h_tail'
+      exact h_tail'
+    have hm : 0 < (zeroMultiplicity ρ : ℝ) := by
+      have h : 0 < zeroMultiplicity ρ := zeroMultiplicity_positive_at_nontrivial_zeros ρ hz hre1 hre2
+      exact_mod_cast h
+    linarith
+  exact ⟨f1, f2, h_pts, h_m1, h_m2, h_main⟩
+
 
 /-- 非临界线零点的非平凡零点和分离（定理，由尾部主导性直接推出）：
     对任意非临界线零点 ρ，存在 f₁, f₂ 使谱点取值相同且 nontrivialZeroSum(f₁) ≠ nontrivialZeroSum(f₂)。
@@ -5391,12 +5611,12 @@ theorem off_critical_zero_tail_dominated (ρ : ℂ) :
     注：mellin_pair_separation_construction（PWW 构造）仍是有用的独立定理，
     它展示了如何构造满足 M[f₁](ρ)=1, M[f₂](ρ)=0 的函数对。 -/
 theorem nontrivial_zero_sum_pair_separation (ρ : ℂ) :
-    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
+    _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 → UniformSupport →
       ∃ (f1 f2 : MollifiedTestFunction),
         (∀ (n : ℕ), f1.toTestFunction.eval (specDiscM n) = f2.toTestFunction.eval (specDiscM n)) ∧
         nontrivialZeroSum f1.toTestFunction ≠ nontrivialZeroSum f2.toTestFunction := by
-  intro hz hre1 hre2 hne
-  rcases off_critical_zero_tail_dominated ρ hz hre1 hre2 hne with ⟨f1, f2, h_pts, h_m1, h_m2, h_nz⟩
+  intro hz hre1 hre2 hne h_win
+  rcases off_critical_zero_tail_dominated ρ hz hre1 hre2 hne h_win with ⟨f1, f2, h_pts, h_m1, h_m2, h_nz⟩
   exact ⟨f1, f2, h_pts, h_nz⟩
 
 /-- 非临界线零点的矛盾（定理，由 nontrivial_zero_sum_pair_separation 推出）：
@@ -5410,11 +5630,11 @@ theorem nontrivial_zero_sum_pair_separation (ρ : ℂ) :
     nontrivialZeroSum(f₁)=spectralSum(f₁)=spectralSum(f₂)=nontrivialZeroSum(f₂)，矛盾。
     故 f₁, f₂ 中至少有一个满足 spectralSum(f)≠nontrivialZeroSum(f)。 -/
 theorem off_critical_line_contradiction :
-    ∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 →
+    ∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ρ.re ≠ 1 / 2 → UniformSupport →
       ∃ (f : MollifiedTestFunction),
         spectralSum f.toTestFunction ≠ nontrivialZeroSum f.toTestFunction := by
-  intro ρ hz hre1 hre2 hne
-  rcases nontrivial_zero_sum_pair_separation ρ hz hre1 hre2 hne with ⟨f1, f2, h_pts, h_nontriv_ne⟩
+  intro ρ hz hre1 hre2 hne h_win
+  rcases nontrivial_zero_sum_pair_separation ρ hz hre1 hre2 hne h_win with ⟨f1, f2, h_pts, h_nontriv_ne⟩
   have h_spec_eq : spectralSum f1.toTestFunction = spectralSum f2.toTestFunction :=
     spectral_sum_determined_by_points f1.toTestFunction f2.toTestFunction h_pts
   by_cases h1 : spectralSum f1.toTestFunction = nontrivialZeroSum f1.toTestFunction
@@ -5442,14 +5662,18 @@ theorem off_critical_line_contradiction :
     数学依据现状见 weil_explicit_formula_exact 的 A2 注记：
     谱对偶篇附录 D.5 惯性素按范数 p 处理，与保序双射篇 Nm(𝔭)=p² 冲突；
     修正后加权几何侧对应 ζ_K 显式公式（K-GRH 级），非 ζ 显式公式。 -/
-theorem all_zeros_on_critical_line (f : MollifiedTestFunction) :
+theorem all_zeros_on_critical_line
+    (h_duality : ∀ (f : MollifiedTestFunction),
+      spectralSum f.toTestFunction = nontrivialZeroSum f.toTestFunction)
+    (h_win : UniformSupport)
+    (f : MollifiedTestFunction) :
     ∀ (s : ℂ), _root_.riemannZeta s = 0 → 0 < s.re → s.re < 1 → s.re = 1 / 2 := by
   intro s hs hre1 hre2
   by_contra h_ne
-  have h_contra := off_critical_line_contradiction s hs hre1 hre2 h_ne
+  have h_contra := off_critical_line_contradiction s hs hre1 hre2 h_ne h_win
   rcases h_contra with ⟨g, hg⟩
   have h_eq : spectralSum g.toTestFunction = nontrivialZeroSum g.toTestFunction :=
-    weil_explicit_formula_trivial_terms_cancel g
+    weil_explicit_formula_trivial_terms_cancel h_duality g
   exact hg h_eq
 
 /-- 谱-零集合对应公理（独立公理，路径 B）：
@@ -5471,6 +5695,9 @@ theorem all_zeros_on_critical_line (f : MollifiedTestFunction) :
 
     降级路径：
       未来从 Weil 显式公式侧在 Lean 中证明该集合相等，把 axiom 降为 theorem。
+      【2026-10-01 已执行】本声明已降级为 lemma + sorry（可改正的遗留，禁止升格为 axiom），
+      数学依据：机制 A 谱-零点对偶（对偶恒等式 h_duality 的谱侧对应），
+      待对偶恒等式（weil_explicit_formula_exact 前提）证明后闭合。
 
     审计提示：
       建议运行 #print axioms RHSpectralDuality.riemann_hypothesis
@@ -5480,10 +5707,11 @@ theorem all_zeros_on_critical_line (f : MollifiedTestFunction) :
 #print axioms RHSpectralDuality.off_critical_line_contradiction
 #print axioms RHSpectralDuality.mollified_trace_equality
 #print axioms RHSpectralDuality.weil_explicit_formula，确认主定理实际依赖哪些公理。 -/
-axiom spectral_zero_set_match :
+lemma spectral_zero_set_match :
     {x : ℝ | ∃ n : ℕ, x = 1 / 4 + (maassSpecParam n)^2} =
     {x : ℝ | ∃ (ρ : ℂ), _root_.riemannZeta ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1 ∧
-      ρ.re = 1 / 2 ∧ 0 ≤ ρ.im ∧ x = 1 / 4 + (ρ.im)^2}
+      ρ.re = 1 / 2 ∧ 0 ≤ ρ.im ∧ x = 1 / 4 + (ρ.im)^2} := by
+  sorry
 
 theorem zero_im_matches_maass_param :
     ∀ (s : ℂ), _root_.riemannZeta s = 0 → 0 < s.re → s.re < 1 → s.re = 1 / 2 → 0 ≤ s.im →
@@ -5528,11 +5756,15 @@ theorem maass_param_to_zero (f : MollifiedTestFunction) :
   · simp [hρ_re_half] <;> norm_num
   · simp [h5] <;> ring
 
-theorem spectral_zero_support_match (f : MollifiedTestFunction) :
+theorem spectral_zero_support_match
+    (h_duality : ∀ (f : MollifiedTestFunction),
+      spectralSum f.toTestFunction = nontrivialZeroSum f.toTestFunction)
+    (h_win : UniformSupport)
+    (f : MollifiedTestFunction) :
     ∀ (s : ℂ), _root_.riemannZeta s = 0 → 0 < s.re → s.re < 1 → 0 ≤ s.im →
       ∃ (n : ℕ), s = (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ) := by
   intro s hs hre1 hre2 htim
-  have h_crit : s.re = 1 / 2 := all_zeros_on_critical_line f s hs hre1 hre2
+  have h_crit : s.re = 1 / 2 := all_zeros_on_critical_line h_duality h_win f s hs hre1 hre2
   have h_im : ∃ (n : ℕ), s.im = maassSpecParam n :=
     zero_im_matches_maass_param s hs hre1 hre2 h_crit htim
   rcases h_im with ⟨n, hn⟩
@@ -5545,10 +5777,14 @@ theorem spectral_zero_support_match (f : MollifiedTestFunction) :
     每个上半平面 ζ 非平凡零点 s 都形如 s = 1/2 + i·t_n。
     这是 RH 证明的关键方向——所有非平凡零点都来自 Maass 谱参数。
     注：下半平面零点是共轭，对应 s=1/2-i·t_n。 -/
-theorem zero_to_maass_param (f : MollifiedTestFunction) :
+theorem zero_to_maass_param
+    (h_duality : ∀ (f : MollifiedTestFunction),
+      spectralSum f.toTestFunction = nontrivialZeroSum f.toTestFunction)
+    (h_win : UniformSupport)
+    (f : MollifiedTestFunction) :
     ∀ (s : ℂ), _root_.riemannZeta s = 0 → 0 < s.re → s.re < 1 → 0 ≤ s.im →
       ∃ (n : ℕ), s = (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ) :=
-  spectral_zero_support_match f
+  spectral_zero_support_match h_duality h_win f
 
 /-- 磨光显式公式 MEF（定理，由正向 + 逆向推出）：
     Maass 谱参数与 ζ 非平凡零点双向一一对应（上半平面）：
@@ -5556,24 +5792,36 @@ theorem zero_to_maass_param (f : MollifiedTestFunction) :
     (2) 逆向：每个上半平面非平凡零点 s 对应 t_n，s = 1/2 + i·t_n
     证明：直接取 maass_param_to_zero 和 zero_to_maass_param 的合取。
     注：RH 本身已由 all_zeros_on_critical_line 直接证明，不依赖 MEF 逆向。 -/
-theorem mollified_trace_explicit_formula (f : MollifiedTestFunction) :
+theorem mollified_trace_explicit_formula
+    (h_duality : ∀ (f : MollifiedTestFunction),
+      spectralSum f.toTestFunction = nontrivialZeroSum f.toTestFunction)
+    (h_win : UniformSupport)
+    (f : MollifiedTestFunction) :
     (∀ (n : ℕ), ∃ (ρ : ℂ), _root_.riemannZeta ρ = 0 ∧
       ρ = (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ)) ∧
     (∀ (s : ℂ), _root_.riemannZeta s = 0 → 0 < s.re → s.re < 1 → 0 ≤ s.im →
       ∃ (n : ℕ), s = (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ)) := by
-  exact ⟨maass_param_to_zero f, zero_to_maass_param f⟩
+  exact ⟨maass_param_to_zero f, zero_to_maass_param h_duality h_win f⟩
 
-theorem zero_correspondence (n : ℕ) (f : MollifiedTestFunction) :
+theorem zero_correspondence (n : ℕ)
+    (h_duality : ∀ (f : MollifiedTestFunction),
+      spectralSum f.toTestFunction = nontrivialZeroSum f.toTestFunction)
+    (h_win : UniformSupport)
+    (f : MollifiedTestFunction) :
     ∃ (ρ : ℂ), _root_.riemannZeta ρ = 0 ∧ ρ.re = 1 / 2 := by
-  have h := (mollified_trace_explicit_formula f).1 n
+  have h := (mollified_trace_explicit_formula h_duality h_win f).1 n
   rcases h with ⟨ρ, hz, hρ⟩
   refine' ⟨ρ, hz, _⟩
   rw [hρ] <;> simp [Complex.add_re, Complex.mul_re]
 
-theorem nontrivial_zero_has_maass_param (f : MollifiedTestFunction) (s : ℂ)
+theorem nontrivial_zero_has_maass_param
+    (h_duality : ∀ (f : MollifiedTestFunction),
+      spectralSum f.toTestFunction = nontrivialZeroSum f.toTestFunction)
+    (h_win : UniformSupport)
+    (f : MollifiedTestFunction) (s : ℂ)
     (hz : _root_.riemannZeta s = 0) (hpos : 0 < s.re) (hlt : s.re < 1) (htim : 0 ≤ s.im) :
     ∃ (n : ℕ), s = (1 / 2 : ℂ) + Complex.I * (maassSpecParam n : ℂ) :=
-  (mollified_trace_explicit_formula f).2 s hz hpos hlt htim
+  (mollified_trace_explicit_formula h_duality h_win f).2 s hz hpos hlt htim
 
 /-- 连续谱项在临界带内正则（由 continuous_term_trivial_zeros 公理直接推出）。
     这意味着连续谱 Cont(f) 不影响非平凡零点（0 < Re(s) < 1）的位置。 -/
@@ -5602,11 +5850,18 @@ theorem trivial_zeros_negative_even :
     （谱对偶桥，weil_explicit_formula_exact 的 A2 修正后成立）。
     Riemann ζ 的 RH 为长期目标：需在文章层面补"ζ_K 零点侧 → ζ 零点侧"的桥
     （K-GRH 不蕴涵 RH：ζ 的零点 ⊂ ζ_K 的零点，反向推不出）。
-    本定理陈述暂保留占位。 -/
-theorem riemann_hypothesis (f : MollifiedTestFunction) :
+    本定理陈述暂保留占位。
+    形式化状态（2026-10-01）：本定理为条件定理——前提 h_duality 即
+    weil_explicit_formula_exact 的对偶恒等式（谱侧 = 零点侧，逐 f）。
+    若对偶成立则 RH（反证链）；对偶本身待 A2 修正后从文章层面证明。 -/
+theorem riemann_hypothesis
+    (h_duality : ∀ (f : MollifiedTestFunction),
+      spectralSum f.toTestFunction = nontrivialZeroSum f.toTestFunction)
+    (h_win : UniformSupport)
+    (f : MollifiedTestFunction) :
     ∀ (s : ℂ), _root_.riemannZeta s = 0 → 0 < s.re → s.re < 1 → s.re = 1 / 2 := by
   intro s hz h_re_pos h_re_lt_one
-  exact all_zeros_on_critical_line f s hz h_re_pos h_re_lt_one
+  exact all_zeros_on_critical_line h_duality h_win f s hz h_re_pos h_re_lt_one
 
 /-- 向实二次域族推广的范式（条件性声明，论文第6节）：
     对任意无平方因子 d > 0，若该实二次域满足：

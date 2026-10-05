@@ -22,11 +22,15 @@ open scoped Interval
 open scoped Real
 open scoped Topology
 
-theorem nontrivialZeroEnum_exists :
+/-- 非平凡零点集合的覆盖枚举（真证，2026-10-02）：
+    临界带零点集 S = riemannZetaZeros ∩ {s | 0 < s.re ∧ s.re < 1} 可数，
+    故存在 ℕ → ℂ 的满射覆盖枚举（枚举值不一定落在 S 内，也不要求互异）。
+    集合论依据：可数集有 ℕ 的满射覆盖（空集情形真空成立），
+    不依赖"ζ 存在非平凡零点"（S.Nonempty）或"零点无限"（Hadamard）。
+    S.Countable 由 mathlib 的"紧集 ∩ 零点集有限"（inter_riemannZetaZeros_finite）给出。 -/
+theorem nontrivialZeroEnum_covers_exists :
     ∃ (e : ℕ → ℂ),
-      (Function.Injective e) ∧
-      (∀ (n : ℕ), _root_.riemannZeta (e n) = 0 ∧ 0 < (e n).re ∧ (e n).re < 1) ∧
-      (∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ∃ (n : ℕ), e n = ρ) := by
+      ∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ∃ (n : ℕ), e n = ρ := by
   let S : Set ℂ := riemannZetaZeros ∩ {s | 0 < s.re ∧ s.re < 1}
   have hS_count : S.Countable := by
     have h1 : ∀ (N : ℕ), (S ∩ Metric.closedBall (0:ℂ) (N:ℝ)).Finite := by
@@ -46,12 +50,44 @@ theorem nontrivialZeroEnum_exists :
       · rintro ⟨N, hz, _⟩; exact hz
     rw [h2]
     exact Set.countable_iUnion (fun N => (h1 N).countable)
-  -- 【可改正的遗留，当前不用】
-  -- 缺口：从 S.Countable 到"存在枚举函数 e : ℕ → ℂ"（可数集合论标准结果，纯集合论，机械可填）。
-  -- 用途说明：本 sorry 支撑 nontrivialZeroEnum 本身（small/layer 分层、contourZeroFinset 补集、
-  -- farZeroContribution 的 tsum 都用它索引）。9/30 重构后，:109/主链不再依赖"全零点 tsum 枚举"——
-  -- nontrivialZeroSum 已显式拆分为 contourZeroFinset（围道内 Finset）+ farZeroContribution（围道外）。
-  -- 若未来把 farZeroContribution 也换成 Finset 截断（按 |Im| 分层），本 sorry 的"全枚举"角色可进一步退休。
+  by_cases hne : S.Nonempty
+  · rcases Set.Countable.exists_eq_range hS_count hne with ⟨e, he⟩
+    refine ⟨e, ?_⟩
+    intro ρ hz hre1 hre2
+    have hρS : ρ ∈ S := by
+      dsimp [S]
+      exact ⟨mem_riemannZetaZeros.mpr hz, hre1, hre2⟩
+    have hρrange : ρ ∈ Set.range e := by
+      rw [← he]
+      exact hρS
+    exact Set.mem_range.mp hρrange
+  · refine ⟨fun _ => 0, ?_⟩
+    intro ρ hz hre1 hre2
+    exfalso
+    apply hne
+    refine ⟨ρ, ?_⟩
+    dsimp [S]
+    exact ⟨mem_riemannZetaZeros.mpr hz, hre1, hre2⟩
+
+/-- 全枚举（覆盖 + 单射 + 枚举值全在临界带）存在性。
+    【可改正的遗留，2026-10-02 精化审计】
+    覆盖分量已由 nontrivialZeroEnum_covers_exists 真证（可数集满射覆盖，无需额外前提）。
+    剩余缺口（数论级，mathlib 无现成定理，非机械）：
+      (i)  S.Nonempty：ζ 存在非平凡零点（临界带零点非空）——数学依据：
+           ζ(1/2 ± 14.13…i) = 0（Hadamard 因子分解 / 数值事实），mathlib 无形式化；
+      (ii) 单射 + range e ⊆ S：需要 S 无限（Hadamard/Hardy 级定理，mathlib 无）。
+      [i+ii 合起来即"存在双射 ℕ ↔ S"，等价于 S 可数无限。]
+    用途现状（2026-10-02 核实）：仅 tsum 精确层使用——stage_4 的
+    nontrivialZeroSum_pair_localization / zero_side_melin_localization
+    （后者无调用者）依赖 nontrivialZeroEnum_covers_all / _injective / _are_zeros；
+    反证主链 off_critical_zero_tail_dominated 证明体 unfold nontrivialZeroSum 后
+    纯 contourZeroFinset + farZeroSubtype 子类型 tsum，已完全绕开 ℕ 枚举。
+    退役路径：P0.3 将 tsum 精确层子类型化后，本遗留可整体删除。 -/
+theorem nontrivialZeroEnum_exists :
+    ∃ (e : ℕ → ℂ),
+      (Function.Injective e) ∧
+      (∀ (n : ℕ), _root_.riemannZeta (e n) = 0 ∧ 0 < (e n).re ∧ (e n).re < 1) ∧
+      (∀ (ρ : ℂ), _root_.riemannZeta ρ = 0 → 0 < ρ.re → ρ.re < 1 → ∃ (n : ℕ), e n = ρ) := by
   sorry
 
 noncomputable def nontrivialZeroEnum : ℕ → ℂ := Classical.choose nontrivialZeroEnum_exists
@@ -1144,13 +1180,26 @@ theorem contourZeroFinset_mem (ρ : ℂ) :
   unfold contourZeroFinset
   simp [contourZeroFinset_finite.coe_toFinset]
 
+/-- 围道外非平凡零点的判定谓词（2026-10-01）：|s−1/2| ≥ 1 的非平凡零点。
+    供 farZeroSubtype 成员与 stage_4 反证链（mollified/off_critical 的 ρ 项分离）使用。 -/
+abbrev IsFarZero (ρ : ℂ) : Prop :=
+  _root_.riemannZeta ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1 ∧ ‖ρ - (1 / 2 : ℂ)‖ ≥ 1
+
+/-- 围道外非平凡零点子类型（2026-10-01）：|s−1/2| ≥ 1 的非平凡零点。
+    farZeroContribution 与 stage_4 反证链（mollified_pair_tail_sum_negligible、
+    off_critical_zero_tail_dominated）共用；tsum 对任意类型有定义，不依赖
+    nontrivialZeroEnum 的 ℕ 枚举（从主链摘除 :56 sorry 的 S 无限需求）。 -/
+abbrev farZeroSubtype : Type :=
+  {ρ : ℂ // IsFarZero ρ}
+
 /-- 围道外非平凡零点贡献（def）：|s−1/2| ≥ 1 的零点（含围道上）的 Mellin 加权项。
     半径 1 与 ContourIntegral.contourRadius = 1 一致。
-    围道上零点的处理：归入围道外（≥ 1）；围道避开零点的形变是模型层标准处理。 -/
+    围道上零点的处理：归入围道外（≥ 1）；围道避开零点的形变是模型层标准处理。
+    2026-10-01 改：直接对"围道外非平凡零点子类型"求和（子类型 tsum），不再依赖
+    nontrivialZeroEnum 的 ℕ 枚举——从主链摘除 nontrivialZeroEnum_exists（:49 sorry 的
+    "S 无限/单射枚举"需求）。tsum 对任意类型有定义，可数性与可和性只决定收敛，不影响定义。 -/
 noncomputable def farZeroContribution (f : TestFunction) : ℂ :=
-    ∑' (n : ℕ), if ‖nontrivialZeroEnum n - (1 / 2 : ℂ)‖ ≥ 1
-      then (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) * melinTransform f (nontrivialZeroEnum n)
-      else 0
+  ∑' ρ : farZeroSubtype, (zeroMultiplicity ρ.1 : ℂ) * melinTransform f ρ.1
 
 /-- 非平凡零点求和（def，显式拆分围道内/外）：
     nontrivialZeroSum(f) = Σ_{ρ ∈ contourZeroFinset} m(ρ)·M[f](ρ) + farZeroContribution f。
@@ -1188,21 +1237,20 @@ theorem nontrivialZeroSum_localization (f : TestFunction) :
     rw [h ρ hz hre1 hre2] <;> ring
   have h_sum_fin : (∑ ρ ∈ contourZeroFinset, (zeroMultiplicity ρ : ℂ) * melinTransform f ρ) = 0 := by
     exact Finset.sum_eq_zero h_fin
-  -- 围道外 tsum 项全 0
-  have h_far : ∀ (n : ℕ), (if ‖nontrivialZeroEnum n - (1 / 2 : ℂ)‖ ≥ 1
-      then (zeroMultiplicity (nontrivialZeroEnum n) : ℂ) * melinTransform f (nontrivialZeroEnum n)
-      else 0) = 0 := by
-    intro n
-    by_cases hc : ‖nontrivialZeroEnum n - (1 / 2 : ℂ)‖ ≥ 1
-    · rw [if_pos hc]
-      have hz : _root_.riemannZeta (nontrivialZeroEnum n) = 0 := (nontrivialZeroEnum_are_zeros n).1
-      have hre1 : 0 < (nontrivialZeroEnum n).re := (nontrivialZeroEnum_are_zeros n).2.1
-      have hre2 : (nontrivialZeroEnum n).re < 1 := (nontrivialZeroEnum_are_zeros n).2.2
-      rw [h (nontrivialZeroEnum n) hz hre1 hre2] <;> ring
-    · rw [if_neg hc]
+  -- 围道外子类型 tsum 项全 0
   have h_tsum : farZeroContribution f = 0 := by
     unfold farZeroContribution
-    rw [tsum_congr h_far, tsum_zero]
+    have h_zero : ∀ ρ : farZeroSubtype,
+        (zeroMultiplicity ρ.1 : ℂ) * melinTransform f ρ.1 = 0 := by
+      intro ρ
+      have hz : _root_.riemannZeta ρ.1 = 0 := ρ.2.1
+      have hre1 : 0 < ρ.1.re := ρ.2.2.1
+      have hre2 : ρ.1.re < 1 := ρ.2.2.2.1
+      rw [h ρ.1 hz hre1 hre2] <;> ring
+    have h_sum : (fun ρ : farZeroSubtype =>
+        (zeroMultiplicity ρ.1 : ℂ) * melinTransform f ρ.1) = fun _ => 0 := by
+      funext ρ; exact h_zero ρ
+    rw [h_sum, tsum_zero]
   rw [h_sum_fin, h_tsum] <;> ring
 
 end OrderPreservingBijection
