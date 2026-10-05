@@ -61,8 +61,8 @@ theorem alphaToMatrix_trace (α : GoldenInt) :
 /-- 对角矩阵的行列式 = GoldenInt.norm α。 -/
 theorem alphaToMatrix_det (α : GoldenInt) :
     (alphaToMatrix α).det = GoldenInt.norm α := by
-  simp [alphaToMatrix, Matrix.det_fin_two, GoldenInt.norm]
-  <;> sorry
+  simp [alphaToMatrix, Matrix.det_fin_two, GoldenInt.norm, QuadraticAlgebra.re_star, QuadraticAlgebra.im_star]
+  <;> ring
 
 /-- 非单位代数元：|Nm(α)| > 1。单位元产生的闭测地线不对应素理想，须排除。 -/
 def NonUnitAlgebra (α : GoldenInt) : Prop := (GoldenInt.norm α).natAbs > 1

@@ -5,6 +5,7 @@
 
 import Mathlib.MeasureTheory.Integral.CircleIntegral
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
+import Mathlib.Analysis.Calculus.ContDiff.Basic
 
 namespace OrderPreservingBijection
 
@@ -18,6 +19,17 @@ structure TestFunction where
 
 instance : CoeFun TestFunction (fun _ => ℝ → ℂ) := ⟨TestFunction.toFun⟩
 def TestFunction.eval (f : TestFunction) (x : ℝ) : ℂ := f.toFun x
+
+/-- 光滑测试函数：TestFunction + C^∞。
+    经典分布论意义下的紧支光滑测试函数 C_c^∞(ℝ)。
+    TestFunction 是 L^1 紧支可测函数（含阶跃函数，用于 Mellin 插值基）；
+    SmoothTestFunction 额外要求 ContDiff ℝ ⊤，用于微分算子 D = x d/dx。
+    两者并存：阶跃函数那条路（插值主链）不动，微分算子收窄到这里。 -/
+structure SmoothTestFunction extends TestFunction where
+  contDiff : ContDiff ℝ ⊤ toFun
+
+/-- 自动把 SmoothTestFunction 当作 TestFunction 用。 -/
+instance : Coe SmoothTestFunction TestFunction := ⟨fun f => f.toTestFunction⟩
 
 /-- toFun 是单射。 -/
 theorem TestFunction.toFun_injective : Function.Injective TestFunction.toFun := by

@@ -9,6 +9,9 @@ path = "./mathlib4-master"
 [[lean_lib]]
 name = "OrderPreservingBijection"
 
+[[lean_lib]]
+name = "BSD"
+
 [[lean_exe]]
 name = "orderpreservingbijection"
 root = "Main"

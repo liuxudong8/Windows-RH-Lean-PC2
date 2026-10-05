@@ -1,6 +1,6 @@
 # BSD 库——弱 BSD 秩 1 的 Lean 形式化（状态摘要）
 
-> 更新：2026-10-05 ①a 轮次。编译基线：`lake build BSD`，3312 jobs，exit 0；sorry = 0；axiom = 13。
+> 更新：2026-10-06 ①c 部分和下界落盘轮。编译基线：`lake build BSD`，exit 0；sorry = 0；数学 axiom = 16（Main 6 + LSeries5 10；其中 §5 (iv-d) 新增 3 个声明 + native_decide 计算信任公理，见 §3.1/§3.2）。
 
 ## 0. 一句话定位
 
@@ -51,6 +51,25 @@ c:\proj2\
 - `geom_tail_bound`：Σ e^(−α(N+1+n)) = e^(−α(N+1))/(1−e^(−α))，0<α（r=e^(−α)，exp_lt_one_iff + Real.exp_nat_mul）
 - **二者 axiom 闭包 = [propext, Classical.choice, Quot.sound]——纯基础公理**
 
+**LSeries5.lean**（5.4(iv-c) 初等不等式链，全部由 axiom 升级为 theorem）：
+- `alpha_gt_2065`：α = 2π/√925 > 0.2065（Real.pi_gt_d4 + Real.sqrt_lt' + lt_div_iff₀）——闭包 = 3 基础公理
+- `exp_neg_alpha_lt_8136`：e^(−α) < 0.8136（exp 单调 + Real.exp_bound n=5 部分和下界 + 倒数单调）——闭包 = 3 基础公理
+- `exp_neg_alpha_801_lt`：e^(−α·801) < 10⁻⁶⁰（exp_nat_mul 幂 + pow_le_pow_left₀ + ℚ 精确判定）——闭包 = 3 基础 + **native_decide 计算信任公理**（见下注）
+- `tail_ivc_bound`：4·e^(−α·801)/(1−e^(−α)) < 10⁻⁵⁸（1−e^(−α) > 0.1864 + mul_le_mul + norm_num）
+- `tail_sufficient_pos`：(iv-d) 充分条件 5 − 尾界 > 0（tail_ivc_bound + sub_pos）
+
+> **native_decide 计算信任公理（透明声明）**：801 次幂的 ℚ 判定（(1017/1250)^801 < 10⁻⁶⁰，即 1017^801·10⁶⁰ < 1250^801，约 2500 位 bignum）由 `native_decide` 完成，生成 `exp_neg_alpha_801_lt._native.native_decide.ax_1_1`。这是 Lean 将 bignum 比较委托给已验证 native 编译通道的**计算信任公理**，非数学假设（`decide` 因 kernel 不归约 `Rat.blt` 而失败；`norm_num` 不计算大幂）。可独立复核：1017^801·10⁶⁰ < 1250^801。若需完全 kernel 核验，可改为"阶乘余项链"（exp(−165.4) < 1/10⁶⁰ 的 90! 级数余项上界），留作后续升级。
+
+**LSeries5.lean（5.4(iv-d) 部分和下界块，本窗口落盘）**——`part50_ge : 2.6766 ≤ Σ_{n<50} fE5 n` 已证（N = 50，阈 2.6766，2·LB = 5.35321 > 0，①c 半边闭合）：
+- `alpha_lt_2066`：α < 0.2066（Real.lt_sqrt + pi_lt_d4）——闭包 = 3 基础公理
+- `exp_neg_alpha_gt_8133`：e^(−α) > 0.8133（Real.exp_bound n=6 上界 + 倒数单调 + exp_neg）——闭包 = 3 基础公理
+- `alphaE5` / `fE5`：α 与第 n 项定义（fE5 n = a_{n+1}/(n+1)·e^(−α(n+1))）
+- `powE_any` / `powE'_any`：0.8133^n ≤ e^(−αn)（正项）/ e^(−αn) ≤ 0.8136^n（负项，指数形态 rw 闭合）
+- 50 条 `term_k`：粗界项 ≤ fE5 项（正/负/零三分支；零分支 `native_decide` 判定 aE5 k = 0）
+- `crude50_ge_R`：2.6766 ≤ 50 项粗界（10 分块 ℚ `native_decide` + cast 桥 + nlinarith）——含 native_decide 计算信任公理
+- `part50_ge_crude` / `part50_ge`：Σ_{n<50} fE5 ≥ 粗界 ≥ 2.6766（sum_range_succ 展开 + term_k 逐项 + linarith）——闭包 = 3 基础 + term_k/crude50 的 native_decide 计算信任公理，**无数学 axiom**
+- 声明层 3 个（见 §3.2）：`L_E5_series_split`、`coefficient_bound_aE5`、`summable_fE5`
+
 ### 3.2 声明层（axiom，每个带"待证明"注释与升级路径）
 
 **Main.lean — 6 个**：
@@ -64,7 +83,7 @@ c:\proj2\
 | `rank_E5_Q_eq_zero` | rank E⁵(ℚ)=0（Kolyvagin） | L_E5_one_ne_zero + Kolyvagin 定理 |
 | `twist_decomposition` | rank E(K) = rank E(ℚ) + rank E⁵(ℚ)（Silverman） | Galois 模特征空间分解（③） |
 
-**LSeries5.lean — 7 个**：
+**LSeries5.lean — 10 个**：
 
 | axiom | 含义 | 升级路径 |
 |---|---|---|
@@ -74,7 +93,10 @@ c:\proj2\
 | `coefficient_bound` | \|a_n(E⁵)\| ≤ τ(n)√n | 素幂递推归纳 + 乘性（①b） |
 | `GammaUpper` | 不完全 Gamma Γ(s,b) | mathlib 无；可加积分定义（大工程） |
 | `Lambda_E5` | Dokchitser 反射公式（N=925, ε=+1） | 自守 L 理论——不可 Lean（永久 axiom 风险） |
-| `L_E5_one_ne_zero` | L(E⁵,1)≠0（区间 ±1.7e-71） | 反射公式截断 + geom_tail_bound + 区间算术（①c） |
+| `L_E5_one_ne_zero` | L(E⁵,1)≠0（区间 ±1.7e-71） | ①c 后半：尾界拼接（tsum 拆分）+ part50_ge 合成 L>0；部分和下界已闭合（`part50_ge` 2.6766，尾界 <10⁻⁵⁸ 已由 (iv-c) 链闭合） |
+| `L_E5_series_split`（新） | L_E5 1 = 2·(Σ_{n<N} fE5 n) + 2·∑'_{n≥N} fE5(n+N)（反射公式截断拆分） | ①c 尾界拼接定理（N=50 起点） |
+| `coefficient_bound_aE5`（新） | \|aE5 n\| ≤ 2n（表口径，1≤n≤50 块判定已过） | 由 coefficient_bound + 素幂递推 |
+| `summable_fE5`（新） | fE5 可和（尾的几何级数控制） | ①a geom_tail_bound + 绝对可和 |
 
 ### 3.3 定理层（拼合）
 
@@ -91,16 +113,16 @@ lake build BSD            # 全库；日志 > build_*.txt
 lake env lean BSD/_check_bsd.lean   # #print axioms 核验
 ```
 
-统计：`(Select-String -Path BSD\*.lean -Pattern "^axiom ").Count`（当前 13）；sorry 应为 0。
+统计：`(Select-String -Path BSD\*.lean -Pattern "^axiom ").Count`（当前 16）；sorry 应为 0。
 
 ## 5. 状态与路线
 
-**已闭合**：库结构、对象层、局部因子恒等式、几何级数尾（①a）、定理层拼合。
+**已闭合**：库结构、对象层、局部因子恒等式、几何级数尾（①a）、定理层拼合、(iv-c) 初等不等式链（5 条 theorem，含 native_decide 计算信任公理的透明标注）、**(iv-d) 部分和下界块**（`part50_ge` 2.6766 ≤ Σ_{n<50} fE5 n，50 项逐项 + 10 分块 cast 桥，axiom 闭包无数学假设——只含 native_decide 计算信任公理）。
 
 **待办（按量级排序）**：
+- ①c 后半（下一节点）：`L_E5_series_split` 尾界拼接——ℝ 通用 `sum_add_tsum_nat_add` 在 4.34 无此名（仅 ℝ≥0 版），需 HasSum 级论证或手写区间拆分；完成合成 `L_E5_pos : 0 < L(E⁵,1)`（2·2.6766 − 尾界 > 0），使 `L_E5_one_ne_zero` 降级为定理（axiom 16 → 15）
 - ①b `coefficient_bound`：素幂递推 \|a_{p^k}\| ≤ (k+1)p^{k/2} 归纳 + 乘性（中等，可行）
 - ② `rank_E_Q_eq_one`：2-下降（大）
-- ①c `L_E5_one_ne_zero`：GammaUpper/Lambda_E5 axiomatize 后做截断 + 区间算术（最大）
 - ③ `twist_decomposition`：Galois 模分解（数学证明已有，Lean 化大）
 
 **永久 axiom 风险（诚实标注）**：`ramanujan_ap_E`（Deligne）、`Lambda_E5`（自守 L）——mathlib 无对应理论，除非引入完整模形式/自守理论，否则以 axiom 形式保留并在文档中声明"数值/文献已验证"。

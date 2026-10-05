@@ -325,7 +325,11 @@ noncomputable def fLaplacianKernel (f : TestFunction) (z w : ManifoldM) : ℂ :=
 noncomputable def geometricKernelTrace (f : TestFunction) : ℂ :=
     manifoldIntegral (fun z => gammaPeriodization (fLaplacianKernel f) z z)
 
-/-- 三维 Laplacian（opaque，类型化）：Δ_M : L²(M) → L²(M)。 -/
+/-- 三维 Laplacian（占位定义，TODO）：Δ_M : L²(M) → L²(M)。
+    警告：当前为 Classical.arbitrary 常量占位，不是真实 Laplace-Beltrami 算子；
+    stage_4.laplacian_has_discrete_spectrum 因依赖本占位而只能声明为显式公理。
+    TODO：重定义为 Mathlib 的 Laplace-Beltrami 算子（需先形式化黎曼流形上的
+    Laplace 算子与 Rellich/Sobolev 紧嵌入），此后谱离散可走紧自伴算子谱定理。 -/
 noncomputable def laplacian_M : L2ManifoldM → L2ManifoldM := fun _ => Classical.arbitrary L2ManifoldM
 /-- 热核联合可测性：K_t(z,w) 关于 (z,w) 联合可测。
     这是参数积分可测性的必要条件。

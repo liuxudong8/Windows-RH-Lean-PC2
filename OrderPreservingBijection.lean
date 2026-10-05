@@ -3,3 +3,5 @@
 import OrderPreservingBijection.Basic
 import OrderPreservingBijection.HyperbolicIdentity
 import OrderPreservingBijection.QuadraticFieldFive
+import OrderPreservingBijection.stage_3
+import OrderPreservingBijection.stage_4

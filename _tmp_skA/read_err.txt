@@ -1,0 +1,10 @@
+﻿python.exe : usage: read.py [-h] -d {0,1,2,3,4,5,6,7,8,9} -o OUTPUT [--asset-dir ASSET_DIR]
+所在位置 行:1 字符: 1
++ & "C:\Program Files\Python310\python.exe" "C:\Users\shtcl\AppData\Loc ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (usage: read.py ...-dir ASSET_DIR]:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+               [--include-media-base64]
+               filename
+read.py: error: the following arguments are required: -d/--dimension

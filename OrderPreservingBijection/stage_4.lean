@@ -57,33 +57,57 @@ theorem riemann_zeta_zero_symmetry (ρ : ℂ) :
 /-- 二维 Laplacian（opaque，类型化）：Δ_X : L²(X) → L²(X)。 -/
 noncomputable def laplacian_X : L2ManifoldX → L2ManifoldX := fun _ => Classical.arbitrary L2ManifoldX
 
-/-- 三维 Laplacian 具有离散谱（公理，第一档，非空洞版本）：
+/-- 三维 Laplacian 具有离散谱（显式公理，原为 admit 占位，2026-10-02 显式化）：
     存在序列 s : ℕ → ℝ，满足：
     (1) 非负 (2) 严格递增 (3) 无界
     (4) 每个 s n 都是 laplacian_M 的特征值（存在非零特征向量）。
-    这是自伴椭圆算子离散谱的标准性质（Rellich 引理 + 紧自伴算子谱定理）。
+
+    数学根据（谱离散部分，标准定理，非推测）：
+    紧致黎曼流形上 Laplace–Beltrami 算子的谱纯离散、λₙ → ∞、重数有限、
+    特征函数构成 L² 正交基（Chavel《Eigenvalues in Riemannian Geometry》Ch.1；
+    Bérard《Spectral Geometry》）。证明链：Stokes 分部积分给自伴性；
+    Rellich–Kondrachov 紧嵌入 H¹(M) ⊂⊂ L²(M) 给预解式 (Δ+1)⁻¹ 紧；
+    紧自伴算子谱定理给离散谱；椭圆正则性给特征函数光滑性。
+    故"0 < s 0（跳过常数后 λ₁ > 0）、严格递增、无界、每点有非零特征向量"
+    均为该定理的直接结论；暂未 Lean 形式化仅因 mathlib 缺
+    Laplace–Beltrami 算子与 Rellich/Sobolev 紧嵌入，而非数学有疑。
+
     流形设定（机制 A）：M = ℍ³/Γ 为紧致算术双曲三流形（Q(√5) 四元数代数紧商，
     无尖点、无连续谱）。紧致性由 Dolgopyat 混合（本文件 :1268 起）硬性要求；
     continuousTerm（散射矩阵）仅存在于非紧情形，紧商下为 0。
+
+    紧致性核验点（谱离散成立与否的唯一几何前提）：
+    ℍ³/Γ 紧致 ⟺ Γ 余紧 ⟺ 定义 Γ 的四元数代数 D 在 ℝ 处不分裂
+    （D ⊗_ℚ ℝ 为 Hamilton 四元数，非 M₂(ℝ)）⟺ Γ 无抛物元。
+    若 D 在 ℝ 处分裂（D ⊗_ℚ ℝ ≅ M₂(ℝ)），则商非紧、含尖点，
+    Laplacian 谱含连续部分 [1, ∞)，"纯离散谱"前提失效。
+    须在构造中核实 D 的具体选择满足 ℝ-不分裂。
+
     枚举约定：跳过 0 特征空间（常数函数），specDiscM 从第一正特征值 λ₁ 开始。
-    比旧版 specDiscM_exists 更强：序列不再是任意的，而是 Laplacian 的特征值枚举。 -/
-theorem laplacian_has_discrete_spectrum :
+    比旧版 specDiscM_exists 更强：序列不再是任意的，而是 Laplacian 的特征值枚举。
+
+    框架约定（非谱几何定理，审查风险点）：
+    "1/4 ≤ s n" 不是紧致谱离散的推论，是为下游 PointSetSeparable 服务的额外假设。
+    事实：紧致双曲曲面 λ₁ 可任意小（Buser 1977）；算术曲面 bass notes 的
+    极限点覆盖 [0, 1/4]（arXiv:2403.00928），Selberg 1/4 猜想仅对同余子群
+    版本成立；闭双曲 3 流形的 λ₁ 无一致下界定理（谱隙上界 λ₁ < 47.32，
+    arXiv:2308.11174），算术 3 流形情形的低特征值问题仍开放。
+    故 1/4 下界的数学地位：需在算术 3 流形的具体族上核验，
+    或作为显式约定保留（当前取后者）。
+
+    形式化状态（诚实标注）：laplacian_M 现为 Classical.arbitrary 占位
+    （HeatKernel.lean:329），mathlib 尚无 Laplace-Beltrami 算子与
+    Rellich/Sobolev 紧嵌入，故此处声明为显式公理而非已证定理。
+    TODO：重定义 laplacian_M 为真实 Laplace-Beltrami 算子后，
+    以 mathlib 紧自伴算子谱定理（Spectrum.lean）替换本公理。 -/
+axiom laplacian_has_discrete_spectrum :
     (∀ (f g : L2ManifoldM), innerProductM (laplacian_M f) g = innerProductM f (laplacian_M g)) ∧
     (∃ (s : ℕ → ℝ),
       (0 < s 0) ∧
       (∀ n : ℕ, 1 / 4 ≤ s n) ∧
       (∀ n : ℕ, s n < s (n + 1)) ∧
       (∀ M : ℝ, ∃ n : ℕ, s n > M) ∧
-      (∀ n : ℕ, ∃ (ψ : L2ManifoldM), ψ ≠ 0 ∧ laplacian_M ψ = (s n : ℂ) • ψ)) := by
-  -- 数学：Rellich 引理 + 紧自伴算子谱定理（紧致流形）
-  -- (1) Laplacian 自伴性：分部积分 + 边界项为零（紧致无边界）
-  -- (2) Rellich 引理：紧致流形上 Laplacian 的预解式是紧算子
-  -- (3) 紧自伴算子谱定理：离散谱 + 特征向量正交基
-  -- (4) 谱隙：紧致商上常数函数是唯一的 0 特征函数（跳过 0 特征空间），
-  --     其余特征值 > 0 且离散（紧致谱定理 + 强极值原理），故 λ₁ > 0
-  -- 注：声明中 1/4 ≤ s n 是框架约定（非紧 L² 谱下界的遗留），紧致情形是额外假设；
-  --     长曲面反例（λ₁ → 0）表明它不来自紧致性，保留仅因下游 PointSetSeparable 依赖。
-  admit
+      (∀ n : ℕ, ∃ (ψ : L2ManifoldM), ψ ≠ 0 ∧ laplacian_M ψ = (s n : ℂ) • ψ))
 
 /-- 三维离散谱（定义，由离散谱公理通过 Classical.choose 给出）。
     非空洞：specDiscM n 是 laplacian_M 的第 n 个特征值。 -/
