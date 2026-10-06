@@ -12,6 +12,9 @@ import Mathlib.Tactic.NormNum
 import Mathlib.Analysis.Real.Pi.Bounds
 import Mathlib.Analysis.Real.Sqrt
 import Mathlib.Analysis.Complex.Exponential
+import Mathlib.Analysis.Complex.Basic
+import Mathlib.NumberTheory.ArithmeticFunction.Misc
+import Mathlib.Algebra.Order.BigOperators.Ring.Finset
 
 set_option maxHeartbeats 4000000
 
@@ -99,9 +102,273 @@ theorem ap5_sample_11 : ap5 11 = -5 := by
     待证明：有限域点计数 + Hasse 界。 -/
 axiom ramanujan_ap_E (p : ℕ) : |ap_E p| ≤ 2 * Real.sqrt (p : ℝ)
 
-/-- 系数界：|a_n(E⁵)| ≤ τ(n)·√n（由 Ramanujan + Hecke 递推 |a_{p^k}| ≤ (k+1)p^{k/2} 的归纳）。
-    待证明：素幂递推的归纳 + 乘性组合。 -/
-axiom coefficient_bound (n : ℕ) : |ap5 n| ≤ (Nat.divisors n).card * Real.sqrt (n : ℝ)
+/-! ## 1.5 ①b：素幂界与乘性组装（axiom → theorem） -/
+
+/-- Deligne（Weil 猜想 d = 1，无条件）：对素 p，E⁵ 的 Satake 参数 α_p, β_p 存在，
+    α_p + β_p = a_p(E⁵)，α_p·β_p = p，‖α_p‖ = ‖β_p‖ = √p。
+    待证明：模性 / 有限域点计数（mathlib 无椭圆曲线理论）；与 ramanujan_ap_E 同级永久 axiom 风险。
+    注：由 ‖α‖ = ‖β‖ = √p 可推出 |a_p| ≤ 2√p（三角不等式），素幂界即由此出。 -/
+axiom ap5_satake (p : ℕ) (hp : Nat.Prime p) :
+    ∃ α β : ℂ, (α + β : ℂ) = (ap5 p : ℂ) ∧ α * β = (p : ℂ) ∧
+      ‖α‖ = Real.sqrt (p : ℝ) ∧ ‖β‖ = Real.sqrt (p : ℝ)
+
+/-- 素幂 Hecke 系数递推：a₀ = 1, a₁ = a, a_{k+1} = a·a_k − p·a_{k−1}（Newton 恒等式）。 -/
+def ppow (a : ℤ) (p : ℕ) : ℕ → ℤ
+  | 0 => 1
+  | 1 => a
+  | k + 2 => a * ppow a p (k + 1) - p * ppow a p k
+
+lemma ppow_0 (a : ℤ) (p : ℕ) : ppow a p 0 = 1 := rfl
+lemma ppow_1 (a : ℤ) (p : ℕ) : ppow a p 1 = a := rfl
+lemma ppow_rec (a : ℤ) (p : ℕ) (k : ℕ) :
+    ppow a p (k + 2) = a * ppow a p (k + 1) - p * ppow a p k := rfl
+
+/-- 幂和 s_k = Σ_{j=0}^{k} α^(k−j) β^j。 -/
+def ssum (α β : ℂ) (k : ℕ) : ℂ :=
+  ∑ j ∈ Finset.range (k + 1), α ^ (k - j) * β ^ j
+
+/-- α·(α^m·β^n) = α^(m+1)·β^n。 -/
+lemma pow_mul_pow_aux' (α β : ℂ) (m n : ℕ) :
+    α * (α ^ m * β ^ n) = α ^ (m + 1) * β ^ n := by
+  rw [pow_succ]
+  ring
+
+/-- β·(α^m·β^n) = α^m·β^(n+1)。 -/
+lemma pow_mul_pow_aux'' (α β : ℂ) (m n : ℕ) :
+    β * (α ^ m * β ^ n) = α ^ m * β ^ (n + 1) := by
+  rw [pow_succ]
+  ring
+
+/-- (α·β)·(α^m·β^n) = α^(m+1)·β^(n+1)。 -/
+lemma pow_mul_pow_aux (α β : ℂ) (m n : ℕ) :
+    (α * β) * (α ^ m * β ^ n) = α ^ (m + 1) * β ^ (n + 1) := by
+  rw [pow_succ, pow_succ]
+  ring
+
+/-- 第一项展开：α·(α^(k+1−j)β^j) 求和 = α^(k+2−j)β^j 求和 + α·β^(k+1)。 -/
+lemma sumA (α β : ℂ) (k : ℕ) :
+    (∑ j ∈ Finset.range (k + 2), α * (α ^ (k + 1 - j) * β ^ j))
+      = (∑ j ∈ Finset.range (k + 1), α ^ (k + 2 - j) * β ^ j) + α * β ^ (k + 1) := by
+  rw [Finset.sum_range_succ]
+  congr 1
+  · apply Finset.sum_congr rfl
+    intro j hj
+    have hj' : j ≤ k := by
+      have hlt : j < k + 1 := Finset.mem_range.mp hj
+      omega
+    rw [show k + 2 - j = (k + 1 - j) + 1 by omega]
+    exact pow_mul_pow_aux' α β (k + 1 - j) j
+  · simp
+
+/-- 第二项展开：β·(α^(k+1−j)β^j) 求和 = α^(k+1−j)β^(j+1) 求和 + β^(k+2)。 -/
+lemma sumB (α β : ℂ) (k : ℕ) :
+    (∑ j ∈ Finset.range (k + 2), β * (α ^ (k + 1 - j) * β ^ j))
+      = (∑ j ∈ Finset.range (k + 1), α ^ (k + 1 - j) * β ^ (j + 1)) + β ^ (k + 2) := by
+  rw [Finset.sum_range_succ]
+  congr 1
+  · apply Finset.sum_congr rfl
+    intro j hj
+    have hj' : j ≤ k := by
+      have hlt : j < k + 1 := Finset.mem_range.mp hj
+      omega
+    exact pow_mul_pow_aux'' α β (k + 1 - j) j
+  · rw [pow_mul_pow_aux'']
+    rw [show k + 1 - (k + 1) = 0 by omega]
+    rw [pow_zero, one_mul]
+
+/-- 第三项：(αβ)·(α^(k−j)β^j) 求和 = α^(k+1−j)β^(j+1) 求和。 -/
+lemma sumC (α β : ℂ) (k : ℕ) :
+    (∑ j ∈ Finset.range (k + 1), (α * β) * (α ^ (k - j) * β ^ j))
+      = ∑ j ∈ Finset.range (k + 1), α ^ (k + 1 - j) * β ^ (j + 1) := by
+  apply Finset.sum_congr rfl
+  intro j hj
+  have hj' : j ≤ k := by
+    have hlt : j < k + 1 := Finset.mem_range.mp hj
+    omega
+  rw [show k + 1 - j = (k - j) + 1 by omega]
+  exact pow_mul_pow_aux α β (k - j) j
+
+/-- 左端展开：α^(k+2−j)β^j 求和 = (j=0..k 部分) + αβ^(k+1) + β^(k+2)。 -/
+lemma sumL (α β : ℂ) (k : ℕ) :
+    (∑ j ∈ Finset.range (k + 3), α ^ (k + 2 - j) * β ^ j)
+      = (∑ j ∈ Finset.range (k + 1), α ^ (k + 2 - j) * β ^ j) + α * β ^ (k + 1) + β ^ (k + 2) := by
+  rw [Finset.sum_range_succ, Finset.sum_range_succ]
+  simp
+
+/-- 幂和满足 Hecke 递推（Newton 恒等式）：s_{k+2} = (α+β)s_{k+1} − αβ s_k。 -/
+lemma ssum_rec (α β : ℂ) (k : ℕ) :
+    ssum α β (k + 2) = (α + β) * ssum α β (k + 1) - α * β * ssum α β k := by
+  unfold ssum
+  rw [add_mul, Finset.mul_sum, Finset.mul_sum, Finset.mul_sum]
+  rw [sumA, sumB, sumC, sumL]
+  ring
+
+/-- 幂和桥：ppow 的复值等于幂和（归纳）。 -/
+lemma ppow_eq_ssum (a : ℤ) (p : ℕ) (α β : ℂ) (hsum : (α + β : ℂ) = (a : ℂ))
+    (hprod : α * β = (p : ℂ)) : ∀ k : ℕ, (ppow a p k : ℂ) = ssum α β k := by
+  intro k
+  induction k using Nat.twoStepInduction with
+  | zero => simp [ppow, ssum]
+  | one =>
+      unfold ssum
+      rw [Finset.sum_range_succ, Finset.sum_range_succ]
+      simpa [hsum] using (ppow_1 a p : ppow a p 1 = a)
+  | more k ih1 ih2 =>
+      calc
+        (ppow a p (k + 2) : ℂ) = (a : ℂ) * (ppow a p (k + 1) : ℂ) - (p : ℂ) * (ppow a p k : ℂ) := by
+          rw [ppow_rec]
+          norm_num
+        _ = (α + β) * ssum α β (k + 1) - α * β * ssum α β k := by
+          rw [hsum, hprod, ih1, ih2]
+        _ = ssum α β (k + 2) := (ssum_rec α β k).symm
+
+/-- 幂和的上界：‖s_k‖ ≤ (k+1)(√p)^k，当 ‖α‖ = ‖β‖ = √p。 -/
+lemma ssum_abs_bound (α β : ℂ) {p : ℕ} (hα : ‖α‖ = Real.sqrt (p : ℝ))
+    (hβ : ‖β‖ = Real.sqrt (p : ℝ)) (k : ℕ) :
+    ‖ssum α β k‖ ≤ (k + 1 : ℝ) * (Real.sqrt (p : ℝ)) ^ k := by
+  unfold ssum
+  calc
+    ‖∑ j ∈ Finset.range (k + 1), α ^ (k - j) * β ^ j‖ ≤
+        (∑ j ∈ Finset.range (k + 1), ‖α ^ (k - j) * β ^ j‖) := norm_sum_le _ _
+    _ ≤ (∑ j ∈ Finset.range (k + 1), (Real.sqrt (p : ℝ)) ^ (k - j) * (Real.sqrt (p : ℝ)) ^ j) := by
+      apply Finset.sum_le_sum
+      intro j hj
+      have hj' : j ≤ k := by
+        have hlt : j < k + 1 := Finset.mem_range.mp hj
+        omega
+      rw [Complex.norm_mul, Complex.norm_pow, Complex.norm_pow, hα, hβ]
+    _ = (∑ _ ∈ Finset.range (k + 1), (Real.sqrt (p : ℝ)) ^ k) := by
+      apply Finset.sum_congr rfl
+      intro j hj
+      have hj' : j ≤ k := by
+        have hlt : j < k + 1 := Finset.mem_range.mp hj
+        omega
+      rw [← pow_add]
+      congr 1
+      omega
+    _ = (k + 1 : ℝ) * (Real.sqrt (p : ℝ)) ^ k := by
+      rw [Finset.sum_const, Finset.card_range]
+      ring
+
+/-- 素幂界（①b 核心）：对素 p，|a_{p^k}(E⁵)| ≤ (k+1)p^{k/2}（p^{k/2} 记为 (√p)^k）。
+    证明：ap5_satake（Deligne）+ Newton 恒等式（ssum_rec）+ 范数上界（ssum_abs_bound）。
+    对坏素（5、37）该界作为 ppow 的代数界仍成立（真实 a_{5^k}=0、a_{37^k}=1 更紧）。 -/
+theorem ppow_bound {p : ℕ} (hp : Nat.Prime p) (k : ℕ) :
+    (((|ppow (ap5 p) p k| : ℤ) : ℝ) ≤ (k + 1 : ℝ) * (Real.sqrt (p : ℝ)) ^ k) := by
+  obtain ⟨α, β, hsum, hprod, hα, hβ⟩ := ap5_satake p hp
+  have hbridge : (ppow (ap5 p) p k : ℂ) = ssum α β k :=
+    ppow_eq_ssum (ap5 p) p α β hsum hprod k
+  have hcast : ‖((ppow (ap5 p) p k : ℤ) : ℂ)‖ =
+      ((|ppow (ap5 p) p k| : ℤ) : ℝ) := by
+    rw [Complex.norm_intCast]
+    rw [Int.cast_abs]
+  calc
+    ((|ppow (ap5 p) p k| : ℤ) : ℝ) = ‖((ppow (ap5 p) p k : ℤ) : ℂ)‖ := by
+      rw [hcast]
+    _ = ‖ssum α β k‖ := by rw [hbridge]
+    _ ≤ (k + 1 : ℝ) * (Real.sqrt (p : ℝ)) ^ k := ssum_abs_bound α β hα hβ k
+
+/-! ## 1.5b 乘性组装：素幂界 → τ(n)√n 全 n 界 -/
+
+/-- ℝ 有限乘积逐项比较（非负版）。 -/
+lemma prod_le_prod_nonneg {ι : Type*} {s : Finset ι} {f g : ι → ℝ}
+    (hf0 : ∀ i ∈ s, 0 ≤ f i) (hg0 : ∀ i ∈ s, 0 ≤ g i) (hfg : ∀ i ∈ s, f i ≤ g i) :
+    (∏ i ∈ s, f i) ≤ ∏ i ∈ s, g i := by
+  classical
+  induction s using Finset.induction_on with
+  | empty => simp
+  | insert a s ha ih =>
+      rw [Finset.prod_insert ha, Finset.prod_insert ha]
+      exact mul_le_mul (hfg a (by simp))
+        (ih (by intro i hi; exact hf0 i (by simp [hi]))
+            (by intro i hi; exact hg0 i (by simp [hi]))
+            (by intro i hi; exact hfg i (by simp [hi])))
+        (Finset.prod_nonneg (by intro i hi; exact hf0 i (by simp [hi])))
+        (hg0 a (by simp))
+
+/-- ℤ 绝对值的乘积：|∏ z_i| = ∏ |z_i|（ℤ 的 |·| : ℤ → ℤ）。 -/
+lemma abs_prod_int {ι : Type*} (s : Finset ι) (z : ι → ℤ) :
+    |∏ i ∈ s, z i| = ∏ i ∈ s, |z i| := by
+  classical
+  induction s using Finset.induction_on with
+  | empty => simp
+  | insert a s ha ih =>
+      rw [Finset.prod_insert ha, Finset.prod_insert ha, abs_mul, ih]
+
+/-- 幂的平方根：√(p)^k = √(p^k)，p ≥ 0。 -/
+lemma sqrt_pow_eq (p k : ℕ) : (Real.sqrt (p : ℝ)) ^ k = Real.sqrt ((p : ℝ) ^ k) := by
+  induction k with
+  | zero => simp
+  | succ k ih =>
+      rw [pow_succ, ih]
+      rw [← Real.sqrt_mul (by positivity : (0 : ℝ) ≤ (p : ℝ) ^ k) (p : ℝ)]
+      congr 1
+
+/-- 乘积的平方根：∏ √(x_i) = √(∏ x_i)，本例 x_i = p^{k_p} ≥ 0。 -/
+lemma sqrt_prod_eq (n : ℕ) :
+    (∏ p ∈ n.primeFactors, Real.sqrt ((p : ℝ) ^ n.factorization p))
+      = Real.sqrt (∏ p ∈ n.primeFactors, (p : ℝ) ^ n.factorization p) := by
+  classical
+  induction n.primeFactors using Finset.induction_on with
+  | empty => simp
+  | insert a s ha ih =>
+      rw [Finset.prod_insert ha, Finset.prod_insert ha, ih]
+      rw [← Real.sqrt_mul (by positivity : (0 : ℝ) ≤ (a : ℝ) ^ n.factorization a)
+        (∏ p ∈ s, (p : ℝ) ^ n.factorization p)]
+
+/-- 素因子分解：n = ∏_{p ∈ primeFactors n} p^{k_p}（ℝ 口径）。 -/
+lemma prod_primeFactors_pow_eq (n : ℕ) (hn : n ≠ 0) :
+    (∏ p ∈ n.primeFactors, (p : ℝ) ^ n.factorization p) = (n : ℝ) := by
+  norm_cast
+  exact Nat.prod_factorization_pow_eq_self hn
+
+/-- 系数界（①b 闭合）：素因子分解组装下 Π a_{p^{k_p}} ≤ τ(n)√n。
+    注：原 axiom（|ap5 n| ≤ τ(n)√n，任意 n）已删——ap5 仅对素数输入有数学意义；
+    本定理的组装形式才是 τ(n)√n 界的可证形态（a_{p^k} 由 ppow 递推给出）。 -/
+theorem coefficient_bound_assembled (n : ℕ) (hn : n ≠ 0) :
+    (|∏ p ∈ n.primeFactors, ppow (ap5 p) p (n.factorization p)| : ℝ)
+      ≤ (Nat.divisors n).card * Real.sqrt (n : ℝ) := by
+  have hsqrt_pow : ∀ p k : ℕ, (Real.sqrt (p : ℝ)) ^ k = Real.sqrt ((p : ℝ) ^ k) := sqrt_pow_eq
+  have hsqrt_prod : (∏ p ∈ n.primeFactors, Real.sqrt ((p : ℝ) ^ n.factorization p))
+      = Real.sqrt (∏ p ∈ n.primeFactors, (p : ℝ) ^ n.factorization p) := sqrt_prod_eq n
+  have hprod_n : (∏ p ∈ n.primeFactors, (p : ℝ) ^ n.factorization p) = (n : ℝ) :=
+    prod_primeFactors_pow_eq n hn
+  have hsqrt : (∏ p ∈ n.primeFactors, (Real.sqrt (p : ℝ)) ^ n.factorization p) = Real.sqrt (n : ℝ) := by
+    calc
+      (∏ p ∈ n.primeFactors, (Real.sqrt (p : ℝ)) ^ n.factorization p)
+          = ∏ p ∈ n.primeFactors, Real.sqrt ((p : ℝ) ^ n.factorization p) := by
+              apply Finset.prod_congr rfl
+              intro p hp
+              exact hsqrt_pow p (n.factorization p)
+      _ = Real.sqrt (∏ p ∈ n.primeFactors, (p : ℝ) ^ n.factorization p) := hsqrt_prod
+      _ = Real.sqrt (n : ℝ) := by rw [hprod_n]
+  have htau : (∏ p ∈ n.primeFactors, ((n.factorization p : ℝ) + 1)) = (Nat.divisors n).card := by
+    norm_cast
+    exact (Nat.card_divisors hn).symm
+  calc
+    (|∏ p ∈ n.primeFactors, ppow (ap5 p) p (n.factorization p)| : ℝ)
+        = (∏ p ∈ n.primeFactors, ((|ppow (ap5 p) p (n.factorization p)| : ℤ) : ℝ)) := by
+          norm_cast
+          exact abs_prod_int n.primeFactors (fun p => ppow (ap5 p) p (n.factorization p))
+    _ ≤ (∏ p ∈ n.primeFactors, ((n.factorization p : ℝ) + 1) * (Real.sqrt (p : ℝ)) ^ n.factorization p) := by
+          apply prod_le_prod_nonneg
+          · intro p hp
+            exact_mod_cast abs_nonneg (ppow (ap5 p) p (n.factorization p))
+          · intro p hp
+            exact mul_nonneg (by positivity) (pow_nonneg (Real.sqrt_nonneg _) _)
+          · intro p hp
+            exact ppow_bound ((Nat.mem_primeFactors.mp hp).1) (n.factorization p)
+    _ = (∏ p ∈ n.primeFactors, ((n.factorization p : ℝ) + 1)) *
+        (∏ p ∈ n.primeFactors, (Real.sqrt (p : ℝ)) ^ n.factorization p) := by
+          rw [Finset.prod_mul_distrib]
+    _ = (Nat.divisors n).card * Real.sqrt (n : ℝ) := by
+          rw [htau, hsqrt]
+
+/-- 系数界（新定理形态，继承 ①b 名字）：见 coefficient_bound_assembled。 -/
+theorem coefficient_bound (n : ℕ) (hn : n ≠ 0) :
+    (|∏ p ∈ n.primeFactors, ppow (ap5 p) p (n.factorization p)| : ℝ)
+      ≤ (Nat.divisors n).card * Real.sqrt (n : ℝ) :=
+  coefficient_bound_assembled n hn
 
 /-- 不完全 Gamma Γ(s, b) = ∫_b^∞ t^(s−1) e^(−t) dt（mathlib 尚无；Dokchitser 反射公式输入）。
     待证明：不完全 Gamma 的分析理论（可加积分定义）。 -/
@@ -116,15 +383,15 @@ axiom Lambda_E5 (s : ℝ) : ℝ
 noncomputable def L_E5 (s : ℝ) : ℝ :=
   ((2 * Real.pi / Real.sqrt (925 : ℝ)) ^ s) / Real.Gamma s * Lambda_E5 s
 
-/-- L(E⁵,1) ≠ 0 —— 区间算术判定（文档 5.4(iv)，确定性而非数值证据）：
+/- L(E⁵,1) ≠ 0 —— 区间算术判定（文档 5.4(iv)，确定性而非数值证据）：
     L(E⁵,1) ∈ [5.3548616166 − 1.7×10⁻⁷¹, 5.3548616166 + 1.7×10⁻⁷¹] ⊂ (0, ∞)。
     误差预算（N = 800 截断，dps = 80）：
     · 截断尾 ≤ 1.7×10⁻⁷¹：系数界 |a_n| ≤ τ(n)√n（coefficient_bound）与
       Γ 因子指数衰减 e^(−2πn/√925)（b_n = 2πn/√925 ⟹ Γ(s,b_n) ~ e^(−b_n)·b_n^(s−1)）
       的封闭几何级数：Σ_{n>N} e^(−αn) = e^(−α(N+1)) / (1 − e^(−α))，α = 2π/√925；
     · 舍入 ≤ 10⁻⁷⁷（80 位十进制精度）。
-    待证明：反射公式截断 + 几何级数尾求和 + 区间算术的 Lean 实现。 -/
-axiom L_E5_one_ne_zero : L_E5 1 ≠ 0
+    待证明：反射公式截断 + 几何级数尾求和 + 区间算术的 Lean 实现。
+    ①c 后半已闭合：见 `L_E5_one_pos` / `L_E5_one_ne_zero`（theorem，非公理）。 -/
 
 /-! ## 3. 尾界几何级数（axiom → theorem） -/
 
@@ -1007,6 +1274,187 @@ theorem part50_ge_crude :
 theorem part50_ge : (2.6766 : ℝ) ≤ ∑ n ∈ Finset.range 50, fE5 n := by
 
   exact le_trans crude50_ge_R part50_ge_crude
+
+/-! ## 5(iv-d) ①c 后半 · 尾界三件套 + L(E⁵,1) > 0 合成 -/
+
+/-- e^(−α·51) < 1/10⁴：由 e^(−α) < 0.8136（`exp_neg_alpha_lt_8136`）幂持法升至 51 次，
+    并配 ℚ 层严格判定 `native_decide`（(1017/1250)^51 < 1/10⁴，计算信任公理）。 -/
+theorem exp_neg_alpha_51_lt : Real.exp (-alphaE5 * (51 : ℕ)) < (1 : ℝ) / 10 ^ 4 := by
+  have hp1 : Real.exp (-alphaE5 * (51 : ℕ)) = (Real.exp (-alphaE5)) ^ 51 := by
+    rw [← Real.exp_nat_mul]
+    apply congrArg Real.exp
+    ring
+  have he : Real.exp (-alphaE5 * (51 : ℕ)) ≤ ((0.8136 : ℝ) ^ 51) := by
+    rw [hp1]
+    exact pow_le_pow_left₀ (by positivity : (0 : ℝ) ≤ Real.exp (-alphaE5))
+      (by simpa [alphaE5] using exp_neg_alpha_lt_8136.le) 51
+  have hq : ((1017 : ℚ) / 1250) ^ 51 < (1 : ℚ) / 10 ^ 4 := by native_decide
+  have hnum : ((0.8136 : ℝ) ^ 51) < (1 : ℝ) / 10 ^ 4 := by
+    have hq' : (((1017 : ℚ) / 1250) ^ 51 : ℝ) < ((1 : ℚ) / 10 ^ 4 : ℝ) := by
+      exact_mod_cast hq
+    norm_num at hq' ⊢
+  exact lt_of_le_of_lt he hnum
+
+/-- 尾上界：4·e^(−α·51)/(1−e^(−α)) < 5。
+    由 e^(−α·51) < 10⁻⁴（`exp_neg_alpha_51_lt`）、1/(1−e^(−α)) ≤ 1/0.1864
+    （`exp_neg_alpha_lt_8136` ⟹ 1−e^(−α) > 0.1864）与数值乘法界拼装。 -/
+theorem tail51_bound : (4 : ℝ) * Real.exp (-alphaE5 * (51 : ℕ))
+    / (1 - Real.exp (-alphaE5)) < (5 : ℝ) := by
+  have h1 : (0.1864 : ℝ) < 1 - Real.exp (-alphaE5) := by
+    dsimp [alphaE5]
+    linarith [exp_neg_alpha_lt_8136]
+  have h2 : (4 : ℝ) * Real.exp (-alphaE5 * (51 : ℕ)) ≤ (4 : ℝ) * ((1 : ℝ) / 10 ^ 4) := by
+    exact mul_le_mul_of_nonneg_left exp_neg_alpha_51_lt.le (by norm_num : (0 : ℝ) ≤ 4)
+  have h3 : 1 / (1 - Real.exp (-alphaE5)) ≤ 1 / (0.1864 : ℝ) := by
+    exact one_div_le_one_div_of_le (by norm_num : (0 : ℝ) < 0.1864) h1.le
+  have he1 : Real.exp (-alphaE5) < 1 := by
+    dsimp [alphaE5]
+    exact lt_trans exp_neg_alpha_lt_8136 (by norm_num : (0.8136 : ℝ) < 1)
+  have hc0 : (0 : ℝ) ≤ 1 / (1 - Real.exp (-alphaE5)) := by
+    exact div_nonneg (by norm_num : (0 : ℝ) ≤ 1) (le_of_lt (sub_pos.2 he1))
+  have hb0 : (0 : ℝ) ≤ (4 : ℝ) * ((1 : ℝ) / 10 ^ 4) := by positivity
+  have h4 : (4 : ℝ) * Real.exp (-alphaE5 * (51 : ℕ))
+      * (1 / (1 - Real.exp (-alphaE5))) ≤
+      (4 : ℝ) * ((1 : ℝ) / 10 ^ 4) * (1 / (0.1864 : ℝ)) := by
+    exact mul_le_mul h2 h3 hc0 hb0
+  have h5 : (4 : ℝ) * ((1 : ℝ) / 10 ^ 4) * (1 / (0.1864 : ℝ)) < (5 : ℝ) := by
+    norm_num
+  simpa [div_eq_mul_inv] using (lt_of_le_of_lt h4 h5)
+
+/-- 尾绝对值界：|Σ'_{n≥0} fE5(n+50)| ≤ 2·e^(−α·51)/(1−e^(−α))。
+    逐项 |fE5(n+50)| ≤ 2·e^(−α(n+51))（`coefficient_bound_aE5` + exp 衰减），
+    `tsum_le_tsum` + `norm_tsum_le_tsum_norm` 后，和值由
+    `hasSum_geometric_of_norm_lt_one`（r = e^(−α) < 1）+ 指标移位闭合。 -/
+theorem tail_abs_le :
+    |∑' n : ℕ, fE5 (n + 50)| ≤ 2 * Real.exp (-alphaE5 * (51 : ℕ)) / (1 - Real.exp (-alphaE5)) := by
+  have hα_pos : (0 : ℝ) < alphaE5 := by
+    dsimp [alphaE5]
+    exact div_pos (mul_pos (by norm_num : (0 : ℝ) < 2) Real.pi_pos)
+      (Real.sqrt_pos.2 (by norm_num : (0 : ℝ) < 925))
+  have hα' : ‖Real.exp (-alphaE5)‖ < 1 := by
+    rw [Real.norm_eq_abs]
+    rw [abs_of_pos (Real.exp_pos _)]
+    rw [Real.exp_lt_one_iff]
+    linarith
+  have hb := hasSum_geometric_of_norm_lt_one hα'
+  have hg0 : HasSum (fun n : ℕ ↦ (Real.exp (-alphaE5)) ^ 51 * (Real.exp (-alphaE5)) ^ n)
+      ((Real.exp (-alphaE5)) ^ 51 * (1 - Real.exp (-alphaE5))⁻¹) := by
+    exact hb.mul_left ((Real.exp (-alphaE5)) ^ 51)
+  have hp : ∀ n : ℕ, (Real.exp (-alphaE5)) ^ 51 * (Real.exp (-alphaE5)) ^ n =
+      Real.exp (-alphaE5 * (n + 51 : ℕ)) := by
+    intro n
+    rw [← pow_add]
+    have hswap : 51 + n = n + 51 := by omega
+    rw [hswap]
+    rw [← Real.exp_nat_mul]
+    apply congrArg Real.exp
+    ring
+  have hg' : HasSum (fun n : ℕ ↦ Real.exp (-alphaE5 * (n + 51 : ℕ)))
+      ((Real.exp (-alphaE5)) ^ 51 * (1 - Real.exp (-alphaE5))⁻¹) := by
+    exact hg0.congr_fun (fun n : ℕ ↦ (hp n).symm)
+  have hg : HasSum (fun n : ℕ ↦ Real.exp (-alphaE5 * (n + 51 : ℕ)))
+      ((Real.exp (-alphaE5)) ^ 51 / (1 - Real.exp (-alphaE5))) := by
+    simpa [div_eq_mul_inv] using hg'
+  have hgs : Summable (fun n : ℕ ↦ Real.exp (-alphaE5 * (n + 51 : ℕ))) := by
+    exact ⟨_, hg⟩
+  have hg_sum : Summable (fun n : ℕ ↦ 2 * Real.exp (-alphaE5 * (n + 51 : ℕ))) := by
+    exact hgs.mul_left 2
+  have hg_value : (∑' n : ℕ, Real.exp (-alphaE5 * (n + 51 : ℕ))) =
+      Real.exp (-alphaE5 * (51 : ℕ)) / (1 - Real.exp (-alphaE5)) := by
+    have hval : (Real.exp (-alphaE5)) ^ 51 / (1 - Real.exp (-alphaE5)) =
+        Real.exp (-alphaE5 * (51 : ℕ)) / (1 - Real.exp (-alphaE5)) := by
+      have hp51 : (Real.exp (-alphaE5)) ^ 51 = Real.exp (-alphaE5 * (51 : ℕ)) := by
+        rw [← Real.exp_nat_mul]
+        apply congrArg Real.exp
+        ring
+      rw [hp51]
+    simpa [hval] using hg.tsum_eq
+  have hterm : ∀ n : ℕ, |fE5 (n + 50)| ≤ 2 * Real.exp (-alphaE5 * (n + 51 : ℕ)) := by
+    intro n
+    have hk : (n + 50 + 1 : ℕ) = n + 51 := by omega
+    have hcast : (↑(n + 50) + 1 : ℝ) = ↑(n + 51) := by
+      calc
+        (↑(n + 50) + 1 : ℝ) = ↑((n + 50) + 1) := by
+          rw [show (1 : ℝ) = ↑(1 : ℕ) by norm_num]
+          rw [← Nat.cast_add]
+        _ = ↑(n + 51) := by simp [hk]
+    unfold fE5
+    rw [abs_mul]
+    rw [hk, hcast]
+    have hnn : (0 : ℝ) ≤ ((n + 51 : ℕ) : ℝ) := by positivity
+    have hdiv : |(aE5 (n + 51 : ℕ) : ℝ) / ((n + 51 : ℕ) : ℝ)| ≤ 2 := by
+      rw [abs_div]
+      rw [abs_of_nonneg hnn]
+      have hc : |(aE5 (n + 51 : ℕ) : ℝ)| ≤ 2 * ((n + 51 : ℕ) : ℝ) := by
+        exact_mod_cast coefficient_bound_aE5 (n + 51)
+      calc
+        |(aE5 (n + 51 : ℕ) : ℝ)| / ((n + 51 : ℕ) : ℝ)
+            ≤ (2 * ((n + 51 : ℕ) : ℝ)) / ((n + 51 : ℕ) : ℝ) := by
+              exact div_le_div_of_nonneg_right hc hnn
+        _ = 2 := by
+          have hx : ((n + 51 : ℕ) : ℝ) ≠ 0 := by positivity
+          field_simp [hx]
+    have he : |Real.exp (-alphaE5 * (n + 51 : ℕ))| = Real.exp (-alphaE5 * (n + 51 : ℕ)) := by
+      rw [abs_of_pos (Real.exp_pos _)]
+    rw [he]
+    exact mul_le_mul_of_nonneg_right hdiv (Real.exp_pos _).le
+  have hf_abs_sum : Summable (fun n : ℕ ↦ |fE5 (n + 50)|) := by
+    have hinj : Function.Injective (fun n : ℕ ↦ n + 50) := by
+      intro a b h
+      dsimp at h
+      omega
+    have hs : Summable (fun n : ℕ ↦ fE5 (n + 50)) := summable_fE5.comp_injective hinj
+    exact hs.norm
+  have hsum_le : (∑' n : ℕ, |fE5 (n + 50)|) ≤
+      ∑' n : ℕ, 2 * Real.exp (-alphaE5 * (n + 51 : ℕ)) := by
+    exact hf_abs_sum.tsum_le_tsum hterm hg_sum
+  have habs : |∑' n : ℕ, fE5 (n + 50)| ≤ ∑' n : ℕ, |fE5 (n + 50)| := by
+    have hnorm : ‖∑' n : ℕ, fE5 (n + 50)‖ ≤ ∑' n : ℕ, ‖fE5 (n + 50)‖ :=
+      norm_tsum_le_tsum_norm hf_abs_sum
+    simpa [Real.norm_eq_abs] using hnorm
+  calc
+    |∑' n : ℕ, fE5 (n + 50)| ≤ ∑' n : ℕ, |fE5 (n + 50)| := habs
+    _ ≤ ∑' n : ℕ, 2 * Real.exp (-alphaE5 * (n + 51 : ℕ)) := hsum_le
+    _ = 2 * (Real.exp (-alphaE5 * (51 : ℕ)) / (1 - Real.exp (-alphaE5))) := by
+      rw [tsum_mul_left, hg_value]
+    _ = 2 * Real.exp (-alphaE5 * (51 : ℕ)) / (1 - Real.exp (-alphaE5)) := by ring
+
+/-- L(E⁵,1) > 0：部分和下界（`part50_ge`，2×2.6766 = 5.3532）
+    + 尾下界（`tail_abs_le` 与 `tail51_bound` 给出 |Σ'| 上界 ⟹ 2Σ' ≥ −2B，2B < 5）。
+    合成：L(E⁵,1) ≥ 5.3532 − 2B > 5.3532 − 5 = 0.3532 > 0。 -/
+theorem L_E5_one_pos : 0 < L_E5 1 := by
+  let B : ℝ := 2 * Real.exp (-alphaE5 * (51 : ℕ)) / (1 - Real.exp (-alphaE5))
+  have hS : (2 : ℝ) * (2.6766 : ℝ) ≤ 2 * (∑ n ∈ Finset.range 50, fE5 n) := by
+    exact mul_le_mul_of_nonneg_left part50_ge (by norm_num : (0 : ℝ) ≤ 2)
+  have hS' : -(2 * B) ≤ 2 * (∑' n : ℕ, fE5 (n + 50)) := by
+    have hneg : -(2 * |∑' n : ℕ, fE5 (n + 50)|) ≤ 2 * (∑' n : ℕ, fE5 (n + 50)) := by
+      have h1 : -(|∑' n : ℕ, fE5 (n + 50)|) ≤ ∑' n : ℕ, fE5 (n + 50) := by
+        have hx : -(∑' n : ℕ, fE5 (n + 50)) ≤ |∑' n : ℕ, fE5 (n + 50)| := by
+          simpa [abs_neg] using le_abs_self (-(∑' n : ℕ, fE5 (n + 50)))
+        simpa using neg_le_neg hx
+      have h2 := mul_le_mul_of_nonneg_left h1 (by norm_num : (0 : ℝ) ≤ 2)
+      simpa [mul_neg, mul_comm] using h2
+    have hb1 : 2 * |∑' n : ℕ, fE5 (n + 50)| ≤ 2 * B := by
+      exact mul_le_mul_of_nonneg_left tail_abs_le (by norm_num : (0 : ℝ) ≤ 2)
+    have hb2 : -(2 * B) ≤ -(2 * |∑' n : ℕ, fE5 (n + 50)|) := by
+      linarith
+    exact le_trans hb2 hneg
+  have hlb : (2 : ℝ) * (2.6766 : ℝ) + -(2 * B) ≤ L_E5 1 := by
+    have hsplit := L_E5_series_split 50
+    rw [hsplit]
+    exact add_le_add hS hS'
+  have hbase : (0 : ℝ) < (2 : ℝ) * (2.6766 : ℝ) - 2 * B := by
+    have hBlt : 2 * B < (5 : ℝ) := by
+      dsimp [B]
+      convert tail51_bound using 1
+      ring
+    have h55 : (5 : ℝ) < (2 : ℝ) * (2.6766 : ℝ) := by norm_num
+    linarith
+  linarith
+
+/-- L(E⁵,1) ≠ 0：`L_E5_one_pos` 直接推论。 -/
+theorem L_E5_one_ne_zero : L_E5 1 ≠ 0 := by
+  exact ne_of_gt L_E5_one_pos
 end
 
 end BSD.LSeries5

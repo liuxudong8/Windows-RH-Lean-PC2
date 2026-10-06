@@ -1,6 +1,6 @@
 # BSD 库——弱 BSD 秩 1 的 Lean 形式化（状态摘要）
 
-> 更新：2026-10-06 ①c 部分和下界落盘轮。编译基线：`lake build BSD`，exit 0；sorry = 0；数学 axiom = 16（Main 6 + LSeries5 10；其中 §5 (iv-d) 新增 3 个声明 + native_decide 计算信任公理，见 §3.1/§3.2）。
+> 更新：2026-10-06 ①b 素幂递推+乘性落盘轮。编译基线：`lake build BSD`，exit 0；sorry = 0；数学 axiom = 15（Main 6 + LSeries5 9；§5 (iv-d) 新增声明 + native_decide 计算信任公理，见 §3.1/§3.2）。
 
 ## 0. 一句话定位
 
@@ -70,6 +70,17 @@ c:\proj2\
 - `part50_ge_crude` / `part50_ge`：Σ_{n<50} fE5 ≥ 粗界 ≥ 2.6766（sum_range_succ 展开 + term_k 逐项 + linarith）——闭包 = 3 基础 + term_k/crude50 的 native_decide 计算信任公理，**无数学 axiom**
 - 声明层 3 个（见 §3.2）：`L_E5_series_split`、`coefficient_bound_aE5`、`summable_fE5`
 
+**LSeries5.lean（①b 乘性组装，本窗口落盘）**——`axiom coefficient_bound` 已删，改为定理形态（素因子分解组装 τ(n)√n 界）：
+- `ppow_0 / ppow_1 / ppow_rec`：素幂系数 a_{p^k} 的递推定义（a_{p^0}=1, a_{p^1}=a_p, a_{p^{k+1}}=a_p·a_{p^k} − p·a_{p^{k−1}}）
+- `ap5_satake`（axiom，见 §3.2）：\|\|α\|=\|\|β\|=√p（Deligne/Satake，模性来源）
+- `ssum` + `ssum_rec`：幂和 s_k = Σ_{j=0}^k α^{k−j}β^j（Nat.twoStepInduction case zero|one|more）+ Newton 恒等式桥（a_{p^k} = s_k）
+- `ppow_eq_ssum`：a_{p^k} = s_k（两条递推同一性，Nat.twoStepInduction）
+- `ssum_abs_bound`：\|s_k\| ≤ (k+1)√p^k（三角 + ‖α‖=‖β‖=√p + 幂和项数）
+- `ppow_bound`：\|a_{p^k}\| ≤ (k+1)p^{k/2} = (k+1)(√p)^k（ssum_abs_bound + ppow_eq_ssum）
+- `prod_le_prod_nonneg` / `abs_prod_int`（\|∏z_i\|=∏\|z_i\|，induction + abs_mul）/ `sqrt_pow_eq` / `sqrt_prod_eq` / `prod_primeFactors_pow_eq`（n = ∏ p^{k_p}，Nat.prod_factorization_pow_eq_self）
+- `coefficient_bound_assembled`：\|∏ a_{p^{k_p}}\| ≤ τ(n)·√n（abs_prod_int + prod_le_prod_nonneg + ppow_bound 逐项 + card_divisors + sqrt 组装）
+- `coefficient_bound`（新定理形态，同名）：上述 τ(n)√n 界——**闭包 = 3 基础公理 + ap5_satake（声明层）**
+
 ### 3.2 声明层（axiom，每个带"待证明"注释与升级路径）
 
 **Main.lean — 6 个**：
@@ -83,20 +94,19 @@ c:\proj2\
 | `rank_E5_Q_eq_zero` | rank E⁵(ℚ)=0（Kolyvagin） | L_E5_one_ne_zero + Kolyvagin 定理 |
 | `twist_decomposition` | rank E(K) = rank E(ℚ) + rank E⁵(ℚ)（Silverman） | Galois 模特征空间分解（③） |
 
-**LSeries5.lean — 10 个**：
+**LSeries5.lean — 9 个**（`L_E5_one_ne_zero` 已降级为定理，见 §3.1）：
 
 | axiom | 含义 | 升级路径 |
 |---|---|---|
 | `ap_E` | a_p(E)（点计数） | 有限域点计数（数学上可行，工程量大） |
 | `ap_E_values` | 抽样值表（a₂=−2, …, a₅₉=8） | 由 ap_E 点计数计算推出 |
 | `ramanujan_ap_E` | \|a_p(E)\| ≤ 2√p（Deligne） | 不可 Lean（Weil 猜想级）——永久 axiom 风险 |
-| `coefficient_bound` | \|a_n(E⁵)\| ≤ τ(n)√n | 素幂递推归纳 + 乘性（①b） |
+| `ap5_satake` | \|\|α\|=\|\|β\|=√p（E⁵ 在 p 处 Frobenius 特征值，Deligne） | 不可 Lean（Weil 猜想级）——永久 axiom 风险；供 ppow_bound 用 |
 | `GammaUpper` | 不完全 Gamma Γ(s,b) | mathlib 无；可加积分定义（大工程） |
 | `Lambda_E5` | Dokchitser 反射公式（N=925, ε=+1） | 自守 L 理论——不可 Lean（永久 axiom 风险） |
-| `L_E5_one_ne_zero` | L(E⁵,1)≠0（区间 ±1.7e-71） | ①c 后半：尾界拼接（tsum 拆分）+ part50_ge 合成 L>0；部分和下界已闭合（`part50_ge` 2.6766，尾界 <10⁻⁵⁸ 已由 (iv-c) 链闭合） |
-| `L_E5_series_split`（新） | L_E5 1 = 2·(Σ_{n<N} fE5 n) + 2·∑'_{n≥N} fE5(n+N)（反射公式截断拆分） | ①c 尾界拼接定理（N=50 起点） |
-| `coefficient_bound_aE5`（新） | \|aE5 n\| ≤ 2n（表口径，1≤n≤50 块判定已过） | 由 coefficient_bound + 素幂递推 |
-| `summable_fE5`（新） | fE5 可和（尾的几何级数控制） | ①a geom_tail_bound + 绝对可和 |
+| `L_E5_series_split` | L_E5 1 = 2·(Σ_{n<N} fE5 n) + 2·∑'_{n≥N} fE5(n+N)（反射公式截断拆分） | ①c 尾界拼接定理（N=50 起点） |
+| `coefficient_bound_aE5` | \|aE5 n\| ≤ 2n（表口径，1≤n≤50 块判定已过） | 由 coefficient_bound + 素幂递推 |
+| `summable_fE5` | fE5 可和（尾的几何级数控制） | ①a geom_tail_bound + 绝对可和 |
 
 ### 3.3 定理层（拼合）
 
@@ -113,19 +123,17 @@ lake build BSD            # 全库；日志 > build_*.txt
 lake env lean BSD/_check_bsd.lean   # #print axioms 核验
 ```
 
-统计：`(Select-String -Path BSD\*.lean -Pattern "^axiom ").Count`（当前 16）；sorry 应为 0。
+统计：`(Select-String -Path BSD\*.lean -Pattern "^axiom ").Count`（当前 15：Main 6 + LSeries5 9）；sorry 应为 0。
 
 ## 5. 状态与路线
 
-**已闭合**：库结构、对象层、局部因子恒等式、几何级数尾（①a）、定理层拼合、(iv-c) 初等不等式链（5 条 theorem，含 native_decide 计算信任公理的透明标注）、**(iv-d) 部分和下界块**（`part50_ge` 2.6766 ≤ Σ_{n<50} fE5 n，50 项逐项 + 10 分块 cast 桥，axiom 闭包无数学假设——只含 native_decide 计算信任公理）。
+**已闭合**：库结构、对象层、局部因子恒等式、几何级数尾（①a）、定理层拼合、(iv-c) 初等不等式链（5 条 theorem，含 native_decide 计算信任公理的透明标注）、**(iv-d) 部分和下界块**（`part50_ge` 2.6766 ≤ Σ_{n<50} fE5 n，50 项逐项 + 10 分块 cast 桥，axiom 闭包无数学假设——只含 native_decide 计算信任公理）、**①c 后半**（尾界三件套 + 合成 `L_E5_one_pos`/`L_E5_one_ne_zero`，axiom 16 → 15，sorry = 0）、**①b（本窗口落盘）**：素幂递推全链（ppow/ssum/Newton/ppow_eq_ssum/ssum_abs_bound/ppow_bound）+ 乘性组装（prod_le_prod_nonneg/abs_prod_int/sqrt_pow_eq/sqrt_prod_eq/prod_primeFactors_pow_eq/card_divisors）→ `coefficient_bound_assembled` + `coefficient_bound` 新定理形态（原 axiom 已删）；`lake build BSD` exit 0，axiom 15 = 15（−coefficient_bound +ap5_satake），sorry = 0。
 
 **待办（按量级排序）**：
-- ①c 后半（下一节点）：`L_E5_series_split` 尾界拼接——ℝ 通用 `sum_add_tsum_nat_add` 在 4.34 无此名（仅 ℝ≥0 版），需 HasSum 级论证或手写区间拆分；完成合成 `L_E5_pos : 0 < L(E⁵,1)`（2·2.6766 − 尾界 > 0），使 `L_E5_one_ne_zero` 降级为定理（axiom 16 → 15）
-- ①b `coefficient_bound`：素幂递推 \|a_{p^k}\| ≤ (k+1)p^{k/2} 归纳 + 乘性（中等，可行）
 - ② `rank_E_Q_eq_one`：2-下降（大）
 - ③ `twist_decomposition`：Galois 模分解（数学证明已有，Lean 化大）
 
-**永久 axiom 风险（诚实标注）**：`ramanujan_ap_E`（Deligne）、`Lambda_E5`（自守 L）——mathlib 无对应理论，除非引入完整模形式/自守理论，否则以 axiom 形式保留并在文档中声明"数值/文献已验证"。
+**永久 axiom 风险（诚实标注）**：`ramanujan_ap_E`（Deligne）、`ap5_satake`（Deligne，①b 引入）、`Lambda_E5`（自守 L）——mathlib 无对应理论，除非引入完整模形式/自守理论，否则以 axiom 形式保留并在文档中声明"数值/文献已验证"。`ap5_satake` 与原 `coefficient_bound` 同为"对象层真证、深层声明层带待证明注释"路线上的等价取舍：`coefficient_bound`（任意 n 的 τ(n)√n 界）被拆为"可证组装（乘性+素幂递推）+ 单个 Deligne 输入（Satake 参数）"。
 
 ## 6. 关联产物
 
