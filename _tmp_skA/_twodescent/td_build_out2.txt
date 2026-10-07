@@ -1,0 +1,1065 @@
+﻿⚠ [2881/3134] Replayed OrderPreservingBijection.QuadraticFieldFive
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:49:2: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:53:23: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:53:2: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:53:23: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:57:23: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:57:2: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:57:23: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:60:25: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:64:25: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:64:25: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:79:6: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:95:19: This simp argument is unused:
+  QuadraticAlgebra.norm_def
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [norm, phi]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:95:50: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:95:50: Unused tactic linter: `norm_num` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:111:10: This simp argument is unused:
+  norm
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [QuadraticAlgebra.im_mul, QuadraticAlgebra.re_star, QuadraticAlgebra.im_star]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:109:4: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:112:4: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:121:18: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:121:18: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:125:20: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+info: OrderPreservingBijection/QuadraticFieldFive.lean:240:6: Try this:
+  [apply] exact Eq.symm (QuadraticAlgebra.ext (id (Eq.symm ha)) (id (Eq.symm hb)))
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:174:85: This simp argument is unused:
+  Int.add_emod
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [h2, pow_two, Int.mul_emod] at h1
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:217:18: This simp argument is unused:
+  h_kj_even
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [a1]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:162:26: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:174:105: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:217:29: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:224:8: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:162:26: Unused tactic linter: `rfl` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:250:6: try 'simp' instead of 'simpa'
+
+Note: This linter can be disabled with `set_option linter.unnecessarySimpa false`
+info: OrderPreservingBijection/QuadraticFieldFive.lean:276:6: Try this:
+  [apply] exact isUnit_iff_exists_inv.mp hz
+info: OrderPreservingBijection/QuadraticFieldFive.lean:297:6: Try this:
+  [apply] exact isUnit_iff_exists_inv.mpr h_exists
+info: OrderPreservingBijection/QuadraticFieldFive.lean:308:6: Try this:
+  [apply] exact isUnit_iff_exists_inv.mpr h_exists
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:295:20: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:301:20: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:313:2: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:330:2: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:358:12: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:358:24: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:415:8: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:415:8: Unused tactic linter: `omega` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:440:17: This simp argument is unused:
+  phi_sq
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [phi, QuadraticAlgebra]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:440:25: This simp argument is unused:
+  QuadraticAlgebra
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [phi, phi_sq]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:460:17: This simp argument is unused:
+  phi_sq
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [phi, QuadraticAlgebra]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:460:25: This simp argument is unused:
+  QuadraticAlgebra
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [phi, phi_sq]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:431:24: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:432:19: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:440:43: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:460:43: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:475:39: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:484:39: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:431:24: Unused tactic linter: `rfl` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+info: OrderPreservingBijection/QuadraticFieldFive.lean:510:52: Try this:
+  [apply] exact Int.mul_eq_zero.mp h6
+info: OrderPreservingBijection/QuadraticFieldFive.lean:547:46: Try this:
+  [apply] exact Int.mul_eq_zero.mp h_factor
+info: OrderPreservingBijection/QuadraticFieldFive.lean:553:42: Try this:
+  [apply] exact Int.mul_eq_zero.mp h_factor
+info: OrderPreservingBijection/QuadraticFieldFive.lean:590:29: Try this:
+  [apply] exact QuadraticAlgebra.ext h_a3 h_im1
+info: OrderPreservingBijection/QuadraticFieldFive.lean:600:33: Try this:
+  [apply] exact QuadraticAlgebra.ext h_a4 h_im1
+info: OrderPreservingBijection/QuadraticFieldFive.lean:618:46: Try this:
+  [apply] exact Int.mul_eq_zero.mp h_factor
+info: OrderPreservingBijection/QuadraticFieldFive.lean:624:42: Try this:
+  [apply] exact Int.mul_eq_zero.mp h_factor
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:515:62: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:516:62: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:523:68: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:524:67: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:561:39: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:564:39: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:577:42: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:579:42: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:586:54: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:587:54: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:596:64: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:597:63: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:632:39: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:634:39: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:647:42: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:649:42: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:656:61: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:657:62: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:665:70: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:666:71: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:503:59: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:508:49: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:519:43: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:527:47: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:534:64: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:561:20: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:564:20: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:577:23: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:579:23: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:591:41: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:601:47: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:605:65: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:632:20: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:634:20: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:647:23: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:649:23: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:660:45: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:669:51: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:515:62: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:516:62: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:523:68: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:524:67: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:561:39: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:564:39: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:577:42: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:579:42: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:586:54: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:587:54: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:596:64: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:597:63: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:632:39: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:634:39: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:647:42: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:649:42: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:656:61: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:657:62: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:665:70: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:666:71: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:687:48: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:692:47: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:705:67: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:706:50: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:719:70: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:720:53: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:687:48: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:758:54: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:738:61: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:739:44: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:752:64: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:753:47: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:763:53: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:758:54: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:805:65: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:813:65: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+info: OrderPreservingBijection/QuadraticFieldFive.lean:840:48: Try this:
+  [apply] exact Eq.symm (Int.ediv_mul_add_emod n q')
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:866:39: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:853:6: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:866:39: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:880:12: This simp argument is unused:
+  hq_pos
+
+Hint: Omit it from the simp argument list.
+  [apply] simp
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:895:16: This simp argument is unused:
+  hq_neg
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [q']
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:900:16: This simp argument is unused:
+  hq_neg
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [q']
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:885:10: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:891:28: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:880:20: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:895:24: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:897:17: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:900:24: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:885:10: Unused tactic linter: `omega` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:891:28: Unused tactic linter: `omega` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+info: OrderPreservingBijection/QuadraticFieldFive.lean:973:6: Try this:
+  [apply] exact Int.natAbs_mul A B
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:944:18: This simp argument is unused:
+  smul_eq_mul
+
+Hint: Omit it from the simp argument list.
+  [apply] simp
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:946:20: This simp argument is unused:
+  smul_eq_mul
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [A, B]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:950:25: This simp argument is unused:
+  smul_eq_mul
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [norm_def, phi]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:930:22: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:937:44: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:939:32: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:950:42: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:971:41: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:975:41: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:994:24: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:944:8: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:944:31: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:946:33: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:930:22: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:937:44: Unused tactic linter: `rfl` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:939:32: Unused tactic linter: `rfl` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:950:42: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:971:41: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:975:41: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:994:24: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+info: OrderPreservingBijection/QuadraticFieldFive.lean:1060:10: Try this:
+  [apply] exact Nat.find_le hn
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1081:14: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1098:25: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+info: OrderPreservingBijection/QuadraticFieldFive.lean:1125:2: Try this:
+  [apply] exact Submodule.IsPrincipal.principal I
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1129:71: Variable name `hP_nonzero` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hP_nonzero
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1165:37: Variable name `hp` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hp
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1165:57: Variable name `hpn` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hpn
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1174:33: Variable name `hp` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hp
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1174:53: Variable name `hpn` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hpn
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1215:2: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1215:22: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1228:2: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1228:22: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1236:2: Try this: 
+  haveI̵
+
+The goal is a proposition, so `have` is preferred over `haveI`.
+The difference between `have` and `haveI` is that `haveI` inlines the value.
+But this is not relevant for proofs because of proof irrelevance.
+
+Note: This linter can be disabled with `set_option linter.style.haveILetI false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1259:2: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1259:22: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1272:2: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1272:22: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1283:2: Try this: 
+  haveI̵
+
+The goal is a proposition, so `have` is preferred over `haveI`.
+The difference between `have` and `haveI` is that `haveI` inlines the value.
+But this is not relevant for proofs because of proof irrelevance.
+
+Note: This linter can be disabled with `set_option linter.style.haveILetI false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1282:33: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1282:33: Unused tactic linter: `decide` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+info: OrderPreservingBijection/QuadraticFieldFive.lean:1331:36: Try this:
+  [apply] exact (ZMod.natCast_eq_zero_iff 2 p).mp h2
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1302:30: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1343:66: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1317:47: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1324:22: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1350:19: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1302:30: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1343:66: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1412:6: try 'simp' instead of 'simpa'
+
+Note: This linter can be disabled with `set_option linter.unnecessarySimpa false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1471:6: Try `simp at h2` instead of `simpa using h2`
+
+Note: This linter can be disabled with `set_option linter.unnecessarySimpa false`
+info: OrderPreservingBijection/QuadraticFieldFive.lean:1487:4: Try this:
+  [apply] exact mul_eq_zero.mp h3
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1399:70: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1411:21: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1416:27: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1425:19: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1435:41: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1437:41: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1439:46: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1441:46: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1395:64: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1402:32: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1411:8: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1416:8: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1425:6: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1446:8: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1448:58: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1474:4: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1399:70: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1411:21: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1416:27: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1425:19: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1435:41: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1437:41: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1439:46: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1441:46: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+info: OrderPreservingBijection/QuadraticFieldFive.lean:1513:4: Try this:
+  [apply] exact Int.dvd_self_sub_of_emod_eq h3
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1523:18: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1523:18: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+info: OrderPreservingBijection/QuadraticFieldFive.lean:1538:37: Try this:
+  [apply] exact Nat.prime_iff_prime_int.mp hnp
+info: OrderPreservingBijection/QuadraticFieldFive.lean:1567:40: Try this:
+  [apply] exact Int.ModEq.dvd (id (Int.ModEq.symm ha_sq))
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1598:46: This simp argument is unused:
+  QuadraticAlgebra.re_add
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [phi, QuadraticAlgebra.re_mul, QuadraticAlgebra.re_sub]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1604:46: This simp argument is unused:
+  QuadraticAlgebra.im_add
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [phi, QuadraticAlgebra.im_mul, QuadraticAlgebra.im_sub]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1585:8: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1588:8: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1591:8: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1600:45: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1606:45: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1610:8: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1598:96: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1601:30: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1604:96: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1585:8: Unused tactic linter: `exact ⟨(p : GoldenInt), by ring⟩` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1588:8: Unused tactic linter: `exact ⟨phi - (r' : GoldenInt), by ring⟩` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1591:8: Unused tactic linter: `exact ⟨phi - (r : GoldenInt), by ring⟩` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1600:45: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1606:45: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1610:8: Unused tactic linter: `exact ⟨(k : GoldenInt), by ring⟩` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+info: OrderPreservingBijection/QuadraticFieldFive.lean:1694:4: Try this:
+  [apply] exact Submodule.le_div_iff_mul_le.mp fun ⦃x⦄ a y => h_main x y a
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1647:19: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1655:19: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1662:24: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1682:17: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1689:20: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+info: OrderPreservingBijection/QuadraticFieldFive.lean:1714:42: Try this:
+  [apply] exact Int.ModEq.dvd (id (Int.ModEq.symm ha_sq))
+info: OrderPreservingBijection/QuadraticFieldFive.lean:1729:6: Try this:
+  [apply] exact Int.ofNat_dvd_left.mpr h
+info: OrderPreservingBijection/QuadraticFieldFive.lean:1736:4: Try this:
+  [apply] exact Int.isCoprime_iff_gcd_eq_one.mpr h_coprime_nat
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1707:33: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1707:33: Unused tactic linter: `decide` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+info: OrderPreservingBijection/QuadraticFieldFive.lean:1769:4: Try this:
+  [apply] exact Submodule.mul_mem_mul h_p_in_p h_p_in_p'
+info: OrderPreservingBijection/QuadraticFieldFive.lean:1772:4: Try this:
+  [apply] exact Submodule.mul_mem_mul h_p_in_p h_phir'_in_p'
+info: OrderPreservingBijection/QuadraticFieldFive.lean:1774:4: Try this:
+  [apply] exact Submodule.mul_mem_mul_rev h_phir_in_p h_p_in_p'
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1746:34: Variable name `hp` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hp
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1778:15: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1780:22: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1782:22: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1784:4: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1798:14: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1778:15: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1780:22: Unused tactic linter: `rfl` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1782:22: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+info: OrderPreservingBijection/QuadraticFieldFive.lean:1847:6: Try this:
+  [apply] exact Int.ModEq.symm ((fun {n a b} => Int.modEq_iff_dvd.mpr) h')
+info: OrderPreservingBijection/QuadraticFieldFive.lean:1880:8: Try this:
+  [apply] exact Int.ModEq.symm ((fun {n a b} => Int.modEq_iff_dvd.mpr) h')
+info: OrderPreservingBijection/QuadraticFieldFive.lean:1920:34: Try this:
+  [apply] exact (ZMod.natCast_eq_zero_iff 4 p).mp h
+info: OrderPreservingBijection/QuadraticFieldFive.lean:1926:42: Try this:
+  [apply] exact Int.ModEq.dvd (id (Int.ModEq.symm ha_sq))
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1864:25: This simp argument is unused:
+  hp_odd
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [a, h_even, Int.add_emod, Int.sub_emod]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1864:33: This simp argument is unused:
+  Int.add_emod
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [a, h_even, hp_odd, Int.sub_emod]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1832:10: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1854:37: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1867:23: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1892:23: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1894:24: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1900:23: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1902:24: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1916:33: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1936:43: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1944:50: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1967:17: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1970:12: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1864:61: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1895:17: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1904:21: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1937:12: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1945:13: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1832:10: Unused tactic linter: `exact?` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1854:37: Unused tactic linter: `decide` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1867:23: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1892:23: Unused tactic linter: `omega` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1894:24: Unused tactic linter: `omega` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1900:23: Unused tactic linter: `omega` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1902:24: Unused tactic linter: `omega` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1916:33: Unused tactic linter: `decide` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1936:43: Unused tactic linter: `omega` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1944:50: Unused tactic linter: `omega` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1967:17: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:1970:12: Unused tactic linter: `rfl` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+info: OrderPreservingBijection/QuadraticFieldFive.lean:2028:8: Try this:
+  [apply] exact Int.ofNat_dvd_left.mp h8
+info: OrderPreservingBijection/QuadraticFieldFive.lean:2035:8: Try this:
+  [apply] exact Int.ofNat_dvd_left.mpr h11
+info: OrderPreservingBijection/QuadraticFieldFive.lean:2037:8: Try this:
+  [apply] exact Int.ofNat_dvd_left.mpr h11
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:2017:26: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:2019:31: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:2060:26: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:2054:13: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:2076:6: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:2017:26: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:2019:31: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:2060:26: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:2093:27: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:2093:27: Unused tactic linter: `ring` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:2122:45: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:2109:20: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:2122:45: Unused tactic linter: `ring_nf` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:2158:25: This simp argument is unused:
+  norm_def
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [hc_def, hc_im, phi, mul_comm]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:2160:25: This simp argument is unused:
+  norm_def
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [hc_def, hc_im, phi, mul_comm]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:2158:50: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:2160:50: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:2187:38: this tactic is never executed
+
+Note: This linter can be disabled with `set_option linter.unreachableTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:2187:38: Unused tactic linter: `ring_nf` does nothing
+
+Note: This linter can be disabled with `set_option linter.unusedTactic false`
+warning: OrderPreservingBijection/QuadraticFieldFive.lean:2263:13: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+ℹ [3311/3313] Replayed BSD.LSeries5
+info: BSD/LSeries5.lean:1450:6: Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+✔ [3313/3313] Built BSD.TwoDescent (14s)
+Build completed successfully (3313 jobs).

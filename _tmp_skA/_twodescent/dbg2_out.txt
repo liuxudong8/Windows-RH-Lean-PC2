@@ -1,0 +1,9 @@
+﻿xi mod 256: (105, 221, 15)
+== w patches (x = pi^w * e) ==
+w=0: hits=0 
+w=2: hits=1 first hit x0=(252, 0, 15) c=(0, 0, 0)
+w=4: hits=1 first hit x0=(255, 2, 4) c=(0, 0, 0)
+w=6: hits=0 
+== infinity patch (t) ==
+t-patch: hits=0 
+v_p2(xi) = 0

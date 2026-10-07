@@ -1,0 +1,33 @@
+﻿basic unit pair (min |log-det|): (-15, -48, 34) N= 1 | (-9, -3, 5) N= -1 det= 1.6623365
+total candidates: 64
+after N-filter: 8
+   pb=0 ua=0 ub=0 us=+1 N=1
+   pb=0 ua=0 ub=1 us=-1 N=1
+   pb=0 ua=1 ub=0 us=+1 N=1
+   pb=0 ua=1 ub=1 us=-1 N=1
+   pb=6 ua=0 ub=0 us=+1 N=1369
+   pb=6 ua=0 ub=1 us=-1 N=1369
+   pb=6 ua=1 ub=0 us=+1 N=1369
+   pb=6 ua=1 ub=1 us=-1 N=1369
+
+=== local solubility on N-filtered candidates ===
+pb=0 ua=0 ub=0 us=+1 xi=(1, 0, 0) N=1: p37_1=True p37_2=True p2=True -> SELMER
+pb=0 ua=0 ub=1 us=-1 xi=(9, 3, -5) N=1: p37_1=True p37_2=True p2=True -> SELMER
+pb=0 ua=1 ub=0 us=+1 xi=(-15, -48, 34) N=1: p37_1=True p37_2=True p2=True -> SELMER
+pb=0 ua=1 ub=1 us=-1 xi=(-819, 1231, -443) N=1: p37_1=True p37_2=True p2=True -> SELMER
+pb=6 ua=0 ub=0 us=+1 xi=(-151, -35, 15) N=1369: p37_1=True p37_2=True p2=True -> SELMER
+pb=6 ua=0 ub=1 us=-1 xi=(-1799, 262, 485) N=1369: p37_1=True p37_2=True p2=True -> SELMER
+pb=6 ua=1 ub=0 us=+1 xi=(6085, -887, -1639) N=1369: p37_1=True p37_2=True p2=True -> SELMER
+pb=6 ua=1 ub=1 us=-1 xi=(55729, -8046, -15057) N=1369: p37_1=True p37_2=True p2=True -> SELMER
+
+=== Sel^2(E/Q) FULL === |Sel^2| = 8
+    (1, 0, 0) N = 1
+    (9, 3, -5) N = 1
+    (-15, -48, 34) N = 1
+    (-819, 1231, -443) N = 1
+    (-151, -35, 15) N = 1369
+    (-1799, 262, 485) N = 1369
+    (6085, -887, -1639) N = 1369
+    (55729, -8046, -15057) N = 1369
+expect {1=(1,0,0), -theta=(0,-2,0)}
+dim Sel^2 = 3 => rank E(Q) <= 3

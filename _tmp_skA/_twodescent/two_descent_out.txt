@@ -1,0 +1,32 @@
+﻿=== nP' for n=1..12 ===
+1P' = (Fraction(0, 1), Fraction(4, 1))  on_curve=True
+2P' = (Fraction(4, 1), Fraction(4, 1))  on_curve=True
+3P' = (Fraction(-4, 1), Fraction(-4, 1))  on_curve=True
+4P' = (Fraction(8, 1), Fraction(-20, 1))  on_curve=True
+5P' = (Fraction(1, 1), Fraction(-1, 1))  on_curve=True
+6P' = (Fraction(24, 1), Fraction(116, 1))  on_curve=True
+7P' = (Fraction(-20, 9), Fraction(172, 27))  on_curve=True
+8P' = (Fraction(84, 25), Fraction(-52, 125))  on_curve=True
+9P' = (Fraction(-80, 49), Fraction(-2108, 343))  on_curve=True
+10P' = (Fraction(161, 4), Fraction(-2033, 8))  on_curve=True
+11P' = (Fraction(464, 529), Fraction(19772, 12167))  on_curve=True
+12P' = (Fraction(5428, 841), Fraction(328660, 24389))  on_curve=True
+
+=== E'[2]: integer roots of X^3 - 16X + 16 ===
+roots: [] => E(Q)[2] = {O}
+
+=== Lutz-Nagell: torsion (X,Y), Y!=0 => Y^2 | 2^12*37, X,Y in Z ===
+Y^2 candidates: [1, 4, 16, 64, 256, 1024, 4096]
+torsion candidates (X, Y^2): [(1, 1), (-4, 16), (0, 16), (4, 16)]
+
+=== E'[3]: rational roots of 3X^4 - 96X^2 + 192X - 256 ===
+rational roots: [] => E(Q)[3] = {O}
+
+=== 2-descent field K = Q(theta), theta^3 - 16 theta + 16 = 0 ===
+disc f = 9472 = {2: 8, 37: 1}
+f irreducible over Q: True
+roots (30 digits): [-4.42863948675507037483099540170, 1.07837774562177823305175180540, 3.35026174113329214177924359630]
+
+=== Selmer/rank checks ===
+E(Q)/2E(Q) ~ Z/2 (LMFDB 37.a1: E(Q) = <(0,0)>), dim = 1
+need dim Sel^2(E/Q) = 1 (Sha[2] = 0, checked via local solubility in full calc)

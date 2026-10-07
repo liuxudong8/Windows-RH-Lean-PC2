@@ -1,0 +1,39 @@
+﻿roots: ['3.3502617411332921418', '1.0783777456217782331', '-4.4286394867550703748']
+N(e1), N(e2): -1 1
+logs e1: ['-8.59397', '4.20864', '4.38533']
+logs e2: ['-0.0688293', '4.09575', '-4.02692']
+
+=== class of -theta among signed unit classes ===
+a=0 b=0 s=+1: w=-theta*class: not all pos
+a=0 b=0 s=-1: w=-theta*class: not all pos
+a=0 b=1 s=+1: w=-theta*class: all-pos, coords/2=-0.071,0.5822 round-err=0.418
+a=0 b=1 s=-1: w=-theta*class: not all pos
+a=1 b=0 s=+1: w=-theta*class: not all pos
+a=1 b=0 s=-1: w=-theta*class: not all pos
+a=1 b=1 s=+1: w=-theta*class: not all pos
+a=1 b=1 s=-1: w=-theta*class: not all pos
+=> -theta class = None => -theta = ???
+
+N(-theta) = 16 (should be 16)
+
+unit reps (N should be +1): [1, 1, 1, 1]
+
+candidates (8 + 1):
+   (1, 0, 0) N = 1
+   (-151, -35, 15) N = 1369
+   (11751, -1655, -3144) N = 1369
+   (-13203, 1920, 3559) N = 1369
+   (793273, -115312, -213862) N = 1369
+
+=== local solubility (incl. -theta) ===
+xi=(1, 0, 0) N=1: p37_1=True p37_2=True p2=True -> SELMER
+xi=(-151, -35, 15) N=1369: p37_1=True p37_2=True p2=False -> no
+xi=(11751, -1655, -3144) N=1369: p37_1=True p37_2=True p2=False -> no
+xi=(-13203, 1920, 3559) N=1369: p37_1=True p37_2=True p2=False -> no
+xi=(793273, -115312, -213862) N=1369: p37_1=True p37_2=True p2=False -> no
+xi=(0, -2, 0) N=16: p37_1=True p37_2=True p2=True -> SELMER
+
+|Sel^2| = 2
+   (1, 0, 0) N = 1
+   (0, -2, 0) N = 16
+expect: {1=(1,0,0), -theta=(0,-2,0)} -> dim 1 -> rank E(Q) <= 1

@@ -1,0 +1,49 @@
+﻿p37_2 rep: (-41, -3, 7, -37) | N = -37
+
+K(S,2) basis norms: {'pi': -2, 'th3': -37, 'p37_2': -37, 'e1': -1, 'e2': 1}
+cand 00: []  xi=(1, 0, 0)  N=1  N in Q*^2=True
+cand 01: ['pi']  xi=(0, 1, 0)  N=-2  N in Q*^2=False
+cand 10: ['th3']  xi=(3, 2, 0)  N=-37  N in Q*^2=False
+cand 11: ['pi', 'th3']  xi=(0, 3, 2)  N=74  N in Q*^2=False
+cand 100: ['p37_2']  xi=(-41, -3, 7)  N=-37  N in Q*^2=False
+cand 101: ['pi', 'p37_2']  xi=(-14, -13, -3)  N=74  N in Q*^2=False
+cand 110: ['th3', 'p37_2']  xi=(-151, -35, 15)  N=1369  N in Q*^2=True
+cand 111: ['pi', 'th3', 'p37_2']  xi=(-30, -91, -35)  N=-2738  N in Q*^2=False
+cand 1000: ['e1']  xi=(-73, -5, 29)  N=-1  N in Q*^2=False
+cand 1001: ['pi', 'e1']  xi=(-58, 43, -5)  N=2  N in Q*^2=False
+cand 1010: ['th3', 'e1']  xi=(-335, 71, 77)  N=37  N in Q*^2=False
+cand 1011: ['pi', 'th3', 'e1']  xi=(-154, -27, 71)  N=-74  N in Q*^2=False
+cand 1100: ['p37_2', 'e1']  xi=(3237, -470, -873)  N=37  N in Q*^2=False
+cand 1101: ['pi', 'p37_2', 'e1']  xi=(1746, -255, -470)  N=-74  N in Q*^2=False
+cand 1110: ['th3', 'p37_2', 'e1']  xi=(13203, -1920, -3559)  N=-1369  N in Q*^2=False
+cand 1111: ['pi', 'th3', 'p37_2', 'e1']  xi=(7118, -1033, -1920)  N=2738  N in Q*^2=False
+cand 10000: ['e2']  xi=(-71, 10, 19)  N=1  N in Q*^2=True
+cand 10001: ['pi', 'e2']  xi=(-38, 5, 10)  N=-2  N in Q*^2=False
+cand 10010: ['th3', 'e2']  xi=(-289, 40, 77)  N=-37  N in Q*^2=False
+cand 10011: ['pi', 'th3', 'e2']  xi=(-154, 19, 40)  N=74  N in Q*^2=False
+cand 10100: ['p37_2', 'e2']  xi=(2885, -411, -774)  N=-37  N in Q*^2=False
+cand 10101: ['pi', 'p37_2', 'e2']  xi=(1548, -211, -411)  N=74  N in Q*^2=False
+cand 10110: ['th3', 'p37_2', 'e2']  xi=(11751, -1655, -3144)  N=1369  N in Q*^2=True
+cand 10111: ['pi', 'th3', 'p37_2', 'e2']  xi=(6288, -825, -1655)  N=-2738  N in Q*^2=False
+cand 11000: ['e1', 'e2']  xi=(4793, -697, -1292)  N=-1  N in Q*^2=False
+cand 11001: ['pi', 'e1', 'e2']  xi=(2584, -375, -697)  N=2  N in Q*^2=False
+cand 11010: ['th3', 'e1', 'e2']  xi=(19547, -2841, -5270)  N=37  N in Q*^2=False
+cand 11011: ['pi', 'th3', 'e1', 'e2']  xi=(10540, -1533, -2841)  N=-74  N in Q*^2=False
+cand 11100: ['p37_2', 'e1', 'e2']  xi=(-194507, 28274, 52438)  N=37  N in Q*^2=False
+cand 11101: ['pi', 'p37_2', 'e1', 'e2']  xi=(-104876, 15245, 28274)  N=-74  N in Q*^2=False
+cand 11110: ['th3', 'p37_2', 'e1', 'e2']  xi=(-793273, 115312, 213862)  N=-1369  N in Q*^2=False
+cand 11111: ['pi', 'th3', 'p37_2', 'e1', 'e2']  xi=(-427724, 62175, 115312)  N=2738  N in Q*^2=False
+
+=== local solubility ===
+mask 00 []: N ok, local: [('p37_1', True), ('p37_2', True), ('p2', True)] -> SELMER
+mask 110 ['th3', 'p37_2']: N ok, local: [('p37_1', True), ('p37_2', True), ('p2', False)] -> no
+mask 10000 ['e2']: N ok, local: [('p37_1', True), ('p37_2', True), ('p2', False)] -> no
+mask 10110 ['th3', 'p37_2', 'e2']: N ok, local: [('p37_1', True), ('p37_2', True), ('p2', False)] -> no
+
+=== Sel^2(E/Q) ===
+|Sel^2| = 1
+   [] xi = (1, 0, 0) N = 1
+
+expect Sel^2 = {1, -theta = -2pi} (dim 1), theta = 2pi
+1     = coeff (1,0,0)
+-theta = coeff (0,-2,0)

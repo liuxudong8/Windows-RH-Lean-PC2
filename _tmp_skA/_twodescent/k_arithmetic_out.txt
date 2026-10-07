@@ -1,0 +1,16 @@
+﻿disc(f) = 9472 = {2: 8, 37: 1}
+totally real: True | roots: [-4.42863948675507037483099540170, 1.07837774562177823305175180540, 3.35026174113329214177924359630]
+
+--- p = 2 ---
+factor_list: [('x', 3)]
+  g=x-0: h(0) mod p = 0  -> divides
+  p divides conductor c = False
+
+--- p = 37 ---
+factor_list: [('x + 3', 1), ('x + 17', 2)]
+  g=x-34: h(34) mod p = 1  -> p | c
+  g=x-20: h(20) mod p = 23  -> p | c
+  p divides conductor c = True
+
+=> if p | c then p^2 | disc(f); disc(f) has 37 to the first power only.
+  Need to resolve which conclusion is right (check LMFDB 3.9472 / 3.2368 etc).

@@ -1,0 +1,23 @@
+﻿scanning units |c|<=120 ...
+unit count: 164
+basic units: (9, -14, -5) N= 1 | (51, -59, -66) N= 1 det= 1.662336521
+  (done class check)
+candidates: 64
+N-filter: 8
+2-adic ring 2^14 ...
+sq2: 16384
+37-adic ring 37^4 ...
+
+=== local solubility (final2) ===
+pb=0 ua=0 ub=0 us=+1 xi=(1, 0, 0) N=1: p37_1=True p37_2=True p2=True -> SELMER
+pb=0 ua=0 ub=1 us=+1 xi=(51, -59, -66) N=1: p37_1=True p37_2=True p2=False -> no
+pb=0 ua=1 ub=0 us=+1 xi=(9, -14, -5) N=1: p37_1=True p37_2=True p2=False -> no
+pb=0 ua=1 ub=1 us=+1 xi=(-1979, 2971, 1297) N=1: p37_1=True p37_2=True p2=False -> no
+pb=6 ua=0 ub=0 us=+1 xi=(-151, -35, 15) N=1369: p37_1=True p37_2=True p2=False -> no
+pb=6 ua=0 ub=1 us=+1 xi=(-10551, 14804, 8836) N=1369: p37_1=True p37_2=True p2=False -> no
+pb=6 ua=1 ub=0 us=+1 xi=(-1289, 1809, 1080) N=1369: p37_1=True p37_2=True p2=False -> no
+pb=6 ua=1 ub=1 us=+1 xi=(300489, -421586, -251697) N=1369: p37_1=True p37_2=True p2=False -> no
+EXPLICIT -theta=(0,-2,0) N=16: p37_1=True p37_2=True p2=False -> no
+
+|Sel^2| = 1
+    (1, 0, 0) N = 1

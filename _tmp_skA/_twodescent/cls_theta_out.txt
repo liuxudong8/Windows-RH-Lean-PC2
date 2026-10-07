@@ -1,0 +1,12 @@
+﻿class (a=0,b=0,s=+1) rep=(1, 0, 0): -theta*rep square? False 
+class (a=0,b=0,s=-1) rep=(-1, 0, 0): -theta*rep square? False 
+class (a=0,b=1,s=+1) rep=(-9, -3, 5): -theta*rep square? False 
+class (a=0,b=1,s=-1) rep=(9, 3, -5): -theta*rep square? False 
+class (a=1,b=0,s=+1) rep=(-15, -48, 34): -theta*rep square? False coords=-0.852394,2.90543 r=0.4527
+class (a=1,b=0,s=-1) rep=(15, 48, -34): -theta*rep square? False 
+class (a=1,b=1,s=+1) rep=(819, -1231, 443): -theta*rep square? False 
+class (a=1,b=1,s=-1) rep=(-819, 1231, -443): -theta*rep square? False 
+
+- theta class found: {}
+(-1)*eta2 = (9, 3, -5)
+-theta * (-eta2) square? False None

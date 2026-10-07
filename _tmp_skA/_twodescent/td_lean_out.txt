@@ -1,0 +1,6 @@
+﻿BSD/TwoDescent.lean:97:9: error: unsolved goals
+⊢ Nat.Prime 2
+BSD/TwoDescent.lean:97:22: error: unsolved goals
+⊢ Nat.Prime 37
+BSD/TwoDescent.lean:108:70: error: unexpected token '/-!'; expected 'lemma'
+BSD/TwoDescent.lean:117:13: error: unexpected token 'end'; expected 'lemma'

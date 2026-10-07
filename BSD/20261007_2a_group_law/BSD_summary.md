@@ -1,6 +1,6 @@
 # BSD 库——弱 BSD 秩 1 的 Lean 形式化（状态摘要）
 
-> 更新：2026-10-06 ①b 素幂递推 + K 端口径同步轮（任务 1+2）。编译基线：`lake build BSD`，exit 0；sorry = 0；库 axiom = 17（Main 8 + LSeries5 9）；**`analytic_rank_K_eq_one` 已由 axiom 升级为 theorem**（乘积恒等式形态：数值判定 L_K′(1) > 0 真证，仅剩 1 个 L′(E,1) 区间声明 + 1 个导数-秩桥梁声明）；§5 (iv-d) native_decide 计算信任公理见 §3.1/§3.2。
+> 更新：2026-10-07 ②a 首轮真证化（Silverman VIII.7.1 触发层 + 群法则）——`Eprime_double`/`Eprime_add` 曲线保持真证（切点加倍/割线加法，因式分解+双方程代入）、2P′..7P′ 链 `P2_eq_double`..`P7_eq_add` 全部由加法公式计算、`P7_X_den_nonbad_factor`（7P′ 分母含素因子 3 ∉ {2,37}）；闭包仅 propext/choice/Quot。编译基线：`lake build BSD` exit 0（3316 jobs）；sorry = 0；库数学 axiom = 14（Main 7 + LSeries5 7，不变）；`rank_E_Q_ge_one` 注释更新（②a 已真证其全部输入，Silverman 定理本身维持外部 axiom）。
 
 ## 0. 一句话定位
 
@@ -27,10 +27,17 @@ c:\proj2\
 ├── BSD\
 │   ├── Main.lean            # 主体：对象层 + 声明层 + 定理层（import BSD.LSeries5）
 │   ├── LSeries5.lean        # ① E⁵ 局部因子 + L(1) 反射公式（几何级数尾已闭合）
+│   ├── LPrime.lean          # L′(E,1) 级数形态 + 正性（B3-min + ①c，数学 axiom 清零）
+│   ├── TwoDescent.lean      # ② E′ 整模型 + 无限阶数值层 + 2-下降骨架（②b 首轮真证层）
 │   ├── BSD_summary.md       # 本文件
 │   ├── _check_bsd.lean      # #print axioms 核验（weak_BSD_37a1 等）
 │   ├── _check_ls5.lean      # #print axioms 核验（LSeries5 各层）
-│   └── _check_1a.lean       # #print axioms 核验（geom_tail_bound 闭合）
+│   ├── _check_1a.lean       # #print axioms 核验（geom_tail_bound 闭合）
+│   ├── _check_summable.lean # ①c 复刻探针（lprime1_summable 证明体）
+│   ├── _check_2b.lean       # ②b 探针（Eprime_poly_no_root 证明体）
+│   ├── _check_2b_ax.lean    # ②b 闭包核验（Eprime_two_torsion_trivial 纯基础）
+│   ├── _check_2a.lean       # ②a 探针（Eprime_double/add + 7 倍链证明体）
+│   └── _check_2a_ax.lean    # ②a 闭包核验（P7_eq_add/P7_X_den_nonbad_factor 纯基础）
 └── lakefile.toml            # [[lean_lib]] name = "BSD"（无 root 字段！）
 ```
 
@@ -83,17 +90,15 @@ c:\proj2\
 
 ### 3.2 声明层（axiom，每个带"待证明"注释与升级路径）
 
-**Main.lean — 9 个**（`analytic_rank_K_eq_one`、`rank_E_Q_eq_one` 已升级为定理，见 §3.3）：
+**Main.lean — 7 个**（`analytic_rank_K_eq_one`、`rank_E_Q_eq_one` 已升级为定理；`Lprime_E1` / `Lprime_E1_interval` 已 B3-min 删除，见 §3.3）：
 
 | axiom | 含义 | 升级路径 |
 |---|---|---|
 | `analyticRank` | 解析秩（函数定义，mathlib 无自守 L） | 自建 L 函数层（LSeries5 方向） |
 | `mwRank` | Mordell–Weil 秩（mathlib 无椭圆曲线理论） | 需要全套算术几何 |
-| `Lprime_E1` | L′(E,1)（E = 37a1/ℚ，LMFDB 0.305999773834…） | 区间算术实现 |
-| `Lprime_E1_interval` | L′(E,1) ∈ [0.30599977, 0.30600000]（LMFDB + degree-2 正确形态反射公式独立重检，差 1.7e-9） | L 函数一阶导数的严格区间算术 |
 | `analytic_rank_K_eq_one_of_LK_prime_ne_zero` | L_K′(1) ≠ 0 ⟹ 解析秩(E/K) = 1（L_K(1) = 0 的函数方程 ε_K = −1 + 解析秩定义） | 函数方程与 Artin 分解的 Lean 实现 |
-| `rank_E_Q_ge_one` | rank E(ℚ) ≥ 1（P₀ = (0,0) 无限阶；支撑见 BSD.TwoDescent） | Silverman VIII.7.1(b) 的 Lean 实现（椭圆曲线约化理论） |
-| `rank_E_Q_le_one` | rank E(ℚ) ≤ 1（2-下降 Selmer 计算） | 三次域类数/单位群/局部可解性（②b） |
+| `rank_E_Q_ge_one` | rank E(ℚ) ≥ 1（P₀ = (0,0) 无限阶；②a 已真证全部输入） | Silverman VIII.7.1(b) 本体（椭圆曲线约化理论，mathlib 缺失） |
+| `rank_E_Q_le_one` | rank E(ℚ) ≤ 1（2-下降 Selmer 计算；E′[2] = {O} 已真证，见 §3.3 ②b） | 三次域类数/单位群/局部可解性（②b 剩余） |
 | `rank_E5_Q_eq_zero` | rank E⁵(ℚ)=0（Kolyvagin） | L_E5_one_ne_zero（已闭合）+ Kolyvagin 定理 |
 | `twist_decomposition` | rank E(K) = rank E(ℚ) + rank E⁵(ℚ)（Silverman） | Galois 模特征空间分解（③） |
 
@@ -113,7 +118,7 @@ c:\proj2\
 
 ### 3.3 定理层（拼合）
 
-- `LK_prime_pos`：L_K′(1) > 0（真定理；axiom 闭包 = `Lprime_E1_interval` + `L_E5_one_pos` 定理 + 基础，无反射公式依赖；数值下界 1.63808 = 0.30599977 × 5.3532）
+- `LK_prime_pos`：L_K′(1) > 0（真定理；axiom 闭包 = `Lprime_E1_pos` 定理（B3-min 已收口）+ `L_E5_one_pos` 定理 + LSeries5 声明层 + 基础；`lprime1_summable` 已 ①c 定理化；数值下界 1.63808 = 0.30599977 × 5.3532）
 - `analytic_rank_K_eq_one`：解析秩(E/K) = 1（**由 axiom 升级为 theorem**：`analytic_rank_K_eq_one_of_LK_prime_ne_zero`（声明）+ `LK_prime_pos`）
 - `algebraic_rank_K_eq_one`：mwRank E(K) = 1（rw 拼合，axiom 闭包 = 声明 + 基础）
 - `rank_E_Q_eq_one`：rank E(ℚ) = 1（**由 axiom 升级为 theorem**：`le_antisymm rank_E_Q_le_one rank_E_Q_ge_one`，② 结构化拼合）
@@ -121,7 +126,14 @@ c:\proj2\
 - `weak_BSD_37a1`：mwRank = analyticRank（弱 BSD 秩 1 成立）
 - 均无 sorry；`weak_BSD_37a1` 的 `#print axioms` 闭包见下注
 
-> 注：`weak_BSD_37a1` 的 axiom 闭包（`lake env lean BSD/_check_bsd.lean`）现为：`Lprime_E1`、`Lprime_E1_interval`、`analytic_rank_K_eq_one_of_LK_prime_ne_zero`（Main 声明）+ `analyticRank`、`mwRank`、`rank_E_Q_ge_one`、`rank_E_Q_le_one`、`rank_E5_Q_eq_zero`、`twist_decomposition` + LSeries5 声明层（`Lambda_E5`、`L_E5_series_split`、`coefficient_bound_aE5`、`summable_fE5` 等）+ native_decide 计算信任公理 + 基础（propext/choice/Quot）。数值判定 L_K′(1) > 0 已真证，K 端不再依赖反射公式的区间算术；代数秩端 rank_E_Q_eq_one 已分解为 ge/le 双声明（2-下降 ②）。
+> **B3-min 收口（2026-10-07）**：`Lprime_E1` / `Lprime_E1_interval` 两个裸数值 axiom（LMFDB 0.305999773834…）已整体删除，替换为公式形态真定理链：
+> `LPrime.lprime1 = 2·∑' aE(n+1)/(n+1)·E1(2π(n+1)/√37)`（E = 37a1 反射公式一阶导级数形态，N=37, ε=−1）→ `LPrime.lprime1_pos : 0 < lprime1`（部分和 ≥ 0.0557 vs 尾项 |·| ≤ 0.0125，margin 充分）→ `Main.Lprime_E1_pos`。
+> `LPrime.lean` 4.5–4.11 块全部闭合（`lake env lean BSD/LPrime.lean` exit 0）；`lake build BSD` exit 0。
+> **①c 复刻收口（2026-10-07）**：`lprime1_summable` axiom → theorem（级数绝对收敛，几何级数闭合）。证明体：逐项界 `|aE(n+1)/(n+1)·E1(bn(n+1))| ≤ (2/1.03)·e^{−1.03(n+1)}`——`aE_bound`（n≤100 分支 + 表外 0）+ `E1_le`（E₁ ≤ e^{−b}/b）+ `b1_gt_103`（bₙ ≥ 1.03n ⟹ bn ≥ 1.03、e^{−bn} ≤ e^{−1.03n}）组合，右侧几何级数可和（`hasSum_geometric_of_norm_lt_one` + `pow_succ` 移位 + `exp_nat_mul`），`Summable.of_norm_bounded` 闭合。
+> `#print axioms LK_prime_pos` 复核：**无 `lprime1_summable`**；数学 axiom 仅剩 LSeries5 声明层（`L_E5_series_split`、`Lambda_E5`）+ 基础（propext/choice/Quot）+ native_decide 计算信任公理（aE_bound 表）。LPrime.lean 数学 axiom 清零。
+> 4.11 形态教训（勿再踩）：`mul_le_mul_of_nonneg_left` 生成 c·a ≤ c·b（左乘），右乘需 `_right`；`Real.exp_le_exp` 现代版 iff 无参；`norm_tsum_le_tsum_norm` 需 `Summable ‖·‖`（用 convert + `Real.norm_eq_abs` 从 `Summable |·|` 构造，勿 simpa 直转——abs_div/abs_mul 归约不对称）；ℕ/ℝ cast 形态（`↑(n+4)` vs `↑(n+3)+1`）非 DefEq，用显式形态等式 `g_sum_eq1/g_sum_eq2/g_sum_abs` + rw 转换（`congr 1` 只留未自动闭合的分母目标；分母 `rw [Nat.cast_add]; ring` 或直接 `ring`）。
+
+> 注：`weak_BSD_37a1` 的 axiom 闭包（`lake env lean BSD/_check_bsd.lean`）现为：`analytic_rank_K_eq_one_of_LK_prime_ne_zero`（Main 声明）+ `analyticRank`、`mwRank`、`rank_E_Q_ge_one`、`rank_E_Q_le_one`、`rank_E5_Q_eq_zero`、`twist_decomposition` + LSeries5 声明层（`Lambda_E5`、`L_E5_series_split`、`coefficient_bound_aE5`、`summable_fE5` 等）+ native_decide 计算信任公理 + 基础（propext/choice/Quot）。数值判定 L_K′(1) > 0 已真证（B3-min + ①c 后 LPrime 端零 axiom），K 端不再依赖反射公式的区间算术；代数秩端 rank_E_Q_eq_one 已分解为 ge/le 双声明（2-下降 ②）。
 
 ## 4. 编译与核验
 
@@ -131,7 +143,7 @@ lake build BSD            # 全库；日志 > build_*.txt
 lake env lean BSD/_check_bsd.lean   # #print axioms 核验
 ```
 
-统计：`(Select-String -Path BSD\*.lean -Pattern "^axiom ").Count`——库代码 = 18（Main 9 + LSeries5 9；`_check_1b.lean` 的 1 个为核验脚本，不计；TwoDescent.lean 无 axiom）；sorry 应为 0。
+统计：`(Select-String -Path BSD\*.lean -Pattern "^axiom ").Count`——库代码 = 14（Main 7 + LSeries5 7；`_check_*.lean` 的核验脚本不计；TwoDescent.lean 无 axiom）；sorry 应为 0。
 
 ## 5. 状态与路线
 
@@ -142,9 +154,23 @@ lake env lean BSD/_check_bsd.lean   # #print axioms 核验
 
 **②b Selmer 完整数值计算（2026-10-06 收口）**：TwoDescent.lean 注释同步域算术口径——Δ_f = 9472 为多项式判别式；θ 三实根 ⟹ K 全实（r₁ = 3, r₂ = 0，单位秩 2）；π = θ/2 满足 2-Eisenstein 多项式 T³ − 4T + 2 ⟹ 𝒪_K = ℤ[π]、**Δ_K = 148、导子 c = 8**（k_arithmetic3.py 数值钉死：h_K = 1、2 = 𝔭₂³（e=3, f=1, 𝔭₂=(π)）、37 = 𝔭₃₇,₁·𝔭₃₇,₂²、δ(P′) = −θ = (0,−2,0)、N(−θ) = 16）。**Selmer 终跑 selmer7.py**（修正局部可解模型：ξ 局部可解 ⟺ ξ = 1 或 ∃x：f(x) ∈ K_v*² 且 (x−θ)ξ ∈ K_v*²；p2: 2¹⁴ 环全查、p37: 37⁴ 环双素片）：K(S,2) 候选（素分量 8 × 单位 8 = 64，|c| ≤ 120 最小 log-det 基本单位对）经 N ∈ ℚ*² 过滤 8 个，局部检查得 **|Sel²| = 2 = {(1,0,0), (0,−2,0) = −θ = δ(P′)}**（−θ 全局部可解：p37₁ ✓ p37₂ ✓ p2 ✓，命中 x = 1：f(1) = 1 平方、(1−θ)(−θ) ∈ K₂*² ⟹ δ(P) = 1−θ ≡ −θ，P = (1,1) ∈ E′(ℚ)）。⟹ dim Sel² = 1 ⟹ **rank E(ℚ) ≤ dim Sel² = 1**（E(ℚ)[2] = {O}），与 LMFDB 37.a1（rank = 1、Sha[2] = 0 ⟹ Sel² = E(ℚ)/2E(ℚ)）一致。**工程收口**：−θ 显式加入候选（δ 理论保证 δ(P′) ∈ Sel²），|Sel²| 结论不依赖基本单位对的唯一性；全部 ②b 脚本（k_arithmetic3/selmer2..7/dbg*）已备份至 Windows-RH-Lean-PC-2\_tmp_skA\_twodescent\。
 
+**本窗口（D1+D2 升级 + 闭包审计，2026-10-06）**：`BSD_axiom_audit.md` 产出主定理闭包审计（18 axiom 分类：4 结构 [A] + 3 数值 [B] + 9 外部定理 [C] + 2 可消除 [D]；唯一发现 = C5 ε_K = −1 依据未显式落档）。**D1+D2 升级 theorem**：(D1) `coefficient_bound_aE5`——aE5_table.lean 定义结构改 wrapper（`aE5_raw` 802 分支原表 + `aE5 n = if n ≤ 800 then aE5_raw n else 0`，数值逐项不变），n ≤ 800 查表（native_decide ℤ 上 |aE5 m| ≤ 2m，m ∈ range 801）+ n ≥ 801 表外平凡（if_neg）；(D2) `summable_fE5`——|fE5 n| ≤ 2·exp(−α(n+1))（D1 + 除法界）+ Σ 几何级数（exp(−α) < 1，α = 2π/√925 > 0）+ Summable.of_norm_bounded，**完全干净**。**库 axiom 18 → 16**（Main 9 + LSeries5 7），`weak_BSD_37a1` 数学闭包 = 11 + 3 基础（propext/Quot/choice），native_decide 计算信任 112 → 114（+2 = D1 查表）；`lake build BSD` exit 0（3314 jobs）。
+
+**本窗口（①c 复刻，2026-10-07）**：`lprime1_summable` axiom → theorem（LPrime.lean 最后一个数学 axiom 清除）。数学链：逐项界 `|aE(n+1)/(n+1)·E1(bn(n+1))| ≤ (2/1.03)·e^{−1.03(n+1)}`——`aE_bound`（n≤100 native_decide 分支 + 表外 0）、`E1_le`（E₁(b) ≤ e^{−b}/b）、`b1_gt_103`（bₙ ≥ 1.03n ⟹ bn ≥ 1.03、e^{−bn} ≤ e^{−1.03n}，`mul_le_mul` 组合）；右侧几何级数可和（`hasSum_geometric_of_norm_lt_one` + `pow_succ` 移位 + `exp_nat_mul`（先 `mul_comm`）+ `hq1.summable.mul_left`），`Summable.of_norm_bounded` 闭合。**库 axiom 15 → 14**（Main 7 + LSeries5 7），`#print axioms LK_prime_pos` 数学闭包 = LSeries5 `L_E5_series_split`/`Lambda_E5` + Main 声明层 + 基础（propext/choice/Quot）+ native_decide 计算信任公理，**无任何 LPrime axiom**；`lake build BSD` exit 0（3316 jobs）；`LPrime.lean` 独立编译 exit 0（探针 `_check_summable.lean` 先验证证明体）。①c 形态教训入 §3.3 4.11 段：`← pow_succ`（q^n·q 移位）、`exp_nat_mul` 需先 `mul_comm`、`Int.cast_abs`（@[simp] 但 ℤ→ℝ 形态需 `simp` 一步）、`neg_le_neg` 后负号绑定需 `rw [neg_mul]`、`(bn)⁻¹` vs `1/bn` 非 DefEq 需 `simpa`、doc comment 内 unicode（`−`/`①`）曾致 lexer 报错——注释改纯 ASCII。
+
+**本窗口（②b 首轮 Lean 化，2026-10-07）**：`rank_E_Q_le_one` 依赖链的 ℚ 端真证化——TwoDescent.lean 新增两个真定理：`Eprime_poly_no_root`（X³ − 16X + 16 无 ℚ 根：有理根定理——r = n/d（互素）⟹ d | n³ ⟹（`Nat.Coprime.dvd_of_dvd_mul_left` 两步剥平方）d | 1 ⟹ d = 1 ⟹ r ∈ ℤ；n | 16 ⟹ |n| ≤ 16 ⟹ `interval_cases` 33 case `norm_num` 排除）与 `Eprime_two_torsion_trivial`（E′[2](ℚ) = {O}，eqn 代入 Y = 0 后调前定理）。`#print axioms BSD.Eprime_two_torsion_trivial` 闭包 = **仅 propext/choice/Quot.sound**（纯基础，真定理确认，原数值核验 two_descent_check.py 升级）。Main.lean `rank_E_Q_le_one` 注释同步：口径显式化——2-下降作用在 E′ 上，E 与 E′ 差一个 2-同源（`toEprime_preserves`，平移+缩放），同源保持 Mordell–Weil 秩（标准事实）⟹ rank E = rank E′ ≤ 1。axiom 数不变（14：Main 7 + LSeries5 7），`lake build BSD` exit 0（3316 jobs）+ `lake build BSD.TwoDescent` exit 0；weak_BSD_37a1 数学闭包不变。**②b 剩余**：K = ℚ(θ) 三次域类数/单位群（h_K = 1、𝒪_K = ℤ[π]）与局部可解性（selmer7.py 数值已收口）的完整 Lean 化——需类域/局部域理论（mathlib 缺失，大工程）。
+
+**本窗口（②a 首轮真证化，2026-10-07）**：`rank_E_Q_ge_one`（Silverman VIII.7.1）的 Lean 可证部分全部真证——axiom 边界推到 Silverman 定理本体单点。
+- **§1b 数值触发层**（TwoDescent.lean）：`P7_X_den`（P7.X 分母 = 9 = 3²，Rat 最简归一）、`three_prime`（decide）、`three_not_bad`（3 ≠ 2 ∧ 3 ≠ 37）、`P7_X_den_nonbad_factor`（3 | P7.X.den ∧ 3 ∉ 坏集）——Silverman 论证的输入事实。
+- **§1c 群法则真证**：`Eprime_double`（切点加倍 λ = (3x²−16)/(2y)，需 P.Y ≠ 0；E′[2] = {O} 保证非 2-扭）与 `Eprime_add`（割线加法 λ = (y₂−y₁)/(x₂−x₁)，需 x₁ ≠ x₂）的**曲线保持性**：field_simp 消分母 + ring_nf 做差归零——加倍差恰为 `64y⁶(y²−x³+16x−16)`（`hfac` 因式分解 + `hE` 代入 P.eqn）；加法差含奇次幂项，先 `show` 幂拆分（P.Y³ → P.Y·P.Y²、P.Y⁴ → (P.Y²)² 等）再双方程代入 + ring。
+- **7 倍链**：`P2_eq_double`、`P3_eq_add`..`P7_eq_add`（2P′..7P′ = (0,4),(4,4),(−4,−4),(8,−20),(1,−1),(24,116),(−20/9,172/27)）——原 two_descent_check.py 数值核验**升级为加法公式真证计算**。
+- **闭包核验**（`_check_2a_ax.lean`）：`P7_eq_add`、`P7_X_den_nonbad_factor` 均**仅 propext/choice/Quot.sound**。Main.lean `rank_E_Q_ge_one` 注释更新（②a 已真证全部输入）。`lake build BSD` exit 0（3316 jobs）、`BSD.TwoDescent` exit 0；axiom 数不变（14），sorry = 0。
+- **工程备注**：命名空间为 `BSD`（非模块名 `BSD.TwoDescent`）；结构相等用 `congr 1 <;> norm_num`（proof 字段由 congr 自动跳过）；Eprime_double 探针先于并入验证（`_check_2a.lean` 全程绿）。
+
 **待办（按量级排序）**：
 - ②b `rank_E_Q_le_one`：Selmer 数值计算已收口（|Sel²| = 2 = {1, −θ}，dim = 1 ⟹ rank ≤ 1，selmer7.py）；Lean 侧 `rank_E_Q_le_one` 仍为 axiom（2-下降理论 + 局部可解性的完整 Lean 化需类域/局部域理论，mathlib 缺失；数学依据已由 selmer7.py + LMFDB 钉死）。剩余待做：基本单位对的唯一性严格化（可选，|Sel²| 结论不依赖）、selmer7 结果入文档链（骨架A讨论稿）
-- ②a 剩余：Silverman VIII.7.1(b) 的 Lean 实现（需要完整椭圆曲线约化理论，mathlib 缺失——可暂以 axiom 保留，当前 `rank_E_Q_ge_one` 已是声明）
+- **补 C5 ε_K = −1 依据**（闭包审计发现）：根数乘性 ε_K = ε(E)·ε(E⁵) = (−1)(+1) = −1 未显式落档——补进 Main.lean 注释 + 骨架A讨论稿 4.3
+- ②a 剩余：Silverman VIII.7.1(b) 本体（扭点 x 坐标分母只含坏约化素因子）——需要完整椭圆曲线约化理论（mathlib 缺失）；②a 已真证其**全部输入**（`Eprime_double`/`Eprime_add` 曲线保持、2P′..7P′ 链、`P7_X_den_nonbad_factor` 分母坏因子），axiom 边界已推到 Silverman 定理单点
 - ③ `twist_decomposition`：Galois 模分解（数学证明已有，Lean 化大）
 
 **永久 axiom 风险（诚实标注）**：`ramanujan_ap_E`（Deligne）、`ap5_satake`（Deligne，①b 引入）、`Lambda_E5`（自守 L）——mathlib 无对应理论，除非引入完整模形式/自守理论，否则以 axiom 形式保留并在文档中声明"数值/文献已验证"。`ap5_satake` 与原 `coefficient_bound` 同为"对象层真证、深层声明层带待证明注释"路线上的等价取舍：`coefficient_bound`（任意 n 的 τ(n)√n 界）被拆为"可证组装（乘性+素幂递推）+ 单个 Deligne 输入（Satake 参数）"。

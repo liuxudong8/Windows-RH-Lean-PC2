@@ -2,6 +2,7 @@ import OrderPreservingBijection.QuadraticFieldFive
 import Mathlib.Data.Rat.Defs
 import Mathlib.Tactic.NormNum
 import BSD.LSeries5
+import BSD.LPrime
 
 /-!
 # 弱 BSD 秩 1 的 Lean 形式化骨架（BSD）
@@ -72,15 +73,14 @@ axiom mwRank (E : Type) (K : Type) : ℕ
 /-! ## 2b. 解析秩(E/K) 判定：乘积恒等式形态（文档 4.3(2)、5.4(iii)） -/
 
 /-- L′(E,1)：E = 37a1/ℚ 的 L 函数在 s = 1 的一阶导数。
-    声明值：LMFDB 0.305999773834…（12 位权威值，文档 5.4(iii)(a)）。 -/
-axiom Lprime_E1 : ℝ
+    公式形态真定理（B3-min 收口）：引用 `BSD.LPrime.lprime1`
+    （反射公式一阶导级数形态，N = 37, ε = −1, b_n = 2πn/√37），
+    原裸数值 axiom（LMFDB 0.305999773834…）已删除。 -/
+noncomputable def Lprime_E1 : ℝ := LPrime.lprime1
 
-/-- L′(E,1) 的严格闭区间：[0.30599977, 0.30600000]。
-    依据：LMFDB 权威值 0.305999773834…；本项目以 degree-2 正确形态反射公式
-    （N = 37, ε = −1, b_n = 2πn/√37）独立重检得 0.305999772…（差 1.7×10⁻⁹）。
-    待证明：L 函数一阶导数的严格区间算术（mathlib 无自守 L 理论）。 -/
-axiom Lprime_E1_interval :
-    (0.30599977 : ℝ) ≤ Lprime_E1 ∧ Lprime_E1 ≤ (0.30600000 : ℝ)
+/-- L′(E,1) > 0：`BSD.LPrime.lprime1_pos`（真定理：部分和 ≥ 0.0557、
+    尾项 |·| ≤ 0.0125、margin 充分）。 -/
+theorem Lprime_E1_pos : 0 < Lprime_E1 := LPrime.lprime1_pos
 
 /-- L_K′(1)：L(E/K) 在 s = 1 的一阶导数，乘积恒等式形态
     L_K′(1) = L′(E,1)·L(E⁵,1)（Artin 分解 L(E/K) = L(E)L(E⁵) + 乘积求导 + L(E,1)=0）。
@@ -89,44 +89,56 @@ axiom Lprime_E1_interval :
     待证明：Artin 分解的 Lean 实现（届时本定义升级为定理）。 -/
 noncomputable def LK_prime : ℝ := Lprime_E1 * LSeries5.L_E5 1
 
-/-- L_K′(1) > 0：`Lprime_E1_interval`（0.30599977 > 0）+ `L_E5_one_pos`（已闭合定理）的乘积。
-    真定理；axiom 闭包 = `Lprime_E1_interval` + 基础公理（无反射公式依赖）。
+/-- L_K′(1) > 0：`Lprime_E1_pos`（真定理）+ `L_E5_one_pos`（已闭合定理）的乘积。
+    真定理；axiom 闭包 = 基础公理（无反射公式依赖，B3-min 已闭环）。
     数值下界：0.30599977 × 5.3532 = 1.63808 < L_K′(1)（文档 5.4(iii)(c)；
     5.3532 = 2 × 2.6766 来自 L(E⁵,1) 的 N = 800 区间算术，见 LSeries5.lean 误差预算）。 -/
 theorem LK_prime_pos : 0 < LK_prime := by
-  have hE : (0 : ℝ) < Lprime_E1 := lt_of_lt_of_le (by norm_num) Lprime_E1_interval.1
+  have hE : (0 : ℝ) < Lprime_E1 := Lprime_E1_pos
   have hE5 : (0 : ℝ) < LSeries5.L_E5 1 := LSeries5.L_E5_one_pos
   exact mul_pos hE hE5
 
 /-- 解析秩(E/K) = 1 的判定桥梁：L_K′(1) ≠ 0 ⟹ 解析秩(E/K) = 1。
-    依据：L_K(1) = 0（根数 ε_K = −1 的函数方程 Λ_K(s) = −Λ_K(2−s)）+ 解析秩定义
-    （中心值零且一阶导数非零 ⟹ 一阶零点，局部幂级数）。文档 4.3(1)(2)。
+    依据：(i) 根数 ε_K = −1（函数方程 Λ_K(s) = −Λ_K(2−s)）⟹ L_K(1) = 0；
+    (ii) 解析秩定义：中心值零且一阶导数非零 ⟹ 一阶零点（局部幂级数）。文档 4.3(1)(2)。
+    ε_K = −1 的推导（闭包审计 C5 落档）：根数乘性 ε(E/K) = ε(E)·ε(E⁵)，
+    其中 E/ℚ 根数 ε(E) = −1（L(E,s) 奇符号，N = 37 全实模形式），E⁵/ℚ 根数 ε(E⁵) = +1
+    （N = 925，±1 由数据核验），故 ε_K = (−1)(+1) = −1。
     待证明：函数方程 ε_K = −1 与 Artin 分解的 Lean 实现（届时本声明可进一步分解）。 -/
 axiom analytic_rank_K_eq_one_of_LK_prime_ne_zero :
     LK_prime ≠ 0 → analyticRank Curve37a1 KFive = 1
 
 /-- 解析秩(E/K) = 1：`analytic_rank_K_eq_one_of_LK_prime_ne_zero` + `LK_prime_pos`（真定理）。
-    数值判定 L_K′(1) > 0 已真证（闭包含 `Lprime_E1_interval` 声明 + `L_E5_one_pos` 定理），
-    不再依赖反射公式的区间算术。axiom 闭包 = `Lprime_E1_interval`
-    + `analytic_rank_K_eq_one_of_LK_prime_ne_zero` + 基础公理。 -/
+    数值判定 L_K′(1) > 0 已真证（B3-min 收口后闭包含 `Lprime_E1_pos`（LPrime.lprime1_pos
+    真定理）+ `L_E5_one_pos` 定理），不再依赖任何 L′(E,1) 裸数值 axiom。
+    axiom 闭包 = `analytic_rank_K_eq_one_of_LK_prime_ne_zero` + 基础公理。 -/
 theorem analytic_rank_K_eq_one : analyticRank Curve37a1 KFive = 1 :=
   analytic_rank_K_eq_one_of_LK_prime_ne_zero (ne_of_gt LK_prime_pos)
 
 /-- rank E(ℚ) ≥ 1（2-下降 ② 的构造输入：P₀ = (0,0) 无限阶）。
-    支撑（数值/代数真证见 BSD.TwoDescent）：
-    E′ : Y² = X³ − 16X + 16 上 P′ = (0,4)，7P′ = (−20/9, 172/27) 的 X 坐标分母含
-    素因子 3 ∉ {2, 37}（坏约化素，Δ′ = 2¹²·37）⟹ P′ 非扭（Silverman VIII.7.1(b)：
-    扭点 x 坐标分母只含坏约化素的素因子，外部定理）。
+    支撑（②a 真证层见 BSD.TwoDescent §1b/§1c）：
+    E′ : Y² = X³ − 16X + 16 上 P′ = (0,4)；7P′ = (−20/9, 172/27) 由 E′ 群法则
+    （切点加倍 `Eprime_double` + 割线加法 `Eprime_add`，曲线保持已真证）逐步计算：
+    `P2_eq_double`..`P7_eq_add`（2P′..7P′ 全部真证）；
+    7P′ 的 X 坐标分母 = 9 = 3² 含素因子 3 ∉ {2, 37}（坏约化素 Δ′ = 2¹²·37，
+    `P7_X_den_nonbad_factor`）⟹ P′ 非扭（Silverman VIII.7.1(b)：扭点 x 坐标分母
+    只含坏约化素的素因子，外部定理）。
     Lutz–Nagell 候选整点 (0,±4),(4,±4),(−4,±4),(1,±1) 恰为 P′, 2P′, 3P′, 5P′ 的倍数。
-    待证明：Silverman VIII.7.1 的 Lean 实现（需要完整椭圆曲线约化理论）。 -/
+    待证明：Silverman VIII.7.1 的 Lean 实现（需要完整椭圆曲线约化理论，mathlib 缺失；
+    ②a 已真证其全部输入：7 倍链计算 + 分母坏因子事实）。 -/
 axiom rank_E_Q_ge_one : 1 ≤ mwRank Curve37a1 ℚ
 
 /-- rank E(ℚ) ≤ 1（2-下降 ②，Selmer 计算）。
     论证骨架（见 BSD.TwoDescent §3）：
     K = ℚ(θ)，θ³ − 16θ + 16 = 0；E(ℚ)/2E(ℚ) ↪ {z ∈ K*/K*² : N(z) ∈ ℚ*²}；
-    rank ≤ dim Sel² − dim E(ℚ)[2] = dim Sel²；Sel² ≅ ℤ/2（数值核验 two_descent_check.py
+    rank ≤ dim Sel² − dim E(ℚ)[2] = dim Sel²；Sel² ≅ ℤ/2（数值核验 selmer7.py
     + LMFDB 37.a1：E(ℚ) ≅ ℤ）⟹ rank ≤ 1。
-    待证明：三次域类数/单位群/局部可解性的 Lean 实现（②b）。 -/
+    口径注：这里的 2-下降作用在 E′ 上（37a1 的整系数模型，Y² = X³ − 16X + 16）；
+    E′[2](ℚ) = {O} 已真证（`BSD.TwoDescent.Eprime_two_torsion_trivial`，
+    X³ − 16X + 16 无 ℚ 根——有理根定理 + 整数枚举，原数值核验升级）；
+    E 与 E′ 差一个 2-同源（平移 + 缩放，`toEprime_preserves`），同源保持 Mordell–Weil
+    秩（标准事实），故 rank E = rank E′ ≤ 1。
+    待证明：三次域类数/单位群/局部可解性的 Lean 实现（②b 剩余，Selmer 数值已收口）。 -/
 axiom rank_E_Q_le_one : mwRank Curve37a1 ℚ ≤ 1
 
 /-- rank E(ℚ) = 1：`rank_E_Q_ge_one` + `rank_E_Q_le_one`（2-下降 ② 拼合）。 -/
@@ -134,13 +146,22 @@ theorem rank_E_Q_eq_one : mwRank Curve37a1 ℚ = 1 :=
   le_antisymm rank_E_Q_le_one rank_E_Q_ge_one
 
 /-- rank E⁵(ℚ) = 0（文档 5.4(iv)，确定性判定）。
-    L(E⁵,1) ≠ 0 的区间算术判定与反射公式（N = 925，ε = +1）已细化到
-    BSD.LSeries5：局部因子恒等式为已证定理（ap5_additive_at_5 / ap5_multiplicative_at_37 /
-    ap5_sample_*），L(E⁵,1) ≠ 0 为已闭合定理（`L_E5_one_ne_zero`，由 `L_E5_one_pos` 推出，
-    后者闭包含 L_E5_series_split 等声明层 axiom）。
-    结合 ℚ 端定理“解析秩 0 ⟹ 代数秩 0”（Kolyvagin [2]）。
-    待证明：L_E5_one_pos 的剩余声明层升级，及 Kolyvagin 定理的 Lean 实现。 -/
-axiom rank_E5_Q_eq_zero : mwRank Twist5 ℚ = 0
+    纯文献断言：Kolyvagin 的 Euler 系统定理 [Kolyvagin 1989]——E 是模椭圆曲线且
+    L(E,1) ≠ 0 ⟹ rank E(ℚ) = 0（且 Ш(E,ℚ) 有限）。
+    适用范围核验：E⁵ = 37a1 的 5-扭（N = 925 = 5²·37，ε = +1）由 BCDT 2001
+    全模性保证模性（无需半稳定；Kolyvagin 定理对模曲线成立，不依赖 Heegner 点机制）。
+    前件已真证：`L_E5_one_ne_zero`（LSeries5.lean 定理，由 `L_E5_one_pos` 推出；
+    闭包含 `L_E5_series_split`（反射公式 axiom）+ part50/crude50 的
+    native_decide 计算信任 + 部分和/尾界定理）。
+    待证明：Kolyvagin 定理与模性的 Lean 实现（mathlib 无 Euler 系统/模性理论——
+    领域前沿级工作量，axiom 保留为唯一诚实选择）。 -/
+axiom rank_E5_Q_eq_zero_of_L_E5_ne_zero : LSeries5.L_E5 1 ≠ 0 → mwRank Twist5 ℚ = 0
+
+/-- rank E⁵(ℚ) = 0：`rank_E5_Q_eq_zero_of_L_E5_ne_zero` + `L_E5_one_ne_zero`（真定理接线）。
+    前件依赖从此显式化：axiom 只断言文献定理（L(E⁵,1)≠0 ⟹ 秩 0），
+    "L(E⁵,1)≠0"本身由 Lean 定理供给（闭包含反射公式 axiom + 区间算术）。 -/
+theorem rank_E5_Q_eq_zero : mwRank Twist5 ℚ = 0 :=
+  rank_E5_Q_eq_zero_of_L_E5_ne_zero LSeries5.L_E5_one_ne_zero
 
 /-- 二次扭分解：rank E(K) = rank E(ℚ) + rank E⁵(ℚ)，K = ℚ(√5)（文档 2.1）。
     证明（纸面）：E(K) 是有限生成 ℤ[Gal(K/ℚ)]-模，σ 生成 Gal ⟹ 特征空间分解

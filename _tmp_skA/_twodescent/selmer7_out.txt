@@ -1,0 +1,20 @@
+﻿candidates: 64 N-filter: 8
+2-adic ring ...
+sq2: 16384
+37-adic ring ...
+
+=== local solubility (final4, correct model) ===
+pb=0 ua=0 ub=0 us=+1 xi=(1, 0, 0) N=1: p37_1=True p37_2=True p2=True -> SELMER
+pb=0 ua=0 ub=1 us=+1 xi=(51, -59, -66) N=1: p37_1=True p37_2=True p2=False -> no
+pb=0 ua=1 ub=0 us=+1 xi=(9, -14, -5) N=1: p37_1=True p37_2=True p2=False -> no
+pb=0 ua=1 ub=1 us=+1 xi=(-1979, 2971, 1297) N=1: p37_1=True p37_2=True p2=False -> no
+pb=6 ua=0 ub=0 us=+1 xi=(-151, -35, 15) N=1369: p37_1=False p37_2=False p2=False -> no
+pb=6 ua=0 ub=1 us=+1 xi=(-10551, 14804, 8836) N=1369: p37_1=True p37_2=False p2=False -> no
+pb=6 ua=1 ub=0 us=+1 xi=(-1289, 1809, 1080) N=1369: p37_1=False p37_2=False p2=False -> no
+pb=6 ua=1 ub=1 us=+1 xi=(300489, -421586, -251697) N=1369: p37_1=True p37_2=False p2=False -> no
+    p2 hit X=(1, 0, 0) f=(1, 0, 0) d=(0, 16382, 4)
+EXPLICIT -theta=(0,-2,0) N=16: p37_1=True p37_2=True p2=True -> SELMER
+
+|Sel^2| = 2
+    (1, 0, 0) N = 1
+    (0, -2, 0) N = 16

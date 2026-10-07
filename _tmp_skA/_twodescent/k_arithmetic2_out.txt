@@ -1,0 +1,21 @@
+﻿=== 1. O_K, discriminant ===
+disc(g) = 606208 (expect 148)
+dK = 148, c = sqrt(disc(f)/dK) = 8
+g Eisenstein at 2: False
+
+=== 2. splitting ===
+f mod 2 = x^3  -> 2 totally ramified, 2 O_K = p2^3 (e=3,f=1)
+f mod 37: [('x + 3', 1), ('x + 17', 2)] -> 37 = p37_1 * p37_2^2
+Minkowski bound M = (6/27)*sqrt(148) = 2.7034500134658754173331929978675853609266533754606
+theta roots: ['-4.428639487', '1.078377746', '3.350261741']
+u roots   : ['-10.85727897', '0.1567554912', '4.700523482']
+check g(u_i) = 0: True
+
+=== 3. class group: p2 principal? ===
+norm(a+bu+cu^2) = a**3 - 6*a**2*b + 140*a**2*c - 52*a*b**2 + 336*a*b*c + 2608*a*c**2 - 8*b**3 + 48*b**2*c + 416*b*c**2 + 64*c**3
+N = +-2 integer solutions (|coeff|<=12): []
+=> no small generator; h(K) likely 3 (p2 nonprincipal), else larger search
+extended search (|coeff|<=30): []
+
+=== 4. units (rank 2) ===
+N = +-1 integer solutions (|coeff|<=60): [(-55, 7, 1, -1), (-1, 0, 0, -1), (1, 0, 0, 1), (55, -7, -1, 1)]

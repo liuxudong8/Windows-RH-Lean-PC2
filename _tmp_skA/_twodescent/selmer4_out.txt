@@ -1,0 +1,21 @@
+﻿basic units: (-15, -48, 34) N= 1 | (-9, -3, 5) N= -1 det= 1.6623365
+candidates: 64
+N-filter: 8
+building 2-adic ring elems (2^14)...
+sq2 size: 16384
+sq37 size: 1874161
+
+=== local solubility (final) ===
+pb=0 ua=0 ub=0 us=+1 xi=(1, 0, 0) N=1: p37_1=True p37_2=True p2=True -> SELMER
+pb=0 ua=0 ub=1 us=-1 xi=(9, 3, -5) N=1: p37_1=True p37_2=True p2=True -> SELMER
+pb=0 ua=1 ub=0 us=+1 xi=(-15, -48, 34) N=1: p37_1=True p37_2=True p2=False -> no
+pb=0 ua=1 ub=1 us=-1 xi=(-819, 1231, -443) N=1: p37_1=True p37_2=True p2=False -> no
+pb=6 ua=0 ub=0 us=+1 xi=(-151, -35, 15) N=1369: p37_1=True p37_2=True p2=False -> no
+pb=6 ua=0 ub=1 us=-1 xi=(-1799, 262, 485) N=1369: p37_1=True p37_2=True p2=False -> no
+pb=6 ua=1 ub=0 us=+1 xi=(6085, -887, -1639) N=1369: p37_1=True p37_2=True p2=False -> no
+pb=6 ua=1 ub=1 us=-1 xi=(55729, -8046, -15057) N=1369: p37_1=True p37_2=True p2=False -> no
+
+|Sel^2| = 2
+    (1, 0, 0) N = 1
+    (9, 3, -5) N = 1
+expect {1=(1,0,0), -theta=(0,-2,0)} => dim 1 => rank E(Q) <= 1
