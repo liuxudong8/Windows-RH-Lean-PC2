@@ -1,0 +1,11 @@
+import Mathlib.Analysis.SpecialFunctions.ImproperIntegrals
+#check MeasureTheory.integrableOn_iff_integrable_indicator
+#check MeasureTheory.integrable_indicator_iff
+#check MeasureTheory.integrableOn_iff_integrable_restrict
+#check integrableOn_exp_neg_Ioi
+#check MeasureTheory.integrableOn_exp_neg_Ioi
+#check MeasureTheory.integrableOn_Ioi_exp_neg
+#check MeasureTheory.integral_Icc_eq_integral_Ioi
+#check MeasureTheory.integral_Ioi_eq_integral_Icc
+#check MeasureTheory.integral_Icc_eq_integral_Ioi'
+#check MeasureTheory.setIntegral_Ioi_eq_integral_Icc

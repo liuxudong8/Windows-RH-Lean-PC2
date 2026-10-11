@@ -1,0 +1,22 @@
+﻿== (a) spurious slope [F(1+h)-F(1-h)]/2h  vs  Q ==
+Q=  5000  slope(2h=0.01) = -0.147728   slope(4h=0.02) = -0.147058
+Q= 10000  slope(2h=0.01) = -0.147728   slope(4h=0.02) = -0.147058
+           ratio vs Q/2 = +1.0000   (expect ~1/sqrt(2) = 0.707 if truncation-driven)
+Q= 20000  slope(2h=0.01) = -0.147728   slope(4h=0.02) = -0.147058
+           ratio vs Q/2 = +1.0000   (expect ~1/sqrt(2) = 0.707 if truncation-driven)
+Q= 40000  slope(2h=0.01) = -0.147728   slope(4h=0.02) = -0.147058
+           ratio vs Q/2 = +1.0000   (expect ~1/sqrt(2) = 0.707 if truncation-driven)
+
+== (b) cubic extraction L'''/6  (4th-order central diff, kills linear term) ==
+Q=10000:
+   h= 0.20  L'''/6 = +2.791183   (Cremona 1.73184990)
+   h= 0.10  L'''/6 = +2.388641   (Cremona 1.73184990)
+   h= 0.05  L'''/6 = +2.270494   (Cremona 1.73184990)
+   h= 0.02  L'''/6 = +2.236056   (Cremona 1.73184990)
+   h= 0.01  L'''/6 = +2.232615   (Cremona 1.73184990)
+Q=40000:
+   h= 0.20  L'''/6 = +2.791183   (Cremona 1.73184990)
+   h= 0.10  L'''/6 = +2.388641   (Cremona 1.73184990)
+   h= 0.05  L'''/6 = +2.270494   (Cremona 1.73184990)
+   h= 0.02  L'''/6 = +2.236056   (Cremona 1.73184990)
+   h= 0.01  L'''/6 = +2.232615   (Cremona 1.73184990)

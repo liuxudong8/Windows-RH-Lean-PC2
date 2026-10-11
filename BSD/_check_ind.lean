@@ -1,0 +1,15 @@
+import Mathlib.Analysis.SpecialFunctions.ImproperIntegrals
+#check MeasureTheory.IntegrableOn.indicator
+#check MeasureTheory.Integrable.indicator
+#check MeasureTheory.Integrable.finset_sum
+#check MeasureTheory.IntegrableOn.mono_set
+#check MeasureTheory.setIntegral_union
+#check MeasureTheory.integral_Icc_eq_integral_Ioc
+#check MeasureTheory.integral_Ioc_eq_integral_Icc
+#check integral_nonneg
+#check MeasureTheory.integral_nonneg
+#check MeasureTheory.integral_mono_ae
+#check MeasureTheory.integral_mono
+#check MeasureTheory.IntegrableOn.integral_mono_on
+#check MeasureTheory.IntegrableOn.setIntegral_mono_on
+#check MeasureTheory.setIntegral_mono_on

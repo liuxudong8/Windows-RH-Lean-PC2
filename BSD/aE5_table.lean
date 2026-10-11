@@ -1,5 +1,5 @@
 -- 自动生成：a_n(E^5) 前 800 项（N=925, eps=+1；a_5=0, a_37=+1）
-def aE5 : Nat -> Int
+def aE5_raw : Nat -> Int
 | 0 => 0
 | 1 => 1
 | 2 => 2
@@ -802,3 +802,5 @@ def aE5 : Nat -> Int
 | 799 => 0
 | 800 => 0
 | _ => 0
+
+def aE5 (n : Nat) : Int := if n <= 800 then aE5_raw n else 0

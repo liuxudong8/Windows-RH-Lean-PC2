@@ -1,0 +1,19 @@
+import Mathlib.Analysis.SpecialFunctions.ImproperIntegrals
+import Mathlib.Tactic.NormNum
+
+#check MeasureTheory.integral_mono_ae
+#check MeasureTheory.integral_mono
+#check integral_indicator
+#check integral_finset_sum
+#check MeasureTheory.setIntegral_const
+#check Real.volume_Icc
+#check MeasureTheory.integral_const
+#check ContinuousOn.aestronglyMeasurable
+#check Continuous.aestronglyMeasurable
+#check MeasureTheory.aemeasurable_const
+#check Set.Icc
+#check Set.mem_Icc
+#check Set.indicator
+#check Set.indicator_nonneg
+#check Set.Ioi
+#check Set.mem_Ioi

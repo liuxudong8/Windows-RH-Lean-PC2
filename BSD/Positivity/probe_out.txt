@@ -1,0 +1,29 @@
+﻿== (1,1)-type existence recon on K = Q(sqrt 5) ==  (Q=3000)
+Rank-1 candidates with N ≡ ±1 (mod 5): eps(E^5) = -1, odd rank allowed.
+
+-- twist probe: L(E^5,1), L'(E^5,1) --
+    79a1  E: rank=1 eps=-1 N=79    | E^5: eps^5=-1 N^5=1975   L(E^5,1)= 0.000e+00  L'(E^5,1)= 4.086e+00  L''(E^5,1)=-1.127e+01  => rk(E^5) ~ 1
+    *** (1,1)-TYPE REALIZED: 79a1 has rk(E)=1 and rk(E^5)=1
+    89a1  E: rank=1 eps=-1 N=89    | E^5: eps^5=-1 N^5=2225   L(E^5,1)= 0.000e+00  L'(E^5,1)= 4.417e+00  L''(E^5,1)=-1.271e+01  => rk(E^5) ~ 1
+    *** (1,1)-TYPE REALIZED: 89a1 has rk(E)=1 and rk(E^5)=1
+    91a1  E: rank=1 eps=-1 N=91    | E^5: eps^5=-1 N^5=2275   L(E^5,1)= 0.000e+00  L'(E^5,1)= 5.500e+00  L''(E^5,1)=-1.594e+01  => rk(E^5) ~ 1
+    *** (1,1)-TYPE REALIZED: 91a1 has rk(E)=1 and rk(E^5)=1
+    99a1  E: rank=1 eps=-1 N=99    | E^5: eps^5=-1 N^5=2475   L(E^5,1)= 0.000e+00  L'(E^5,1)= 3.836e+00  L''(E^5,1)=-1.144e+01  => rk(E^5) ~ 1
+    *** (1,1)-TYPE REALIZED: 99a1 has rk(E)=1 and rk(E^5)=1
+   101a1  E: rank=1 eps=-1 N=101   | E^5: eps^5=-1 N^5=2525   L(E^5,1)= 0.000e+00  L'(E^5,1)= 3.747e+00  L''(E^5,1)=-1.125e+01  => rk(E^5) ~ 1
+    *** (1,1)-TYPE REALIZED: 101a1 has rk(E)=1 and rk(E^5)=1
+   106b1  E: rank=1 eps=-1 N=106   | E^5: eps^5=-1 N^5=2650   L(E^5,1)= 0.000e+00  L'(E^5,1)= 4.235e+00  L''(E^5,1)=-1.292e+01  => rk(E^5) ~ 1
+    *** (1,1)-TYPE REALIZED: 106b1 has rk(E)=1 and rk(E^5)=1
+
+== (1,1)-type hits: 6 / 6 ==
+
+-- entanglement sign probe: L'(E,1) (over Q, eps=-1 rank-1) vs L'(E^5,1) --
+    79a1  L'(E,1)= 0.5811   L'(E^5,1)= 4.0863   product>0? +
+    89a1  L'(E,1)= 0.6223   L'(E^5,1)= 4.4173   product>0? +
+    91a1  L'(E,1)= 0.5548   L'(E^5,1)= 5.5001   product>0? +
+    99a1  L'(E,1)= 0.6801   L'(E^5,1)= 3.8356   product>0? +
+   101a1  L'(E,1)= 0.7559   L'(E^5,1)= 3.7470   product>0? +
+   106b1  L'(E,1)= 0.6652   L'(E^5,1)= 4.2345   product>0? +
+
+== 389a1: E rank 2 (allbsd), eps=+1, N=389 ≡ 4 (mod 5) => eps(E^5)=+1 ==
+   389a1  E: rank=2 eps=+1 N=389   | E^5: eps^5=+1 N^5=9725   L(E^5,1)= 8.909e+00  L'(E^5,1)=-1.940e+01  L''(E^5,1)= 5.567e+01  => rk(E^5) ~ 0

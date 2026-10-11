@@ -1,0 +1,27 @@
+import Mathlib.Analysis.SpecialFunctions.ImproperIntegrals
+import Mathlib.Tactic.NormNum
+
+#check MeasureTheory.integral_indicator
+#check MeasureTheory.integral_finset_sum
+#check MeasureTheory.setIntegral_eq_indicator
+#check MeasureTheory.integral_add
+#check MeasureTheory.integral_sub
+#check MeasureTheory.integral_finset_sum
+#check MeasureTheory.integral_mono_ae
+#check MeasureTheory.integral_congr_ae
+#check MeasureTheory.Integrable.mono'
+#check MeasureTheory.Integrable.mono
+#check MeasureTheory.integrableOn_exp_neg_Ioi
+#check Set.Icc_subset_Ioi
+#check Set.Ioi_subset_Ioi
+#check Set.Icc_subset_Icc
+#check Set.indicator_le_indicator
+#check Set.indicator_nonneg
+#check Set.indicator_comp
+#check Set.indicator_of_mem
+#check Set.indicator_of_not_mem
+#check Set.indicator_eq_zero
+#check Set.sum_indicator
+#check Finset.sum_le_sum
+#check Finset.sum_const
+#check Finset.card_range

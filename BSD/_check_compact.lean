@@ -1,0 +1,11 @@
+import Mathlib.Analysis.SpecialFunctions.ImproperIntegrals
+#check MeasureTheory.ContinuousOn.integrableOn_compact
+#check isCompact_Icc
+#check MeasureTheory.IntegrableOn
+#check div_le_iff₀
+#check one_div_le_one_div
+#check MeasureTheory.IntegrableOn.mono_set
+#check AEStronglyMeasurable
+#check MeasureTheory.AEStronglyMeasurable.mono
+#check MeasureTheory.AEStronglyMeasurable.restrict
+#check MeasureTheory.aestronglyMeasurable_iff_aestronglyMeasurable_restrict

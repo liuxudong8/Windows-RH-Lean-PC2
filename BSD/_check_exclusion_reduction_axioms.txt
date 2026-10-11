@@ -1,0 +1,7 @@
+﻿lean.exe : info: downloading https://releases.lean-lang.org/lean4/v4.34.1/lean-4.34.1-windows.tar.zst
+所在位置 行:1 字符: 644
++ ...  $leanPath; & lean -R "C:\proj2" -o "C:\proj2\BSD\.lake\build\lib\lea ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (info: downloadi...windows.tar.zst:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

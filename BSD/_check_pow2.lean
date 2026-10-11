@@ -1,0 +1,3 @@
+import Mathlib.Analysis.SpecialFunctions.ImproperIntegrals
+#check pow_le_pow_left₀
+#check pow_le_pow_of_le_left

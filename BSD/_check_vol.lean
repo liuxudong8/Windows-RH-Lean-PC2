@@ -1,0 +1,29 @@
+import Mathlib.Analysis.SpecialFunctions.ImproperIntegrals
+import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
+
+open MeasureTheory
+
+#check Real.volume_Icc
+#check MeasureTheory.volume_Icc
+#check volume_Icc
+#check Real.volume_Ioc
+#check volume_Ioc
+#check MeasureTheory.volume_Ioc
+#check MeasureTheory.volume_Ioo
+#check volume_Ioo
+#check MeasureTheory.volume_singleton
+#check MeasureTheory.volume_singleton
+#check volume_singleton
+#check MeasureTheory.volume_univ
+#check volume_univ
+#check MeasureTheory.volume_leftInfinite_Ioi
+#check Real.volume_leftInfinite_Ioi
+#check MeasureTheory.volume_Iio
+#check volume_span
+#check MeasureTheory.integral_const
+#check integral_const
+#check MeasureTheory.integral_const_mul
+#check MeasureTheory.setIntegral_const
+#check setIntegral_const
+#check MeasureTheory.integral_restrict_const
+#check MeasureTheory.restrict_const

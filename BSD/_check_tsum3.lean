@@ -1,0 +1,25 @@
+import Mathlib.Analysis.SpecialFunctions.ImproperIntegrals
+import Mathlib.Topology.Algebra.InfiniteSum.Basic
+import Mathlib.Data.Real.Basic
+
+#check Summable.hasSum
+#check hasSum_geometric
+#check tsum_geometric
+#check tsum_geometric_le
+#check summable_geometric_of_lt_1
+#check geom_sum
+#check geom_sum_le
+#check abs_tsum_le_tsum_abs
+#check tsum_abs
+#check HasSum.abs
+#check Summable.abs
+#check hasSum_nat_add_iff
+#check tsum_comp
+#check tsum_range
+#check Finset.sum_range_succ
+#check abs_of_nonneg
+#check Real.exp_neg
+#check exp_le_exp_of_le
+#check exp_pos
+#check div_le_div_of_nonneg_left
+#check le_of_lt

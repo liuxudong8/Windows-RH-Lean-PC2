@@ -1,0 +1,7 @@
+import Mathlib.Analysis.SpecialFunctions.ImproperIntegrals
+#check MeasureTheory.setIntegral_nonneg
+#check MeasureTheory.integral_nonneg_of_ae
+#check MeasureTheory.integral_nonneg_ae
+#check MeasureTheory.integral_nonneg_of_nonneg_ae
+#check MeasureTheory.setIntegral_nonneg_ae
+#check MeasureTheory.integral_Icc_eq_integral_Ioc

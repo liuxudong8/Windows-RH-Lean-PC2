@@ -626,15 +626,86 @@ def alphaE5 : ℝ := 2 * Real.pi / Real.sqrt 925
 noncomputable def fE5 : ℕ → ℝ := fun n =>
   (aE5 (n + 1) : ℝ) / (n + 1) * Real.exp (-alphaE5 * (n + 1))
 
-/- 数学 axiom（①c 的分层：等式/界/收敛为 axiom，不等式链为定理）：
+/- 数学 axiom（①c 的分层：等式为 axiom，界/收敛已升级为定理）：
    · `L_E5_series_split`：Dokchitser 反射公式 s = 1 的 N-截断等式（替代原 `L_E5_one_ne_zero` 判定黑盒）；
-   · `coefficient_bound_aE5`：|a_n(E⁵)| ≤ 2n（表版；与 §2 `coefficient_bound` 同数学内容，
-     aE5 为独立值表定义故单列）；
-   · `summable_fE5`：反射级数绝对收敛（几何级数比较）。 -/
+   · `coefficient_bound_aE5`（theorem）：|a_n(E⁵)| ≤ 2n——aE5 为有限值表（0..800，wrapper 定义
+     `aE5 n = if n ≤ 800 then aE5_raw n else 0`），n ≤ 800 查表（native_decide 有限量词
+     ℤ 上 |aE5 m| ≤ 2m，m ∈ range 801），n ≥ 801 表外平凡（if_neg ⟹ 0 ≤ 2n）；
+     表值正确性（aE5_raw 数值）为外部输入（LMFDB/计算），"界"为机器验证定理；
+   · `summable_fE5`（theorem）：反射级数绝对收敛——|fE5 n| ≤ 2·exp(−α(n+1))（coefficient_bound_aE5
+     + 除法界），Σ 2·exp(−α(n+1)) 为几何级数（exp(−α) < 1，α = 2π/√925 > 0）。
+   数值一致性核验（2026-10-06，refl_consistency.py）：2×Σ_{n<800} fE5(n)（高精度 α = 2π/√925，
+   仅用 aE5 系数表 + α，不依赖反射公式）= 5.3548616166473251…，显式尾界 2.7×10⁻⁷²；
+   与既有值 5.35486161664732485121 一致到 16 位（差 2.9×10⁻¹⁶ = 旧计算 double 精度 α 所致，
+   高精度值才是第 17 位后权威）——axiom 形态无 gross 错误；part50_ge 下界 2.6766 ✓、
+   2B51 = 5.7×10⁻⁴ < 5 ✓（L_E5_one_pos 的数值侧复验）。 -/
 axiom L_E5_series_split (N : ℕ) :
   L_E5 1 = 2 * (∑ n ∈ Finset.range N, fE5 n) + 2 * ∑' n : ℕ, fE5 (n + N)
-axiom coefficient_bound_aE5 (n : ℕ) : |aE5 n| ≤ 2 * (n : ℝ)
-axiom summable_fE5 : Summable fE5
+
+/-- |a_n(E⁵)| ≤ 2n：aE5 为有限表（0..800 + 表外 0），n ≤ 800 查表（native_decide），
+    n ≥ 801 平凡（wrapper 定义 aE5 n = if n ≤ 800 then aE5_raw n else 0）。
+    axiom → theorem（①c 的界升级）；表值本身（aE5_raw）为外部数值输入。 -/
+theorem coefficient_bound_aE5 (n : ℕ) : |(aE5 n : ℝ)| ≤ 2 * (n : ℝ) := by
+  by_cases hn : n ≤ 800
+  · have h := (by native_decide : ∀ m ∈ Finset.range 801, |(aE5 m : ℤ)| ≤ 2 * m)
+    have hn' : n ∈ Finset.range 801 := by simp [Finset.mem_range] ; omega
+    have hz : |(aE5 n : ℤ)| ≤ 2 * n := h n hn'
+    exact_mod_cast hz
+  · have hn' : 801 ≤ n := by omega
+    rw [aE5]
+    have hn'' : ¬ n ≤ 800 := by omega
+    rw [if_neg hn'']
+    norm_num
+
+/-- 反射级数绝对收敛：|fE5 n| ≤ 2·exp(−α(n+1))（系数界 + 除法界），
+    Σ 2·exp(−α(n+1)) 为几何级数（exp(−α) < 1，α = 2π/√925 > 0）。
+    axiom → theorem（①c 的收敛升级）。 -/
+theorem summable_fE5 : Summable fE5 := by
+  have hterm : ∀ n : ℕ, |fE5 n| ≤ 2 * Real.exp (-alphaE5 * ((n : ℝ) + 1)) := by
+    intro n
+    unfold fE5
+    rw [abs_mul]
+    have hnn : (0 : ℝ) ≤ ((n : ℝ) + 1) := by positivity
+    have hdiv : |(aE5 (n + 1 : ℕ) : ℝ) / ((n : ℝ) + 1)| ≤ 2 := by
+      rw [abs_div]
+      rw [abs_of_nonneg hnn]
+      have hc : |(aE5 (n + 1 : ℕ) : ℝ)| ≤ 2 * ((n : ℝ) + 1) := by
+        exact_mod_cast coefficient_bound_aE5 (n + 1)
+      calc
+        |(aE5 (n + 1 : ℕ) : ℝ)| / ((n : ℝ) + 1)
+            ≤ (2 * ((n : ℝ) + 1)) / ((n : ℝ) + 1) := by
+              exact div_le_div_of_nonneg_right hc hnn
+        _ = 2 := by
+          have hx : ((n : ℝ) + 1) ≠ 0 := by positivity
+          field_simp [hx]
+    have he : |Real.exp (-alphaE5 * ((n : ℝ) + 1))| = Real.exp (-alphaE5 * ((n : ℝ) + 1)) := by
+      rw [abs_of_pos (Real.exp_pos _)]
+    rw [he]
+    exact mul_le_mul_of_nonneg_right hdiv (Real.exp_pos _).le
+  have halpha : (0 : ℝ) < alphaE5 := by
+    dsimp [alphaE5]
+    positivity
+  have hg : Summable (fun n : ℕ => (Real.exp (-alphaE5)) ^ n) := by
+    refine summable_geometric_of_norm_lt_one ?_
+    rw [Real.norm_eq_abs]
+    rw [abs_of_pos (Real.exp_pos _)]
+    exact (Real.exp_lt_one_iff.mpr (neg_lt_zero.mpr halpha))
+  have hg2 : Summable (fun n : ℕ => 2 * Real.exp (-alphaE5 * ((n : ℝ) + 1))) := by
+    have hpoint : (fun n : ℕ => 2 * Real.exp (-alphaE5 * ((n : ℝ) + 1)))
+        = (fun n : ℕ => (2 * Real.exp (-alphaE5)) * Real.exp (-alphaE5) ^ n) := by
+      funext n
+      have hcast : ((n + 1 : ℕ) : ℝ) = (n : ℝ) + 1 := by norm_num
+      rw [show -alphaE5 * ((n : ℝ) + 1) = ((n + 1 : ℕ) : ℝ) * -alphaE5 by
+        rw [hcast]
+        ring]
+      rw [Real.exp_nat_mul]
+      rw [pow_succ]
+      ring
+    rw [hpoint]
+    exact hg.mul_left (2 * Real.exp (-alphaE5))
+  refine Summable.of_norm_bounded hg2 ?_
+  intro n
+  simpa [Real.norm_eq_abs] using hterm n
 
 /-- 任意 n 的幂界（正项底）：0.8133^(n+1) ≤ e^(−α(n+1))。 -/
 theorem powE_any (n : ℕ) : ((0.8133 : ℝ) ^ (n + 1)) ≤ Real.exp (-alphaE5 * (n + 1)) := by

@@ -1,0 +1,5 @@
+﻿mpmath UPPER-incomplete (structure == float pipeline), 5077a1:
+Q= 1000  slope F'(1) = -0.147728145773   (float gives -0.147728231; rank 3: 0)
+Q= 2000  slope F'(1) = -0.147728145773   (float gives -0.147728231; rank 3: 0)
+Q= 4000  slope F'(1) = -0.147728145773   (float gives -0.147728231; rank 3: 0)
+Q= 8000  slope F'(1) = -0.147728145773   (float gives -0.147728231; rank 3: 0)
