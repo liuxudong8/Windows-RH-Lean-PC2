@@ -1,0 +1,8 @@
+{
+ "equation": "y^2+y=x^3+x^2-2x",
+ "N": 389,
+ "Delta": 389,
+ "rank": 2,
+ "a_p_check": "all match Cremona Table 3",
+ "NCN": 20000
+}
