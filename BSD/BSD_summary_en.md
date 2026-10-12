@@ -1,5 +1,6 @@
 # BSD Library — Lean Formalization of Weak BSD Rank 1 / Rank-2 Symmetry + n=3 Skeleton (Status Summary)
 
+> Updated: 2026-10-12 (session 《编译lean项目20261012》 continued) — the Lean sister module `SymmetryFormula4` for formula (4) (negative-root-number twist count) landed: formula (4) of §5.2 of the linkage document (L″(E/K,1) > 0 ⟺ the negative-root-number count is even) is formalized as "three axiom classes + assembly (3)-core + genuine theorems", with the double instance check 79a1 (1,1) and 389a1 (2,0); Σr_χ = 2 forces the count to be even automatically (the parity-layer echo of the unconditional P*). After adding the `BSD.lean` import, `lake build -R` is all green (7690 jobs); synced to Windows-RH-Lean-PC-2. See §8.
 > Updated: 2026-10-11 (session title: 《编译lean项目20261011》) — the rank-2 symmetry chain and the first skeleton block of the n=3 difficulty transfer are closed. On 10-11 we completed: ExclusionReduction (rank-1 reverse exclusion layer), LeibnizReduction (leibniz_artin promoted to a genuine second-order Leibniz theorem, tasks 1/2), the full closure proof of 43a1 (1,0) type (LPrime43 + LSeries5_43 + _check_43a1), SymmetryReduction (generic twist-involution rank symmetry), insertion of §4.7 into the rank-2 document (audit --source exit=0 + sha-verified write-back), SymmetryClosure (79a1 (1,1) triple assembly), SelmerDescent (task 3 axioms at theorem level), the three-layer analysis of arbitrary-rank symmetry, and LeibnizThird ((2,1)/(1,2) third-order Leibniz genuine theorems with closure = pure logic).
 
 ## 0. One-line positioning
@@ -175,3 +176,45 @@ The main line progressed from "rank-1 reverse (exclusion layer ord ≤ 1) theory
 - **m ≥ 3 full closure**: existence of the all-ones distribution is conditional; no instance data (the symmetry statement is conditional: *if* the distribution is all-ones, closure holds).
 - **Acceptance**: tasks 1–4 (LeibnizReduction/SymmetryReduction/SymmetryClosure/SelmerDescent), document §4.7, and LeibnizThird are delivered and await acceptance; we will revise on request.
 - **Legacy calibration**: the aE5 row-47 manual fix (|43|→1) in the 43a1 (1,0) table is commented (multiplicativity special case); can be upgraded to the ap5_multiplicative-family theorems if needed.
+
+## 8. 2026-10-12: Formula-(4) negative-root-number twist count module (session 《编译lean项目20261012》 continued)
+
+Landed the §5.2 (3)(4) formulas and the §8 landing point of the linkage document《对称性+正性 ⟷ K-GRH：联系链》as a sister module of `SymmetryClosure`: **`BSD.SymmetryFormula4`** (`BSD/SymmetryFormula4.lean`). The logic is purely algebraic (finite-character counting + parity + sign arithmetic) with no contact with the analytic continuation of L-functions — formalization difficulty far below Kolyvagin / Selmer descent.
+
+### 8.1 Module structure (three axiom classes + assembly + genuine theorems)
+
+| Layer | Name | Content |
+|---|---|---|
+| Object layer | `zeroOrderE/E5/EK_f4`, `rootE/rootE5_f4`, `LppEK_f4`, `chi_NE/chi_neg/local_f4` | component analytic ranks, root numbers, K-side second derivative, the three inputs of the twist-root-number formula |
+| (1) L decomposition | `l_fun_decomposition_f4` | ord L(E/K,1) = ord L(E,1) + ord L(E⁵,1) (Artin decomposition; theorem-level axiom) |
+| (2) BSD parity | `bsd_parity_f4` / `bsd_parity5_f4` | ε(E⊗χ) = (−1)^{ord L(E⊗χ)} (self-dual L-function) |
+| (3) twist root-number formula | `twist_root_number_f4` | ε(E⊗χ) = ε(E)·χ(N_E)·χ(−1)·(local correction) (linkage §5.3) |
+| Assembly (3)-core | `lpp_pos_iff_root_prod_f4` | L″(E/K,1) > 0 ⟺ product of root numbers over r_χ = 0 components = +1 (§5.1 component signs + §5.2 convolution; axiom) |
+| Formula-(4) theorem | `formula4_f4` | K-side rank 2 ⟹ L″>0 ↔ negative-root-number count even (**genuine proof**: exhaustive over the three types) |
+| Corollary | `lpp_pos_of_analytic_two` | K-side rank 2 ⟹ L″>0 (**genuine proof**) |
+
+### 8.2 Key mathematics: Σr_χ = 2 forces the count even
+
+The right-hand side of (4) is **automatically even** under K-side rank 2: the (0,2)/(1,1)/(2,0) types (via BSD parity ε = (−1)^ord) give negative-root counts 0/2/0 respectively — the parity-layer echo of the unconditional Channel-B P*; formula (4) and the symbol channel converge along two independent routes. The "one positive one negative ⟹ count 1 odd ⟹ contradiction" case is automatically excluded by ε(E/K) = ∏ε(E⊗χ) = (−1)^{Σr} = +1 (Σr = 2 even).
+
+### 8.3 Double instances (data-layer axioms + genuine assembly theorems)
+
+| Instance | Type | ε(E), ε(E⁵) | Count | Conclusion | Cross-check |
+|---|---|---|---|---|---|
+| 79a1 | (1,1) | −1, −1 | 2 (even) | L″>0 | converges with the SymmetryClosure entanglement-product channel (`lpp_EK_79_pos_both_f4`) |
+| 389a1 | (2,0) | +1, +1 | 0 (even) | L″>0 | interval arithmetic L″(389a1,1) = 1.518633 > 0 (Probe389) |
+
+- 389a1 data (Probe389/probe389_summary.md §2, verified): ε(E)=+1 (LMFDB; rank 2 even, a₃₈₉=+1 split mult); χ₅(−389)=(5/389)·χ₅(−1)=+1 (reciprocity (5/389)=(389/5)=(4/5)=1; real quadratic field gives χ₅(−1)=+1); local factor = 1 (gcd(389,5)=1, χ unramified at 389).
+- `rootE5_eq_rootE_79/389_f4`: arithmetic self-consistency of the twist-root-number formula at the instances (χ·χ(−1)·local = 1 ⟹ ε(E⁵)=ε(E), matching the ε values from BSD parity).
+- The two instances cover exactly the two sources of evenness of the right-hand side of (4): 79a1 "two negatives cancel" (count 2), 389a1 "no negatives" (count 0); under (2,0), formula (3) degenerates to the zero-order component product = ε(E⁵) = +1.
+
+### 8.4 Closure audit and compilation
+
+| Theorem | Closure |
+|---|---|
+| `formula4_f4` / `lpp_pos_of_analytic_two` | this module's object layer + three axiom classes + (3)-assembly; **no GRH, no bsd_formula_rank_\*** |
+| `lpp_pos_79_f4` / `lpp_pos_389_f4` | the above + instance data layer |
+| `rootE5_eq_rootE_79/389_f4` | twist-root-number formula + instance arithmetic data |
+
+- Compilation: `lake build BSD.SymmetryFormula4` exit 0; after adding `import BSD.SymmetryFormula4` to `BSD.lean`, `lake build -R` is all green (7690 jobs; 10 BSD oleans in the workspace); closure probe `_check_symmetry_formula4.lean` exit 0.
+- Engineering: build logs `build_project_20261012_f4*.txt`; `BSD.lean` / `SymmetryFormula4.lean` / `_check_symmetry_formula4.lean` synced to Windows-RH-Lean-PC-2 (SHA256 match).

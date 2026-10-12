@@ -1,5 +1,6 @@
 # BSD 库——弱 BSD 秩 1/秩 2 对称 + n=3 骨架的 Lean 形式化（状态摘要）
 
+> 更新：2026-10-12（会话题目《编译lean项目20261012》续）——公式 (4)（负根数 twist 计数）Lean 姊妹模块 `SymmetryFormula4` 落地：联系链 §5.2 (4) 式（L″(E/K,1)>0 ⟺ 负根数计数为偶）以"三类 axiom + 组装 (3) 核心 + 真定理"落盘，79a1 (1,1) 与 389a1 (2,0) 双实例验证，Σr_χ=2 ⟹ 计数自动为偶（P* 无条件性在奇偶层的复现）；`BSD.lean` 加入口后 `lake build -R` 全绿（7690 jobs）；已同步至 Windows-RH-Lean-PC-2。详见 §8。
 > 更新：2026-10-11（会话题目《编译lean项目20261011》）——秩 2 对称链与 n=3 困难平移第一块骨架收口。10-11 完成：ExclusionReduction（秩1反向排除层）、LeibnizReduction（leibniz_artin 二阶真定理化，任务1/2）、43a1 (1,0) 全闭证（LPrime43 + LSeries5_43 + _check_43a1）、SymmetryReduction（扭对合秩对称泛型）、秩 2 文档 4.7 节插入（audit --source exit=0 + sha 校验写回）、SymmetryClosure（79a1 (1,1) 三件套）、SelmerDescent（任务3 挂账）、任意秩对称三层分析、LeibnizThird（(2,1)/(1,2) 三阶 Leibniz 真定理，闭包仅纯逻辑）。
 
 ## 0. 一句话定位
@@ -244,3 +245,45 @@ lake env lean BSD/_check_bsd.lean   # #print axioms 核验
 - **m ≥ 3 全闭合**：(1,1,…,1) 分配的存在性是条件性的，无实例数据（对称陈述：*若*全 1 分配则闭包）。
 - **验收**：任务 1–4（LeibnizReduction/SymmetryReduction/SymmetryClosure/SelmerDescent）、文档 4.7 节、LeibnizThird 均已交付，待验收；若用户再提则续修。
 - **遗留口径**：43a1 (1,0) 侧 L(E⁵,1) 表 aE5 行 47 手工修正（\|43\|→1）已注释说明（乘性特判），如需可升级为 ap5_multiplicative 系定理。
+
+## 8. 2026-10-12：公式 (4) 负根数 twist 计数模块（会话题目《编译lean项目20261012》续）
+
+把联系链《对称性+正性 ⟷ K-GRH：联系链》§5.2 (3)(4) 式与 §8 落点做成 `SymmetryClosure` 的姊妹模块 **`BSD.SymmetryFormula4`**（`BSD/SymmetryFormula4.lean`）：逻辑纯代数（有限特征标计数 + 奇偶性 + 符号运算），不碰 L 函数解析延拓，形式化难度远低于 Kolyvagin / Selmer descent。
+
+### 8.1 模块结构（三类 axiom + 组装 + 真定理）
+
+| 层 | 名称 | 内容 |
+|---|---|---|
+| 对象层 | `zeroOrderE/E5/EK_f4`、`rootE/rootE5_f4`、`LppEK_f4`、`chi_NE/chi_neg/local_f4` | 分量解析秩、根数、K 侧二阶导、twist 根数公式三输入 |
+| (1) L 分解 | `l_fun_decomposition_f4` | ord L(E/K,1) = ord L(E,1) + ord L(E⁵,1)（Artin 分解，定理级挂账） |
+| (2) BSD 奇偶性 | `bsd_parity_f4` / `bsd_parity5_f4` | ε(E⊗χ) = (−1)^{ord L(E⊗χ)}（自对偶 L 函数） |
+| (3) twist 根数公式 | `twist_root_number_f4` | ε(E⊗χ) = ε(E)·χ(N_E)·χ(−1)·(局部修正)（联系链 5.3） |
+| 组装 (3) 式核心 | `lpp_pos_iff_root_prod_f4` | L″(E/K,1) > 0 ⟺ 零阶分量根数积 = +1（5.1 分量符号 + 5.2 卷积，挂账） |
+| (4) 式定理 | `formula4_f4` | K 侧秩 2 ⟹ L″>0 ↔ 负根数计数偶（**真证明**：穷举三型） |
+| 推论 | `lpp_pos_of_analytic_two` | K 侧秩 2 ⟹ L″>0（**真证明**） |
+
+### 8.2 关键数学：Σr_χ = 2 ⟹ 计数自动为偶
+
+(4) 式右边的偶性在 K 侧秩 2 下**恒成立**：(0,2)/(1,1)/(2,0) 三型（BSD 奇偶性 ε=(−1)^ord）负根数计数分别为 0/2/0——这是通道 B 的 P* 无条件结论在奇偶层的复现，(4) 式与符号通道两条独立路线合流。"一正一负 ⟹ 计数 1 奇 ⟹ 矛盾"的情形被 ε(E/K) = ∏ε(E⊗χ) = (−1)^{Σr} = +1（Σr=2 偶）自动排除。
+
+### 8.3 双实例（数据层 axiom + 真定理组装）
+
+| 实例 | 型 | ε(E), ε(E⁵) | 计数 | 结论 | 对照 |
+|---|---|---|---|---|---|
+| 79a1 | (1,1) | −1, −1 | 2（偶） | L″>0 | SymmetryClosure 纠缠积通道合流（`lpp_EK_79_pos_both_f4`） |
+| 389a1 | (2,0) | +1, +1 | 0（偶） | L″>0 | 区间算术 L″(389a1,1) = 1.518633 > 0（Probe389） |
+
+- 389a1 数据（Probe389/probe389_summary.md §2，已核）：ε(E)=+1（LMFDB，秩 2 偶、a₃₈₉=+1 split mult）；χ₅(−389)=(5/389)·χ₅(−1)=+1（互反 (5/389)=(389/5)=(4/5)=1，实二次域 χ₅(−1)=+1）；局部因子=1（gcd(389,5)=1，χ 在 389 非分歧）。
+- `rootE5_eq_rootE_79/389_f4`：twist 根数公式的实例算术自洽性（χ·χ(−1)·局部 = 1 ⟹ ε(E⁵)=ε(E)，与 BSD 奇偶性给出的 ε 值一致）。
+- 两个实例恰好覆盖 (4) 式右边偶性的两种来源：79a1"两负抵消"（计数 2）、389a1"无负"（计数 0）；(3) 式在 (2,0) 下退化为零阶分量积 = ε(E⁵) = +1。
+
+### 8.4 闭包审计与编译
+
+| 定理 | 闭包 |
+|---|---|
+| `formula4_f4` / `lpp_pos_of_analytic_two` | 本模块对象层 + 三类挂账 + (3) 组装；**无 GRH、无 bsd_formula_rank_\*** |
+| `lpp_pos_79_f4` / `lpp_pos_389_f4` | 上述 + 实例数据层 |
+| `rootE5_eq_rootE_79/389_f4` | twist 根数公式 + 实例算术数据 |
+
+- 编译：`lake build BSD.SymmetryFormula4` exit 0；`BSD.lean` 加 `import BSD.SymmetryFormula4` 入口后 `lake build -R` 全绿（7690 jobs，BSD 库 10 个 olean 入工作区）；探针 `_check_symmetry_formula4.lean` 闭包核验 exit 0。
+- 工程：构建日志 `build_project_20261012_f4*.txt`；已同步 `BSD.lean` / `SymmetryFormula4.lean` / `_check_symmetry_formula4.lean` 至 Windows-RH-Lean-PC-2（SHA256 一致）。
