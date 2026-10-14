@@ -1,5 +1,7 @@
 # BSD 库——弱 BSD 秩 1/秩 2 对称 + n=3 骨架的 Lean 形式化（状态摘要）
 
+> 更新：2026-10-15（λ₁₁ = 2 数值支柱 + 跨素数核对）——数值路径 1 本体完成：389a1/p=11 series(11) 复刻（PARI/GP 真模符号管道）验证 **ord_T L₁₁ = 2（λ₁₁ = 2）**（L₁₁(T)=9T²+9T³+… mod 11，T⁰≡0 mod 11⁴、T¹≡0 mod 11、T²≡9 mod 11≠0，220+22 点自洽 + 两条分布恒等式精确成立）；挂账 Lean（`Sha11_389.lean` 数值验证层，编译全绿）；③ 跨素数核对：E^χ（twist，cond 24896）**analytic rank 0、M(0)=2** ⟹ T⁰≡10 mod 11≠0 ⟹ **λ₁₁(E^χ)=0**，特征分解 **λ(E/K)=λ(E)+λ(E^χ)=2+0=2**（Q 侧 = K_cyc 侧，跨素数 {3,11} 一致）；挂账 Lean（跨素数核对层，真证 `lambda_ek_two_389`）。`lake build BSD.Sha11_389` 全绿。详见 §10。
+> 更新：2026-10-13（Sha 有限性攻关）——五阶段路线（Iwasawa 欧拉系延伸）A 阶段全绿、B 阶段落地、B-6 rank-2 欧拉系评估命中 CH22、框架实证两处纠错、CH22 链 Lean 集成完成（`sha11_finite_389 : ShaFinite Curve389a1 11` 真证）、λ₁₁ K_cyc 侧评估完成（三条路径待选）。`lake build -R` 全绿 7690 jobs。详见 §9。
 > 更新：2026-10-12（会话题目《编译lean项目20261012》续）——公式 (4)（负根数 twist 计数）Lean 姊妹模块 `SymmetryFormula4` 落地：联系链 §5.2 (4) 式（L″(E/K,1)>0 ⟺ 负根数计数为偶）以"三类 axiom + 组装 (3) 核心 + 真定理"落盘，79a1 (1,1) 与 389a1 (2,0) 双实例验证，Σr_χ=2 ⟹ 计数自动为偶（P* 无条件性在奇偶层的复现）；`BSD.lean` 加入口后 `lake build -R` 全绿（7690 jobs）；已同步至 Windows-RH-Lean-PC-2。详见 §8。
 > 更新：2026-10-11（会话题目《编译lean项目20261011》）——秩 2 对称链与 n=3 困难平移第一块骨架收口。10-11 完成：ExclusionReduction（秩1反向排除层）、LeibnizReduction（leibniz_artin 二阶真定理化，任务1/2）、43a1 (1,0) 全闭证（LPrime43 + LSeries5_43 + _check_43a1）、SymmetryReduction（扭对合秩对称泛型）、秩 2 文档 4.7 节插入（audit --source exit=0 + sha 校验写回）、SymmetryClosure（79a1 (1,1) 三件套）、SelmerDescent（任务3 挂账）、任意秩对称三层分析、LeibnizThird（(2,1)/(1,2) 三阶 Leibniz 真定理，闭包仅纯逻辑）。
 
@@ -262,9 +264,11 @@ lake env lean BSD/_check_bsd.lean   # #print axioms 核验
 | (4) 式定理 | `formula4_f4` | K 侧秩 2 ⟹ L″>0 ↔ 负根数计数偶（**真证明**：穷举三型） |
 | 推论 | `lpp_pos_of_analytic_two` | K 侧秩 2 ⟹ L″>0（**真证明**） |
 
-### 8.2 关键数学：Σr_χ = 2 ⟹ 计数自动为偶
+### 8.2 关键数学：Σr_χ = 2 下 (4) 式右端恒真——奇偶性必要条件，非正性本身
 
-(4) 式右边的偶性在 K 侧秩 2 下**恒成立**：(0,2)/(1,1)/(2,0) 三型（BSD 奇偶性 ε=(−1)^ord）负根数计数分别为 0/2/0——这是通道 B 的 P* 无条件结论在奇偶层的复现，(4) 式与符号通道两条独立路线合流。"一正一负 ⟹ 计数 1 奇 ⟹ 矛盾"的情形被 ε(E/K) = ∏ε(E⊗χ) = (−1)^{Σr} = +1（Σr=2 偶）自动排除。
+(4) 式右边的偶性在 K 侧秩 2 下**恒成立**：(0,2)/(1,1)/(2,0) 三型（BSD 奇偶性 ε=(−1)^ord）负根数计数分别为 0/2/0——更深一层：(3) 式右端（零阶根数积 = +1）在 Σr=2 下恒真（(1,1) 空积 = 1；(2,0)/(0,2) ε(秩 0 分量) = (−1)^0 = +1）。
+
+因此 **(3)/(4) 是奇偶性必要条件，不是正性本身**：它们在秩 2 情形不携带超出"各分量符号为正"（r≥1 通道 B；r=0 根数 + BSD 符号定理）的约束，(4) 的价值在**矛盾检测**（若某实例计数为奇，则 K 侧秩 2 与正性不相容）。正性来源因型而异，见 §8.3。"一正一负 ⟹ 计数 1 奇 ⟹ 矛盾"的情形被 ε(E/K) = ∏ε(E⊗χ) = (−1)^{Σr} = +1（Σr=2 偶）自动排除。
 
 ### 8.3 双实例（数据层 axiom + 真定理组装）
 
@@ -275,7 +279,9 @@ lake env lean BSD/_check_bsd.lean   # #print axioms 核验
 
 - 389a1 数据（Probe389/probe389_summary.md §2，已核）：ε(E)=+1（LMFDB，秩 2 偶、a₃₈₉=+1 split mult）；χ₅(−389)=(5/389)·χ₅(−1)=+1（互反 (5/389)=(389/5)=(4/5)=1，实二次域 χ₅(−1)=+1）；局部因子=1（gcd(389,5)=1，χ 在 389 非分歧）。
 - `rootE5_eq_rootE_79/389_f4`：twist 根数公式的实例算术自洽性（χ·χ(−1)·局部 = 1 ⟹ ε(E⁵)=ε(E)，与 BSD 奇偶性给出的 ε 值一致）。
-- 两个实例恰好覆盖 (4) 式右边偶性的两种来源：79a1"两负抵消"（计数 2）、389a1"无负"（计数 0）；(3) 式在 (2,0) 下退化为零阶分量积 = ε(E⁵) = +1。
+- 两个实例恰好覆盖 (4) 式右边偶性的两种来源：79a1"两负抵消"（计数 2）、389a1"无负"（计数 0）。
+
+**正性来源的不对称（要点明）**：(1,1) 型（79a1）正性 = 纠缠积 2L′(E,1)L′(E⁵,1)，即秩 1 分量符号（Gross–Zagier / 通道 B 秩 1，无条件）；(2,0) 型（389a1）正性 = ℚ 侧秩 2 分量 L″(E,1) > 0——(2,0) 下 L″(E/K,1) = L″(E,1)·L(E⁵,1)（Leibniz 消项），且 sign L(E⁵,1) = ε(E⁵) = +1（无条件），故 L″(E/K,1) > 0 ⟺ L″(E,1) > 0。一般曲线秩 2 正性为开放猜想；389a1 由区间算术 L″(389a1,1) = 1.518633 > 0（Probe389）无条件验证。**因此 (4) 不单独证明任一型的正性，只通过奇偶筛；(2,0) 的困难被准确定位到 ℚ 侧秩 2 分量**（框架表述修正：原"两条独立通道合流"改为"奇偶必要条件 + 分量符号输入"）。
 
 ### 8.4 闭包审计与编译
 
@@ -287,3 +293,127 @@ lake env lean BSD/_check_bsd.lean   # #print axioms 核验
 
 - 编译：`lake build BSD.SymmetryFormula4` exit 0；`BSD.lean` 加 `import BSD.SymmetryFormula4` 入口后 `lake build -R` 全绿（7690 jobs，BSD 库 10 个 olean 入工作区）；探针 `_check_symmetry_formula4.lean` 闭包核验 exit 0。
 - 工程：构建日志 `build_project_20261012_f4*.txt`；已同步 `BSD.lean` / `SymmetryFormula4.lean` / `_check_symmetry_formula4.lean` 至 Windows-RH-Lean-PC-2（SHA256 一致）。
+
+## 9. 2026-10-12 → 10-13：Sha 有限性攻关（五阶段路线 A/B 全绿 + CH22 Lean 集成 + λ₁₁ 评估）
+
+主线从"秩对称闭环"转入 **Ш 有限性** 的正面攻坚：从定义出发评估 → 五阶段路线落盘 → A 阶段（免费层闭合）→ B 阶段（欧拉系 Rank-1 → Iwasawa corank，λ_p=0）→ B-6（rank-2 欧拉系/广义 Kato 类评估）→ CH22 框架实证 + Lean 集成 → λ₁₁ K_cyc 侧评估。
+
+### 9.1 "从定义出发"评估与数值锚点
+
+- 四条纯定义路径（Poitou–Tate 逐层有限、局部 Tate 配对、descent、Cassels 配对）循环或等价于 BSD/Kolyvagin，**无新数学输入**；但 `|Ш[n]| = |Sel_n|/|E(K)/nE(K)|` 逐 n 可算，作交叉检验（`Probe389/sha_crosscheck.*`）。
+- 锚点交叉检验：Ω = 4.98042512171011、Reg@n=9 = 0.1524593847、∏c = 1、BSD 预测 |Ш| = 1.0000000000004；**|Sel₂(389a1)| = 4 三次域独立复现**（A = ℚ(β)，β = 2θ，G = x³+2x²−8x+2，β² ≡ 1 mod A*² 使 16→8 类；p=2 全过、p=389 拒 γ¹ 类 4 个、∞ 拒 γ 类）。"g 非 389a1"旧诊断被 j 不变量反证推翻（E″:Y²=X³+4X²−32X+16 同构）。
+
+### 9.2 五阶段路线（`BSD/document/Iwasawa欧拉系延伸路线.md`）
+
+Ш 有限 ⟺ (i) 每 p 的 p-秩有界 = **λ_p = 0**（Iwasawa 主猜想侧）∧ (ii) 除有限个 p 外 Ш[p] = 0。路线 A/B/C/D/E；A（免费层）→ B（Rank-1 欧拉系 → λ_p=0）→ B-6（rank-2 欧拉系/广义 Kato，新数学输入）→ C/D/E（文献链/数值/Lean 挂账）。
+
+### 9.3 A 阶段（免费层闭合，全绿）
+
+- `BSD/ShaPComponent.lean`：**引理 A.1 真证** `G[p] = 0 ⟹ G[p^∞] = 0`（torsionBy/nsmul 系）。
+- `BSD/ShaFreeLayer.lean`：descent 基数真证 `card_eq_mul_of_short_exact_add`、Cassels 交错配对结构真证 `injective_of_nondegenerate`、平方结论挂账 axiom、389a1/p=2 **`sha2_389_card_eq_one` 真证推导**（|Ш[2]| = 1）。
+- 并入 `BSD.lean` 聚合；闭包核验 `_check_l01/l02.lean` 干净；`lake build -R` 7690 jobs 全绿。
+
+### 9.4 B 阶段（`BSD/EulerSystem.lean`，B-0..B-6）
+
+- 对象层：`Corank`/`Rank`/`Lambda`/`OrdinaryAt`/`EulerSystemRankOne`/`Sha_p`(+group/fintype)/`kolyvagin_descent_bound`/`KatoClassNonzero`/`kato_corank_bound` axioms（namespace BSD.EulerSystem）。
+- **组合真证**：`lambda_zero_of_kato`（控制定理 + Kato 界 ⟹ λ_p = 0）、`lambda_zero_iff_corank_eq_rank`。
+- **盲区显式化**：`kolyvagin_rank2_blind_389a1 : ¬ EulerSystemRankOne Curve389a1 K389a1 2`（Rank-1 欧拉系工具对秩 2 失效，B-6 的出发点）。
+- 389a1/p=2 实例：`rank_389a1 : Rank Curve389a1 K389a1 = 2`、`ordinary_389a1_2`（⚠ 已被数学反证，见 9.6）、`lambda2_389a1_eq_zero`（挂账）。
+- 编译陷阱（入册）：axiom/theorem 参数必须显式 `(E : Type)`（隐式致 K 位置错位）；变量名禁 `λ` 字符（Lean 解析为 lambda 关键字）；`import Mathlib.GroupTheory.Index`；`Nat.add_left_cancel` 方向（2+0=2+x ⟹ x=0）；rw 列表含局部变量时拆单条。
+
+### 9.5 B-6 rank-2 欧拉系评估（CH22 命中）
+
+- 工具矩阵（检索确认）：LLZ14（V_f⊗V_g Rankin–Selberg 欧拉系）、BDR（Beilinson–Flach + syntomic regulator）、KLZ（Rankin–Eisenstein 类）、DR16（广义 Kato 类 κ(f,g,h)，weight (2,1,1) Hida 极限，**非欧拉系**）、**CH22**（Castella–Hsieh，CM 辅助特征形式情形证 DR 猜想）、Castella 2312.01481（κ_p ≠ 0 ⟹ dim Sel = 2，逆 ⟺ loc_p ≠ 0）、Kim 2203.12159（弱 IMC 任意秩 Selmer 结构）、BKS 2103.11535（Kato 欧拉系导数 + Mazur–Tate 无条件证据）。
+- **CH22 附录 Table 1 首行即 389a1 / p=11 / K=ℚ(√−2)**，条件全验证：D=−8（389∤D）、11≡3 mod 8 split、(−2/389)=−1 inert、E[11] 不可约（389a 类仅 1 曲线无有理 m-同源 m>3）、L(E^K,1)≠0、χ 由 Vatsal 保证无穷多。定理链：ord_T Θ_{f/K} = 2（数值 10T²+69T³+… mod 11²）→ (Thm B) κ≠0 → (Thm A(1.9) 无条件) dim Sel(ℚ,V₁₁E) = 2 → (descent + rank=2) **Ш[11^∞](E/ℚ) 有限**。
+
+### 9.6 框架实证两处纠错（重要）
+
+1. **389a1 最小模型 = [0,1,1,−2,0]（y²+y=x³+x²−2x）**——此前误用 y²+y=x³−x²−2x+1，致 a_p 全部错值。重算：a₂=−2、a₃=−2、a₅=−3、a₇=−5、**a₁₁=−4**（⟹ good ordinary at 11）、a₁₃=−3、a₁₇=−6、a₁₉=5。
+2. **p=2 恒非 ordinary**（a₂ 恒偶）⟹ 旧记录"389a1/p=2 good ordinary"错误；Greenberg 控制定理在 p=2 前提不成立，λ₂ 挂账比 B-4 所述更独立（2-adic 无 ordinary 框架）。`ordinary_389a1_2` axiom 语义须更正（留痕）。
+落盘：`BSD/Probe389/kato_framework_check.md`、`ap_ordinary.py`；路线文档增 §4.4。
+
+### 9.7 CH22 Lean 集成（`BSD/Sha11_389.lean`，已并入聚合、全绿）
+
+| 层 | 内容 | 状态 |
+|---|---|---|
+| 对象 | `SelDim`/`ShaCorank`/`ShaFinite`（⟺ corank=0） | 定义 |
+| CH22 条件 | `ThetaOrderTwo389`（ord_T Θ=2 数值事实）、`KatoNonzero389` | axiom |
+| 文献定理 | `kato_nonzero_of_theta_order`（Thm B）、`sel_dim_two_of_kato_nonzero`（Thm A(1.9)）、`sel_dim_eq_rank_add_sha_corank`（descent 维数形式） | axiom |
+| 组合真证 | `sel_dim_two_389`（B+A 串联）、`sha_corank_zero_389`（2=2+x⟹x=0，Nat 算术）、**`sha11_finite_389 : ShaFinite Curve389a1 11`** | 真证 |
+
+- 闭包核验 `_check_l04.lean`：`sha11_finite_389` 仅依赖本模块 CH22 axiom + EulerSystem 复用（Curve389a1/Rank/rank_389a1）+ 内核（propext/choice/Quot）——无 sorry、无逻辑泄漏。
+- 工程：EulerSystem 有 `namespace BSD.EulerSystem` ⟹ Sha11_389 需 `open BSD.EulerSystem`；Sha11_389 自身用 `namespace BSD.Sha11_389` 包裹。
+- 编译：`lake build BSD.Sha11_389` exit 0；`BSD.lean` 加 import 后 `lake build -R` **7690 jobs 全绿**。
+
+### 9.8 λ₁₁ K_cyc 侧评估（2026-10-13，最新）
+
+**数学定位**：λ₁₁ = corank_{ℤ₁₁} Sel_{11^∞}(E/K_cyc) − rank E(ℚ)；IMC（ordinary, μ=0）下 λ_p = ord_T L_p(E,T) − rank。
+
+**关键诊断——CH22 为什么给不了 λ₁₁**：CH22 闭的是 **ℚ 侧**（Ш[11^∞] 有限 ⟹ corank Sel(E/ℚ) = 2），但控制定理是**不动点版本** corank(Sel_{K_cyc}^G) = 2；全群 corank = corank(Sel^G) + corank(Sel/Sel^G) = 2 + λ₁₁——**λ₁₁ 恰是"K_cyc 塔附加部分"（M/M^G 的 cofree part），控制定理摸不到它**。
+
+**工具覆盖**：Skinner–Urban IMC 仅 analytic rank 0/1（L_p 非零特殊值）；rank 2 ⟹ L_p 零点情形——**任何 p 均未覆盖**（修正 B-4 表述："rank 2+p=2" → "analytic rank ≥ 2 均未覆盖"，p=2 只是叠加 2-adic Hida 障碍）。CH22 广义 Kato 类在 ℚ 侧；Kim 弱 IMC 假设下；BKS Kato 导数机制对口但无 corank 定理。
+
+**ord_T L₁₁ = 2 数值预期**：解析侧 L″(E,1)/2! = 0.759316500288 ≠ 0（已无条件验证）+ 非 CM good ordinary 无 exceptional zero 机制 ⟹ p-adic 插值预期 T 阶恰 2。
+
+**三条可执行路径（待选）**：① 数值证据层——L₁₁(E,T) Iwasawa 展开验证 T²∥L₁₁ mod 11^k（p=11 远比 p=2 可行，无 Hida 障碍）；② IMC + ord=2 ⟹ λ₁₁ = 0 挂账（与 λ₂ 并列，Lean axiom 层）；③ Kato 欧拉系导数真定理（BKS 机制，p=11 现实性高）——B-6 的新数学输入延续。
+
+### 9.9 当前状态总表（389a1，Sha 有限性侧）
+
+| 素 | 目标 | 状态 | 载体 |
+|---|---|---|---|
+| 2 | Ш[2] 有限 | **真证** | ShaFreeLayer.lean（sha2_389_card_eq_one 推导） |
+| 11 | Ш[11^∞] 有限 | **Lean 定理链**（CH22 axiom + 组合真证） | Sha11_389.lean（sha11_finite_389） |
+| 2 | λ₂（K_cyc 侧） | axiom 挂账；p=2 非 ordinary 使控制定理前提失效 | EulerSystem.lean |
+| 11 | λ₁₁（K_cyc 侧） | 开放；三条路径待选 | — |
+| 其余 ℓ | Ш[ℓ^∞] 有限 | 开放 | — |
+
+工程注记：本 §9 全部产物位于 `c:\proj2\BSD\`（主项目）；备份仓库同步待后续指令。
+
+## 10. 2026-10-15：λ₁₁ = 2 数值支柱 + Lean 挂账 + 跨素数核对（K_cyc 侧）
+
+主线：把 §9.8 的"数值路径 1"拍板落地——series(11) 复刻验证 ord_T L₁₁ = 2（λ₁₁ = 2），挂账 Lean，再转 p 侧 Iwasawa 与 K_cyc 侧的跨素数核对。全部数值经 PARI/GP 2.13.3（WSL）真模符号管道（`msfromell` + `mseval`），复刻结构经 11a1/p=3 校准（Σ ≡ 68 mod 243 精确命中，`series_points_check.md` §6）。
+
+### 10.1 series(11) 复刻（389a1/p=11，`Probe389/`）
+
+- **结果**：L₁₁(T) = 0 + 0·T + 9·T² + 9·T³ + …（mod 11 系数）；T⁰ ≡ 0 mod 11⁴（bd=4）、T¹ ≡ 0 mod 11（bd=1）、T² ≡ 9 mod 11 ≠ 0 ⟹ **ord_T = 2（λ₁₁ = 2）**。
+- **数据质量**：220 个 series 点（j=0..10 × a=1..10，分母 121/11）+ 22 补测点，PARI 全实测，重复点值一致（distinct r121=110, r11=10）；**两条分布恒等式精确成立**（H₁ 自洽性硬检验）：r=1/121：−4·0 = 0 = −1 + f(1/11)；r=1/11：−4·1 = −4 = −4 + f(1)。
+- **389a1 的 series 点全非尖点端点**（c<121 与 N=389 互素），无 11a1 那种尖点对称补的必要。
+- **交叉互证**：Sage docstring series(3) = O(3⁵)+O(3²)T+(2+2·3+O(3²))T²（T²≡2 mod 3 ≠ 0，跨素数秩 2 一致）；L″(E,1)/2 = 0.759316500288（区间算术，analytic rank 2）；M(0) = 0（rank 2 ⟹ L(E,1)/Ω = 0）。
+- 产物：`read_pari_series11.py`（一键复现）、`ms389a1_series.gp` 等 7 个脚本/输出、`series11_389_check.md`（备查）。
+
+### 10.2 Lean 挂账（`Sha11_389.lean` 数值验证层）
+
+新增"数值验证层"（在 CH22 条件层与定理层之间）：`L11OrderTwo389 : Prop` + `l11_order_two_389 : L11OrderTwo389`（axiom）。注释明确**对象区分**：L₁₁(T)（E/ℚ ordinary p-adic L，λ₁₁=2 直接证据）≠ Θ_{f/K}（E/K 反cyclotomic，CH22 定理前提）——同属"秩 2 ⟹ 二阶消失"实例，构成 CH22 链的独立平行背书。编译 `lake build BSD.Sha11_389` 全绿（1069 jobs）。
+
+### 10.3 跨素数核对（③，K_cyc 侧 λ）
+
+**数学**：Iwasawa 特征分解（K/ℚ 二次 Abel，11 split in K ⟺ χ(11)=(−2/11)=+1）：L_p(E/K,T) = L_p(E,T)·L_p(E^χ,T) ⟹ λ₁₁(E/K) = λ₁₁(E) + λ₁₁(E^χ)。
+
+| 对象 | λ | 证据 |
+|---|---|---|
+| E/ℚ, p=11 | **2** | series(11)：T²≡9 mod 11 ≠ 0（§10.1） |
+| E/ℚ, p=3 | **2** | docstring series(3)：T²≡2 mod 3 ≠ 0（跨素数一致） |
+| E^χ/ℚ, p=11 | **0** | analytic rank 0（ellanalyticrank 无条件）+ T⁰≡10 mod 11 ≠ 0 |
+| **E/K, K_cyc, p=11** | **2 = 2+0** | 特征分解 |
+
+**E^χ 数据**（PARI）：方程 [0,−8,0,−128,−128]（`elltwist(E,−8)`，−8 为 K 域判别式），conductor **24896 = 389·64**（389 inert in K 保留）；**analytic rank = 0**、**L(E^χ,1) = 2.7884581989… ≠ 0**（ellanalyticrank，无条件）；**M(0) = L/Ω⁺ = 2（精确有理）**（msfromell @ N=24896，4G 栈）。rank 0 恒等式（11a1 校准已验证）T⁰ ≡ (1−1/α)²·M(0) mod 11，(1−1/α)² ≡ 5 mod 11 ⟹ **T⁰(E^χ) ≡ 10 mod 11 ≠ 0 ⟹ ord_T = 0 ⟹ λ₁₁(E^χ) = 0**。
+
+**结论**：秩 2 曲线在 ordinary 素数 {3,11} 处 λ = rank = 2（跨素数一致）；K 侧二次 twist 是 rank 0（非零点情形），λ 贡献为零 ⟹ E/K 也是 λ=2（零点情形），Q 侧 = K_cyc 侧。与"Ш[11^∞] 有限 ⟹ corank 0"的 descent 结构相容，为 B-6/CH22 框架提供跨素数、跨域数值一致性背书。
+
+产物：`ms389twist_smoke.gp`/`ms389twist2.gp` + 输出、`cross_prime_lambda_check.md`（备查）。
+
+### 10.4 Lean 挂账（跨素数核对层）
+
+新增"跨素数核对层"：`LambdaTwistZero389 : Prop` + `lambda_twist_zero_389`（axiom，数值-解析证据）；`LambdaEKTwo389 : Prop`（axiom）；`lambda_ek_add_of_decomp : L11OrderTwo389 → LambdaTwistZero389 → LambdaEKTwo389`（特征分解 axiom，文献事实）；真证定理 **`lambda_ek_two_389 : LambdaEKTwo389`**（纯组合两个 axiom 前提，与 `sel_dim_two_389` 模式一致）。编译全绿（1069 jobs，5.8s 增量）。
+
+### 10.5 当前状态（λ 侧，389a1）
+
+| 素 | 目标 | 状态 | 载体 |
+|---|---|---|---|
+| 11 | λ₁₁(E/ℚ) = 2 | **数值验证**（ord_T L₁₁ = 2）+ Lean 挂账 | series11_389_check.md / Sha11_389.lean |
+| 11 | λ₁₁(E^χ) = 0 | **数值-解析**（rank 0 + T⁰≠0）+ Lean 挂账 | cross_prime_lambda_check.md / Sha11_389.lean |
+| 11 | λ₁₁(E/K) = 2 | **特征分解推导** + Lean 真证 | Sha11_389.lean（lambda_ek_two_389） |
+| 3 | λ₃(E) = 2 | docstring 数值（跨素数一致） | Sage series(3) |
+| 其余 ℓ | λ_ℓ | 开放 | — |
+
+工程注记：本段数值产物（PARI 脚本/输出/复刻管道）位于 `c:\proj2\BSD\Probe389\`；`Sha11_389.lean` 三块 axiom 层（CH22 条件 + L₁₁ 数值 + 跨素数核对）各自独立挂账、逻辑组合全真证；备份仓库同步待显式指令。

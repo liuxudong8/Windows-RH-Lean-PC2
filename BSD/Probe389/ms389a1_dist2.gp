@@ -1,0 +1,18 @@
+default(parisize, 256M);
+f = "/tmp/ms389a1_dist2_out.txt";
+E = ellinit([0,1,1,-2,0]);
+MS = msfromell(E, 1);
+M = MS[1];
+v = MS[2];
+write(f, Str("{0,12/121}  = ", mseval(M, v, [0,1;12,121])));
+write(f, Str("{0,23/121}  = ", mseval(M, v, [0,1;23,121])));
+write(f, Str("{0,34/121}  = ", mseval(M, v, [0,1;34,121])));
+write(f, Str("{0,45/121}  = ", mseval(M, v, [0,1;45,121])));
+write(f, Str("{0,56/121}  = ", mseval(M, v, [0,1;56,121])));
+write(f, Str("{0,67/121}  = ", mseval(M, v, [0,1;67,121])));
+write(f, Str("{0,78/121}  = ", mseval(M, v, [0,1;78,121])));
+write(f, Str("{0,89/121}  = ", mseval(M, v, [0,1;89,121])));
+write(f, Str("{0,100/121} = ", mseval(M, v, [0,1;100,121])));
+write(f, Str("{0,111/121} = ", mseval(M, v, [0,1;111,121])));
+write(f, "DONE");
+quit();

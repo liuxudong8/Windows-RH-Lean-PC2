@@ -1,0 +1,16 @@
+default(parisize, 256M);
+f = "/tmp/ms389twist_smoke_out.txt";
+E = ellinit([0,1,1,-2,0]);
+Ed = ellinit(elltwist(E, -8));
+write(f, Str("Ed = ", Ed));
+write(f, Str("conductor Ed = ", ellglobalred(Ed)[1]));
+ar = ellanalyticrank(Ed);
+write(f, Str("analytic rank Ed = ", ar[1]));
+write(f, Str("L(Ed,1) = ", ar[2]));
+MS = msfromell(Ed, 1);
+M = MS[1];
+v = MS[2];
+write(f, Str("M(0) Ed = ", mseval(M, v, [1,0;0,1])));
+write(f, Str("{0,1/11} Ed = ", mseval(M, v, [0,1;1,11])));
+write(f, "DONE");
+quit();

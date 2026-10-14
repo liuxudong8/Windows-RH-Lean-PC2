@@ -1,0 +1,14 @@
+default(parisize, 512M);
+default(parisizemax, 4G);
+f = "/tmp/ms389twist2_out.txt";
+E = ellinit([0,1,1,-2,0]);
+Ed = ellinit(elltwist(E, -8));
+om = ellomega(Ed);
+write(f, Str("omega = ", om));
+write(f, Str("real period = ", om[1]));
+MS = msfromell(Ed, 1);
+M = MS[1];
+v = MS[2];
+write(f, Str("M(0) Ed = ", mseval(M, v, [1,0;0,1])));
+write(f, "DONE");
+quit();

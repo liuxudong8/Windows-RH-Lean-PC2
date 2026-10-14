@@ -1,0 +1,12 @@
+default(parisize, 256M);
+f = "/tmp/ms389a1_smoke_out.txt";
+E = ellinit([0,1,1,-2,0]);
+MS = msfromell(E, 1);
+M = MS[1];
+v = MS[2];
+write(f, Str("M(0)      = ", mseval(M, v, [1,0;0,1])));
+write(f, Str("{0,1/11}  = ", mseval(M, v, [0,1;1,11])));
+write(f, Str("{0,1/121} = ", mseval(M, v, [0,1;1,121])));
+write(f, Str("{0,2/121} = ", mseval(M, v, [0,1;2,121])));
+write(f, "DONE");
+quit();

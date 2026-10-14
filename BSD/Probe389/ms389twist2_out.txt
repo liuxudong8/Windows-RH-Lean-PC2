@@ -1,0 +1,3 @@
+omega = om
+M(0) Ed = 2
+DONE
