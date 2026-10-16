@@ -1,5 +1,6 @@
 # BSD 库——弱 BSD 秩 1/秩 2 对称 + n=3 骨架的 Lean 形式化（状态摘要）
 
+> 更新：2026-10-16（rank 推进收口：`rank_389a1` 黑箱拆分真证化）——**`RankTwo389.lean` 落地**：代数秩 2 从单 axiom 拆为"上界真证 + 下界挂账"——`rank_le_two_389`（真证：`sel2_rank_bound`（2-descent 阶上界 axiom，正合列 0→E/2E→Sel₂→Ш[2]→0 + E(ℚ) 无 2-扭 ⟹ 2^rank ≤ #Sel₂）+ `sel2_order_four_389`（\|Sel₂\|=4，G4 锚点）⟹ 2^rank ≤ 4 ⟹ rank ≤ 2）+ `rank_ge_two_389`（挂账：两独立无限阶点 P₁=(−1:1:1)、P₂=(0:−1:1)，高度配对 det=0.15246017794314375162…≠0（G3 数值）⟹ rank ≥ 2，Mordell–Weil 事实）+ `rank_two_389 := le_antisymm`（真证组装）。**闭包核验（#print axioms）**：`rank_two_389` 依赖 [sel2_rank_bound, sel2_order_four_389, PointsIndependent389, points_independent_389, rank_ge_two_of_points] + 基础设施——**不含 `rank_389a1`**：代数秩 2 降级为"\|Sel₂\| 数据锚点 + descent 结构 axiom + 两独立点单点挂账"。**编译链收口**：lake clean 事故（mathlib `.trace` 被清 ⟹ 近全量重编 + 并行 `.private` 读取竞争/模块崩溃/依赖缺失多批失败）经 3 轮 `lake build <Module>` 串行补编修复；**Lake 5.0 的 `-R` = `--reconfigure`，只编 defaultTargets（exe 链），BSD 库须显式 `lake build BSD`**；RankTwo389 纳入默认构建 = `BSD.Main.lean` 加 `import BSD.RankTwo389`（lean_lib 默认 roots=["Main"]，只编 Main 闭包；lakefile 的 globs/roots TOML 语法在 Lake 5.0 下不可行，保持默认）；`lake build -R` 全绿 7690 jobs、`lake build BSD` 全绿 3476 jobs（BSD 14 olean）。详见 §14。
 > 更新：2026-10-16（G3/G4 工程补齐 + 挂账 Lean 真证层）——**G3（Reg 全精度）闭合**：Sage regulator(precision=200) = 0.15246017794314375162432475704945582324372707748663...，高度配对 det 0.152460177943144（gens [(−1:1:1),(0:−1:1)]），Python NT/Sage/Magma/LMFDB 四源一致到 ~10⁻¹⁹；G2a 判别 Reg 误差从 5×10⁻⁶ 收窄 6 个数量级，#Ш_pred ≈ 1±10⁻¹²。**G4（纯 Python 独立复算 |Sel₂|）闭合**：A=ℚ[x]/(x³+x²−2x+1/4)（全实三次域），单位穷举 ε₁=(−1,8,−4)、ε₂=(−1,8,4)；类数 h=1（Minkowski 界 8.76 + P₂/P₃ 主性：∃δ N=±2/±3）；|A*/A*²|=8，N∈ℚ*² 筛选 ⟹ **|H¹(ℚ,E[2])|=4**（δ=1,(1,−8,4),(1,−8,−4),(−3,20,16)）⟹ |Sel₂|≤4 ∧ rank=2 无挠 ⟹ |Sel₂|≥4 ⟹ **|Sel₂|=4**（纯标准库无 numpy）。**挂账 `Sha11_389.lean`**：`sel2_order_four_389`（axiom）+ **真证 `sha2_order_one_389`（#Ш[2]=1 = 4/2²，descent 阶关系组合，数据锚点已闭合）** + `RegHighPrecision389`/`reg_high_precision_389`（axiom）；G2 层注释 Reg 更新为 200 位口径。`lake build -R` 全绿 7690 jobs。详见 §13。
 > 更新：2026-10-15（缺口 A 数值核验闭合——CH22 Theorem A 假设层补齐）——**L(E/K,χ²,1) ≠ 0 数值核验完成**：构造 Cl_5 二次 ring class 特征 χ²=(N(𝔞)/5)（conductor 5）、θ(χ²) level 200、Rankin-Selberg 卷积 a_n=Σ_{d|n}a_E(d)·b_{n/d}（Sage 50000 系数）；PARI lfuncreate 低层格式 `[an,1,[0,1/2,1,3/2],3,77800,1]`（Vga=Γ(s)Γ(s+1/2) 型、k=3、N=389·200、eps=+1）——**三参数扫描裁决**（conductor 5 候选 / eps ±1 / Vga 3 候选，lfuncheckfeq 独胜组合）：**L(1)=4.9098500369129333522552480141603036183…≠0**，5000/50000 系数收敛至 10⁻²⁷。回写 `Sha11_389.lean`：`LEKChi2Nonzero389`/`l_ek_chi2_nonzero_389` 注释从"数值核验待做"更新为"已核验闭合"（axiom 保留：数值支持、不替代证明），编译全绿（1069 jobs）。**Thm-A 假设五项至此全部有数依据**（①L(E^χ,1)≠0 2.788 已挂、②χ² 非零 4.90985 新闭合、③ρ̄ 不可约 389a 类单曲线论据、④N⁻ 无平方 389 素数、⑤q|N⁻ 分歧 389 乘性）。详见 §12。
 > 更新：2026-10-15（Θ_{f/K} 反cyclotomic 复刻收尾）——"最难"主线 **Θ_{f/K} Sage Brandt module 复刻**（CH22 定理前提 ord_T=2 的真复刻）阶段闭合：① **根本 bug 修复**（v4–v10 把类索引当 f 值求和——f 从未参与 Θ）；② **ord_T=2 判定闭合**：389a1（T²≡78）与 709a1（T²≡94）均 T⁰=T¹=0、T²≢0 mod 121 ⟹ ord_T=2，两曲线独立成立，与 CH22 靶一致（T⁰=T¹=0 为结构性质，对 f_E p-adic 归一化稳健）；③ **逐系数对靶定位为不可达**（f_E "p-adically normalized" 细节 + optimal embedding，论文未给）；④ ord_T=2 判定**挂账进 `Sha11_389.lean` 证据块**（axiom 层不变，证据注释更新 + 新证据块），编译全绿。详见 §11。
@@ -571,3 +572,37 @@ H¹(ℚ, E[2]) ≅ { δ ∈ A*/A*² : N(δ) ∈ ℚ*² }
 | G6 GRH 反证链组合 | 判定通过（条件于 GRH+BSD） |
 
 产物：`Probe389/G3_Reg/g3_result.md`（+ g3_sage.sage）、`Probe389/G4_Sel2/g4_result.md`（+ g4_sel2.py / g4_classno.py）；`rank2_status.md` G3/G4 行更新为"已闭合"。
+
+## 14. 2026-10-16：rank 推进——`rank_389a1` 黑箱拆分真证化（RankTwo389.lean）
+
+主线延续：Ш 有限性（G3/G4 闭合）之后，用户提出"rank 可以推进一步"并确认"要做"——把 `BSD.EulerSystem.rank_389a1 : Rank Curve389a1 K389a1 = 2`（单 axiom 黑箱）拆为"**上界真证 + 下界挂账**"，再用 `le_antisymm` 组装，使"代数秩 = 2"降级为"数据锚点 + 单点挂账"。
+
+### 14.1 模块结构（`BSD/RankTwo389.lean`，新建）
+
+| 层 | 名称 | 内容 |
+|---|---|---|
+| 结构 axiom | `sel2_rank_bound (E K) : 2 ^ Rank E K ≤ SelPOrder E 2` | 2-descent 阶上界：正合列 0→E(ℚ)/2E(ℚ)→Sel₂→Ш[2]→0，\|E/2E\| = 2^{rank+dim E[2]}，E(ℚ) 无 2-扭 ⟹ 2^rank \| #Sel₂（定理级挂账） |
+| 数据锚点 | `PointsIndependent389 : Prop` / `points_independent_389` | P₁=(−1:1:1)、P₂=(0:−1:1) 独立（高度配对 det = 0.15246017794314375162…≠0，G3 Sage regulator(200) 实测 gens）∧ 无限阶（torsion trivial 标准事实） |
+| 挂账事实 | `rank_ge_two_of_points : PointsIndependent389 → 2 ≤ Rank ...` | Mordell–Weil：自由阿贝尔群秩 ≥ 线性无关元个数（定理级挂账） |
+| 真证 | `rank_ge_two_389` / `rank_le_two_389` / **`rank_two_389 := le_antisymm`** | 下界 = 数据锚点+挂账组合；上界 = `sel2_rank_bound` + `sel2_order_four_389`（\|Sel₂\|=4）⟹ 2^rank≤2² ⟹ rank≤2（`Nat.pow_le_pow_iff_right`）；组装 = le_antisymm |
+
+**pow 引理坑（入册）**：`pow_le_pow_right₀` 在 ℕ 上不存在（要求 LinearOrderedSemiring）；正确用法 `(Nat.pow_le_pow_iff_right (a := 2) (by decide)).mp`（探针 `_probe_pow.lean` 确认签名 `{a n m} (h : 1 < a) : a^n ≤ a^m ↔ n ≤ m`，import Mathlib.Data.Nat.Basic）。
+
+### 14.2 闭包核验（核心证据，#print axioms）
+
+| 定理 | axioms | 分层 |
+|---|---|---|
+| `rank_le_two_389` | [propext, Classical.choice, Quot.sound, Curve389a1, K389a1, Rank, `sel2_rank_bound`, `SelPOrder`, `sel2_order_four_389`] | **真证上界**（descent 结构 axiom + \|Sel₂\| 数据锚点） |
+| `rank_ge_two_389` | [Curve389a1, K389a1, Rank, `PointsIndependent389`, `points_independent_389`, `rank_ge_two_of_points`] | **挂账下界**（两独立点单点挂账） |
+| `rank_two_389` | 两者之并 | **不含 `rank_389a1`**——黑箱降级完成 |
+
+**循环陷阱（勿倒用）**：顺序必须为 \|Sel₂\|=4 ⟹ rank≤2 ∧ 独立点 ⟹ rank≥2 ⟹ rank=2 ⟹ #Ш[2]=1（`sha2_order_one_389` = 4/2²）；不可用 #Ш[2]=1 反推 rank。
+
+### 14.3 编译链收口（lake clean 事故与修复，入册）
+
+1. **lake clean 连锁**：清掉 mathlib `.trace` ⟹ 触发近全量重编（7690 jobs 大部分为 mathlib）；并行编译多批偶发失败——`failed to read ...olean.private`（toolchain 文件完好，**并行竞争**实锤）、`Code 3221225727` 崩溃、依赖时序缺失（`Notation3.olean does not exist`）。修复 = **失败模块逐个串行 `lake build Mathlib.XXX` 补编**，3 轮收口。
+2. **Lake 5.0 语义澄清**：`lake build -R` 的 `-R` = `--reconfigure`（重解释配置），**只编 defaultTargets（exe 链：Main→OrderPreservingBijection），不含 BSD 库**——BSD 库必须显式 `lake build BSD`（历史"BSD 库增量回放"是 reconfigure 的回放日志，非重建）。
+3. **RankTwo389 纳入默认构建**：Lake 5.0 的 lean_lib 默认 roots = ["Main"]（只编 `BSD.Main` 闭包）——lakefile.toml 的 `globs`/`roots` TOML 语法在 Lake 5.0 下均不可行（`expected glob`；`roots=[]` 无效）——最终方案：`BSD/Main.lean` 加 `import BSD.RankTwo389`，闭包自然扩展。
+4. **最终全绿**：`lake build -R` 全绿 7690 jobs（exit 0）；`lake build BSD` 全绿 3476 jobs（BSD 14 olean，含 RankTwo389）。
+
+工程备注：探针 `_check_rank_two_389.lean`（闭包核验）、`_probe_pow.lean`（pow 引理签名）留档；历史遗留 `BSD\.lake`（旧独立包产物）已删除（lake 5.0 的 lean_lib 产物在 workspace 级 `.lake/build/lib/lean/BSD/`）；`EulerSystem.rank_389a1` 注释的生成元 "(0,0),(1,0)" 与 Sage 实测 gens 不符（历史遗留，RankTwo389 以实测 gens 为准）。

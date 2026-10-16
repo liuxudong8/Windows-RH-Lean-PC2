@@ -3,6 +3,7 @@ import Mathlib.Data.Rat.Defs
 import Mathlib.Tactic.NormNum
 import BSD.LSeries5
 import BSD.LPrime
+import BSD.RankTwo389
 
 /-!
 # 弱 BSD 秩 1 的 Lean 形式化骨架（BSD）

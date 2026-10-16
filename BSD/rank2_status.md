@@ -1,12 +1,12 @@
 # 389a1 秩 2 — BSD/Ш 可计算层状态盘点
 
-> 日期：2026-10-15
+> 日期：2026-10-16（R10 新增：rank 推进收口）
 > 位置：`C:\proj2\BSD\rank2_status.md`（与 BSD_summary.md 并列；Probe389/sha_crosscheck.md 为数值底稿）
 > 用途：区分"已闭合（证据强度标注）"与"仍未做（开放缺口）"，供 GRH/RH 关联讨论取用
 
 ## 0. 一句话状态
 
-389a1（(2,0) 型，rank 2）的**解析侧正性 + BSD 数值对账 + Ш 可计算层已全部落地且三方自洽**（#Ш_pred = 1.0000000000004，平方约束通过）；**Ш 整体有限性对秩 2 仍开放**——现有工作是"检验/闭包机器"，非证明。
+389a1（(2,0) 型，rank 2）的**解析侧正性 + BSD 数值对账 + Ш 可计算层已全部落地且三方自洽**（#Ш_pred = 1.0000000000004，平方约束通过）；**Ш 整体有限性对秩 2 仍开放**——现有工作是"检验/闭包机器"，非证明。**代数秩 2 已从黑箱 axiom 降级为"\|Sel₂\| 数据锚点 + descent 结构 axiom + 两独立点单点挂账"**（R10，2026-10-16）。
 
 ## 1. 已闭合的秩 2 层（证据强度分级）
 
@@ -21,6 +21,7 @@
 | R7 | **Cassels 平方性检验（方向 1）** | `sha_crosscheck.md` §3 | **已过**：\|Ш[2]\| = 1 = 1²；\|Ш\|_pred = 1 = 1²；\|Ш[2]\| ≤ \|Ш\|_pred ✓ |
 | R8 | \|Sel₂(389a1)\| = 4（descent） | `sha_crosscheck.md`（Magma 手册 H133E28 权威）；`TwoDescent.lean` | 权威值 + 方法学修正（twist 模型 ≠ 2-descent；A*/A*² 类空间） |
 | R9 | 79a1 K 侧秩 2（(1,1) 型双侧根数 −1，公式 4 负数计数=2 偶） | `SymmetryClosure.lean` + `BSD_summary.md` §8 | 真定理组装 + 双实例验证 |
+| **R10** | **rank(389a1) = 2 证明型拆分**（`rank_389a1` 黑箱 axiom 降级） | `RankTwo389.lean` `rank_two_389 := le_antisymm`（2026-10-16） | **上界真证 + 下界挂账**：`rank_le_two_389`（`sel2_rank_bound` 2-descent 阶上界 axiom + `sel2_order_four_389` \|Sel₂\|=4 ⟹ 2^rank≤4 ⟹ rank≤2，真证）；`rank_ge_two_389`（P₁=(−1:1:1)、P₂=(0:−1:1) 独立 + 高度配对 det≠0（G3）⟹ rank≥2，Mordell–Weil 单点挂账）；**闭包 #print axioms 不含 `rank_389a1`**（已核验）——代数秩 2 = "数据锚点 + descent 结构 + 单点挂账" |
 
 ## 2. 仍未做的开放缺口
 
