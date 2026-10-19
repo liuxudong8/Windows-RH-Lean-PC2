@@ -1,6 +1,8 @@
 # BSD 库——弱 BSD 秩 1/秩 2 对称 + n=3 骨架的 Lean 形式化（状态摘要）
 
-> 更新：2026-10-16（rank 推进收口：`rank_389a1` 黑箱拆分真证化）——**`RankTwo389.lean` 落地**：代数秩 2 从单 axiom 拆为"上界真证 + 下界挂账"——`rank_le_two_389`（真证：`sel2_rank_bound`（2-descent 阶上界 axiom，正合列 0→E/2E→Sel₂→Ш[2]→0 + E(ℚ) 无 2-扭 ⟹ 2^rank ≤ #Sel₂）+ `sel2_order_four_389`（\|Sel₂\|=4，G4 锚点）⟹ 2^rank ≤ 4 ⟹ rank ≤ 2）+ `rank_ge_two_389`（挂账：两独立无限阶点 P₁=(−1:1:1)、P₂=(0:−1:1)，高度配对 det=0.15246017794314375162…≠0（G3 数值）⟹ rank ≥ 2，Mordell–Weil 事实）+ `rank_two_389 := le_antisymm`（真证组装）。**闭包核验（#print axioms）**：`rank_two_389` 依赖 [sel2_rank_bound, sel2_order_four_389, PointsIndependent389, points_independent_389, rank_ge_two_of_points] + 基础设施——**不含 `rank_389a1`**：代数秩 2 降级为"\|Sel₂\| 数据锚点 + descent 结构 axiom + 两独立点单点挂账"。**编译链收口**：lake clean 事故（mathlib `.trace` 被清 ⟹ 近全量重编 + 并行 `.private` 读取竞争/模块崩溃/依赖缺失多批失败）经 3 轮 `lake build <Module>` 串行补编修复；**Lake 5.0 的 `-R` = `--reconfigure`，只编 defaultTargets（exe 链），BSD 库须显式 `lake build BSD`**；RankTwo389 纳入默认构建 = `BSD.Main.lean` 加 `import BSD.RankTwo389`（lean_lib 默认 roots=["Main"]，只编 Main 闭包；lakefile 的 globs/roots TOML 语法在 Lake 5.0 下不可行，保持默认）；`lake build -R` 全绿 7690 jobs、`lake build BSD` 全绿 3476 jobs（BSD 14 olean）。详见 §14。
+> 更新：2026-10-19（谱对偶线接入：ζ_K 零点并集结构——跨族配对显式公式、字符振荡对消与 Hilbert 空间方法的边界）——**谱对偶论证系列（K=ℚ(√5)，ζ_K=ζ·L(χ₅)，与 E⁵ twist 共享同一 χ₅ 结构：E⁵ 局部因子 a_p=χ₅(p)a_p(E)）攻防 XVIII/XIX 收口，产出三个独立于 RH/GRH/QRH 真伪的可辩护对象**。**①Q(0) 判负（决定性负结果）**：Q(0)=∫η⁴=∫f²（f=η² 为 supp⊂[−1/2,1/2]、∫f=1 的概率密度），Cauchy–Schwarz 给出 **Q(0)≥1（等号仅 uniform）**，Lamzouri 命题 2.1（arXiv:2609.02882）应用于 Z_K 并集的下界 **2−C_MT(f)−Q(0)(f)≤0 恒成立**（极值 f₀ 给 −0.3338、uniform 给 −0.3333）——Hilbert 空间不等式对乘积 L 函数（ζ_K=ζ·L）的并集**彻底失效**（跨族对在 ΣK² 贡献 Q(0)≥1、在 Σ1 无对应独立计数）。**②素项净压制定量（攻防 XIX）**：Σ_p χ₅(p)/√p（σ=1/2 临界）部分和**振荡有界 sup≤2.457**（X≤5×10⁶）——字符和消去、跨族项无长周期漂移；并集素项 sup 包络（Σ(1+χ₅)/(√p log p)）全尺度 <单族（分段比值 0.57/0.71/0.82/0.90/0.94）；但**均方口径并集 1.263× 单族**（Σ(1+χ)²/p=3.457 vs Σ1/p=2.736，X=2×10⁶；(1+χ)²=4·1_{χ=+1}）——净压制只在幅度 sup 层、功率层不成立（呼应攻防 XVI 二阶矩白噪声判定）。**③在线比例余项数值级**：密度侧 sup|S_K|/(π·(T/2π)λ)≈8.1×10⁻⁶、配对侧 ∫dF≈−0.0094≈0 ⟹ **0.6725−O(10⁻⁵~10⁻³)**——缺口在 Levinson 常数不在余项；7/8=0.875 属 QRH 类不同机制（quasi-random 前提），非同一论证的常数推进。**④L(χ₅) 主项修正**：N_L(T)=(T/2π)[log(T/2π)+log 5−1]+O(log qT)（Γ(s/2) 相位，log q 为线性项；历史脚本误用 ζ 口径或缺 log q 产生 ~10⁵ 伪主项，已修；ζ 口径 D(t)≈0 完美验证；L 数据含 0.27% R-S 求根伪影已披露）。**战略定位**：可对外辩护资产 = 跨族配对显式公式（定理 3.1′：ζ 与 L(χ₅) 零点跨族配对相关主项 f(0)、素项被字符振荡 O(x^{−1/2}) 消除——L 函数乘积配对理论新工具）+ 字符振荡对消结构 + Q(0) 负结果（AI 时代方法边界/死路地图）；谱对偶链（Arthur 迹公式 ↔ Weil 显式公式，商定映射 (ℓ₁,ℓ₂)↦(T,W)）仍为信念未闭合，诚实标注。数值体系（zeros_T6e5.npz：ζ 999492 + L 1150050 零点；route2m.json 跨族配对；fourier 剖面）与攻防 XVI–XIX 文档见 d1 目录。详见 §15。
+
+> 更新：2026-10-16（rank 推进收口：`rank_389a1` 黑箱拆分真证化）——**`RankTwo389.lean` 落地**：代数秩 2 从单 axiom 拆为"上界真证 + 下界挂账"——`rank_le_two_389`（真证：`sel2_rank_bound`（2-descent 阶上界 axiom，正合列 0→E/2E→Sel₂→Ш[2]→0 + E(ℚ) 无 2-扭 ⟹ 2^rank ≤ #Sel₂）+ `sel2_order_four_389`（\|Sel₂\|=4，G4 锚点）⟹ 2^rank ≤ 4 ⟹ rank ≤ 2）+ `rank_ge_two_389`（挂账：两独立无限阶点 P₁=(−1:1:1)、P₂=(0:−1:1)，高度配对 det=0.15246017794314375162…≠0（G3 数值）⟹ rank ≥ 2，Mordell–Weil 事实）+ `rank_two_389 := le_antisymm`（真证组装）。**闭包核验（#print axioms）**：`rank_two_389` 依赖 [sel2_rank_bound, sel2_order_four_389, PointsIndependent389, points_independent_389, rank_ge_two_of_points] + 基础设施——**不含 `rank_389a1`**：代数秩 2 降级为"\|Sel₂\| 数据锚点 + descent 结构 axiom + 两独立点单点挂账"。**编译链收口**：lake clean 事故（mathlib `.trace` 被清 ⟹ 近全量重编 + 并行 `.private` 读取竞争/模块崩溃/依赖缺失多批失败）经 3 轮 `lake build <Module>` 串行补编修复；**Lake 5.0 的 `-R` = `--reconfigure`，只编 defaultTargets（exe 链），BSD 库须显式 `lake build BSD`**；RankTwo389 纳入默认构建 = `BSD.Main.lean` 加 `import BSD.RankTwo389`（lean_lib 默认 roots=["Main"]，只编 Main 闭包；lakefile 的 globs/roots TOML 语法在 Lake 5.0 下不可行，保持默认）；`lake build -R` 全绿 7690 jobs、`lake build BSD` 全绿 3476 jobs（BSD 14 olean）。同日第二轮 A/B 锚点细化见 §14.4。详见 §14。
 > 更新：2026-10-16（G3/G4 工程补齐 + 挂账 Lean 真证层）——**G3（Reg 全精度）闭合**：Sage regulator(precision=200) = 0.15246017794314375162432475704945582324372707748663...，高度配对 det 0.152460177943144（gens [(−1:1:1),(0:−1:1)]），Python NT/Sage/Magma/LMFDB 四源一致到 ~10⁻¹⁹；G2a 判别 Reg 误差从 5×10⁻⁶ 收窄 6 个数量级，#Ш_pred ≈ 1±10⁻¹²。**G4（纯 Python 独立复算 |Sel₂|）闭合**：A=ℚ[x]/(x³+x²−2x+1/4)（全实三次域），单位穷举 ε₁=(−1,8,−4)、ε₂=(−1,8,4)；类数 h=1（Minkowski 界 8.76 + P₂/P₃ 主性：∃δ N=±2/±3）；|A*/A*²|=8，N∈ℚ*² 筛选 ⟹ **|H¹(ℚ,E[2])|=4**（δ=1,(1,−8,4),(1,−8,−4),(−3,20,16)）⟹ |Sel₂|≤4 ∧ rank=2 无挠 ⟹ |Sel₂|≥4 ⟹ **|Sel₂|=4**（纯标准库无 numpy）。**挂账 `Sha11_389.lean`**：`sel2_order_four_389`（axiom）+ **真证 `sha2_order_one_389`（#Ш[2]=1 = 4/2²，descent 阶关系组合，数据锚点已闭合）** + `RegHighPrecision389`/`reg_high_precision_389`（axiom）；G2 层注释 Reg 更新为 200 位口径。`lake build -R` 全绿 7690 jobs。详见 §13。
 > 更新：2026-10-15（缺口 A 数值核验闭合——CH22 Theorem A 假设层补齐）——**L(E/K,χ²,1) ≠ 0 数值核验完成**：构造 Cl_5 二次 ring class 特征 χ²=(N(𝔞)/5)（conductor 5）、θ(χ²) level 200、Rankin-Selberg 卷积 a_n=Σ_{d|n}a_E(d)·b_{n/d}（Sage 50000 系数）；PARI lfuncreate 低层格式 `[an,1,[0,1/2,1,3/2],3,77800,1]`（Vga=Γ(s)Γ(s+1/2) 型、k=3、N=389·200、eps=+1）——**三参数扫描裁决**（conductor 5 候选 / eps ±1 / Vga 3 候选，lfuncheckfeq 独胜组合）：**L(1)=4.9098500369129333522552480141603036183…≠0**，5000/50000 系数收敛至 10⁻²⁷。回写 `Sha11_389.lean`：`LEKChi2Nonzero389`/`l_ek_chi2_nonzero_389` 注释从"数值核验待做"更新为"已核验闭合"（axiom 保留：数值支持、不替代证明），编译全绿（1069 jobs）。**Thm-A 假设五项至此全部有数依据**（①L(E^χ,1)≠0 2.788 已挂、②χ² 非零 4.90985 新闭合、③ρ̄ 不可约 389a 类单曲线论据、④N⁻ 无平方 389 素数、⑤q|N⁻ 分歧 389 乘性）。详见 §12。
 > 更新：2026-10-15（Θ_{f/K} 反cyclotomic 复刻收尾）——"最难"主线 **Θ_{f/K} Sage Brandt module 复刻**（CH22 定理前提 ord_T=2 的真复刻）阶段闭合：① **根本 bug 修复**（v4–v10 把类索引当 f 值求和——f 从未参与 Θ）；② **ord_T=2 判定闭合**：389a1（T²≡78）与 709a1（T²≡94）均 T⁰=T¹=0、T²≢0 mod 121 ⟹ ord_T=2，两曲线独立成立，与 CH22 靶一致（T⁰=T¹=0 为结构性质，对 f_E p-adic 归一化稳健）；③ **逐系数对靶定位为不可达**（f_E "p-adically normalized" 细节 + optimal embedding，论文未给）；④ ord_T=2 判定**挂账进 `Sha11_389.lean` 证据块**（axiom 层不变，证据注释更新 + 新证据块），编译全绿。详见 §11。
@@ -606,3 +608,48 @@ H¹(ℚ, E[2]) ≅ { δ ∈ A*/A*² : N(δ) ∈ ℚ*² }
 4. **最终全绿**：`lake build -R` 全绿 7690 jobs（exit 0）；`lake build BSD` 全绿 3476 jobs（BSD 14 olean，含 RankTwo389）。
 
 工程备注：探针 `_check_rank_two_389.lean`（闭包核验）、`_probe_pow.lean`（pow 引理签名）留档；历史遗留 `BSD\.lake`（旧独立包产物）已删除（lake 5.0 的 lean_lib 产物在 workspace 级 `.lake/build/lib/lean/BSD/`）；`EulerSystem.rank_389a1` 注释的生成元 "(0,0),(1,0)" 与 Sage 实测 gens 不符（历史遗留，RankTwo389 以实测 gens 为准）。
+
+### 14.4 锚点细化（A/B，2026-10-16 同日第二轮，纯注释/docstring 升级）
+
+用户上传《rank无限阶和独立性.docx》（方案 = 已落地 RankTwo389 的文本化，重合 ~90%）后确认 A+B 一起做。结论先行：结构无新东西，真增量只有下界挂账的**数值锚点细化**——axiom/定理签名零改动，闭包不变。
+
+**A — 无限阶独立数值支柱**（原为引用断言"torsion trivial 标准事实，LMFDB/Magma 一致"）：
+- N₅ = #E(𝔽₅) = 9、N₇ = #E(𝔽₇) = 13（2026-10-16 纯枚举复算，含无穷远点；与 a₅=−3、a₇=−5 一致，N_p = 1+p−a_p）；
+- gcd(9,13) = 1 ⟹ E(ℚ)[tors] = 0（好素 reduction 单射标准事实）⟹ P₁, P₂ ≠ O 自动无限阶；
+- 389 是坏素（乘法约化），**只取好素 p = 5, 7 即足够**（文档建议 4 个素数，实测 2 个即可）。
+- 关键逻辑（与文档一致）：det > 0 ⟹ 线性无关 ⟹ rank ≥ 2，**无需先证 torsion trivial**——torsion 锚点是审稿视角更硬的独立支柱（纯有限域计数，不依赖高度理论）。
+
+**B — det 下界量化**（原为"det ≠ 0"）：
+- 写死 `det = 0.15246017794314375162... > 1/10 > 0`（G3 值，数值下界量化）；
+- docstring 补全 2×2 高度配对矩阵 [[0.686667083305587, 0.268478098806726],[0.268478098806726, 0.327000773651605]]，四源一致到 ~10⁻¹⁹。
+
+**未做（按讨论结论）**：对象级 `height_pairing_det_pos_389 : (0.1 : ℝ) < heightPairingDet P1 P2` 依赖 mathlib canonical height 形式化基础设施，现状 Prop 级锚点是合理停点；Sage `regulator(proof=True)`/mwrank 证书被 G3 四源一致覆盖，未重做。
+
+**验证**：`lake build BSD.RankTwo389` 增量 1070 jobs exit 0；闭包探针重跑——`rank_two_389` axioms 与 §14.2 逐项一致（不含 `rank_389a1`）。
+
+## 15. 2026-10-19：谱对偶线——ζ_K 零点并集结构（与 BSD 共享 χ₅ 结构）
+
+主线：谱对偶论证系列（K=ℚ(√5)，Dedekind ζ_K=ζ·L(χ₅)，χ₅ 为模 5 实字符）推进 ζ_K 零点在线比例下界，攻防 XVI–XIX 收口。与 BSD 库的连接点：**E⁵ twist 的局部因子 a_p=χ₅(p)·a_p(E)（§1 口径）与 L(s,χ₅) 共享同一字符结构**——E⁵ 的 L 函数是 L(E,χ₅)，而 ζ_K 的 L 分量是 L(·,χ₅)；谱对偶研究的是后者的零点结构（以及它如何并入 ζ_K 的并集零点）。
+
+### 15.1 数值体系（可复用）
+
+- `zeros_T6e5.npz`：ζ 999 492 个零点 + L(χ₅) 1 150 050 个（t∈[6.6, 6×10⁵]，R-S 主项求根，mpmath 验证前 15 个 L 零点）；N_K=2 149 542，密度 ρ_K=3.58。
+- `route2m.json`：跨族配对相关 F_cross/F_jit 谱（α∈[0,2]，41 点）；∫dF≈−0.0094（配对白噪声）、F_cross/F_jit≈0.99。
+- Fourier 剖面（`fourier_spectrum.png`）：χ₅(p)=−1 素项在并集中**精确对消**（∫P_K≈10⁻⁵，消除 10³–10⁵ 倍）、χ₅(p)=+1 增强恰 4 倍、χ₅(5)=0 项在 L 中消失。
+
+### 15.2 三个可辩护结果
+
+1. **Q(0)≥1 ⟹ 并集下界恒非正（攻防 XVIII，决定性负结果）**：命题 2.1（Lamzouri arXiv:2609.02882）对 Z_K=Z_ζ∪Z_L 的下界 2−C_MT(f)−Q(0)(f)≤0，与 mollifier 选择无关（f₀ 极值 −0.3338 / uniform −0.3333）。**Hilbert 空间不等式对乘积 L 函数并集失效**——跨族对纯负债（ΣK² 计 Q(0)≥1，Σ1 无对应计数）。
+2. **跨族配对显式公式（定理 3.1′）**：ζ 与 L(χ₅) 零点跨族配对相关主项 = f(0)（密度级系数 1），素项被 χ₅ 字符振荡消除（O(x^{−1/2}) 类）——Montgomery 配对相关向双 L 函数的推广，独立于 RH 真伪的 L 函数配对理论工具。
+3. **素项净压制与余项级（攻防 XIX）**：Σ_p χ₅(p)/√p 部分和有界 ≤2.46（字符和消去）；并集 sup 包络全尺度 <单族（0.57–0.94）；均方口径并集 1.263×单族（二矩无增益）；在线比例余项数值级 0.6725−O(10⁻⁵~10⁻³)——**缺口在常数不在余项**。
+
+### 15.3 L(χ₅) 主项修正（数值工作流重要修复）
+
+N_L(T)=(T/2π)[log(T/2π)+log 5−1]+O(log qT)——Γ(s/2) 相位含 (T/2)log(qT/2π)，log q=log 5 是线性项；历史脚本误用 ζ 口径（缺 log q）产生 C_L≈75098 伪主项，已修；L 零点数据含 ~0.27% R-S 求根系统伪影（趋势 −0.0052/单位）已披露（差分口径 ε、Fourier 免疫）。
+
+### 15.4 战略定位与连接
+
+- **与 7/8（0.874957，QRH 类）的关系**：0.6725 是 Levinson–Lamzouri 无条件常数，0.875 是 quasi-random 前提的常数——不同机制，非同一论证推进；追边界无增量。
+- **可辩护资产**：跨族配对显式公式 + 字符振荡对消 + Q(0) 负结果（方法边界）；可向"L 函数乘积的配对理论 + 方法边界"方向打包（《ζ_K 零点并集结构》文档）。
+- **谱对偶链状态**：Arthur 迹公式 ↔ Weil 显式公式的商定映射 (ℓ₁,ℓ₂)↦(T,W) 为信念（未闭合到配对常数），诚实标注为开放。
+- **与 BSD 的连接**：χ₅ 结构共享（E⁵ twist 与 L(χ₅)）；谱对偶的 θ_K 下界推进（若 L4 交叉项落地）可能为 Chebotarev/素数分裂分布精度提供数值输入。
