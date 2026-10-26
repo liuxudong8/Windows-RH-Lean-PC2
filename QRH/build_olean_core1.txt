@@ -1,0 +1,7 @@
+﻿lake.exe : failed to write '.lake\build\lib\lean\QRH\S7_1_Core.olean': failed to create file
+所在位置 行:1 字符: 92
++ ... "C:\proj2"; & lake env lean -o ".lake\build\lib\lean\QRH\S7_1_Core.ol ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (failed to write... to create file:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

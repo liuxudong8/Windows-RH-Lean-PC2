@@ -1,0 +1,15 @@
+﻿QRH\S7_1_Main.lean:1:0: error: unknown module prefix 'QRH'
+
+No directory 'QRH' or file 'QRH.olean' in the search path entries:
+C:\proj2\.lake\packages\Cli\.lake\build\lib\lean
+C:\proj2\.lake\packages\batteries\.lake\build\lib\lean
+C:\proj2\.lake\packages\Qq\.lake\build\lib\lean
+C:\proj2\.lake\packages\aesop\.lake\build\lib\lean
+C:\proj2\.lake\packages\proofwidgets\.lake\build\lib\lean
+C:\proj2\.lake\packages\importGraph\.lake\build\lib\lean
+C:\proj2\.lake\packages\LeanSearchClient\.lake\build\lib\lean
+C:\proj2\.lake\packages\plausible\.lake\build\lib\lean
+C:\proj\mathlib4-master\.lake\build\lib\lean
+C:\proj2\.lake\build\lib\lean
+c:\Users\shtcl\.elan\toolchains\leanprover--lean4---v4.34.0-rc2\lib\lean
+c:\Users\shtcl\.elan\toolchains\leanprover--lean4---v4.34.0-rc2\lib\lean
