@@ -1,0 +1,84 @@
+QRH\S7_1_Main.lean:45:18: warning: Variable name `K` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _K
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+QRH\S7_1_Main.lean:45:30: warning: Variable name `δ` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _δ
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+QRH\S7_1_Main.lean:45:32: warning: Variable name `N` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _N
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+QRH\S7_1_Main.lean:45:40: warning: Variable name `Z` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _Z
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+QRH\S7_1_Main.lean:48:18: warning: Variable name `T` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _T
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+QRH\S7_1_Main.lean:48:26: warning: Variable name `Z` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _Z
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+QRH\S7_1_Main.lean:51:30: warning: Variable name `z` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _z
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+QRH\S7_1_Main.lean:64:7: warning: Variable name `x` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _x
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+QRH\S7_1_Main.lean:65:7: warning: Variable name `prime_term` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _prime_term
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+QRH\S7_1_Main.lean:65:18: warning: Variable name `trivial_term` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _trivial_term
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+QRH\S7_1_Main.lean:65:31: warning: Variable name `offcritical` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _offcritical
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+QRH\S7_1_Main.lean:73:24: warning: Variable name `n` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _n
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+QRH\S7_1_Main.lean:97:13: warning: Variable name `hT` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hT
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+QRH\S7_1_Main.lean:98:13: warning: Variable name `hε0` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hε0
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`

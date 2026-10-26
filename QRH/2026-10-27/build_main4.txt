@@ -1,0 +1,76 @@
+﻿QRH\S7_1_Main.lean:42:48: error(lean.synthInstanceFailed): failed to synthesize instance of type class
+  Membership ℂ ZeroSet
+
+Hint: Type class instance resolution failures can be inspected with the `set_option trace.Meta.synthInstance true` command.
+QRH\S7_1_Main.lean:42:56: error(lean.synthInstanceFailed): failed to synthesize instance of type class
+  Membership ℂ ZeroSet
+
+Hint: Type class instance resolution failures can be inspected with the `set_option trace.Meta.synthInstance true` command.
+QRH\S7_1_Main.lean:45:18: warning: Variable name `K` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _K
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+QRH\S7_1_Main.lean:45:30: warning: Variable name `δ` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _δ
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+QRH\S7_1_Main.lean:45:32: warning: Variable name `N` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _N
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+QRH\S7_1_Main.lean:45:40: warning: Variable name `Z` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _Z
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+QRH\S7_1_Main.lean:48:18: warning: Variable name `T` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _T
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+QRH\S7_1_Main.lean:48:26: warning: Variable name `Z` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _Z
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+QRH\S7_1_Main.lean:51:30: warning: Variable name `z` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _z
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+QRH\S7_1_Main.lean:54:6: warning: declaration uses `sorry`
+QRH\S7_1_Main.lean:56:8: warning: This simp argument is unused:
+  zerosLChi5
+
+Hint: Omit it from the simp argument list.
+  [apply] simp
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+QRH\S7_1_Main.lean:64:16: error(lean.synthInstanceFailed): failed to synthesize instance of type class
+  Membership ?m.1 ZeroSet
+
+Hint: Type class instance resolution failures can be inspected with the `set_option trace.Meta.synthInstance true` command.
+QRH\S7_1_Main.lean:66:27: error(lean.unknownIdentifier): Unknown constant `Complex.abs`
+QRH\S7_1_Main.lean:73:24: warning: Variable name `n` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _n
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+QRH\S7_1_Main.lean:78:21: warning: Variable name `ε` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _ε
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+QRH\S7_1_Main.lean:92:8: warning: declaration uses `sorry`
