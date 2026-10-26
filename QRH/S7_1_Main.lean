@@ -125,8 +125,8 @@ theorem s71_main
 三条真证明件（超支撑素数项层）：
 - [x] Abel 求和引理（sum_abel，summation by parts 归纳真证；S7.6 §2.4 离散骨架）
 - [x] K̂_a 偶性（Khat_a_even，一阶校正恒为零真证）；二阶一致界 khat_second_order_bound
-      |K̂(au)−1|≤2(au)²+(au)⁴——statement axiom（Taylor 数值分析件；数值件 F：K̂″(0)≈−3.06、
-      ratio=1.000 @ aδ≤3e−3、f̂₀(0)=∫K₀=1）
+      |K̂(au)−1|≤2(au)²+(au)⁴——**真证**（K̂ 导数闭式乘形式 + 区间界；2026-10-26 迁入 Stage3 替换 axiom；
+      数值核对：K̂″(0)≈−3.06、ratio=1.000 @ aδ≤3e−3、f̂₀(0)=∫K₀=1）
 - [x] N_L 对数增长下界（N_L_lower_bound：N_L(T)≥c·T·logT）——axiom（数论件，S6 口径）
 构建证据：lake build QRH 1965 jobs 全绿（build_qrh_full.txt）；Stage3 独立编译 build_stage3.txt。
 超支撑素数项量级（数值件 F 已实测，2026-10-25）：S(X)=Σ_{p≤X}Λχ₅(p)p^{−1/2}K̂_a(δlogp)
