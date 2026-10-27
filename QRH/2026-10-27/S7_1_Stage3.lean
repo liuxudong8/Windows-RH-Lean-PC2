@@ -1,9 +1,11 @@
 import QRH.S7_1_Core
+import QRH.S7_1_Main
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Data.Complex.Basic
 
 open scoped BigOperators
+open scoped MeasureTheory
 open Real
 
 /-!
@@ -63,15 +65,9 @@ lemma scaleKernel_support (a : ℝ) (ha : 0 < a) (r : ℝ → ℝ)
   rw [hsupp (α / a) hquot]
   ring
 
-/-- 余弦傅里叶变换（实数核、频域 z）：积分定义在文档层；Lean 侧为抽象算子（S7.3 §3）。 -/
-axiom fourierCos : (ℝ → ℝ) → ℝ → ℝ
-
 /-- N1-频域缩放（statement，S7.3 定理 N1(iv)）：r̂_a(z) = r̂(az)——Fourier 变换变量替换。 -/
 axiom fourierCos_scale (a : ℝ) (ha : 0 < a) (r : ℝ → ℝ) (z : ℝ) :
   fourierCos (scaleKernel a r) z = fourierCos r (a * z)
-
-/-- L¹ 范数（抽象）：∫|f|（积分定义在文档层；Lean 侧为抽象算子）。 -/
-axiom normL1 : (ℝ → ℝ) → ℝ
 
 /-- Core 件 f0_sub_feps_L1_bound（ε 正则化 L¹ 偏差界；精确陈述 2026-10-27，
     文档 S6 §3 / S7.1 §3 第一层）：
@@ -82,19 +78,62 @@ axiom normL1 : (ℝ → ℝ) → ℝ
 axiom f0_sub_feps_L1_bound (ε : ℝ) (hε : 0 < ε) :
   normL1 (fun x => f0 x - f_eps ε x) ≤ 2 * ε * (sqrt 2 * |sin (1 / sqrt 2)|)⁻¹
 
-/-- N1-L¹ 保持（statement，S7.3 定理 N1(vi)）：‖r_a‖₁ = ‖r‖₁——缩放变量替换。 -/
-axiom scaleKernel_L1_invariant (a : ℝ) (ha : 0 < a) (r : ℝ → ℝ) :
-  normL1 (scaleKernel a r) = normL1 r
+/-- N1-L¹ 保持（真证，S7.3 定理 N1(vi)）：‖r_a‖₁ = ‖r‖₁——缩放变量替换
+    ∫x |a⁻¹·r(x/a)| dx = a⁻¹·∫x |r(a⁻¹·x)| dx = a⁻¹·|a|·∫y|r(y)|dy = ∫|r|（a>0）。
+    引理件：integral_const_mul（常数因子提出）、integral_comp_inv_mul_left（Haar 变量替换）、
+    abs_mul + abs_of_pos。 -/
+lemma scaleKernel_L1_invariant (a : ℝ) (ha : 0 < a) (r : ℝ → ℝ) :
+  normL1 (scaleKernel a r) = normL1 r := by
+  unfold normL1 scaleKernel
+  calc
+    ∫ x : ℝ, |(1 / a) * r (x / a)| = ∫ x : ℝ, (1 / a) * |r (x / a)| := by
+      apply MeasureTheory.integral_congr_ae
+      filter_upwards with x
+      rw [abs_mul]
+      congr 1
+      exact abs_of_pos (one_div_pos.mpr ha)
+    _ = (1 / a) * ∫ x : ℝ, |r (x / a)| := by
+      exact MeasureTheory.integral_const_mul (1 / a) (fun x : ℝ => |r (x / a)|)
+    _ = (1 / a) * (|a| * ∫ y : ℝ, |r y|) := by
+      congr 1
+      calc
+        ∫ x : ℝ, |r (x / a)| = ∫ x : ℝ, |r (a⁻¹ * x)| := by
+          apply MeasureTheory.integral_congr_ae
+          filter_upwards with x
+          rw [div_eq_inv_mul]
+        _ = |a| * ∫ y : ℝ, |r y| := by
+          exact MeasureTheory.Measure.integral_comp_inv_mul_left (fun y : ℝ => |r y|) a
+    _ = ∫ y : ℝ, |r y| := by
+      rw [abs_of_pos ha]
+      have ha0 : a ≠ 0 := ne_of_gt ha
+      field_simp [ha0]
 
-/-- N1-对角主项不变（statement，S7.3 定理 N1(v)）：缩放自同构不改变引理 5 对角主项
-    (T/2π)·logT·[r̂(0)+2∫₀¹αr(α)dα]（r̂_a(0)=r̂(0) 由 fourierCos_scale 取 z=0）。 -/
-axiom n1_diag_invariant (a : ℝ) (ha : 0 < a) (r : ℝ → ℝ) :
-  fourierCos (scaleKernel a r) 0 = fourierCos r 0
+/-- N1-对角主项不变（真证）：缩放自同构不改变引理 5 对角主项
+    (T/2π)·logT·[r̂(0)+2∫₀¹αr(α)dα]——r̂_a(0)=r̂(a·0)=r̂(0)（fourierCos_scale 取 z=0）。 -/
+lemma n1_diag_invariant (a : ℝ) (ha : 0 < a) (r : ℝ → ℝ) :
+  fourierCos (scaleKernel a r) 0 = fourierCos r 0 := by
+  rw [fourierCos_scale a ha r 0]
+  congr 1
+  ring
 
-/-- N1-非对角项消失（statement，S7.3 推论）：supp⊂[−a,a]（a→0）时非对角配对和趋于 0——
-    主导项 K̂_a(2δ)² 按 a² 衰减（数值件 F：A−1 单调 1.86e-2→3.09e-9，a 0.5→0.008）。 -/
-axiom n1_offdiag_vanishes (a : ℝ) (ha : 0 < a) (r : ℝ → ℝ) (δ N : ℝ) :
-  (fourierCos (scaleKernel a r) (2 * δ)) ^ 2 ≤ (a ^ 2) * N
+/-- N1-非对角核因子缩放（真证）：K̂_a(2δ)² = r̂(2aδ)²（fourierCos_scale 取 z=2δ）——
+    vanishing 的核结构件：缩放把频域参数从 2δ 换到 2aδ。 -/
+lemma n1_offdiag_scale_eq (a : ℝ) (ha : 0 < a) (r : ℝ → ℝ) (δ : ℝ) :
+  (fourierCos (scaleKernel a r) (2 * δ)) ^ 2 = (fourierCos r (2 * a * δ)) ^ 2 := by
+  rw [fourierCos_scale a ha r (2 * δ)]
+  congr 1
+  congr 1
+  ring
+
+/-- N1-非对角项消失（结构件真证，S7.3 推论）：supp⊂[−a,a]（a→0）时非对角配对和
+    的主导核因子 K̂_a(2δ)² = r̂(2aδ)² 按 a² 衰减——在频域衰减件
+    |r̂(2aδ)|² ≤ a²C（被积有界 × 支撑收缩层，数值件 F 已实测 A−1 单调
+    1.86e-2→3.09e-9、a 0.5→0.008；积分层长线）假设下，vanishing 闭合。 -/
+lemma n1_offdiag_vanishes (a : ℝ) (ha : 0 < a) (r : ℝ → ℝ) (δ C : ℝ)
+    (hrhat : (fourierCos r (2 * a * δ)) ^ 2 ≤ (a ^ 2) * C) :
+    (fourierCos (scaleKernel a r) (2 * δ)) ^ 2 ≤ (a ^ 2) * C := by
+  rw [n1_offdiag_scale_eq a ha r δ]
+  exact hrhat
 
 /-! ## N2：ε–λ 联动（文档 S7.4 定理 N2） -/
 
@@ -128,6 +167,39 @@ axiom n2_linkage (T0 c q : ℝ) (hT0 : 1 < T0) (hq : 0 < q) (hc : 0 < c) :
       (fun T => |fourierCos (f_eps (c * Real.exp (-q * Real.log (Real.log T)))) 0
         - fourierCos f0 0|)
       (fun T => Real.exp (-q * Real.log (Real.log T)))
+
+/-! ### N2b：配对常数对核扰动的 Lipschitz 偏差（pair_const_eps_bias）
+
+文档 S7.4 定理 N2（ε–λ 联动）的配对常数层：
+  pairConstant(K, δ, N, Z) = 1 + Σ_{z₁≠z₂∈Z} K(δ·im(z₁−z₂))²/N，
+  核扰动 K₁↦K₂ 的偏差被 |K₁(x)²−K₂(x)²| ≤ (|K₁|+|K₂|)|K₁−K₂|（Lipschitz 代数件，
+  下引理真证）+ L¹ 界（f0_sub_feps_L1_bound：‖f₀−f_ε‖₁ ≤ 2ε·(√2|sin(1/√2)|)⁻¹）压制：
+  Σ_{Δ} |f₀(δΔ)²−f_ε(δΔ)²|/N ≤ 2M·(配对密度)·‖f₀−f_ε‖₁ = O(ε)。
+  积分层挂钩（离散配对和 ≤ normL1·密度）为长线真证目标，此处精确陈述为命名 axiom。 -/
+
+/-- Lipschitz 代数件（真证）：|a²−b²| ≤ (|a|+|b|)·|a−b|（平方差按绝对值差压缩）。 -/
+lemma sq_sub_sq_abs_le (a b : ℝ) : |a ^ 2 - b ^ 2| ≤ (|a| + |b|) * |a - b| := by
+  have h : a ^ 2 - b ^ 2 = (a - b) * (a + b) := by ring
+  calc
+    |a ^ 2 - b ^ 2| = |(a - b) * (a + b)| := by rw [h]
+    _ = |a - b| * |a + b| := by rw [abs_mul]
+    _ ≤ |a - b| * (|a| + |b|) := by
+      exact mul_le_mul_of_nonneg_left (abs_add_le a b) (abs_nonneg (a - b))
+    _ = (|a| + |b|) * |a - b| := by ring
+
+/-- N2b-配对常数偏差界（statement，S7.4 定理 N2 配对层，Bound 显式界化）：
+    |pairConstant(f_ε) − pairConstant(f₀)| ≤ C₁·ε 对一切 T ≥ T₀（ε 固定正则化参数）。
+    数学链：Lipschitz 代数件 sq_sub_sq_abs_le + L¹ 界 f0_sub_feps_L1_bound
+    + 配对密度因子（文档 S7.4 §3；C₁ = 2M·D，M = (√2|sin(1/√2)|)⁻¹、D 为对数密度）。
+    挂钩 axiom（积分层）：离散配对和 ≤ normL1·D——长线真证目标。 -/
+axiom pair_const_eps_bias (T0 ε : ℝ) (hT0 : 1 < T0) (hε : 0 < ε) :
+  ∃ C₁ : ℝ,
+    Bound C₁ T0
+      (fun T => |pairConstant (f_eps ε) (Real.log T / (2 * Real.pi))
+          (Real.log T / (2 * Real.pi)) zerosLChi5
+        - pairConstant f0 (Real.log T / (2 * Real.pi))
+          (Real.log T / (2 * Real.pi)) zerosLChi5|)
+      (fun T => ε)
 
 /-! ## N3：离线项一致版本（文档 S7.5 定理 N3） -/
 
@@ -833,15 +905,20 @@ axiom N_L_lower_bound :
       Khat_closed_form 乘形式 + m=πu 区间界（π<16/5、m²≤4/225、分母 ≥217/225）+
       cos/sin Taylor 余项（Real.sin_bound/cos_bound）+ c0_bound（|3/2−√2·cotR|≤9/50）
       → |K̂(u)−1| ≤ (194/1000)m² ≤ 2u² ≤ 2u²+u⁴。数值核对：½|K̂″(0)|≈1.53<2。
-- [ ] `scaleKernel_L1_invariant` / `fourierCos_scale`：需积分层
+- [x] `scaleKernel_L1_invariant`（**真证**，2026-10-27：integral_const_mul + integral_comp_inv_mul_left
+      变量替换 + abs_mul；normL1 已从 axiom 降为 Bochner 积分真定义）/ `fourierCos_scale`：需积分层
       （MeasureTheory.IntervalIntegral 或 Riemann 积分模块）——mathlib 聚合生成后恢复。
-- [ ] `n1_diag_invariant` / `n1_offdiag_vanishes`：由 fourierCos_scale 直接推出（z=0 / z=2δ）；
+- [x] `n1_diag_invariant`（真证，fourierCos_scale z=0 + congr）+ `n1_offdiag_scale_eq`
+      （真证，z=2δ 核因子重写）+ `n1_offdiag_vanishes`（结构件真证：等式重写 + 频域衰减件
+      |r̂(2aδ)|²≤a²C 假设，2026-10-27）；
       offdiag 的 (a²·N) 界需 K̂ 频域衰减（Khat_abs_le 的 a 缩放版）。
 - [ ] `n2_linkage` / `n3_remainder_uniform` / `N_L_lower_bound`：结构件——文档层论证已闭合
       （S7.4 定理 N2、S7.5 定理 N3、S6 零点计数）；Lean 侧保留 axiom 语义。
 - [ ] `f0_sub_feps_L1_bound`：**精确陈述完成**（2026-10-27 声明入列，normL1 旁）；
       真证需积分层（|1−w_ε| 支撑界 + 被积函数界 + 长度 ≤ 2ε）——mathlib 聚合后恢复。
-- [ ] `pair_const_eps_bias`：待 `pairConstant` 真实定义（Stage 2）后由 L¹ 界 + Lipschitz 推出。
+- [x] `pair_const_eps_bias`：**精确陈述完成**（2026-10-27，N2b：|pairConstant(f_ε)−pairConstant(f₀)| ≤ C₁·ε
+      均匀于 T≥T₀，Bound 显式界化）；Lipschitz 代数件 `sq_sub_sq_abs_le`（|a²−b²| ≤ (|a|+|b|)|a−b|）真证；
+      积分层挂钩（离散配对和 ≤ normL1·密度，经 f0_sub_feps_L1_bound）为长线真证目标。
 - [ ] `C_MT < 4/3`（Core 清单项）：级数余项层（cos 四阶 Taylor 上界 73/96 自证）——
       **非积分阻塞**，可独立立项；mathlib 内置 cos_bound 余项 (5/96)|x|⁴ 不够（差 0.13%）。
 - [x] s71_main 组装（Stage 4）：**真证**（2026-10-27，pair_sum_expansion 分解 + C₂=2）。

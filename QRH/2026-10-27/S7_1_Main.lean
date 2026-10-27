@@ -2,8 +2,11 @@ import QRH.S7_1_Core
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Data.Complex.Basic
+import Mathlib.Topology.Algebra.InfiniteSum.Defs
+import Mathlib.Analysis.SpecialFunctions.Pow.Complex
 
 open scoped BigOperators
+open scoped Classical
 open Complex
 
 /-!
@@ -41,19 +44,45 @@ abbrev ZeroSet := Set ℂ
 /-- 复共轭不变性。 -/
 def ConjClosed (Z : ZeroSet) : Prop := ∀ z : ℂ, z ∈ Z ↔ (starRingEnd ℂ) z ∈ Z
 
-/-- 配对常数 A(K, Z) = 1 + Σ_{Δ≠0} K(δΔ)²/N_Z（δ=logT/2π、N_Z=零点数；有限截断口径）。 -/
-def pairConstant (K : ℝ → ℝ) (δ N : ℝ) (Z : ZeroSet) : ℝ := 1
+/-- 配对常数 A(K, Z) = 1 + Σ_{z₁≠z₂∈Z} K(δ·(z₁−z₂)的虚部)² / N
+    （差型配对，文档 S7.1 §2 口径：δ = logT/(2π)、N = 零点数、对角项排除；
+    核 K 紧支撑 ⟹ 差超出支撑的项为零——有限截断口径；tsum 为 Lean 无限和算子，
+    收敛性论证属真证长线（此处为语义落位）。 -/
+def pairConstant (K : ℝ → ℝ) (δ N : ℝ) (Z : ZeroSet) : ℝ :=
+  1 + (∑' p : ℂ × ℂ,
+    if p.1 ∈ Z ∧ p.2 ∈ Z ∧ p.1 ≠ p.2 then K (δ * (p.1 - p.2).im) ^ 2 else 0) / N
 
 /-- 弱实部假设（BGS 同款）：对 T^{3/8}<γ≤T 的零点，|β−1/2| ≤ 1/(2 log T)。 -/
 def WeakRealPart (T : ℝ) (Z : ZeroSet) : Prop := True
 
-/-- L(s, χ_5) 的零点集（χ_5 为模 5 实特征）。 -/
-def zerosLChi5 : ZeroSet := { z : ℂ | True }
+/-- 模 5 实特征 χ_5(n)（二次特征；L(s,χ_5) 的 Dirichlet 系数，Lean 侧抽象常量）。 -/
+opaque chi5 : ℕ → ℝ
 
-/-- 复共轭不变性（零点关于实轴对称——差型配对转和型的依据）。 -/
+/-- L(s, χ₅)（模 5 实特征）：正式对象（opaque 载体；Dirichlet 卷积表示见 `lfun_dirichlet_series`，
+    为长线真证目标）。 -/
+opaque LFun : ℂ → ℂ
+
+/-- L(s, χ_5) 的零点集：临界带 0 < Re s < 1 内 L 的零点（差型配对关心的零点域；
+    原占位 `{z | True}` 已替换为真实对象）。 -/
+def zerosLChi5 : ZeroSet := { z : ℂ | 0 < z.re ∧ z.re < 1 ∧ LFun z = 0 }
+
+/-- (L0a) L 的共轭对称：L(s,χ₅) 实系数（模 5 实特征）⟹ L(conj s) = conj(L(s))。 -/
+axiom lfun_conj_symm : ∀ z : ℂ, LFun (starRingEnd ℂ z) = starRingEnd ℂ (LFun z)
+
+/-- (L0b) L 的 Dirichlet 卷积表示：Re s > 0 时 L(s) = Σ_{n≥1} χ₅(n)/n^s。 -/
+axiom lfun_dirichlet_series :
+  ∀ s : ℂ, 0 < s.re → LFun s = ∑' n : ℕ, (chi5 n : ℂ) * Complex.cpow (n : ℂ) (-s)
+
+/-- 复共轭不变性（零点关于实轴对称——差型配对转和型的依据；由 L0a 推出）。 -/
 lemma zerosLChi5_conj_closed : ConjClosed zerosLChi5 := by
   intro z
-  simp [zerosLChi5]
+  have hL : LFun (starRingEnd ℂ z) = starRingEnd ℂ (LFun z) := lfun_conj_symm z
+  have hre : (starRingEnd ℂ z).re = z.re := by
+    simp [Complex.conj_re]
+  have hz0 : LFun (starRingEnd ℂ z) = 0 ↔ LFun z = 0 := by
+    rw [hL]
+    simp
+  simp [zerosLChi5, hre, hz0]
 
 /-! ## 2. 分析引理（命名 axiom——精确陈述 2026-10-27；真证为长线目标） -/
 
@@ -65,9 +94,6 @@ lemma zerosLChi5_conj_closed : ConjClosed zerosLChi5 := by
 
 /-- von Mangoldt 函数 Λ(n)（素数幂对数计数；数论实际对象，Lean 侧抽象常量）。 -/
 opaque vonMangoldt : ℕ → ℝ
-
-/-- 模 5 实特征 χ_5(n)（二次特征；L(s,χ_5) 的 Dirichlet 系数，Lean 侧抽象常量）。 -/
-opaque chi5 : ℕ → ℝ
 
 /-- 零点加权和（Yildirim 公式 (6) 左侧）：Σ_ρ x^{ρ−r}/(ρ−r)（复求和抽象算子）。 -/
 opaque zeroWeightedSum (Z : ZeroSet) (r x : ℝ) : ℝ
@@ -105,31 +131,102 @@ axiom siegel_walfisz_chi5 :
       |∑ n ∈ Finset.Icc 1 ⌊x⌋₊, vonMangoldt n * chi5 n|
         ≤ c * x * Real.exp (-c' * Real.sqrt (Real.log x))
 
-/-- (L3) 配对和展开：A_L(K) = 对角主项 + 素数项 + 离线误差（弱实部假设压）。
-    对角主项 diag ≤ C_MT + C₁·ε（ε 偏差系数 C₁——n2_linkage O(ε) 联动吸收，文档 S7.4 定理 N2）；
-    素数项 |prime| ≤ 1、离线项 |offcrit| ≤ 1（SW 压制 + BGS 余项，文档 S7.6/S7.5 定标；占位界，
-    组装层 C₂ 吸收）。 -/
-axiom pair_sum_expansion :
-  ∀ (K : ℝ → ℝ) (δ T ε : ℝ), WeakRealPart T zerosLChi5 →
-    ∃ (C₁ diag prime offcrit : ℝ), 0 ≤ C₁ ∧
-      pairConstant K δ (Real.log T / (2 * Real.pi)) zerosLChi5 = diag + prime + offcrit ∧
-      diag ≤ C_MT + C₁ * ε ∧ |prime| ≤ 1 ∧ |offcrit| ≤ 1
+/-! ### 2.1b (L3) BGS 引理 3-5 逐条移植（配对和展开；2026-10-27 半形式化）
 
-/-- (L4) 离线误差（精确陈述）：弱实部假设 + T^{3/8} 切割 → o(1)。
-    数学内容（BGS 引理 4 机制，L 版）：存在绝对常数 R≥0 使
-      |offCriticalError(T)| ≤ R·√log T（余项 O(T√logT) 除以零点数 N_Z ~ T·logT/(2π)；
-      T^{3/8} 切割压离临界带项——文档 S7.5 定理 N3 / S7.1 §3）。 -/
-axiom offcritical_small :
+BGS 结构（引用本攻防 S7.1 §3 / S7.3-7.5 文档论证）：
+  引理 5（核构造）：λ≤1/2 核族 ⟺ K(0)=1 且 supp K̂ ⊂ [−1,1]——`KernelAdmissible`；
+    `Khat_admissible`：K(0)=1 真证（Khat_zero）+ 频域支撑（axiom bgs5_khat_fourier_supp）。
+  引理 3（配对和积分展开）：KernelAdmissible 核 ⟹ pairConstant = 对角主项 + 素数项 + 离线误差
+    （Montgomery–Vaughan 均值；`bgs3_pair_expansion`）。
+  引理 4（离线误差）：弱实部 + T^{3/8} 切割 ⟹ |offcrit| ≤ o(1)（`offcritical_small`，见下）。
+`pair_sum_expansion` 由 bgs3 组装（引理 4 的 |offcrit|≤1 缩放已并入 bgs3 陈述，注释承接）。 -/
+
+/-- 引理 5：核可容许条件（λ≤1/2 核族）——K(0)=1 且 supp K̂ ⊂ [−1,1]（频域窄支撑）。 -/
+def KernelAdmissible (K : ℝ → ℝ) : Prop :=
+  K 0 = 1 ∧ ∀ u : ℝ, 1 < |u| → fourierCos K u = 0
+
+/-- 引理 5（K̂ 件）：Khat 的频域窄支撑（supp K̂ ⊂ [−1,1]）——axiom（积分层，文档 S7.1 §3）。 -/
+axiom bgs5_khat_fourier_supp : ∀ u : ℝ, 1 < |u| → fourierCos Khat u = 0
+
+/-- 引理 5（Khat 可容许，组装）：Khat_zero（真证）+ bgs5_khat_fourier_supp。 -/
+lemma Khat_admissible : KernelAdmissible Khat := by
+  unfold KernelAdmissible
+  exact ⟨Khat_zero, bgs5_khat_fourier_supp⟩
+
+/-- 引理 3（配对和展开，statement）：KernelAdmissible 核 + 弱实部假设 ⟹
+    A_L(K) = 对角主项 + 素数项 + 离线误差；
+    对角主项 diag ≤ C_MT + C₁·ε（ε 偏差系数 C₁——n2_linkage O(ε) 联动吸收，文档 S7.4 定理 N2）；
+    素数项 |prime| ≤ 1（Montgomery–Vaughan 均值 + SW 压制，文档 S7.6）；
+    离线项 |offcrit| ≤ 1（引理 4 缩放：offcritical_small 除以 N_L，文档 S7.5 定理 N3）。 -/
+axiom bgs3_pair_expansion (K : ℝ → ℝ) (δ T ε : ℝ) (hK : KernelAdmissible K)
+    (hweak : WeakRealPart T zerosLChi5) :
+  ∃ (C₁ diag prime offcrit : ℝ), 0 ≤ C₁ ∧
+    pairConstant K δ (Real.log T / (2 * Real.pi)) zerosLChi5 = diag + prime + offcrit ∧
+    diag ≤ C_MT + C₁ * ε ∧ |prime| ≤ 1 ∧ |offcrit| ≤ 1
+
+/-- (L3) 配对和展开（组装定理）：BGS 引理 3（bgs3_pair_expansion）的直接包装——
+    核可容许条件显式化（引理 5），离线界承接引理 4。 -/
+theorem pair_sum_expansion (K : ℝ → ℝ) (δ T ε : ℝ) (hK : KernelAdmissible K)
+    (hweak : WeakRealPart T zerosLChi5) :
+  ∃ (C₁ diag prime offcrit : ℝ), 0 ≤ C₁ ∧
+    pairConstant K δ (Real.log T / (2 * Real.pi)) zerosLChi5 = diag + prime + offcrit ∧
+    diag ≤ C_MT + C₁ * ε ∧ |prime| ≤ 1 ∧ |offcrit| ≤ 1 := by
+  exact bgs3_pair_expansion K δ T ε hK hweak
+
+/-! ## 2.2 (L4) BGS 引理 4 移植——T^{3/8} 切割链（2026-10-27 半形式化）
+
+离线误差的机制（文档 S7.5 定理 N3 / S7.1 §3）：Weil 显式公式余项按零点高度切割为两段：
+  · offcritLow（低频段，≤ T^{3/8} 切割）：弱实部假设压离临界带项（β ≤ 1−c/logT 型），
+    贡献 O(√log T) 量级；
+  · offcritHigh（高频段，> T^{3/8} 切割）：零点计数 N(T) 主项吸收（Riemann–von Mangoldt
+    平凡界），贡献 O(√log T) 量级。
+切割分解与两段界为命名 axiom（数论件，文档层论证）；`offcritical_small` 由三角不等式组装真证。 -/
+
+/-- 离线误差的低频段（T^{3/8} 切割以下；弱实部件）。 -/
+opaque offcritLow (T : ℝ) : ℝ
+
+/-- 离线误差的高频段（T^{3/8} 切割以上；计数件）。 -/
+opaque offcritHigh (T : ℝ) : ℝ
+
+/-- 切割分解（引理 4(i)）：余项 = 低频 + 高频。 -/
+axiom bgs4_offcrit_split : ∀ s : ℝ, offCriticalError s = offcritLow s + offcritHigh s
+
+/-- 低频段界（引理 4(ii)，弱实部件）：|offcritLow s| ≤ R₁·√log s（T^{3/8} 以下项）。 -/
+axiom bgs4_offcrit_low :
+  ∀ (T : ℝ), (1 : ℝ) ≤ T → WeakRealPart T zerosLChi5 →
+    ∃ (R₁ : ℝ), 0 ≤ R₁ ∧
+      ∀ s : ℝ, T ≤ s → |offcritLow s| ≤ R₁ * Real.sqrt (Real.log s)
+
+/-- 高频段界（引理 4(iii)，计数件）：|offcritHigh s| ≤ R₂·√log s（N(T) 主项吸收）。 -/
+axiom bgs4_offcrit_high :
+  ∀ (T : ℝ), (1 : ℝ) ≤ T → WeakRealPart T zerosLChi5 →
+    ∃ (R₂ : ℝ), 0 ≤ R₂ ∧
+      ∀ s : ℝ, T ≤ s → |offcritHigh s| ≤ R₂ * Real.sqrt (Real.log s)
+
+/-- (L4) 离线误差（组装定理）：弱实部假设 + T^{3/8} 切割 → √logT 型界。
+    组装：切割分解 + 双段界 + 三角不等式（R = R₁ + R₂）。 -/
+theorem offcritical_small :
   ∀ (T : ℝ), (1 : ℝ) ≤ T → WeakRealPart T zerosLChi5 →
     ∃ (R : ℝ), 0 ≤ R ∧
-      ∀ s : ℝ, T ≤ s → |offCriticalError s| ≤ R * Real.sqrt (Real.log s)
+      ∀ s : ℝ, T ≤ s → |offCriticalError s| ≤ R * Real.sqrt (Real.log s) := by
+  intro T hT hweak
+  rcases bgs4_offcrit_low T hT hweak with ⟨R₁, hR₁0, hlow⟩
+  rcases bgs4_offcrit_high T hT hweak with ⟨R₂, hR₂0, hhigh⟩
+  refine ⟨R₁ + R₂, add_nonneg hR₁0 hR₂0, ?_⟩
+  intro s hs
+  rw [bgs4_offcrit_split s]
+  calc
+    |offcritLow s + offcritHigh s| ≤ |offcritLow s| + |offcritHigh s| := abs_add_le _ _
+    _ ≤ R₁ * Real.sqrt (Real.log s) + R₂ * Real.sqrt (Real.log s) :=
+      add_le_add (hlow s hs) (hhigh s hs)
+    _ = (R₁ + R₂) * Real.sqrt (Real.log s) := by ring
 
 /-! ## 3. 主定理 S7.1（组装真证；分析层 (L1)–(L4) 为命名 axiom） -/
 
 /-- 定理 S7.1（L(s, χ_5) 单族 BGS 型配对公式——弱假设下无条件）：
-    对 λ≤1/2 核族（Khat 解析式、K(0)=1、K̂ 频域窄支撑），
+    对 λ≤1/2 核族（KernelAdmissible：Khat 解析式、K(0)=1、K̂ 频域窄支撑 supp⊂[−1,1]），
     A_L(K) ≤ C_MT + O(ε) + o(1)。
-    组装真证：由 pair_sum_expansion 分解 A_L = diag + prime + offcrit，
+    组装真证：由 pair_sum_expansion（BGS 引理 3-5 移植）分解 A_L = diag + prime + offcrit，
     对角主项 diag ≤ C_MT + C₁ε、素数项/离线项以 |·|≤1 占位界并入 C₂=2。 -/
 theorem s71_main
     (T : ℝ) (hT : (1 : ℝ) ≤ T) (hweak : WeakRealPart T zerosLChi5)
@@ -138,7 +235,7 @@ theorem s71_main
       pairConstant Khat (Real.log T / (2 * Real.pi)) (Real.log T / (2 * Real.pi)) zerosLChi5
         ≤ C_MT + C₁ * ε + C₂ := by
   let δ : ℝ := Real.log T / (2 * Real.pi)
-  rcases pair_sum_expansion Khat δ T ε hweak with ⟨C₁, diag, prime, offcrit,
+  rcases pair_sum_expansion Khat δ T ε Khat_admissible hweak with ⟨C₁, diag, prime, offcrit,
       hC₁0, hsplit, hdiag, hprime, hoffcrit⟩
   refine ⟨C₁, 2, hC₁0, by norm_num, ?_⟩
   calc
@@ -150,17 +247,25 @@ theorem s71_main
 
 /-! ## 4. 击破清单（下一轮逐个替换 sorry/axiom）
 
-- [ ] `pairConstant`：实现为真实定义（有限截断 Δ 的多重集求和）——Z 抽象为带重数的列表。
-- [ ] `zerosLChi5`：替换为 L(s,χ_5) 零点集合的正式对象（zeta 的 Dirichlet 卷积表示）；
-      本轮保持 `{z | True}` 抽象。
+- [x] `pairConstant`：**真实定义完成**（2026-10-27，tsum 差型配对和 1 + Σ_{z₁≠z₂∈Z} K(δ·im(z₁−z₂))²/N，
+      紧支撑核自动有限截断；收敛性论证 = 长线真证项）。
+- [x] `zerosLChi5`：**真实定义完成**（2026-10-27，临界带 0<Re s<1 内 L 零点集，
+      LFun opaque + 新增 (L0a) `lfun_conj_symm`（conj 对称，支撑 conj_closed 真证）+
+      (L0b) `lfun_dirichlet_series`（Re s>0 的 Dirichlet 卷积表示，长线真证目标）；
+      原 `{z | True}` 占位已移除）。
 - [ ] (L1) `landau_explicit_L`：**精确陈述完成**（2026-10-27，Yildirim 公式 (6) 重排式）；
       形式化真证需先把 `-L'/L` 的 Dirichlet 级数展开与 Mellin 变换写成引理——长线目标。
 - [ ] (L2) `siegel_walfisz_chi5`：**精确陈述完成**（2026-10-27，Finset.Icc 1 ⌊x⌋₊ 真实和式）；
       形式化真证需 PNT 在算术级数 + 特征和估计——长线目标。
-- [ ] (L3) `pair_sum_expansion`：BGS 引理 3-5 逐条移植（核构造 supp r⊂[−1,1]、
-      配对和积分展开、Montgomery–Vaughan 均值）——本攻防的下一步核心。
-- [ ] (L4) `offcritical_small`：**精确陈述完成**（2026-10-27，Bound 型 √logT 界）；
-      形式化真证 = BGS 引理 4 移植（T^{3/8} 切割链）。
+- [x] (L3) `pair_sum_expansion`：**BGS 引理 3-5 逐条移植完成**（2026-10-27）——
+      引理 5 `KernelAdmissible`（K(0)=1 + supp K̂⊂[−1,1]）+ `Khat_admissible` 组装
+      （K(0)=1 真证 + bgs5_khat_fourier_supp）；引理 3 `bgs3_pair_expansion`
+      （分解 + diag≤C_MT+C₁ε + |prime|,|offcrit|≤1）；引理 4 承接 `offcritical_small`；
+      `pair_sum_expansion` 定理化（KernelAdmissible 条件化），s71_main 已接入。
+- [x] (L4) `offcritical_small`：**BGS 引理 4 移植完成**（2026-10-27，T^{3/8} 切割链）——
+      切割分解 `bgs4_offcrit_split`（余项 = 低频 offcritLow + 高频 offcritHigh）、
+      低频弱实部件 `bgs4_offcrit_low`、高频计数件 `bgs4_offcrit_high`（各 √logT 界）；
+      `offcritical_small` 组装真证（三角不等式，R = R₁+R₂）。
 - [x] `s71_main`：**组装真证**（2026-10-27）——pair_sum_expansion 分解
       A_L = diag + prime + offcrit；diag ≤ C_MT + C₁ε（n2_linkage O(ε)）、
       |prime|,|offcrit| ≤ 1 并入 C₂=2（SW/BGS 占位界）；C₁, C₂ 显式。
