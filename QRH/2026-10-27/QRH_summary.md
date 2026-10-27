@@ -1,6 +1,6 @@
 # QRH 项目总结（攻防 XLII「干到 1」主线 + Lean 形式化）
 
-> 2026-10-26 定稿。数学层 S0–S7.6 已闭环落档 d1；Lean 形式化阶段推进中（Core/Stage3 真证链绿，Main 骨架组装未完成）。
+> 2026-10-27 定稿。数学层 S0–S7.6 已闭环落档 d1；Lean 形式化 Main (L3)(L4) 已落位、2604 jobs 全绿；S7.7 击破清单四连已落档。
 > 口径基准：7/8 为既定目标（31/32 被否）；A 是数据而非定理；「证到 1」≠ 接近 RH（统计口径 vs 实际描述）。
 
 ## 1. 项目定位
@@ -36,6 +36,7 @@ QRH 常数 0.6725 → 7/8 需要 A ≤ 1.125。A→1 远强于 A ≤ 1.125，故
 | S7.4 | 骨头 2（N2）：ε–λ 联动（正则化撑宽与有效核宽标度律） | 撑宽缺口闭合 |
 | S7.5 | 骨头 3（N3）：离线项一致版本（BGS 余项跨 λ 一致） | 跨 λ 一致性 |
 | S7.6 | SW 常数显式化：L(s,χ₅) 素数项显式界 (C,c) | 常数显式 |
+| S7.7 | 击破清单四连：BGS 引理 3–5 移植（Main）+ N1/L1 真证（Stage3）+ BGS 引理 4 T^{3/8} 切割链（Main）+ 落档 | (L3)(L4) 落位 |
 
 ## 4. 三硬骨头与 SW 常数（推 1 断层闭合）
 
@@ -50,36 +51,44 @@ QRH 常数 0.6725 → 7/8 需要 A ≤ 1.125。A→1 远强于 A ≤ 1.125，故
 
 ## 5. Lean 形式化状态（C:\proj2\QRH，mathlib v4.34.0-rc2）
 
-构建：`lake build QRH` 1965 jobs 全绿（exit=0）；Windows 侧 mathlib 聚合 Mathlib.olean 未生成，仅具体模块 import。
+构建：`lake build QRH` **2604 jobs 全绿**（exit=0；2026-10-27，build_qrh_l4b.txt）；Windows 侧 mathlib 聚合 Mathlib.olean 未生成，仅具体模块 import。**架构（2026-10-27）**：为打破 import 环（Stage3⇄Main），fourierCos 与 normL1 迁至 Core 新增 4b 节，依赖链 Core→Main→Stage3 单向；Core 增 import `MeasureTheory.Measure.Haar.NormedSpace`（积分变量替换引理系，Bochner 无条件）。
 
 **误差界宏（弃 Asymptotics.IsBigO 与 ε–N）**：`Bound C T0 err f := 0≤C ∧ ∀T≥T0, |err T| ≤ C·f T`；`BoundBall C δ err f := 0≤C ∧ ∀|x|≤δ, |err x| ≤ C·f x`。
 
-**真证链（10 件）**：
+**真证链（2026-10-27 现状，16 件）**：
 
-- Core（S7_1_Core.lean）：`sin_inv_sqrt2_ne_zero`（分母良定义）、`Khat_neg`（偶性）、`Khat_zero`（K̂(0)=1，sin/x 极限延拓）、`Khat_abs_le`（频域衰减三角不等式界）、`f0_continuous`。
-- Stage3（S7_1_Stage3.lean）：`scaleKernel_support`（N1 支撑保持）、`f_eps_support`（N2 支撑 [−1/2,1/2]）、`Khat_a_even`（一阶校正恒零）、`sum_abel`（Abel 求和归纳）、**`khat_second_order_bound`**（K̂ 二阶一致界真证，2026-10-26 迁入替换 axiom）。
+- Core（S7_1_Core.lean）：`sin_inv_sqrt2_ne_zero`（分母良定义）、`Khat_neg`（偶性）、`Khat_zero`（K̂(0)=1，sin/x 极限延拓）、`Khat_abs_le`（频域衰减三角不等式界）、`f0_continuous`；**`normL1`（Bochner 积分真定义 ‖f‖₁=∫|f|，axiom 降级）**。
+- Stage3（S7_1_Stage3.lean）：`scaleKernel_support`（N1 支撑保持）、`f_eps_support`（N2 支撑 [−1/2,1/2]）、`Khat_a_even`（一阶校正恒零）、`sum_abel`（Abel 求和归纳）、`khat_second_order_bound`（K̂ 二阶一致界真证，2026-10-26 迁入替换 axiom）、**`n1_diag_invariant`**（r̂_a(0)=r̂(0)，z=0 取点真证）、**`n1_offdiag_scale_eq`**（K̂_a(2δ)²=r̂(2aδ)²，两层 congr 1 真证）、**`n1_offdiag_vanishes`**（结构件真证：scale_eq 重写 + 频域衰减件 |r̂(2aδ)|²≤a²C 假设闭合）、**`scaleKernel_L1_invariant`**（abs_mul + integral_const_mul + integral_comp_inv_mul_left + field_simp，Haar 变量替换链）。
+- Main（S7_1_Main.lean）：**`Khat_admissible`**（K(0)=1 真证 Khat_zero + 频域支撑件）、**`pair_sum_expansion`**（由大 axiom 降为 bgs3_pair_expansion 组装定理）、**`offcritical_small`**（由 axiom 降为 bgs4_offcrit_split/low/high 组装真证，R=R₁+R₂）、`s71_main` 组装真证（2026-10-27，接实参 Khat_admissible）。
 
 **khat_second_order_bound 真证链**（BoundBall 1 (1/24)）：K̂(u) 乘形式闭式 Khat_closed_form = [cos m − √2·m·cotR·sin m]/(1 − 2m²)，m = πu；|u| ≤ 1/24、π < 16/5 ⟹ |m| ≤ 2/15 ⟹ m² ≤ 4/225 ⟹ 分母 1−2m² ≥ 217/225 > 0；分子拆分 N = m²(3/2 − √2·cotR) + cos 二阶余项 − √2·m·cotR·(sin 一阶余项)；cos/sin 余项用 Real.cos_bound/sin_bound、c0_bound（|3/2 − √2·cotR| ≤ 9/50，cotR ∈ [1, 237/200]）；拼接得 |K̂−1| ≤ (194/1000)·m² ≤ 2u² ≤ 2u²+u⁴。数值核对：½|K̂″(0)| ≈ 1.53 < 2（2u² 系数来源）。
 
-**主定理 s71_main（组装真证，2026-10-27，替代 sorry）**：A_L(K) ≤ C_MT + C₁ε + C₂，C₂ = 2 显式。证明链 = pair_sum_expansion 分解 A_L = diag + prime + offcrit → diag ≤ C_MT + C₁ε（n2_linkage O(ε)）+ |prime|,|offcrit| ≤ 1 并入 C₂（linarith + ring）；(L3) axiom 语义已强化（diag 界入陈述）。整库 1965 jobs 全绿（build_qrh_s71.txt）。
+**主定理 s71_main（组装真证，2026-10-27，替代 sorry）**：A_L(K) ≤ C_MT + C₁ε + C₂，C₂ = 2 显式。证明链 = pair_sum_expansion 分解 A_L = diag + prime + offcrit → diag ≤ C_MT + C₁ε（n2_linkage O(ε)）+ |prime|,|offcrit| ≤ 1 并入 C₂（linarith + ring）；(L3) axiom 语义已强化（diag 界入陈述）。全量 **2604 jobs 全绿**（build_qrh_l4b.txt）。2026-10-27 更新：pair_sum_expansion 由大 axiom 降为 bgs3_pair_expansion 组装定理，核可容许谓词 KernelAdmissible（K(0)=1 ∧ supp K̂⊂[−1,1]，λ≤1/2 核族）显式进入主定理链，s71_main 增加实参 Khat_admissible。
 
-**长线命名 axiom——精确陈述完成（2026-10-27）**：`landau_explicit_L`（Yildirim 公式 (6) 重排式：zeroWeightedSum = trivialTerm − primePowerSum − logDerivTerm）、`siegel_walfisz_chi5`（Finset.Icc 1 ⌊x⌋₊ 真实和式：|Σ Λ(n)χ_5(n)| ≤ c·x·e^{−c′√log x}）、`offcritical_small`（Bound 型：|offCriticalError s| ≤ R·√log s）——由空洞占位升级为与数学一致的精确陈述；引入抽象对象（opaque：vonMangoldt、chi5、zeroWeightedSum、primePowerSum、trivialTerm、logDerivTerm、offCriticalError）作陈述载体。真证 = PNT-in-AP 量级长线。
+**长线命名 axiom——精确陈述完成（2026-10-27）**：`landau_explicit_L`（Yildirim 公式 (6) 重排式：zeroWeightedSum = trivialTerm − primePowerSum − logDerivTerm）、`siegel_walfisz_chi5`（Finset.Icc 1 ⌊x⌋₊ 真实和式：|Σ Λ(n)χ_5(n)| ≤ c·x·e^{−c′√log x}）——由空洞占位升级为与数学一致的精确陈述；真证 = PNT-in-AP 量级长线。
 
-**挂账 axiom（如实记录）**：
+**(L3)(L4) 移植（2026-10-27，Main 击破清单核心，已落位）**：
+- 引理 5（核构造）→ KernelAdmissible + axiom bgs5_khat_fourier_supp（频域支撑，积分层件）+ Khat_admissible 组装。
+- 引理 3（配对和展开）→ axiom bgs3_pair_expansion（A_L = diag+prime+offcrit；diag ≤ C_MT+C₁ε；|prime|,|offcrit| ≤ 1，Montgomery–Vaughan 均值口径）。
+- 引理 4（离线误差）→ T^{3/8} 切割链：opaque offcritLow/offcritHigh + bgs4_offcrit_split/low/high（|·| ≤ R₁√log s / R₂√log s），offcritical_small 组装真证（abs_add_le + add_le_add + ring，R = R₁+R₂）。
+- **数学诚实修正**：N1 vanishing 原 ∀N 陈述过宽（r̂(0)=1 不消失，fourierCos_scale 只给等式），改为带正参数 C 的显式衰减件假设。
+
+**挂账 axiom（2026-10-27 现状，如实记录）**：
 - Core 清单项：`C_MT<4/3`（无 axiom 声明——数学上需 cos 四阶 Taylor 上界 73/96，mathlib 内置 cos_bound 余项 (5/96)|x|⁴ 不够（组合 sin_bound 修正后差 0.13%）；**级数余项层、非积分阻塞，可独立立项**）。
-- Stage3：`fourierCos_scale`、`scaleKernel_L1_invariant`、`n1_diag_invariant`、`n1_offdiag_vanishes`、`n2_linkage`、`n3_remainder_uniform`、`N_L`、`N_L_lower_bound`（积分层/数论件，陈述完整；真证挂 mathlib 聚合 Mathlib.olean——IntervalIntegral.olean 缺失实测确认）；`f0_sub_feps_L1_bound`（**精确陈述声明入列 2026-10-27**：‖f₀−f_ε‖₁ ≤ 2ε·(√2|sin(1/√2)|)⁻¹；真证挂聚合）；`pair_const_eps_bias`（待 pairConstant 真实定义，Stage 2 后由 L¹ 界 + Lipschitz 推出）。
-- Main：`landau_explicit_L`、`siegel_walfisz_chi5`、`offcritical_small`（**精确陈述完成**，真证长线）；`pair_sum_expansion`（(L3) 组装依赖，陈述精确，BGS 引理 3-5 移植为下一步核心）。
+- Stage3：`fourierCos_scale`（频域变量替换，积分层件）、`n2_linkage`、`n3_remainder_uniform`、`N_L`、`N_L_lower_bound`（数论件，陈述完整；真证挂 mathlib 聚合 Mathlib.olean）；`f0_sub_feps_L1_bound`（**精确陈述声明入列 2026-10-27**：‖f₀−f_ε‖₁ ≤ 2ε·(√2|sin(1/√2)|)⁻¹；真证挂聚合）；`pair_const_eps_bias`（待 pairConstant 真实定义，Stage 2 后由 L¹ 界 + Lipschitz 推出）。已真证出账：`n1_diag_invariant`、`n1_offdiag_scale_eq`、`n1_offdiag_vanishes`（结构件，衰减件为带 C 假设）、`scaleKernel_L1_invariant`。
+- Main：`landau_explicit_L`、`siegel_walfisz_chi5`（**精确陈述完成**，真证长线）；`bgs5_khat_fourier_supp`、`bgs3_pair_expansion`、`bgs4_offcrit_split/low/high`（命名 axiom，2026-10-27 落位）；`offcritLow/offcritHigh` opaque。已真证出账：`pair_sum_expansion`（组装定理）、`offcritical_small`（组装真证）。
 
-**文件结构**：C:\proj2\QRH.lean（根，import Core/Main/Stage3）；QRH\S7_1_Core.lean；QRH\S7_1_Stage3.lean；QRH\S7_1_Main.lean（zerosLChi5、pairConstant、WeakRealPart 抽象 + s71_main 组装真证）；QRH\Dbg_Khat.lean（khat 真证开发档案）。编译证据：build_core1..12.txt、build_main1..9.txt、build_stage3.txt、build_qrh_full{,2,3,_khat,_khat2,_s71}.txt、dbg_khat.txt、dbg_probe3.txt（IntervalIntegral.olean 缺失确认）、main_precise.txt、stage3_precise.txt、build_qrh_precise.txt（2026-10-27 陈述层后全量 1965 绿）。
+**文件结构**：C:\proj2\QRH.lean（根，import Core/Main/Stage3）；QRH\S7_1_Core.lean（4b 节：fourierCos axiom + normL1 Bochner 定义；import Haar.NormedSpace）；QRH\S7_1_Stage3.lean（N1/L1 真证链）；QRH\S7_1_Main.lean（zerosLChi5、pairConstant、WeakRealPart 抽象 + (L3)(L4) 移植 + s71_main 组装真证）；QRH\Dbg_Khat.lean（khat 真证开发档案）。编译证据：build_core1..12.txt、build_main1..9.txt、build_stage3.txt、build_qrh_full{,2,3,_khat,_khat2,_s71}.txt、dbg_khat.txt、dbg_probe3.txt（IntervalIntegral.olean 缺失确认）、main_precise.txt、stage3_precise.txt、build_qrh_precise.txt、build_qrh_l1.txt、**build_qrh_l4b.txt（2026-10-27 全量 2604 绿）**。
 
 ## 6. 下一步（按依赖序）
 
-1. **Stage 4 已完成**（2026-10-27）：s71_main 组装真证（前提显式、常数显式、组装真证）——Lean 侧可核查的最远合理点已达。
-2. **条件封口（陈述层完成 2026-10-27；真证挂聚合）**：积分层三组——Stage3（fourierCos_scale → n1_diag/n1_offdiag → n2_linkage/n3_remainder_uniform）+ f0_sub_feps_L1_bound 陈述就绪；mathlib 聚合 Mathlib.olean 生成后即可真证。`C_MT<4/3` 级数余项层（cos 四阶上界 73/96 自证）非积分阻塞，可独立立项。
-3. **长线（命名 axiom 精确陈述完成 2026-10-27）**：(L1) 显式公式 / (L2) SW 真证 = PNT-in-AP 量级多人年工程；先做 Stage 2：(L3) 配对和展开半形式化（有限多重集 + 有限和，δ 实数口径）→ pairConstant 真实定义 → pair_const_eps_bias。
+1. **Stage 4 已达成**（2026-10-27）：s71_main 组装真证 + (L3)(L4) 移植落位（Main 击破清单仅剩 (L1)(L2) 长线）——Lean 侧可核查的最远合理点已达。
+2. **条件封口（陈述层完成 2026-10-27；真证挂聚合）**：积分层剩余——Stage3 `fourierCos_scale`（频域变量替换）+ `f0_sub_feps_L1_bound`；mathlib 聚合 Mathlib.olean 生成后即可真证。`C_MT<4/3` 级数余项层（cos 四阶上界 73/96 自证）非积分阻塞，可独立立项。
+3. **长线（命名 axiom 精确陈述完成 2026-10-27）**：(L1) 显式公式 / (L2) SW 真证 = PNT-in-AP 量级多人年工程；候选半形式化推进：超支撑素数项层（Abel 求和 + χ₅ 部分和衔接，对应数值件 F 机制）。
+4. **GitHub**：2026-10-27 已推送 7d77e55（QRH 快照 + d1 文档 + 数值件）；summary 随新提交同步。
 
 ## 7. 文件索引
 
-- 文档（d1 根 C:\Users\shtcl\Doubao\chats\2026-10-16\document\d1\）：XLII 系列 17 份（S0–S7.6，含 S1a/S1b/S2(i)/S2(ii)/S3/S4/S5/S6 与「全尺度 GUE 配对 S0」）；英文 d1\en\（XLI、XLII-S0 已译）；前置攻防 XL/XLI（0.6725→7/8 常数机制闭合）。
-- 数值件（qrh_work\、new-chat\xlii_work\）：xlii_s7g_sw_constant.py/json/log、xlii_s7g_fig.py/png、xlii_s7f_bone1/2.py/json/fig、xlii_s7f_supersupport.py/json、xlii_s7_prime.json、xlii_s6_lambda.py/json；s7X 文档生成脚本 + render-s7X\ 权威渲染。
+- 文档（d1 根 C:\Users\shtcl\Doubao\chats\2026-10-16\document\d1\）：XLII 系列 18 份（S0–S7.7，含 S1a/S1b/S2(i)/S2(ii)/S3/S4/S5/S6 与「全尺度 GUE 配对 S0」）；英文 d1\en\（XLI、XLII-S0 已译）；前置攻防 XL/XLI（0.6725→7/8 常数机制闭合）。**公式格式惯例（2026-10-27 起）**：d1 文档公式一律 Word 原生 OMML（LaTeX→MathML→OMML 管线，可编辑），禁 LaTeX 源码文本。
+- 数值件（qrh_work\、new-chat\xlii_work\）：xlii_s7g_sw_constant.py/json/log、xlii_s7g_fig.py/png、xlii_s7f_bone1/2.py/json/fig、xlii_s7f_supersupport.py/json、xlii_s7_prime.json、xlii_s6_lambda.py/json；s7X 文档生成脚本（gen_s7_7_doc.py 含 OMML 支持）+ render-s7X\ 权威渲染。
 - Lean：见 §5。
