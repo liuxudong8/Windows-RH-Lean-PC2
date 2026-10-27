@@ -31,15 +31,15 @@ foreach ($f in $proj2Files) {
 }
 
 # 3) d1 文档最新全目录 → 仓库 document\（robocopy /E 增量，退出码 0-7 为成功）
-robocopy "C:\Users\shtcl\Doubao\chats\2026-10-16\document" (Join-Path $repo "document") /E /NFL /NDL /NJH /NJS /NP | Out-Null
+& "C:\Windows\System32\robocopy.exe" "C:\Users\shtcl\Doubao\chats\2026-10-16\document" (Join-Path $repo "document") /E /NFL /NDL /NJH /NJS /NP | Out-Null
 if ($LASTEXITCODE -ge 8) { Write-Host "robocopy document FAILED ($LASTEXITCODE)" -ForegroundColor Red; exit 1 }
 
 # 4) 数值件全目录 → 仓库 new-chat\
-robocopy "C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat" (Join-Path $repo "new-chat") /E /NFL /NDL /NJH /NJS /NP | Out-Null
+& "C:\Windows\System32\robocopy.exe" "C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat" (Join-Path $repo "new-chat") /E /NFL /NDL /NJH /NJS /NP | Out-Null
 if ($LASTEXITCODE -ge 8) { Write-Host "robocopy new-chat FAILED ($LASTEXITCODE)" -ForegroundColor Red; exit 1 }
 
 # 5) C:\proj2\archive 过程快照 → 仓库 archive\
-robocopy "C:\proj2\archive" (Join-Path $repo "archive") /E /NFL /NDL /NJH /NJS /NP | Out-Null
+& "C:\Windows\System32\robocopy.exe" "C:\proj2\archive" (Join-Path $repo "archive") /E /NFL /NDL /NJH /NJS /NP | Out-Null
 if ($LASTEXITCODE -ge 8) { Write-Host "robocopy archive FAILED ($LASTEXITCODE)" -ForegroundColor Red; exit 1 }
 
 Write-Host "`n===== 2/5 Check local changes =====" -ForegroundColor Cyan
