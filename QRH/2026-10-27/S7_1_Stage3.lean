@@ -898,6 +898,7 @@ axiom N_L : ℝ → ℝ
 axiom N_L_lower_bound :
   ∃ c : ℝ, 0 < c ∧ ∀ T : ℝ, 1 ≤ T → c * T * Real.log T ≤ N_L T
 
+
 /-! ## 击破清单（Stage 3+ 剩余）
 
 - [x] `sum_abel`：真证（range 口径归纳 + Finset.sum_range_succ + ring）。
