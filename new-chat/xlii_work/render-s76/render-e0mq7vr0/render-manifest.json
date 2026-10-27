@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-10-25T22:18:53.708802+00:00",
+  "status": "rendered",
+  "visual_review": "pending",
+  "channel": "lark-cli docs +word-to-pdf",
+  "input": {
+    "path": "C:\\Users\\shtcl\\Doubao\\chats\\2026-10-16\\document\\d1\\路2攻防XLII-S7.6-SW常数显式化-L(s,χ5)素数项显式界(C,c).docx",
+    "sha256": "b5503a70976147a4c39019014443cc4d320c56f07c75d10a9fd0d694d87c9b9c",
+    "size": 175175
+  },
+  "cli": {
+    "path": "C:\\Users\\shtcl\\AppData\\Local\\Doubao\\User Data\\Default\\sandbox_envs_dir\\envs\\966b5a70-7daa-45e9-9d89-3f86f5c6a3f9\\override_dlcs\\lark-cli.exe",
+    "version": "lark-cli version v1.0.100+eef59cd",
+    "sha256": "8e8e4783427c245ac57694cbeeb78b48aa97584b26d67560cf929b1376e93f3e",
+    "size": 51229696
+  },
+  "dpi": 150,
+  "attempts": [
+    {
+      "argv": [
+        "C:\\Users\\shtcl\\AppData\\Local\\Doubao\\User Data\\Default\\sandbox_envs_dir\\envs\\966b5a70-7daa-45e9-9d89-3f86f5c6a3f9\\override_dlcs\\lark-cli.exe",
+        "docs",
+        "+word-to-pdf",
+        "--file",
+        "./input.docx",
+        "--wait-timeout-seconds",
+        "120",
+        "--output",
+        "./document.pdf",
+        "--if-exists",
+        "error",
+        "--format",
+        "json"
+      ],
+      "returncode": 0,
+      "stdout": {
+        "ok": true,
+        "identity": "user",
+        "data": {
+          "task_id": "render_ChShfMTINBeP4LhcnJhH_Q",
+          "status": "succeeded",
+          "pdf": {
+            "download_url": "https://api-drive-stream.feishu.cn/space/api/box/stream/download/authcode/?<redacted>",
+            "size": 477052,
+            "url_expires_at": 1792967166
+          },
+          "expires_at": 1793052964,
+          "output_path": "C:\\Users\\shtcl\\Doubao\\chats\\2026-10-16\\new-chat\\xlii_work\\render-s76\\render-e0mq7vr0\\document.pdf",
+          "downloaded_size": 477052,
+          "upload_preparation": {
+            "compressed": false,
+            "strategy": "original",
+            "strategy_version": "word-render-media-v2",
+            "source_size_bytes": 175175,
+            "upload_size_bytes": 175175,
+            "images_compressed": 0,
+            "layout_preserved": true
+          },
+          "timings": {
+            "prepare_upload_ms": 14,
+            "create_task_ms": 1047,
+            "poll_total_ms": 1855,
+            "poll_sleep_ms": 501,
+            "status_request_ms": 1355,
+            "status_request_count": 1,
+            "download_pdf_ms": 490,
+            "total_ms": 3408
+          }
+        }
+      },
+      "stderr": ""
+    }
+  ],
+  "task_id": "render_ChShfMTINBeP4LhcnJhH_Q",
+  "cli_status": "succeeded",
+  "upload_preparation": {
+    "compressed": false,
+    "strategy": "original",
+    "strategy_version": "word-render-media-v2",
+    "source_size_bytes": 175175,
+    "upload_size_bytes": 175175,
+    "images_compressed": 0,
+    "layout_preserved": true
+  },
+  "expires_at": 1793052964,
+  "pdf": {
+    "file": "document.pdf",
+    "sha256": "72629f713d073c51b8e33da1b126f5c28c07bdb185bd3cbb26621c16b0277a40",
+    "size": 477052,
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "",
+      "producer": "",
+      "creationDate": "D:20261026061604+08'00'",
+      "modDate": "D:20261026061604+08'00'",
+      "trapped": "",
+      "encryption": null
+    }
+  },
+  "page_count": 5,
+  "pages": [
+    {
+      "page": 1,
+      "file": "page-0001.png",
+      "sha256": "838a3890a5d7d2d35b54a788d895ff48d91ec14dd0e7afad4ca1004f242a8ff9",
+      "size": 299258,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 2,
+      "file": "page-0002.png",
+      "sha256": "4374e5d503212070589d9b45214c5c82bb21c5d853e95ead7f280544f177b24b",
+      "size": 295962,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 3,
+      "file": "page-0003.png",
+      "sha256": "ed0e33cb27167ea122578199e6f1ca8086bb0aab324d813ac41caa85968c3110",
+      "size": 196073,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 4,
+      "file": "page-0004.png",
+      "sha256": "a554b09697e06f283196093f89e248eb30820a00429e35aab13add1af995f338",
+      "size": 297049,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 5,
+      "file": "page-0005.png",
+      "sha256": "9ea3217dfeeeadcbdcfad6d11e5f0408549587799f7903de58268ff900458877",
+      "size": 88743,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    }
+  ],
+  "rasterizer": "PyMuPDF 1.27.2.2"
+}

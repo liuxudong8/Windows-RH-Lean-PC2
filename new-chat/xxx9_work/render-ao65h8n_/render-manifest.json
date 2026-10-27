@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-10-23T21:02:06.773667+00:00",
+  "status": "rendered",
+  "visual_review": "pending",
+  "channel": "lark-cli docs +word-to-pdf",
+  "input": {
+    "path": "D:\\F\\有名公司同事文档\\刘旭东文集\\document\\d1\\路2攻防XXXIX-在线比例桥余项精细形态-理论余项界0.27的松弛定位与正向下界严格化窗口.docx",
+    "sha256": "531c3c5f272aa0fe259c93c60c032ed30041e1fcf381759f069d0f4a34fdc3df",
+    "size": 43797
+  },
+  "cli": {
+    "path": "C:\\Users\\shtcl\\AppData\\Local\\Doubao\\User Data\\Default\\sandbox_envs_dir\\envs\\966b5a70-7daa-45e9-9d89-3f86f5c6a3f9\\override_dlcs\\lark-cli.exe",
+    "version": "lark-cli version v1.0.100+eef59cd",
+    "sha256": "8e8e4783427c245ac57694cbeeb78b48aa97584b26d67560cf929b1376e93f3e",
+    "size": 51229696
+  },
+  "dpi": 150,
+  "attempts": [
+    {
+      "argv": [
+        "C:\\Users\\shtcl\\AppData\\Local\\Doubao\\User Data\\Default\\sandbox_envs_dir\\envs\\966b5a70-7daa-45e9-9d89-3f86f5c6a3f9\\override_dlcs\\lark-cli.exe",
+        "docs",
+        "+word-to-pdf",
+        "--file",
+        "./input.docx",
+        "--wait-timeout-seconds",
+        "120",
+        "--output",
+        "./document.pdf",
+        "--if-exists",
+        "error",
+        "--format",
+        "json"
+      ],
+      "returncode": 0,
+      "stdout": {
+        "ok": true,
+        "identity": "user",
+        "data": {
+          "task_id": "render_0p74Brb_RrdOSk1sjuSshw",
+          "status": "succeeded",
+          "pdf": {
+            "download_url": "https://api-drive-stream.feishu.cn/space/api/box/stream/download/authcode/?<redacted>",
+            "size": 390200,
+            "url_expires_at": 1792789762
+          },
+          "expires_at": 1792875559,
+          "output_path": "C:\\Users\\shtcl\\Doubao\\chats\\2026-10-16\\new-chat\\xxx9_work\\render-ao65h8n_\\document.pdf",
+          "downloaded_size": 390200,
+          "upload_preparation": {
+            "compressed": false,
+            "strategy": "original",
+            "strategy_version": "word-render-media-v2",
+            "source_size_bytes": 43797,
+            "upload_size_bytes": 43797,
+            "images_compressed": 0,
+            "layout_preserved": true
+          },
+          "timings": {
+            "prepare_upload_ms": 11,
+            "create_task_ms": 778,
+            "poll_total_ms": 2915,
+            "poll_sleep_ms": 501,
+            "status_request_ms": 2414,
+            "status_request_count": 1,
+            "download_pdf_ms": 590,
+            "total_ms": 4295
+          }
+        }
+      },
+      "stderr": ""
+    }
+  ],
+  "task_id": "render_0p74Brb_RrdOSk1sjuSshw",
+  "cli_status": "succeeded",
+  "upload_preparation": {
+    "compressed": false,
+    "strategy": "original",
+    "strategy_version": "word-render-media-v2",
+    "source_size_bytes": 43797,
+    "upload_size_bytes": 43797,
+    "images_compressed": 0,
+    "layout_preserved": true
+  },
+  "expires_at": 1792875559,
+  "pdf": {
+    "file": "document.pdf",
+    "sha256": "ff4959500d8b7367ee476f6ad15784ff15bd74740a9ecb8ba2841b582ac3fea9",
+    "size": 390200,
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "",
+      "producer": "",
+      "creationDate": "D:20261024045920+08'00'",
+      "modDate": "D:20261024045920+08'00'",
+      "trapped": "",
+      "encryption": null
+    }
+  },
+  "page_count": 4,
+  "pages": [
+    {
+      "page": 1,
+      "file": "page-0001.png",
+      "sha256": "57be0fbbc6bc43f04906097eef0ee13267518d71006fc1268b37f1480c561221",
+      "size": 329879,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 2,
+      "file": "page-0002.png",
+      "sha256": "eb606ab5ac008ab50ce606c7bef199f95c34072c4820eafd6660d1f6e1346ea8",
+      "size": 284351,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 3,
+      "file": "page-0003.png",
+      "sha256": "db20cddf1c920e767bc275b1e2dc2b127a658a249a19bfee0feac05c27384335",
+      "size": 355582,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 4,
+      "file": "page-0004.png",
+      "sha256": "3ba2a779ddca0a3d636dc496b96ec5aadcce5a651b3023ab53ade200b673f37d",
+      "size": 314028,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    }
+  ],
+  "rasterizer": "PyMuPDF 1.27.2.2"
+}

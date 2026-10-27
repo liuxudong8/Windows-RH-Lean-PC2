@@ -1,0 +1,189 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-10-19T03:08:31.156717+00:00",
+  "status": "rendered",
+  "visual_review": "pending",
+  "channel": "lark-cli docs +word-to-pdf",
+  "input": {
+    "path": "C:\\proj2\\BSD\\document\\ζ_K零点并集结构-跨族配对显式公式、字符振荡对消与Hilbert空间方法的边界.docx",
+    "sha256": "1963eba3fad793b15dbe7ab3567345d0e5c268e7ef3a4bf7710e00fecbe39629",
+    "size": 47500
+  },
+  "cli": {
+    "path": "C:\\Users\\shtcl\\AppData\\Local\\Doubao\\User Data\\Default\\sandbox_envs_dir\\envs\\966b5a70-7daa-45e9-9d89-3f86f5c6a3f9\\override_dlcs\\lark-cli.exe",
+    "version": "lark-cli version v1.0.100+eef59cd",
+    "sha256": "8e8e4783427c245ac57694cbeeb78b48aa97584b26d67560cf929b1376e93f3e",
+    "size": 51229696
+  },
+  "dpi": 150,
+  "attempts": [
+    {
+      "argv": [
+        "C:\\Users\\shtcl\\AppData\\Local\\Doubao\\User Data\\Default\\sandbox_envs_dir\\envs\\966b5a70-7daa-45e9-9d89-3f86f5c6a3f9\\override_dlcs\\lark-cli.exe",
+        "docs",
+        "+word-to-pdf",
+        "--file",
+        "./input.docx",
+        "--wait-timeout-seconds",
+        "120",
+        "--output",
+        "./document.pdf",
+        "--if-exists",
+        "error",
+        "--format",
+        "json"
+      ],
+      "returncode": 0,
+      "stdout": {
+        "ok": true,
+        "identity": "user",
+        "data": {
+          "task_id": "render_43eY6Ye7b33p9qnuavT43Q",
+          "status": "succeeded",
+          "pdf": {
+            "download_url": "https://api-drive-stream.feishu.cn/space/api/box/stream/download/authcode/?<redacted>",
+            "size": 455973,
+            "url_expires_at": 1792379750
+          },
+          "expires_at": 1792465547,
+          "output_path": "C:\\Users\\shtcl\\Doubao\\chats\\2026-10-16\\new-chat\\zetaK_rev_work\\render\\render-mr7rn6xr\\document.pdf",
+          "downloaded_size": 455973,
+          "upload_preparation": {
+            "compressed": false,
+            "strategy": "original",
+            "strategy_version": "word-render-media-v2",
+            "source_size_bytes": 47500,
+            "upload_size_bytes": 47500,
+            "images_compressed": 0,
+            "layout_preserved": true
+          },
+          "timings": {
+            "prepare_upload_ms": 9,
+            "create_task_ms": 951,
+            "poll_total_ms": 2931,
+            "poll_sleep_ms": 501,
+            "status_request_ms": 2430,
+            "status_request_count": 1,
+            "download_pdf_ms": 531,
+            "total_ms": 4422
+          }
+        }
+      },
+      "stderr": ""
+    }
+  ],
+  "task_id": "render_43eY6Ye7b33p9qnuavT43Q",
+  "cli_status": "succeeded",
+  "upload_preparation": {
+    "compressed": false,
+    "strategy": "original",
+    "strategy_version": "word-render-media-v2",
+    "source_size_bytes": 47500,
+    "upload_size_bytes": 47500,
+    "images_compressed": 0,
+    "layout_preserved": true
+  },
+  "expires_at": 1792465547,
+  "pdf": {
+    "file": "document.pdf",
+    "sha256": "e02f06b8c86e73fd64ddc81316c739f3b8a2c85e3e8df52fe083ca307934e701",
+    "size": 455973,
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "",
+      "producer": "",
+      "creationDate": "D:20261019110547+08'00'",
+      "modDate": "D:20261019110547+08'00'",
+      "trapped": "",
+      "encryption": null
+    }
+  },
+  "page_count": 8,
+  "pages": [
+    {
+      "page": 1,
+      "file": "page-0001.png",
+      "sha256": "e28072a4746009a7d5e607b42048d2719c3f0e3828e8b75fd965dd76031d9087",
+      "size": 356340,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 2,
+      "file": "page-0002.png",
+      "sha256": "0410602e262e32fafdbe0ae58276a24be378848dd00fcf6af66e0abccc048b74",
+      "size": 316566,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 3,
+      "file": "page-0003.png",
+      "sha256": "01d447dedc100a8adb161504df5e909fb2ed9776dc3f4761508f493c579fb823",
+      "size": 299669,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 4,
+      "file": "page-0004.png",
+      "sha256": "d222eb445763f42afca210f4a8368bf864ea7cf5ba68da3fb5dbd176a0dbca53",
+      "size": 309668,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 5,
+      "file": "page-0005.png",
+      "sha256": "1df1655a6e552c9ca3582098c280f42c5dc21af82d5ed0039b5991b74360eb31",
+      "size": 294019,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 6,
+      "file": "page-0006.png",
+      "sha256": "993a19e3b3a1a786b88a130528f7b264609ca9af9aff974ddc501abad5088a64",
+      "size": 337498,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 7,
+      "file": "page-0007.png",
+      "sha256": "4fe5475ad4f79e3da7b9a1533bb367d5bc81f45128bc54e67154c1c84ea35751",
+      "size": 335139,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 8,
+      "file": "page-0008.png",
+      "sha256": "0a66734268ac01bb4ead0b21606841ebba85d1efd65f447c7053574eb1b6dd2b",
+      "size": 78089,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    }
+  ],
+  "rasterizer": "PyMuPDF 1.28.2"
+}

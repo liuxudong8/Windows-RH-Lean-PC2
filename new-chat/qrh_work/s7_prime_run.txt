@@ -1,0 +1,4 @@
+﻿primes up to 10000000 : 664579
+T=600000 δ=2.1175  |S_final|=0.10246  |S|max=0.12756  ratio/N_L=8.91e-08  |S0_final|=2.876
+T=800000 δ=2.1633  |S_final|=0.06313  |S|max=0.12705  ratio/N_L=4.02e-08  |S0_final|=2.876
+saved xlii_s7_prime.json

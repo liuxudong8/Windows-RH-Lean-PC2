@@ -1,0 +1,9 @@
+﻿X=1e5..1e7, psi(X,chi5):
+  X=1.000e+05  psi=-2.522195e+01  |psi|/X=2.522e-04  log(|psi|/X)=-8.285  sqrt(logX)=3.393
+  X=2.512e+05  psi=+1.921387e+02  |psi|/X=7.649e-04  log(|psi|/X)=-7.176  sqrt(logX)=3.526
+  X=6.310e+05  psi=-2.047611e+02  |psi|/X=3.245e-04  log(|psi|/X)=-8.033  sqrt(logX)=3.654
+  X=1.585e+06  psi=-2.334767e+02  |psi|/X=1.473e-04  log(|psi|/X)=-8.823  sqrt(logX)=3.778
+  X=3.981e+06  psi=+3.378579e+02  |psi|/X=8.487e-05  log(|psi|/X)=-9.374  sqrt(logX)=3.898
+  X=1.000e+07  psi=-1.271382e+03  |psi|/X=1.271e-04  log(|psi|/X)=-8.970  sqrt(logX)=4.015
+fit: c_eff=-4.0166  C_eff=8.004e+02
+kadiri c_theory=1/sqrt(6.397)=0.3954  elapsed=0.3s

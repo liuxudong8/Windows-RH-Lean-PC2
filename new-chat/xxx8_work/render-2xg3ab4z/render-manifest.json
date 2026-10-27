@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-10-23T20:52:41.032507+00:00",
+  "status": "rendered",
+  "visual_review": "pending",
+  "channel": "lark-cli docs +word-to-pdf",
+  "input": {
+    "path": "D:\\F\\有名公司同事文档\\刘旭东文集\\document\\d1\\路2攻防XXXVIII-Δ常数指纹对同虚部成对注入的爆炸响应与威胁排除的交叉验证闭合.docx",
+    "sha256": "47a47a964b568d6d5179c4e3234151f466227611793cb742fb942a153058fe10",
+    "size": 43699
+  },
+  "cli": {
+    "path": "C:\\Users\\shtcl\\AppData\\Local\\Doubao\\User Data\\Default\\sandbox_envs_dir\\envs\\966b5a70-7daa-45e9-9d89-3f86f5c6a3f9\\override_dlcs\\lark-cli.exe",
+    "version": "lark-cli version v1.0.100+eef59cd",
+    "sha256": "8e8e4783427c245ac57694cbeeb78b48aa97584b26d67560cf929b1376e93f3e",
+    "size": 51229696
+  },
+  "dpi": 150,
+  "attempts": [
+    {
+      "argv": [
+        "C:\\Users\\shtcl\\AppData\\Local\\Doubao\\User Data\\Default\\sandbox_envs_dir\\envs\\966b5a70-7daa-45e9-9d89-3f86f5c6a3f9\\override_dlcs\\lark-cli.exe",
+        "docs",
+        "+word-to-pdf",
+        "--file",
+        "./input.docx",
+        "--wait-timeout-seconds",
+        "120",
+        "--output",
+        "./document.pdf",
+        "--if-exists",
+        "error",
+        "--format",
+        "json"
+      ],
+      "returncode": 0,
+      "stdout": {
+        "ok": true,
+        "identity": "user",
+        "data": {
+          "task_id": "render_CYhFEWIRCoYhT1ZZMWpg7Q",
+          "status": "succeeded",
+          "pdf": {
+            "download_url": "https://api-drive-stream.feishu.cn/space/api/box/stream/download/authcode/?<redacted>",
+            "size": 374634,
+            "url_expires_at": 1792789195
+          },
+          "expires_at": 1792874993,
+          "output_path": "C:\\Users\\shtcl\\Doubao\\chats\\2026-10-16\\new-chat\\xxx8_work\\render-2xg3ab4z\\document.pdf",
+          "downloaded_size": 374634,
+          "upload_preparation": {
+            "compressed": false,
+            "strategy": "original",
+            "strategy_version": "word-render-media-v2",
+            "source_size_bytes": 43699,
+            "upload_size_bytes": 43699,
+            "images_compressed": 0,
+            "layout_preserved": true
+          },
+          "timings": {
+            "prepare_upload_ms": 12,
+            "create_task_ms": 713,
+            "poll_total_ms": 1781,
+            "poll_sleep_ms": 501,
+            "status_request_ms": 1281,
+            "status_request_count": 1,
+            "download_pdf_ms": 606,
+            "total_ms": 3113
+          }
+        }
+      },
+      "stderr": ""
+    }
+  ],
+  "task_id": "render_CYhFEWIRCoYhT1ZZMWpg7Q",
+  "cli_status": "succeeded",
+  "upload_preparation": {
+    "compressed": false,
+    "strategy": "original",
+    "strategy_version": "word-render-media-v2",
+    "source_size_bytes": 43699,
+    "upload_size_bytes": 43699,
+    "images_compressed": 0,
+    "layout_preserved": true
+  },
+  "expires_at": 1792874993,
+  "pdf": {
+    "file": "document.pdf",
+    "sha256": "58a3b896a219d8c95748e83a4b0113e35270a0faaf76491d4b43d32dd58c775b",
+    "size": 374634,
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "",
+      "producer": "",
+      "creationDate": "D:20261024044954+08'00'",
+      "modDate": "D:20261024044954+08'00'",
+      "trapped": "",
+      "encryption": null
+    }
+  },
+  "page_count": 4,
+  "pages": [
+    {
+      "page": 1,
+      "file": "page-0001.png",
+      "sha256": "db0e24210fbb667f5d03eedc12e3cea0c6df4c7f337902a863b3fc40b527b62d",
+      "size": 324256,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 2,
+      "file": "page-0002.png",
+      "sha256": "ca7493ffca38a7d57cf777f69273724a69ffcb3b63297be3608f6bce7ba1013c",
+      "size": 256400,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 3,
+      "file": "page-0003.png",
+      "sha256": "5ce4fbc33ef2285f0edf5cef5d0d1db8907865e9e64d287e5684fa2af7195e10",
+      "size": 314335,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 4,
+      "file": "page-0004.png",
+      "sha256": "e6f9f8dabee5b27d9408c99b41103d1348818568d9b608be1ffb88a99a82da5b",
+      "size": 344895,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    }
+  ],
+  "rasterizer": "PyMuPDF 1.27.2.2"
+}

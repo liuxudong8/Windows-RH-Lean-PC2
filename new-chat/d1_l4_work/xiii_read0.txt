@@ -1,0 +1,72 @@
+# 攻防 XIII：0.874957 语义澄清
+
+QRH 零无区域的 Liu 代数改进边界 B_new=(1507−2√921)/1653
+
+摘要：文献核验（2026-10-18）确定 0.874957 的精确语义：它等于 B_new=(1507−2√921)/1653=0.874957069799…，是 Liu（arXiv:2610.12234，Purdue）对 OpenAI 准黎曼猜想（QRH）证明的参数比较改进得到的零无区域边界——即所有有限阶 Hecke L 函数（Q(√−3) 上）与所有 Dirichlet L 函数（含 ζ）在 Re s>B_new 无零点，且已由 Lean 形式化。它**不是**零点在线比例下界，**不是**密度估计常数。后续改进链：OpenAI 7/8=0.875（2026-09-30）⟹ Liu B_r=0.874975、B_new=0.874957（2026-10）⟹ arXiv:2610.15291 B₁=0.8748867 ⟹ Cureton–Thorner 平移至更广 Hecke 族（hexagonmath 2610.00200）⟹ 社区 1/32 竞赛与 Lean 形式化。对推进目标的判定：7/8 推进在 2026-10 语境下是 QRH 方向（缩小零无区域边界），与 L1/L4 在线比例战场异类；0.874957 作为在线比例输入无文献意义，但作为 ζ_K 零无区域边界是显式公式/密度估计的强输入。
+
+关键词：0.874957；准黎曼猜想（QRH）；零无区域边界；Liu 代数改进；7/8；语义澄清
+
+# 1 结论
+
+0.874957 = B_new = (1507−2√921)/1653 = 0.874957069799…。来源：Baiying Liu（Purdue），《Slightly Improved Zero-Free Half-Planes for the Quasi-Riemann Hypothesis》，arXiv:2610.12234（2026 年 10 月）。语义：准黎曼猜想的零无区域边界——ζ、每个 Dirichlet L 函数、Q(√−3) 上每个有限阶 Hecke L 函数在 Re s>0.874957 无零点（s=1 主特征极点除外）。该结果已 Lean 4 形式化。与零点在线比例（临界线上零点占比，当前记录 67.25%）是两类不同的量：前者是 σ 坐标（竖线位置），后者是比例（零点个数占比）。
+
+# 2 证据链：0.874957 的精确来源
+
+## 2.1 OpenAI QRH（2026-09-30）
+
+OpenAI 于 2026-10-06 公开数学稿件库 openai/math，其中《The Quasi-Riemann Hypothesis: A Zero-Free Half-Plane Re s>7/8》（199 页，2026-09-30 版）证明：Q(√−3) 上每个有限阶 Hecke L 函数、进而每个 Dirichlet L 函数（含 ζ）在 Re s>7/8 无零点。7/8=0.875 是准黎曼假设（存在固定 σ<1 使 Re s>σ 无零点）的具体化。此即 2026 年 10 月语境下 7/8 的标准含义（区别于 N(T) 公式常数项 7/8）。
+
+## 2.2 Liu 的代数改进（arXiv:2610.12234）
+
+Liu 保留 OpenAI 论证结构，变参数 (b,ℓ) 得两个改进边界：
+
+B_r = 34999/40000 = 0.874975（b=1/8 固定，ℓ=1/6+1/10000）；B_new = (1507−2√921)/1653 = 0.874957069799…（b_new=−4/29+230√921/26709，ℓ_new=(33+8√921)/1653）
+
+B_new 即 0.874957。改进量 7/8−B_new=4.2930201×10⁻⁵（Python 验证：B_new=0.874957069799，与论文一致）。两个边界的零无区域结论均有 Lean 4 形式化（有限阶 Hecke 族 + Dirichlet + ζ 推论）。
+
+## 2.3 后续改进链（arXiv:2610.15291 与社区）
+
+《Refining the 7/8 zero-free half-plane for Hecke and Dirichlet L-functions》（arXiv:2610.15291，2026-10）在 OpenAI 分析输入下把边界推到 B₁=8748867/10⁷=0.8748867（=7/8−1133/10⁷），优于 B_new。文中对照表明确标注 B_L=(1507−2√921)/1653=0.874957069799 来自 Liu。更广方向：Cureton–Thorner（hexagonmath.org/2610.00200，2026-10-12）将方法平移至更广 Hecke 函数族；开源社区进一步压缩边界并 Lean 形式化（AxiomMath/DedekindZetaZeroFree 仓库），具体边界量级以原文为准。
+
+# 3 语义判定
+
+表 1 0.874957 与相关量的语义对照
+
+| 量 | 数值 | 类型 | 含义 |
+| --- | --- | --- | --- |
+| 0.874957（B_new） | 0.874957069799… | 零无区域边界（σ 坐标） | Re s>B 无零点（QRH，Liu 改进） |
+| 7/8（QRH 语境） | 0.875 | 零无区域边界 | OpenAI QRH 原始边界 |
+| 7/8（N(T) 公式） | 0.875 | 常数项 | Riemann–von Mangoldt 公式 +7/8 |
+| 在线比例（ζ） | 0.6725 | 比例 | 临界线上简单零点占比（Lamzouri） |
+| 在线比例（ζ_K，平凡并集） | 0.6725 | 比例 | ζ 与 L(χ₅) 各自界的并集 |
+| 简单∪在线（ζ） | 0.88762 | 比例 | Lamzouri C₂ 常数 |
+
+判定：（1）0.874957 是竖线位置（σ 坐标），不是比例——与在线比例战场（L1/L4）不同类；（2）7/8 在 2026-10 语境下是 QRH 边界（OpenAI），N(T) 公式常数项是其历史语义，两者数值同为 0.875 但含义不同；（3）0.874957 比 7/8 更小 = 更强的零无区域，但距离在线（σ=1/2）仍有 0.375 之遥；（4）攻防 XI 猜测的三种可能来源中，'QRH θ 值' 正确，且可精确定位为 Liu 代数改进值。
+
+# 4 对推进目标的影响
+
+（1）战场判定：用户目标为 ζ_K 零点在线比例下界（L1/L4），而 0.874957 是零无区域边界。'推进 7/8' 在 2026-10 语境下有两个互斥方向：
+
+方向 A（QRH 方向）：缩小零无区域边界——0.875 → 0.874957（Liu）→ 0.8748867（arXiv:2610.15291）。此方向已有完整链条且后续改进已超越我们手中的 0.874957，作为研究目标增量有限。
+
+方向 B（在线比例方向）：目标仍是 ζ_K 在线比例下界。0.874957 不能直接作为比例输入，但可作为显式公式的零无区域输入：ζ_K 在 Re s>0.874957 无零点 ⟹ 显式公式中零点实部的贡献被 σ≤0.874957 约束，可改进余项/密度估计的输入。
+
+（2）对 Lamzouri 框架的意义：引理 3.1 的跨族版本（攻防 XII 定理 3.1′）与配对相关不直接需要零无区域；但若把 QRH 边界引入，配对相关中 T^{α(β−β′)} 因子（β≤0.874957）的贡献上限可收紧，可能改进攻防 XII 中 Q(0) 背景的精细结构估计。
+
+（3）诚实边界：QRH 结论依赖 OpenAI 稿件的分析输入（Kontorovich 等评价极高，但 199 页稿仍在同行评审）；B_new/B₁ 均为其推论，分析输入成立时无条件。0.874957 与 67.25% 在线比例无任何直接换算关系——任何将两者并置的推断都须显式说明桥梁。
+
+# 5 参考文献
+
+[1] Liu B. Slightly improved zero-free half-planes for the quasi-Riemann hypothesis[EB/OL]. arXiv:2610.12234, 2026. https://arxiv.org/pdf/2610.12234.
+
+[2] Refining the 7/8 zero-free half-plane for Hecke and Dirichlet L-functions[EB/OL]. arXiv:2610.15291, 2026. https://arxiv.org/pdf/2610.15291.
+
+[3] OpenAI. The quasi-Riemann hypothesis: a zero-free half-plane Re s>7/8[R/OL]. 2026-09-30. https://github.com/openai/math.
+
+[4] A conditional bound Λ≤0.13963 for the de Bruijn–Newman constant[EB/OL]. arXiv:2610.12803, 2026.
+
+[5] Cureton, Thorner. [R/OL]. hexagonmath.org/2610.00200, 2026-10-12.
+
+[6] Lamzouri Y. A new proof that more than 2/3 of the zeros of the Riemann zeta function are simple and on the critical line[EB/OL]. arXiv:2609.02882, 2026.
+
+[7] 内部工作稿：路②攻防 XI/XII 与数值体系（d1 目录，2026-10）。

@@ -1,0 +1,261 @@
+# -*- coding: utf-8 -*-
+"""生成《路2攻防XXXV-盲区理论门槛文献核实-零密度路径闭合与超密度假设判定.docx》（d1 惯例）"""
+from docx import Document
+from docx.shared import Pt, Cm, RGBColor
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_TAB_ALIGNMENT
+from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL
+from docx.oxml.ns import qn
+from docx.oxml import OxmlElement
+
+OUT = r"D:\F\有名公司同事文档\刘旭东文集\document\d1\路2攻防XXXV-盲区理论门槛文献核实-零密度路径闭合与超密度假设判定.docx"
+SONG, HEI, KAI, TNR = "宋体", "黑体", "楷体", "Times New Roman"
+
+doc = Document()
+sec = doc.sections[0]
+sec.page_width, sec.page_height = Cm(21), Cm(29.7)
+sec.top_margin = sec.bottom_margin = sec.left_margin = sec.right_margin = Cm(2.5)
+
+normal = doc.styles["Normal"]
+normal.font.name = TNR
+normal.font.size = Pt(10.5)
+normal.element.rPr.rFonts.set(qn("w:eastAsia"), SONG)
+npf = normal.paragraph_format
+npf.space_before = Pt(0); npf.space_after = Pt(0); npf.line_spacing = 1.5
+
+def set_fonts(run, eastasia=SONG, latin=TNR, size=10.5, bold=False, italic=False,
+              sub=False, sup=False, color=None):
+    run.font.name = latin
+    run._element.rPr.rFonts.set(qn("w:eastAsia"), eastasia)
+    run.font.size = Pt(size)
+    run.font.bold = bold
+    run.font.italic = italic
+    if sub: run.font.subscript = True
+    if sup: run.font.superscript = True
+    if color: run.font.color.rgb = RGBColor(*color)
+
+def rich(par, segs, size=10.5, eastasia=SONG):
+    for kind, text in segs:
+        r = par.add_run(text)
+        if kind == "n": set_fonts(r, eastasia=eastasia, size=size)
+        elif kind == "b": set_fonts(r, eastasia=HEI, size=size, bold=True)
+        elif kind == "i": set_fonts(r, eastasia=eastasia, size=size, italic=True)
+        elif kind == "sup": set_fonts(r, eastasia=eastasia, size=size, sup=True)
+        elif kind == "sub": set_fonts(r, eastasia=eastasia, size=size, sub=True)
+    return par
+
+def para(segs, indent=True, align=None, size=10.5, before=0, after=0, line=1.5, eastasia=SONG):
+    p = doc.add_paragraph()
+    pf = p.paragraph_format
+    if indent: pf.first_line_indent = Pt(size * 2)
+    if align == "center": pf.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    elif align == "right": pf.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    pf.space_before = Pt(before); pf.space_after = Pt(after)
+    pf.line_spacing = line
+    rich(p, segs, size=size, eastasia=eastasia)
+    return p
+
+def formula(segs, number=None, size=10.5):
+    p = doc.add_paragraph()
+    pf = p.paragraph_format
+    pf.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    pf.space_before = Pt(4); pf.space_after = Pt(4)
+    pf.line_spacing = 1.5
+    if number:
+        pf.tab_stops.add_tab_stop(Cm(15.9), WD_TAB_ALIGNMENT.RIGHT)
+        rich(p, segs, size=size)
+        rich(p, [("n", "\t（" + number + "）")], size=size)
+    else:
+        rich(p, segs, size=size)
+    return p
+
+def h1(text):
+    p = doc.add_heading(level=1)
+    pf = p.paragraph_format
+    pf.space_before = Pt(12); pf.space_after = Pt(6)
+    pf.line_spacing = 1.5
+    r = p.add_run(text)
+    set_fonts(r, eastasia=HEI, latin=TNR, size=12, bold=True, color=(0, 0, 0))
+    return p
+
+def h2(text):
+    p = doc.add_heading(level=2)
+    pf = p.paragraph_format
+    pf.space_before = Pt(6); pf.space_after = Pt(3)
+    pf.line_spacing = 1.5
+    r = p.add_run(text)
+    set_fonts(r, eastasia=HEI, latin=TNR, size=10.5, bold=True, color=(0, 0, 0))
+    return p
+
+def make_table(headers, rows, widths, first_center=True):
+    tbl = doc.add_table(rows=1 + len(rows), cols=len(headers))
+    tbl.style = "Table Grid"
+    tbl.alignment = WD_TABLE_ALIGNMENT.CENTER
+    for j, htxt in enumerate(headers):
+        c = tbl.rows[0].cells[j]
+        c.width = widths[j]
+        tcPr = c._tc.get_or_add_tcPr()
+        shd = OxmlElement("w:shd")
+        shd.set(qn("w:val"), "clear"); shd.set(qn("w:color"), "auto"); shd.set(qn("w:fill"), "D9D9D9")
+        tcPr.append(shd)
+        p = c.paragraphs[0]
+        p.paragraph_format.first_line_indent = Pt(0)
+        p.paragraph_format.space_before = Pt(1); p.paragraph_format.space_after = Pt(1)
+        p.paragraph_format.line_spacing = 1.15
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        r = p.add_run(htxt)
+        set_fonts(r, eastasia=HEI, size=9, bold=True)
+        c.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+    for i, row in enumerate(rows, 1):
+        for j, txt in enumerate(row):
+            c = tbl.rows[i].cells[j]
+            c.width = widths[j]
+            p = c.paragraphs[0]
+            p.paragraph_format.first_line_indent = Pt(0)
+            p.paragraph_format.space_before = Pt(1); p.paragraph_format.space_after = Pt(1)
+            p.paragraph_format.line_spacing = 1.15
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER if (first_center and j == 0) else WD_ALIGN_PARAGRAPH.LEFT
+            r = p.add_run(txt)
+            set_fonts(r, eastasia=SONG, size=9)
+            c.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+    for row in tbl.rows:
+        trPr = row._tr.get_or_add_trPr()
+        cant = OxmlElement("w:cantSplit")
+        trPr.append(cant)
+    trPr0 = tbl.rows[0]._tr.get_or_add_trPr()
+    th = OxmlElement("w:tblHeader")
+    trPr0.append(th)
+    return tbl
+
+def caption(text, before=2, after=6):
+    para([("n", text)], indent=False, align="center", size=9, before=before, after=after)
+
+footer_p = sec.footer.paragraphs[0]
+footer_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+run = footer_p.add_run()
+fld1 = OxmlElement("w:fldChar"); fld1.set(qn("w:fldCharType"), "begin")
+instr = OxmlElement("w:instrText"); instr.set(qn("xml:space"), "preserve"); instr.text = "PAGE"
+fld2 = OxmlElement("w:fldChar"); fld2.set(qn("w:fldCharType"), "end")
+run._r.append(fld1); run._r.append(instr); run._r.append(fld2)
+set_fonts(run, size=9)
+
+# ---------- 标题区 ----------
+tp = doc.add_paragraph()
+tp.alignment = WD_ALIGN_PARAGRAPH.CENTER
+tp.paragraph_format.space_after = Pt(0)
+tp.paragraph_format.line_spacing = 1.5
+rich(tp, [("b", "路2攻防XXXV—盲区理论门槛的文献核实：")], size=18, eastasia=HEI)
+tp2 = doc.add_paragraph()
+tp2.alignment = WD_ALIGN_PARAGRAPH.CENTER
+tp2.paragraph_format.space_after = Pt(10)
+tp2.paragraph_format.line_spacing = 1.5
+rich(tp2, [("b", "压δ*过0.05线需超密度假设界——零密度路径闭合判定")], size=18, eastasia=HEI)
+para([("n", "——《谱对偶论证》系列（d1）：Ingham/Guth-Maynard/密度假设三条路径的对照、δ*数值钉死与盲区状态收口")],
+     indent=False, align="center", size=12, eastasia=KAI, after=2)
+para([("n", "2026 年 10 月 23 日")], indent=False, align="center", size=9, after=12)
+
+# ---------- 摘要 ----------
+para([("b", "摘要：")], indent=False)
+para([("n", "本攻防执行用户指令「文献核实是下一步的决定性查证点」，对攻防 XXXIII 遗留的唯一盲区 δ<0.05 的理论闭合路线完成文献核实并落档判定。核实结论：σ∈[1/2,3/4] 判定带（核心判定点 σ=0.55）的已知最好无条件零密度界仍是 Ingham 的 N(σ,T)≪T^{3(1−σ)/(2−σ)}log⁵T；Guth-Maynard 2024（84 年来首次改进）的统一系数形式 T^{30(1−σ)/13} 只在 σ>0.7 处优于 Ingham 的 σ 依赖指数——σ=0.55 处 GM 指数 1.0385 严格劣于 Ingham 0.9310；所有优于 Ingham 的已知界（Huxley 3(1−σ)/(3σ−1) 于 σ≥3/4、Bourgain 密度假设于 σ≥25/32、Heath-Brown a=1,A=2 于 σ≥11/14、Bellotti log-free 于 σ≥0.985、显式 Ingham 需 T≥3×10¹²）无一覆盖判定带。数值钉死（口径同 B1：frac=2·T^{κ}/N_K、并集 2×）：δ=0.05（σ=0.55）处 frac——Ingham 0.2230、GM 0.9313、密度假设 0.1476——全部高于目标带 0.1018；临界深度 δ*——Ingham 0.0902、GM 0.1221、密度假设 0.0640。关键结论：**连密度假设（T^{2(1−σ)+ε}，RH 之外公认最强的零密度猜想）的 δ* 都压不过 0.05 线（差 3.2%）**——盲区 δ<0.05 的无条件闭合需要 σ=0.55 处指数 ≤0.8721（κ_gate），即超密度假设的界，文献中不存在。状态收口：盲区威胁（δ<0.05、>21.9 万「极浅且极多」离线）与密度假设兼容（DH 在 δ=0.05 允许 0.148·N_K≈31.7 万，大于目标带 21.9 万）——未被任何现有界排除，也无可排除的现有界——是真开放理论点；威胁形态算术上不自然；数值侧已封死（XXXIII 峰高口径 + XXXIV 配对二阶全阶盲）；无条件段 δ≥0.0902 保留。判定：零密度路径（通用界）闭合——盲区门槛从「优于 Ingham 约 6%」升级为「超密度假设」；θ_K≥7/8 等价式的证据结构 = 无条件段 + 数值闭合段 + 盲区存档；下一步方向从通用零密度转向 ζ_K 特有谱结构。")], indent=True)
+para([("b", "关键词：")], indent=False)
+para([("n", "文献核实；零密度；Guth-Maynard；密度假设；超密度假设；盲区存档")], indent=False)
+
+# ---------- 1 ----------
+h1("1　承接与任务")
+para([("n", "攻防 XXXIII 入口 B 四件套收口：零密度（B1）给出无条件段 δ≥0.0902——即任何离线深度 δ≥0.0902 的威胁被 Ingham 主幂界 N(σ,T)≪T^{3(1−σ)/(2−σ)}（并集 2×、目标带 0.1018）无条件排除；峰高口径（B3/B4）实测排除威胁窗 δ∈[0.05,0.0902]；唯一盲区 δ<0.05——需 >21.9 万「极浅且极多」离线的理论威胁。攻防 XXXIV 关闭配对二阶口径（δ²·O(1) 相对签名低于背景涨落，「二阶也盲」），盲区数值攻击路线全部封死。")], indent=True)
+para([("n", "盲区闭合只剩理论路线：把 δ* 压过 0.05 线。攻防 XXXIII 给出的门槛是「σ=0.55 处指数优于 Ingham 约 6%（0.931→0.872）」。本攻防任务：文献核实判定带 σ∈[0.5,0.55] 是否存在优于 Ingham 的已知零密度界，并对 Ingham / Guth-Maynard / 密度假设三条路径做数值钉死（entD_work 脚本可复跑）。")], indent=True)
+
+# ---------- 2 ----------
+h1("2　判定带的已知最好界")
+h2("2.1　综述：Ingham 在 σ∈[1/2,3/4] 的最优性")
+para([("n", "Bellotti 2024（arXiv:2405.12545）对已知结果的综述给出决定性表述：对一切 1/2<σ≤1 与 T>0，N(σ,T) 的最优非显式均匀上界由两段拼成——σ∈[1/2,3/4] 用 Ingham 1940 的 N(σ,T)≪T^{3(1−σ)/(2−σ)}log⁵T，σ∈[3/4,1] 用 Huxley 的 N(σ,T)≪T^{3(1−σ)/(3σ−1)}log⁴⁴T。换句话说：**在我们关心的判定带 σ∈[0.5,0.55]（⊂[1/2,3/4]），Ingham 的 σ 依赖指数 3(1−σ)/(2−σ) 就是已知最好的 T 指数**，80 余年来未被改进。")], indent=True)
+h2("2.2　各改进界的适用范围对照")
+para([("n", "文献中所有优于 Ingham 的零密度改进都只在 σ 更大的区域成立，逐一对照（判定带 σ=0.55 全部不覆盖）：")], indent=True)
+para([("n", "（i）Huxley：N(σ,T)≪T^{3(1−σ)/(3σ−1)}log⁴⁴T 对 σ∈[3/4,1]——σ=3/4 处指数 0.6，σ=0.55 无定义（3σ−1=0.65 时 3(1−σ)/(3σ−1)=1.35/0.65>2——不适用）。")], indent=True)
+para([("n", "（ii）Bourgain 2000：密度假设 N(σ,T)≪T^{2(1−σ)} 成立于 σ≥25/32≈0.7813——不达 0.55。")], indent=True)
+para([("n", "（iii）Heath-Brown 1979（Dirichlet L 函数密度定理，CJM）：Σ(Q)≪(Q²T)^{2(1−σ)} 于 σ≥11/14≈0.7857；全区间版 a=6/5、A(σ)=5/(3−σ) 给 T 指数 6(1−σ)/(3−σ)——σ=0.55 处 1.102，严格劣于 Ingham 0.931。对固定 L(χ₅)（Q 小）亦无改进。")], indent=True)
+para([("n", "（iv）Bellotti 2024：log-free 显式界 N(σ,T)≤C·T^{B(1−σ)} 只对 σ∈[0.985,0.9927] 与 T∈(3×10¹², exp(6.7×10¹²)]——判定带与 T=6×10⁵ 均不适用。")], indent=True)
+para([("n", "（v）显式 Ingham（arXiv:2507.15184，2025）：N(σ,T)≤B₁T^{3(1−σ)/(2−σ)}(logT)^{(7−5σ)/(2−σ)}——log 幂次降到 ~3（σ=0.55 处 2.93），但要求 T≥3×10¹²（RH 验证高度）；T=6×10⁵ 差 7 个量级，不适用。")], indent=True)
+
+# ---------- 3 ----------
+h1("3　Guth-Maynard 2024：为什么没有触及 σ=0.55")
+para([("n", "2024 年 Guth-Maynard 给出 84 年来对 Ingham 零密度界的首次改进，形式 N(σ,T)≪T^{30(1−σ)/13+o(1)}（σ∈[1/2,3/4]）。它改进的是「统一 (1−σ) 系数」口径：Ingham 的 σ 依赖指数在 σ=3/4 处比值 3(1−σ)/(2−σ)/(1−σ)=3/(2−σ)=12/5=2.4 是该口径下的最优系数；GM 把它压到 30/13≈2.308。但 σ 依赖口径下比较：GM 指数 30(1−σ)/13 与 Ingham 指数 3(1−σ)/(2−σ) 之比 = 30(2−σ)/(13·3)——GM 更优当且仅当 30(2−σ)<39，即 σ>0.7。")], indent=True)
+formula([("n", "GM<Ingham  ⟺  30(1−σ)/13 < 3(1−σ)/(2−σ)  ⟺  2−σ < 39/30  ⟺  σ > 0.7。")], "1")
+para([("n", "判定点 σ=0.55<0.7：GM 指数 30·0.45/13=1.0385 严格劣于 Ingham 0.9310——**GM 的改进不触及判定带**。数值上 frac(δ=0.05)：GM 0.9313 vs Ingham 0.2230——GM 甚至比 Ingham 更松（4.2 倍）。这是本攻防核实中最重要的一条文献事实：84 年来的唯一突破也够不到 σ=0.55。")], indent=True)
+
+# ---------- 4 ----------
+h1("4　三条路径数值钉死")
+caption("表 1　δ 网格上三条零密度路径的 frac=2·T^{κ}/N_K（T=6×10⁵、N_K=2149542、并集 2×）", before=4, after=2)
+t1 = make_table(
+    ["δ（σ=0.5+δ）", "Ingham κ / frac", "GM 30(1−σ)/13 κ / frac", "密度假设 2(1−σ) κ / frac", "低于 0.1018？"],
+    [
+        ["0.005", "0.9933 / 0.5107", "1.1423 / 3.7078", "0.9900 / 0.4887", "否"],
+        ["0.02", "0.9730 / 0.3896", "1.1077 / 2.3394", "0.9600 / 0.3279", "否"],
+        ["0.05", "0.9310 / 0.2230", "1.0385 / 0.9313", "0.9000 / 0.1476", "否"],
+        ["0.06", "0.9167 / 0.1842", "1.0154 / 0.6851", "0.8800 / 0.1131", "否"],
+        ["0.08", "0.8873 / 0.1247", "0.9692 / 0.3707", "0.8400 / 0.0664", "仅密度假设"],
+        ["0.09", "0.8723 / 0.1021", "0.9462 / 0.2727", "0.8200 / 0.0509", "仅密度假设"],
+        ["0.1", "0.8571 / 0.0834", "0.9231 / 0.2006", "0.8000 / 0.0390", "Ingham+密度假设"],
+    ],
+    [Cm(1.8), Cm(2.7), Cm(2.9), Cm(2.9), Cm(2.3)])
+para([("n", "判定带内（δ≤0.05）三条路径 frac 全部高于目标带 0.1018；Ingham 首次低于目标带在 δ=0.0902（表外精确二分，B1 一致）；密度假设首次低于在 δ=0.064；GM 在 δ=0.1 仍 0.2006——最差。")], indent=True)
+caption("表 2　临界深度 δ* 与判定点指数（frac=0.1018 的解）", before=4, after=2)
+t2 = make_table(
+    ["路径", "σ=0.55 处指数 κ", "δ*（frac=0.1018）", "对 0.05 线"],
+    [
+        ["Ingham 3(1−σ)/(2−σ)", "0.9310", "0.09017", "压过（δ*>0.05）"],
+        ["Guth-Maynard 30(1−σ)/13", "1.0385", "0.12209", "压过但更远"],
+        ["密度假设 2(1−σ)", "0.9000", "0.06396", "压不过（差 3.2%）"],
+    ],
+    [Cm(4.2), Cm(2.4), Cm(2.6), Cm(3.4)])
+para([("n", "κ_gate=0.87209（frac=0.1018 对应的指数）。密度假设的 δ*=0.0640 仍 >0.05——**即使密度假设成立，盲区 δ<0.05 也不能无条件闭合**；其指数 0.9000 与门槛 0.8721 差 3.2%。Ingham 差 6.3%。")], indent=True)
+
+# ---------- 5 ----------
+h1("5　门槛升级：从「优于 Ingham 6%」到「超密度假设」")
+para([("n", "攻防 XXXIII 的口径是「压 δ* 过 0.05 线需优于 Ingham 约 6%」。本攻防核实把这个门槛精确化并升级：盲区 δ<0.05 无条件闭合 ⟺ σ=0.55 处存在零密度界 N(σ,T)≪T^{κ(0.55)} 且 κ(0.55)≤0.8721。已知最好：Ingham 0.9310（差 6.3%）；GM 不触及（1.0385）；**密度假设 0.9000（差 3.2%）**。")], indent=True)
+formula([("n", "盲区无条件闭合  ⟺  ∃ 界 N(σ,T)≪T^{κ(1−σ)}(σ∈[0.5,0.55]) 使 κ(0.55) ≤ ln(0.1018·N_K/2)/lnT = 0.87209。")], "2")
+para([("n", "密度假设 T^{2(1−σ)+ε} 是 RH 之外公认最强的零密度猜想形态（对 ζ 与固定 L 函数同）；它的 δ* 仍差 3.2% 才能压过 0.05 线。因此盲区闭合需要**超密度假设**的界——即比「每离线零点一个对称伙伴、对称侧按 2(1−σ) 计数」更强的东西，本质上需要进入 ζ_K 的谱结构（零点并集的精细形态、显式公式余项的具体抵消），而非通用零密度框架。文献中不存在此类现成定理。")], indent=True)
+
+# ---------- 6 ----------
+h1("6　盲区状态收口与证据结构")
+caption("表 3　θ_K≥7/8 等价式的证据结构（盲区 δ<0.05 状态）", before=4, after=2)
+t3 = make_table(
+    ["段", "范围", "闭合方式", "状态"],
+    [
+        ["无条件段", "δ≥0.0902", "Ingham 主幂零密度（B1，并集 2×）", "无条件闭合"],
+        ["数值闭合段", "δ∈[0.05,0.0902]", "峰高全区间实测（B4：≤2139@2σ/3208@3σ）", "实测排除"],
+        ["盲区", "δ<0.05", "无现成界（需超密度假设，κ≤0.8721@σ=0.55）", "存档：真开放理论点"],
+    ],
+    [Cm(2.2), Cm(2.3), Cm(5.5), Cm(2.6)])
+para([("n", "盲区威胁的定性：它与密度假设兼容（DH 在 δ=0.05 允许 0.148·N_K≈31.7 万离线 > 目标带 21.9 万）——威胁未被任何现有界排除，也无可排除的现有界。但威胁形态是「极浅（δ<0.05）且极多（>21.9 万）」：零点集在实部 1/2−δ 处堆积、且每零点配一个对称伙伴——这种构型算术上不自然（攻防 XXXIII 判定），且与我们谱对偶框架的在线比例桥（ζ 族 0.6725 在线比例等）不兼容。")], indent=True)
+
+# ---------- 7 ----------
+h1("7　诚实边界与未决")
+para([("n", "① 文献核实覆盖到 2026 年 10 月可检索的 arXiv/期刊来源；Guth-Maynard 的完整定理（含 log 因子与 σ 依赖精细形式）以正式出版版本为准，但 σ=0.55 处不改进 Ingham 的结论不依赖 log 因子细节（主幂已劣）。② 判定带取 σ∈[0.5,0.55]（δ≤0.05）；若未来界在 σ∈(0.55,0.7) 改进（GM 已改进），对盲区（δ<0.05）无帮助——盲区的判定点在 σ=0.55 之下。③ 「并集 2×」为保守口径；单族口径 frac(δ=0.05)=0.1115 仍高于 0.1018（差 9.5%）——即使离线威胁被证明只能全量落在单族，主幂 Ingham 也不够；该口径优化不是文献路线的替代。④ 未决：ζ_K 特有谱结构（在线比例桥、显式公式余项、零点并集精细形态）能否给出 κ(0.55)≤0.8721 的专用论证——这是盲区闭合的唯一开放方向，属本系列框架内的新攻坚而非文献检索。")], indent=True)
+
+# ---------- 8 ----------
+h1("8　判定总结")
+para([("n", "文献核实完成并落档：σ∈[1/2,3/4] 判定带的已知最好无条件零密度界是 Ingham T^{3(1−σ)/(2−σ)}；Guth-Maynard 2024（84 年来首次改进）在 σ=0.55 处严格劣于 Ingham，未触及判定带；所有优于 Ingham 的已知界（Huxley/Bourgain/Heath-Brown/Bellotti/显式 Ingham）适用范围无一覆盖。数值钉死：δ=0.05 处 frac——Ingham 0.2230、GM 0.9313、密度假设 0.1476——全超目标带；δ*——0.0902/0.1221/0.0640；**连密度假设都压不过 0.05 线**（差 3.2%）。判定：盲区门槛从「优于 Ingham 约 6%」升级为「超密度假设」（κ≤0.8721@σ=0.55）；零密度路径（通用界）闭合；盲区 δ<0.05 为真开放理论点，与密度假设兼容、威胁形态算术不自然、数值侧已封死（XXXIII/XXXIV）。θ_K≥7/8 等价式的证据结构 = 无条件段（δ≥0.0902）+ 数值闭合段（δ∈[0.05,0.0902]）+ 盲区存档（δ<0.05）。主线下一步：转向 ζ_K 特有谱结构——用我们谱对偶框架内的在线比例桥/显式公式余项精细形态，构造超密度假设级的专用论证。")], indent=True)
+
+# ---------- 参考文献 ----------
+h1("参考文献")
+refs = [
+    "INGHAM A E. On the estimation of N(σ,T)[J]. Quart. J. Math. Oxford, 1940, 11: 291-292（N(σ,T)≪T^{3(1−σ)/(2−σ)}log⁵T；判定带已知最好的 σ 依赖指数）.",
+    "HUXLEY M N. On the difference between consecutive primes[J]. Invent. Math., 1972, 15: 164-170（σ∈[3/4,1] 的 3(1−σ)/(3σ−1) 型密度界；不覆盖 0.55）.",
+    "BOURGAIN J. On large values estimates for Dirichlet polynomials and the density hypothesis for the Riemann zeta function[J]. Int. Math. Res. Not., 2000（密度假设成立于 σ≥25/32）.",
+    "HEATH-BROWN D R. The density of zeros of Dirichlet's L-functions[J]. Canad. J. Math., 1979, 31: 231-240（Σ(Q)≪(Q²T)^{2(1−σ)} 于 σ≥11/14；全区间 a=6/5、A(σ)=5/(3−σ) 的 T 指数在 0.55 处 1.102 劣于 Ingham）.",
+    "GUTH L, MAYNARD J. Large values of the Dirichlet polynomials and the Riemann zeta function[Z]. 2024（N(σ,T)≪T^{30(1−σ)/13+o(1)}，σ∈[1/2,3/4] 统一系数 12/5→30/13；σ≤0.7 不改进 Ingham σ 依赖指数）.",
+    "BELLOTTI C. An explicit log-free zero density estimate for the Riemann zeta-function[J/OL]. arXiv:2405.12545, 2024（综述：σ∈[1/2,3/4] 最优均匀界为 Ingham；log-free 界 σ≥0.985）.",
+    "An explicit form of Ingham's zero density estimate[J/OL]. arXiv:2507.15184, 2025（显式 Ingham：T≥3×10¹²、log 幂次 (7−5σ)/(2−σ)）.",
+    "攻防 XXXIII：路2攻防XXXIII-入口B密度剖面与威胁窗闭合-全区间峰高实测与盲区收缩判定.docx（B1 零密度口径 frac=2·T^{κ}/N_K、δ*=0.0902；威胁窗 δ∈[0.05,0.0902] 数值闭合）.",
+    "攻防 XXXIV：路2攻防XXXIV-二阶口径数值定向-配对和的离线δ²λ²签名与“二阶也盲”判定.docx（配对二阶盲；盲区数值攻击路线全部关闭）.",
+    "数值数据：entB_density.json（B1 口径）；entD_zero_density_lit.json（本轮三条路径 frac/δ*，脚本 entD_zero_density_lit.py 可复跑）；zeros_T6e5.npz.",
+]
+for i, r in enumerate(refs, 1):
+    p = doc.add_paragraph()
+    p.paragraph_format.first_line_indent = Pt(0)
+    p.paragraph_format.space_after = Pt(2)
+    p.paragraph_format.line_spacing = 1.15
+    rich(p, [("n", "[" + str(i) + "] " + r)], size=9)
+
+doc.save(OUT)
+print("SAVED:", OUT)

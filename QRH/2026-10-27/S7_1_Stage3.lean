@@ -73,6 +73,15 @@ axiom fourierCos_scale (a : ℝ) (ha : 0 < a) (r : ℝ → ℝ) (z : ℝ) :
 /-- L¹ 范数（抽象）：∫|f|（积分定义在文档层；Lean 侧为抽象算子）。 -/
 axiom normL1 : (ℝ → ℝ) → ℝ
 
+/-- Core 件 f0_sub_feps_L1_bound（ε 正则化 L¹ 偏差界；精确陈述 2026-10-27，
+    文档 S6 §3 / S7.1 §3 第一层）：
+    ‖f₀ − f_ε‖₁ ≤ 2ε·(√2·|sin(1/√2)|)⁻¹。
+    数学链：|1−w_ε| ≤ 1_{|x|>1/2−ε}（w_ε 在 [1/2−ε, 1/2] 线性过渡，[0,1] 截断）
+    + |f₀(x)| ≤ (√2·|sin(1/√2)|)⁻¹（f0 最大值界）→ 积分长度 ≤ 2ε。
+    真证前置：mathlib 聚合后 import MeasureTheory.Integral.IntervalIntegral（现缺失）。 -/
+axiom f0_sub_feps_L1_bound (ε : ℝ) (hε : 0 < ε) :
+  normL1 (fun x => f0 x - f_eps ε x) ≤ 2 * ε * (sqrt 2 * |sin (1 / sqrt 2)|)⁻¹
+
 /-- N1-L¹ 保持（statement，S7.3 定理 N1(vi)）：‖r_a‖₁ = ‖r‖₁——缩放变量替换。 -/
 axiom scaleKernel_L1_invariant (a : ℝ) (ha : 0 < a) (r : ℝ → ℝ) :
   normL1 (scaleKernel a r) = normL1 r
@@ -830,7 +839,12 @@ axiom N_L_lower_bound :
       offdiag 的 (a²·N) 界需 K̂ 频域衰减（Khat_abs_le 的 a 缩放版）。
 - [ ] `n2_linkage` / `n3_remainder_uniform` / `N_L_lower_bound`：结构件——文档层论证已闭合
       （S7.4 定理 N2、S7.5 定理 N3、S6 零点计数）；Lean 侧保留 axiom 语义。
-- [ ] s71_main 组装（Stage 4）：Core（Khat_zero、f_eps_support）+ Stage 3+ 件 → ε-δ 展开。
+- [ ] `f0_sub_feps_L1_bound`：**精确陈述完成**（2026-10-27 声明入列，normL1 旁）；
+      真证需积分层（|1−w_ε| 支撑界 + 被积函数界 + 长度 ≤ 2ε）——mathlib 聚合后恢复。
+- [ ] `pair_const_eps_bias`：待 `pairConstant` 真实定义（Stage 2）后由 L¹ 界 + Lipschitz 推出。
+- [ ] `C_MT < 4/3`（Core 清单项）：级数余项层（cos 四阶 Taylor 上界 73/96 自证）——
+      **非积分阻塞**，可独立立项；mathlib 内置 cos_bound 余项 (5/96)|x|⁴ 不够（差 0.13%）。
+- [x] s71_main 组装（Stage 4）：**真证**（2026-10-27，pair_sum_expansion 分解 + C₂=2）。
 -/
 
 end QRH

@@ -1,0 +1,2 @@
+﻿✔ [1949/1949] Built QRH.S7_1_Core (9.1s)
+Build completed successfully (1949 jobs).

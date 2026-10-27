@@ -1,0 +1,19 @@
+﻿nz=1369141 nl=1570076 rz=1.770128 rl=2.025168 umax=0.885064
+python.exe : C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_dbg.py:11: RuntimeWarning: invalid value 
+encountered in divide
+所在位置 行:1 字符: 1
++ & "D:\F\Anaconda3\anaconda_3\python.exe" -u "C:\Users\shtcl\Doubao\ch ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (C:\Users\shtcl\...tered in divide:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  return np.where(np.abs(x) < 1e-12, 1.0, np.sin(x) / x)
+a=0.005 manual_int(0..umax)=1.666667e-03  全积分 (2/3)a=3.333333e-03  ratio=0.5000
+a=0.01 manual_int(0..umax)=3.333333e-03  全积分 (2/3)a=6.666667e-03  ratio=0.5000
+a=0.02 manual_int(0..umax)=6.666666e-03  全积分 (2/3)a=1.333333e-02  ratio=0.5000
+a=0.05 manual_int(0..umax)=1.666666e-02  全积分 (2/3)a=3.333333e-02  ratio=0.5000
+a=0.1 manual_int(0..umax)=3.333316e-02  全积分 (2/3)a=6.666667e-02  ratio=0.5000
+a=0.2 manual_int(0..umax)=6.666342e-02  全积分 (2/3)a=1.333333e-01  ratio=0.5000
+S_zeta_center = 2385670   S_L_center = 2123371   ratio=1.1235
+nb1=1772 nb2=1772
+期望跨族对数 (全窗口) ≈ 2772740；实测 hist 总对数=2385670；滤除比例=0.860

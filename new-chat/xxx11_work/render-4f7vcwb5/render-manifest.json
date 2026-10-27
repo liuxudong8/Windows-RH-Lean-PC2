@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-10-23T22:54:38.313309+00:00",
+  "status": "rendered",
+  "visual_review": "pending",
+  "channel": "lark-cli docs +word-to-pdf",
+  "input": {
+    "path": "D:\\F\\有名公司同事文档\\刘旭东文集\\document\\d1\\路2攻防XLI-拟随机并集定理的常数机制闭合-QRH攻坚0.6725到7-8的最优核数值构造与前提可靠性三层论证.docx",
+    "sha256": "6860046e979040478f16164f079d2aba37c73acfcf72844e2002b9c8c6d39511",
+    "size": 45762
+  },
+  "cli": {
+    "path": "C:\\Users\\shtcl\\AppData\\Local\\Doubao\\User Data\\Default\\sandbox_envs_dir\\envs\\966b5a70-7daa-45e9-9d89-3f86f5c6a3f9\\override_dlcs\\lark-cli.exe",
+    "version": "lark-cli version v1.0.100+eef59cd",
+    "sha256": "8e8e4783427c245ac57694cbeeb78b48aa97584b26d67560cf929b1376e93f3e",
+    "size": 51229696
+  },
+  "dpi": 150,
+  "attempts": [
+    {
+      "argv": [
+        "C:\\Users\\shtcl\\AppData\\Local\\Doubao\\User Data\\Default\\sandbox_envs_dir\\envs\\966b5a70-7daa-45e9-9d89-3f86f5c6a3f9\\override_dlcs\\lark-cli.exe",
+        "docs",
+        "+word-to-pdf",
+        "--file",
+        "./input.docx",
+        "--wait-timeout-seconds",
+        "120",
+        "--output",
+        "./document.pdf",
+        "--if-exists",
+        "error",
+        "--format",
+        "json"
+      ],
+      "returncode": 0,
+      "stdout": {
+        "ok": true,
+        "identity": "user",
+        "data": {
+          "task_id": "render_dKXo7ACgCKijvmnptEHHRw",
+          "status": "succeeded",
+          "pdf": {
+            "download_url": "https://api-drive-stream.feishu.cn/space/api/box/stream/download/authcode/?<redacted>",
+            "size": 417653,
+            "url_expires_at": 1792796513
+          },
+          "expires_at": 1792882311,
+          "output_path": "C:\\Users\\shtcl\\Doubao\\chats\\2026-10-16\\new-chat\\xxx11_work\\render-4f7vcwb5\\document.pdf",
+          "downloaded_size": 417653,
+          "upload_preparation": {
+            "compressed": false,
+            "strategy": "original",
+            "strategy_version": "word-render-media-v2",
+            "source_size_bytes": 45762,
+            "upload_size_bytes": 45762,
+            "images_compressed": 0,
+            "layout_preserved": true
+          },
+          "timings": {
+            "prepare_upload_ms": 14,
+            "create_task_ms": 867,
+            "poll_total_ms": 1842,
+            "poll_sleep_ms": 501,
+            "status_request_ms": 1342,
+            "status_request_count": 1,
+            "download_pdf_ms": 617,
+            "total_ms": 3342
+          }
+        }
+      },
+      "stderr": ""
+    }
+  ],
+  "task_id": "render_dKXo7ACgCKijvmnptEHHRw",
+  "cli_status": "succeeded",
+  "upload_preparation": {
+    "compressed": false,
+    "strategy": "original",
+    "strategy_version": "word-render-media-v2",
+    "source_size_bytes": 45762,
+    "upload_size_bytes": 45762,
+    "images_compressed": 0,
+    "layout_preserved": true
+  },
+  "expires_at": 1792882311,
+  "pdf": {
+    "file": "document.pdf",
+    "sha256": "fe449c0dd3eabe1a1d5d737adb6b211d5774f3561bf8ff2d6459de61f73121bd",
+    "size": 417653,
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "",
+      "producer": "",
+      "creationDate": "D:20261024065152+08'00'",
+      "modDate": "D:20261024065152+08'00'",
+      "trapped": "",
+      "encryption": null
+    }
+  },
+  "page_count": 5,
+  "pages": [
+    {
+      "page": 1,
+      "file": "page-0001.png",
+      "sha256": "d166e15bd1f18eee08b8e5230bead6dfa5d7df95912e58329b7d59e130db9611",
+      "size": 307233,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 2,
+      "file": "page-0002.png",
+      "sha256": "d58df3d36bc6014194352c7638bedaa8919959a033655e66ece96561cf1dfc3e",
+      "size": 323394,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 3,
+      "file": "page-0003.png",
+      "sha256": "5a9e5c5b66adcd01e510aa8b20c5d08be85ee8f285ab45de62bc7d1a55367210",
+      "size": 308375,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 4,
+      "file": "page-0004.png",
+      "sha256": "3bfa49ca62cadb55e783cb7a2d634761ad0f09dbe7989774e631a9d5d6ce5950",
+      "size": 360108,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 5,
+      "file": "page-0005.png",
+      "sha256": "67ff1918d5880884784bad9729fad07673838a59b960d5cfd1bbc34547a17a13",
+      "size": 308013,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    }
+  ],
+  "rasterizer": "PyMuPDF 1.27.2.2"
+}

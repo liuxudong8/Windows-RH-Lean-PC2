@@ -1,0 +1,474 @@
+# Dimension 2: paragraph layout
+source: D:\F\有名公司同事文档\刘旭东文集\document\d1\en\路2攻防XLI-拟随机并集定理的常数机制闭合-QRH攻坚0.6725到7-8的最优核数值构造与前提可靠性三层论证-EN.docx
+location_base: /word/document.xml/w:body/
+syntax: [P<n> ...] starts a paragraph; listed defaults apply when omitted; other missing attributes are unset/inherited; null overrides a default with unset/inherited.
+defaults: indent={"firstLine":"0"}, part="word/document.xml", spacing={"before":"20","after":"20","line":"276","lineRule":"auto"}
+definitions: @v1 spacing={"after":"0","line":"360","lineRule":"auto"}; @v2 spacing={"before":"0","after":"0","line":"360","lineRule":"auto"}; @v3 spacing={"before":"240","after":"120","line":"360","lineRule":"auto"}; @v4 spacing={"before":"80","after":"40","line":"360","lineRule":"auto"}; @v5 spacing={"after":"20","line":"252","lineRule":"auto"}
+text_policy: full text is emitted without truncation.
+omitted: record_type=paragraph; repeated default values; xpath because it equals location; raw XML.
+normalized: loc is body[/row/cell/block] indexes relative to location_base; @v references definitions; line_spacing duplicates spacing.line; border XML is losslessly compacted by tag and attributes.
+
+[P1 section=1 loc=1 align="center" spacing=@v1 indent=null]
+Offense XLI—Closure of the Constant Mechanism of the Pseudorandom Union Theorem:
+
+[P2 section=1 loc=2 align="center" spacing=@v1 indent=null]
+Numerical Construction of the Optimal Kernel in the QRH Push 0.6725→7/8
+
+[P3 section=1 loc=3 align="center" spacing={"after":"200","line":"360","lineRule":"auto"} indent=null]
+and a Three-Tier Reliability Argument for the Premise
+
+[P4 section=1 loc=4 align="center" spacing={"before":"0","after":"40","line":"360","lineRule":"auto"} indent=null]
+—Spectral Duality Arguments series (d1): weak-premise conditional theorem form
+
+[P5 section=1 loc=5 align="center" spacing={"before":"0","after":"240","line":"360","lineRule":"auto"} indent=null]
+October 24, 2026
+
+[P6 section=1 loc=6 spacing=@v2 indent=null]
+Abstract:
+
+[P7 section=1 loc=7 indent={"firstLine":"420"} spacing=@v2]
+Offense XLI closes Phase 1 of the QRH constant-mechanism push (numerical orientation #1–#8). Three findings: (i) Variational mechanism (full re-reading of Lamzouri Proposition 2.1): online proportion N₀ˢ/N ≥ 2−A, with A=ΣK²/Σ1 the pair-correlation constant; C_MT=1.3275 is the unconditional minimum within the kernel family of spectral support λ≤1/2 (Lemma 3.2, Remark 3.4); the real-valuedness of the Z_T elements confirms that the pair sum is a real-axis quantity. (ii) Optimal-kernel numerics (audit6 kernel family × scale scan): minimal single-family A = 1.0079 (ζ) / 1.0114 (L), with kernel fejer_a0.5 (narrow kernel at nearest-neighbor scale) — below C_MT=1.3275 and below the 7/8 threshold 1.125, margin 0.11–0.12; the measured MT optimal kernel, 1.1868/1.2494, is likewise below C_MT — GUE repulsion lowering the pair constant holds at the data level; minimal union A = 1.2859 > 1.125 — the direct union argument fails, and the decomposition argument is mandatory (Proposition 2.1 applied to the two families separately plus weighting; pseudorandom union online proportion ≈0.990). (iii) Three-tier premise reliability (audit8 + #7 literature check): the premise is weakened from the unverifiable global GUE hypothesis to A≤1.125, directly checkable numerically; the 5-segment subinterval statistics are monotone-stable, optimal-kernel A drift ≤0.005; the nearest-neighbor distribution matches Wigner within ~5%, no anomalous tail; Odlyzko (GUE confirmation at height 10²²), Rubinstein (numerical verification of Katz–Sarnak), and Özlük (11/12 simplicity for Dirichlet L under GRH) form the literature precedents. No unconditional version of the pair-correlation formula for the L family exists in the literature (the BGS generalization is an open construction within the framework) — the theorem takes the purely conditional (weak-premise) form.
+
+[P8 section=1 loc=8 spacing=@v2 indent=null]
+Keywords:
+
+[P9 section=1 loc=9 spacing=@v2 indent=null]
+pair-correlation constant; Montgomery–Taylor variational problem; pseudorandom premise; decomposition argument; weak-premise conditional theorem; three-tier reliability
+
+[P10 section=1 loc=10 style="Heading1" spacing=@v3 indent=null]
+1　Context and Task
+
+[P11 section=1 loc=11 indent={"firstLine":"420"} spacing=@v2]
+Offense XL judged that the gap in θ_K≥7/8 lies in the constant (0.6725→0.875, difference 0.2025), of QRH-mechanism type. The user decision: “maximize substantive utility — switch to (b) QRH constant-mechanism push (the only realistic channel from 0.6725 to 7/8)”, with numerical orientation insisted upon first. This paper completes numerical orientation #1–#8 (qrh_work/audit1-8), literature check #7 (attribution of the A_L pair-correlation theorem), and the three-tier premise reliability argument (audit8), settling the conditional-theorem form of the pseudorandom union theorem.
+
+[P12 section=1 loc=12 style="Heading1" spacing=@v3 indent=null]
+2　Variational Mechanism and Real-Axis Convention
+
+[P13 section=1 loc=13 indent={"firstLine":"420"} spacing=@v2]
+Lamzouri (arXiv:2609.02882v2), Proposition 2.1: for a conjugation-invariant multiset Z, η∈L², supp η⊂(−λ,λ), η²^(0)=1, K=η²^ (entire, K(0)=1), the number of simple real zeros is ≥ 2Σ1 − ΣK(z−s)² — online proportion ≥ 2−A, A=ΣK(z−s)²/Σ1 (unconditional; no termwise nonnegativity of K required). The constant C_MT=1/2+(1/√2)cot(1/√2)=1.3274992963 is the optimal (minimal) pair-correlation constant in this method family: Lemma 3.2 constructs the optimal kernel η_ε (f₀(x)=cos(√2x)/(√2sin(1/√2)), support [−1/2,1/2]), pair constant C=Q(0)+2∫₀¹αQ(α)dα (Q=f*f); Remark 3.4 (Carneiro–Chandee–Littmann–Milinovich) confirms C_η≥C_MT — within the unconditional framework no kernel constant in the family of spectral support λ≤1/2 can fall below 1.3275.
+
+[P14 section=1 loc=14 indent={"firstLine":"420"} spacing=@v2]
+Real-axis confirmation: Z_T={i(ρ−1/2)logT/2π} gives z=−γ·logT/2π∈ℝ for ρ=1/2+iγ — the pair sum ΣK(z−s)² of Proposition 2.1 is computed on the real axis (K even). Spectral support λ is the variational degree of freedom: the unconditional case (the BGS theorem requires f of support [−1,1]) pins λ≤1/2; relaxing λ requires the pseudorandom (GUE) premise — precisely the “pseudorandom version of the Montgomery–Taylor variational problem”.
+
+[P15 section=1 loc=15 style="Heading1" spacing=@v3 indent=null]
+3　Numerical Evidence Chain: The Pseudorandom Premise Holds and the Pair Constant Is Suppressed
+
+[P16 section=1 loc=16 indent={"firstLine":"420"} spacing=@v2]
+Numerical orientation #1–#4 (audit1-4, T=6×10⁵, discarding t<300): the within-family nearest-neighbor statistics of both families are GUE-compatible — ζ mean=1.0000/var=0.1651/s-exp=2.03/p(0+)=0.009; L mean=0.9197/var=0.1365/s-exp=1.86/p(0+)=0.012 (density convention ρ_L=(1/2π)[log(t/2π)+log5−1]). Cross-family independence: no common value (tol=1e-6), g(r) pointwise normalized ≈1.05–1.09 (no clustering); observed family-switch frequency 0.7533 vs independent GUE-mixture simulation 0.7610±0.0066 (R=40, z=−1.1σ) / 0.7606±0.0057 (R=30, z=−1.3σ) — 0.753 is the natural value for two independent families each with its own GUE repulsion, not a zipper artifact. Union overall comparison (audit4): union nearest-neighbor var=0.4405 vs independent GUE mixture 0.4755±0.0088 (z=−4.0σ), p(0+)=0.5396 vs 0.5581±0.0053 (z=−3.5σ) — the union is more sub-Poisson than the independent GUE mixture (weak but significant, same direction as the Δ law).
+
+[P17 section=1 loc=17 indent={"firstLine":"420"} spacing=@v2]
+Numerical orientation #5 (audit5, fixed kernel): Fejér kernel A_ζ=1.0565, A_L=1.0808, A_union=1.6230 (cross-family contribution 0.5535 per zero); sinc A_ζ=1.1880, A_L=1.2473; gauss A_ζ=1.6146, A_L=1.7864 — single-family measured A significantly below C_MT=1.3275; union A_union≫1.125 (online proportion only 0.377) — direct application of Proposition 2.1 to the union is crushed by cross-family pairings (the numerical version of the Q(0) verdict).
+
+[P18 section=1 loc=18 align="center" spacing=@v4 keep_next=true indent=null]
+Table 1　Pair-correlation constant A from the kernel family × scale scan (audit6, δ=logT/2π=2.1175, histogram convention)
+
+[P19 section=1 table=1 row=1 cell=1 loc=19/1/1/2 align="center"]
+Kernel
+
+[P20 section=1 table=1 row=1 cell=2 loc=19/1/2/2 align="center"]
+A_ζ
+
+[P21 section=1 table=1 row=1 cell=3 loc=19/1/3/2 align="center"]
+A_L
+
+[P22 section=1 table=1 row=1 cell=4 loc=19/1/4/2 align="center"]
+A_union
+
+[P23 section=1 table=1 row=1 cell=5 loc=19/1/5/2 align="center"]
+Online prop. 2−A_ζ
+
+[P24 section=1 table=1 row=1 cell=6 loc=19/1/6/2 align="center"]
+Verdict
+
+[P25 section=1 table=1 row=2 cell=1 loc=19/2/1/2 align="center"]
+fejer_a0.5 (optimal)
+
+[P26 section=1 table=1 row=2 cell=2 loc=19/2/2/2 align="left"]
+1.0079
+
+[P27 section=1 table=1 row=2 cell=3 loc=19/2/3/2 align="left"]
+1.0114
+
+[P28 section=1 table=1 row=2 cell=4 loc=19/2/4/2 align="left"]
+1.2859
+
+[P29 section=1 table=1 row=2 cell=5 loc=19/2/5/2 align="left"]
+0.9921
+
+[P30 section=1 table=1 row=2 cell=6 loc=19/2/6/2 align="left"]
+Single family OK
+
+[P31 section=1 table=1 row=3 cell=1 loc=19/3/1/2 align="center"]
+sinc_a0.5
+
+[P32 section=1 table=1 row=3 cell=2 loc=19/3/2/2 align="left"]
+1.0492
+
+[P33 section=1 table=1 row=3 cell=3 loc=19/3/3/2 align="left"]
+1.0639
+
+[P34 section=1 table=1 row=3 cell=4 loc=19/3/4/2 align="left"]
+1.4720
+
+[P35 section=1 table=1 row=3 cell=5 loc=19/3/5/2 align="left"]
+0.9508
+
+[P36 section=1 table=1 row=3 cell=6 loc=19/3/6/2 align="left"]
+Single family OK
+
+[P37 section=1 table=1 row=4 cell=1 loc=19/4/1/2 align="center"]
+fejer_a1.0
+
+[P38 section=1 table=1 row=4 cell=2 loc=19/4/2/2 align="left"]
+1.0565
+
+[P39 section=1 table=1 row=4 cell=3 loc=19/4/3/2 align="left"]
+1.0807
+
+[P40 section=1 table=1 row=4 cell=4 loc=19/4/4/2 align="left"]
+1.6227
+
+[P41 section=1 table=1 row=4 cell=5 loc=19/4/5/2 align="left"]
+0.9435
+
+[P42 section=1 table=1 row=4 cell=6 loc=19/4/6/2 align="left"]
+Single family OK
+
+[P43 section=1 table=1 row=5 cell=1 loc=19/5/1/2 align="center"]
+gauss_a0.5
+
+[P44 section=1 table=1 row=5 cell=2 loc=19/5/2/2 align="left"]
+1.1269
+
+[P45 section=1 table=1 row=5 cell=3 loc=19/5/3/2 align="left"]
+1.1773
+
+[P46 section=1 table=1 row=5 cell=4 loc=19/5/4/2 align="left"]
+1.8902
+
+[P47 section=1 table=1 row=5 cell=5 loc=19/5/5/2 align="left"]
+0.8731
+
+[P48 section=1 table=1 row=5 cell=6 loc=19/5/6/2 align="left"]
+Single family OK
+
+[P49 section=1 table=1 row=6 cell=1 loc=19/6/1/2 align="center"]
+MT optimal kernel (num.)
+
+[P50 section=1 table=1 row=6 cell=2 loc=19/6/2/2 align="left"]
+1.1868
+
+[P51 section=1 table=1 row=6 cell=3 loc=19/6/3/2 align="left"]
+1.2494
+
+[P52 section=1 table=1 row=6 cell=4 loc=19/6/4/2 align="left"]
+2.0562
+
+[P53 section=1 table=1 row=6 cell=5 loc=19/6/5/2 align="left"]
+0.8132
+
+[P54 section=1 table=1 row=6 cell=6 loc=19/6/6/2 align="left"]
+Below C_MT
+
+[P55 section=1 table=1 row=7 cell=1 loc=19/7/1/2 align="center"]
+C_MT (uncond. ref.)
+
+[P56 section=1 table=1 row=7 cell=2 loc=19/7/2/2 align="left"]
+1.3275
+
+[P57 section=1 table=1 row=7 cell=3 loc=19/7/3/2 align="left"]
+1.3275
+
+[P58 section=1 table=1 row=7 cell=4 loc=19/7/4/2 align="left"]
+—
+
+[P59 section=1 table=1 row=7 cell=5 loc=19/7/5/2 align="left"]
+0.6725
+
+[P60 section=1 table=1 row=7 cell=6 loc=19/7/6/2 align="left"]
+Theorem bound
+
+[P61 section=1 loc=20 align="center" spacing={"before":"120","after":"0","line":"276","lineRule":"auto"} keep_next=true special=[{"tag":"w:drawing","location":"/w:document/w:body/w:p[19]/w:r/w:drawing"}] indent=null]
+<empty/>
+
+[P62 section=1 loc=21 align="center" spacing={"before":"40","after":"120","line":"276","lineRule":"auto"} keep_next=true indent=null]
+Fig. 1　Pair-correlation constant A from the kernel family × scale scan (audit6): single families lie below C_MT and the 7/8 threshold; the direct union argument fails
+
+[P63 section=1 loc=22 indent={"firstLine":"420"} spacing=@v2]
+As shown in Fig. 1, readings: (i) The optimal kernel sits at the nearest-neighbor scale (fejer_a0.5, spectral support λ_eff≈0.5 type), with single-family A_min≈1.008–1.011 — the region where GUE nearest-neighbor repulsion is strongest suppresses the pair sum the most; the trivial limit A→1 as a→0 (kernel loses resolution) is identified, and the optimal reading lies at the physical nearest-neighbor repulsion scale. (ii) The measured MT optimal kernel, 1.1868 (ζ) / 1.2494 (L) < C_MT=1.3275 — GUE data likewise suppress the pair constant for compact-spectrum kernels (the gap between the unconditional leading term and the measured data). (iii) Minimal union A = 1.2859 > 1.125 — the failure of the direct union argument is confirmed.
+
+[P64 section=1 loc=23 align="center" spacing=@v4 keep_next=true indent=null]
+Table 2　Single-family pseudorandom online proportion and 7/8 margin (audit6 optimal kernel)
+
+[P65 section=1 table=2 row=1 cell=1 loc=24/1/1/2 align="center"]
+Family
+
+[P66 section=1 table=2 row=1 cell=2 loc=24/1/2/2 align="center"]
+A_min (kernel)
+
+[P67 section=1 table=2 row=1 cell=3 loc=24/1/3/2 align="center"]
+Online prop. 2−A_min
+
+[P68 section=1 table=2 row=1 cell=4 loc=24/1/4/2 align="center"]
+7/8 threshold 0.875
+
+[P69 section=1 table=2 row=1 cell=5 loc=24/1/5/2 align="center"]
+Margin
+
+[P70 section=1 table=2 row=2 cell=1 loc=24/2/1/2 align="center"]
+ζ
+
+[P71 section=1 table=2 row=2 cell=2 loc=24/2/2/2 align="left"]
+1.0079 (fejer_a0.5)
+
+[P72 section=1 table=2 row=2 cell=3 loc=24/2/3/2 align="left"]
+0.9921
+
+[P73 section=1 table=2 row=2 cell=4 loc=24/2/4/2 align="left"]
+met
+
+[P74 section=1 table=2 row=2 cell=5 loc=24/2/5/2 align="left"]
+0.1171
+
+[P75 section=1 table=2 row=3 cell=1 loc=24/3/1/2 align="center"]
+L
+
+[P76 section=1 table=2 row=3 cell=2 loc=24/3/2/2 align="left"]
+1.0114 (fejer_a0.5)
+
+[P77 section=1 table=2 row=3 cell=3 loc=24/3/3/2 align="left"]
+0.9886
+
+[P78 section=1 table=2 row=3 cell=4 loc=24/3/4/2 align="left"]
+met
+
+[P79 section=1 table=2 row=3 cell=5 loc=24/3/5/2 align="left"]
+0.1136
+
+[P80 section=1 loc=25 indent={"firstLine":"420"} spacing=@v2]
+Table 2: under the pseudorandom (GUE) premise the single-family online proportion ≈0.989–0.992, with 7/8 margin ~0.11–0.12 — stronger than the audit5 fixed-kernel convention (margin 0.04–0.07). The quantitative reality of the closure of the constant mechanism is confirmed.
+
+[P81 section=1 loc=26 style="Heading1" spacing=@v3 indent=null]
+4　Decomposition Argument and Union Online Proportion
+
+[P82 section=1 loc=27 indent={"firstLine":"420"} spacing=@v2]
+The zeros of the union Z_K=Z_ζ∪Z_L are mutually distinct (cross-family common values =0, verified numerically) — N₀ˢ_K=N₀ˢ_ζ+N₀ˢ_L. Decomposition argument: apply Proposition 2.1 to the two families separately (kernel family of spectral support λ≤1/2, constant C_MT), then weight by zero counts — union online proportion ≥ (N_ζ(2−A_ζ)+N_L(2−A_L))/N_K. Under the pseudorandom premise (audit6 optimal kernel): (999354×0.9921+1149836×0.9886)/2149190 ≈ 0.990 ≥ 0.875=7/8 — the union meets the threshold. Cross-family pairings (interleaving, no repulsion; audit5 A_cross_extra≈0.55–1.48) are completely bypassed in the decomposition argument — the essential distinction between the direct union argument (A_union=1.29–1.62, online proportion 0.377–0.714) and the decomposition argument.
+
+[P83 section=1 loc=28 style="Heading1" spacing=@v3 indent=null]
+5　Three-Tier Reliability of the Premise
+
+[P84 section=1 loc=29 indent={"firstLine":"420"} spacing=@v2]
+Tier 1 (weakened premise):
+
+[P85 section=1 loc=30 indent={"firstLine":"420"} spacing=@v2]
+The conditional-theorem premise is downgraded from “GUE pair correlation (global, unverifiable)” to “A_ζ, A_L≤1.125 (pair-correlation-constant hypothesis)” — GUE is sufficient but not necessary; the pair constant is the object directly verified numerically by audit6. The A≤1.125 threshold passes numerically over the whole range (optimal kernel 1.008–1.014).
+
+[P86 section=1 loc=31 indent={"firstLine":"420"} spacing=@v2]
+Tier 2 (subinterval convergence + rebuttal scan):
+
+[P87 section=1 loc=32 align="center" spacing=@v4 keep_next=true indent=null]
+Table 3　Pair-correlation constant A and nearest-neighbor variance vs height (audit8, 5 segments)
+
+[P88 section=1 table=3 row=1 cell=1 loc=33/1/1/2 align="center"]
+Height segment
+
+[P89 section=1 table=3 row=1 cell=2 loc=33/1/2/2 align="center"]
+ζ A0.5
+
+[P90 section=1 table=3 row=1 cell=3 loc=33/1/3/2 align="center"]
+ζ A1.0
+
+[P91 section=1 table=3 row=1 cell=4 loc=33/1/4/2 align="center"]
+L A0.5
+
+[P92 section=1 table=3 row=1 cell=5 loc=33/1/5/2 align="center"]
+L A1.0
+
+[P93 section=1 table=3 row=1 cell=6 loc=33/1/6/2 align="center"]
+ζ nn_var
+
+[P94 section=1 table=3 row=1 cell=7 loc=33/1/7/2 align="center"]
+L nn_var
+
+[P95 section=1 table=3 row=2 cell=1 loc=33/2/1/2 align="center"]
+0.3-1.2e5
+
+[P96 section=1 table=3 row=2 cell=2 loc=33/2/2/2 align="left"]
+1.0045
+
+[P97 section=1 table=3 row=2 cell=3 loc=33/2/3/2 align="left"]
+1.0341
+
+[P98 section=1 table=3 row=2 cell=4 loc=33/2/4/2 align="left"]
+1.0071
+
+[P99 section=1 table=3 row=2 cell=5 loc=33/2/5/2 align="left"]
+1.0521
+
+[P100 section=1 table=3 row=2 cell=6 loc=33/2/6/2 align="left"]
+0.1619
+
+[P101 section=1 table=3 row=2 cell=7 loc=33/2/7/2 align="left"]
+0.1312
+
+[P102 section=1 table=3 row=3 cell=1 loc=33/3/1/2 align="center"]
+1.2-2.4e5
+
+[P103 section=1 table=3 row=3 cell=2 loc=33/3/2/2 align="left"]
+1.0069
+
+[P104 section=1 table=3 row=3 cell=3 loc=33/3/3/2 align="left"]
+1.0505
+
+[P105 section=1 table=3 row=3 cell=4 loc=33/3/4/2 align="left"]
+1.0102
+
+[P106 section=1 table=3 row=3 cell=5 loc=33/3/5/2 align="left"]
+1.0735
+
+[P107 section=1 table=3 row=3 cell=6 loc=33/3/6/2 align="left"]
+0.1646
+
+[P108 section=1 table=3 row=3 cell=7 loc=33/3/7/2 align="left"]
+0.1355
+
+[P109 section=1 table=3 row=4 cell=1 loc=33/4/1/2 align="center"]
+2.4-3.6e5
+
+[P110 section=1 table=3 row=4 cell=2 loc=33/4/2/2 align="left"]
+1.0087
+
+[P111 section=1 table=3 row=4 cell=3 loc=33/4/3/2 align="left"]
+1.0594
+
+[P112 section=1 table=3 row=4 cell=4 loc=33/4/4/2 align="left"]
+1.0120
+
+[P113 section=1 table=3 row=4 cell=5 loc=33/4/5/2 align="left"]
+1.0841
+
+[P114 section=1 table=3 row=4 cell=6 loc=33/4/6/2 align="left"]
+0.1657
+
+[P115 section=1 table=3 row=4 cell=7 loc=33/4/7/2 align="left"]
+0.1374
+
+[P116 section=1 table=3 row=5 cell=1 loc=33/5/1/2 align="center"]
+3.6-4.8e5
+
+[P117 section=1 table=3 row=5 cell=2 loc=33/5/2/2 align="left"]
+1.0089
+
+[P118 section=1 table=3 row=5 cell=3 loc=33/5/3/2 align="left"]
+1.0641
+
+[P119 section=1 table=3 row=5 cell=4 loc=33/5/4/2 align="left"]
+1.0131
+
+[P120 section=1 table=3 row=5 cell=5 loc=33/5/5/2 align="left"]
+1.0914
+
+[P121 section=1 table=3 row=5 cell=6 loc=33/5/6/2 align="left"]
+0.1660
+
+[P122 section=1 table=3 row=5 cell=7 loc=33/5/7/2 align="left"]
+0.1384
+
+[P123 section=1 table=3 row=6 cell=1 loc=33/6/1/2 align="center"]
+4.8-6.0e5
+
+[P124 section=1 table=3 row=6 cell=2 loc=33/6/2/2 align="left"]
+1.0097
+
+[P125 section=1 table=3 row=6 cell=3 loc=33/6/3/2 align="left"]
+1.0691
+
+[P126 section=1 table=3 row=6 cell=4 loc=33/6/4/2 align="left"]
+1.0137
+
+[P127 section=1 table=3 row=6 cell=5 loc=33/6/5/2 align="left"]
+1.0967
+
+[P128 section=1 table=3 row=6 cell=6 loc=33/6/6/2 align="left"]
+0.1665
+
+[P129 section=1 table=3 row=6 cell=7 loc=33/6/7/2 align="left"]
+0.1390
+
+[P130 section=1 table=3 row=7 cell=1 loc=33/7/1/2 align="center"]
+Full range
+
+[P131 section=1 table=3 row=7 cell=2 loc=33/7/2/2 align="left"]
+1.0079
+
+[P132 section=1 table=3 row=7 cell=3 loc=33/7/3/2 align="left"]
+1.0565
+
+[P133 section=1 table=3 row=7 cell=4 loc=33/7/4/2 align="left"]
+1.0114
+
+[P134 section=1 table=3 row=7 cell=5 loc=33/7/5/2 align="left"]
+1.0807
+
+[P135 section=1 table=3 row=7 cell=6 loc=33/7/6/2 align="left"]
+0.1651
+
+[P136 section=1 table=3 row=7 cell=7 loc=33/7/7/2 align="left"]
+0.1365
+
+[P137 section=1 loc=34 indent={"firstLine":"420"} spacing=@v2]
+Verdict: all statistics drift monotonically with height without divergence; optimal-kernel A segment drift ≤0.005 (A0.5), and the 7/8 margin 0.11–0.12 far exceeds finite-T corrections. Rebuttal scan: ζ nearest-neighbor gap-band counts vs GUE Wigner distribution give obs/pred ratio 0.86–1.05 (relative deviation ≤5%, direction slightly central-peaked — compatible with the exact-GUE/finite-T correction direction, not a falsification); tail max_s≈3.1–3.4 (ζ) at ≈√(log n) scale, no anomalous long gaps; L, affected by the normalization constant (nn_mean=0.92), is not used for a precise band comparison, supported by var/s_exp/A. Cross-family independence (audit3/4) plus union extra sub-Poissonity (var −4σ, same direction as the Δ law) — the systematic rebuttal scan finds no structural evidence against the pseudorandom framework.
+
+[P138 section=1 loc=35 indent={"firstLine":"420"} spacing=@v2]
+Tier 3 (literature support + rebuttal framework):
+
+[P139 section=1 loc=36 indent={"firstLine":"420"} spacing=@v2]
+Independent literature evidence: Odlyzko (height 10²², 10¹⁰ zeros) numerically verifies GUE pair correlation (“confirmed the GUE connection”); Rubinstein numerically verifies the Katz–Sarnak conjecture; Özlük (1982, under GRH) proves that Dirichlet L-functions have at least 11/12≈0.917 simple zeros — the precedent chain for the pairing method. Rebuttal framework: cross-family independence and union sub-Poissonity (audit4) are both consistent with GUE pseudorandomness + the Δ law; no arithmetic-structure fingerprint appears.
+
+[P140 section=1 loc=37 style="Heading1" spacing=@v3 indent=null]
+6　Pseudorandom Union Theorem (Conditional Form)
+
+[P141 section=1 loc=38 indent={"firstLine":"420"} spacing=@v2]
+Theorem (weak-premise pseudorandom union theorem, conditional form). Let the pair-correlation constants of the zeros of ζ and L(χ₅) on the normalized scale satisfy A_ζ, A_L≤1.125 (pseudorandom premise, including the existence hypothesis of the pair-correlation formula for the L family; measured optimal kernels A_ζ=1.0079, A_L=1.0114). Then the union online simple-zero proportion is ≥ (N_ζ(2−A_ζ)+N_L(2−A_L))/N_K ≥ 7/8.
+
+[P142 section=1 loc=39 indent={"firstLine":"420"} spacing=@v2]
+Proof skeleton: (i) N₀ˢ_K=N₀ˢ_ζ+N₀ˢ_L (zeros distinct, verified); (ii) apply Proposition 2.1 separately: N₀ˢ_ζ≥2N_ζ−ΣK²_ζ, N₀ˢ_L≥2N_L−ΣK²_L (unconditional inequalities, K=η²^, K(0)=1); (iii) the pseudorandom premise ⟹ ΣK²_ζ≤A_ζN_ζ, ΣK²_L≤A_LN_L; (iv) substitute and weight. The key point of the decomposition argument: cross-family pairings never enter (in contrast with the failing direct union argument, A_union=1.29–1.62).
+
+[P143 section=1 loc=40 style="Heading1" spacing=@v3 indent=null]
+7　Honest Boundaries
+
+[P144 section=1 loc=41 indent={"firstLine":"420"} spacing=@v2]
+① The measured A is data (T=6×10⁵), not a theorem — the premise A≤1.125 is unproved; the theorem is purely conditional. ② No unconditional version of the L-family pair-correlation formula exists in the literature (Özlük needs GRH; Yıldırım needs GRH + cross-character average) — the BGS generalization to a fixed-modulus real character is an open construction within the framework, covered by hypothesis in the theorem. ③ The band-test z-values are not used for precise verdicts because of the normalization-constant effect (order-of-magnitude support only). ④ The kernel-family scan is finite (fejer/sinc/gauss/MT families), not exhausting the full variational solution space; the trivial limit A→1 as a→0 is identified, but the optimal reading is restricted to the nearest-neighbor scale. ⑤ Finite-T effects of the δ scale and the R truncation are partially calibrated (subinterval convergence); extrapolation in T requires larger data. ⑥ The weights N_ζ/N_K=0.465, N_L/N_K=0.535 in the union decomposition come from the T=6×10⁵ measurement.
+
+[P145 section=1 loc=42 style="Heading1" spacing=@v3 indent=null]
+8　Verdict and Summary
+
+[P146 section=1 loc=43 indent={"firstLine":"420"} spacing=@v2]
+Offense XLI closes Phase 1 of the QRH push. (1) Variational mechanism confirmed: C_MT=1.3275 is the unconditional minimum of the λ≤1/2 kernel family; 0.6725 is the unconditional limit of the pair-correlation-constant path. (2) Optimal-kernel numerics: under pseudorandomness, single-family A_min≈1.008–1.011 (fejer_a0.5), online proportion ≈0.99, 7/8 margin 0.11–0.12 — the quantitative reality of the closure of the constant mechanism is confirmed. (3) The direct union argument fails (A_union_min=1.286) while the decomposition argument meets the threshold (union ≈0.990) — a strict separation of argument paths. (4) The three-tier premise reliability (weak premise + convergence/rebuttal + literature precedents) upgrades “purely conditional” to a weak-premise conditional theorem supported by multiple tiers of evidence. (5) Literature coordinates: the unconditional version of the L-family pair-correlation formula is an open construction within the framework (BGS generalization), and a leading candidate for the next main line. Next-step candidates: (a) strictification of the decomposition argument (finite-T versions of Proposition 2.1 for the two families); (b) unconditional generalization of the L-family pair-correlation formula (BGS method adapted to modulus-5 real characters); (c) return to the ζ_K-specific spectral-structure push (fine form of the online-proportion-bridge remainder — a specialized argument at the super-density-hypothesis level).
+
+[P147 section=1 loc=44 style="Heading1" spacing=@v3 indent=null]
+References
+
+[P148 section=1 loc=45 spacing=@v5]
+[1] Lamzouri Y. A new proof that more than 2/3 of the zeros of the Riemann zeta function are simple and on the critical line. arXiv:2609.02882v2 (Proposition 2.1 (N₀ˢ≥2Σ1−ΣK²), Lemma 3.2 (optimal kernel f₀(x)=cos(√2x)/(√2sin(1/√2)), C_MT=1/2+(1/√2)cot(1/√2)=1.3274992963), Remark 3.4 (C_η≥C_MT optimality)) — read in full.
+
+[P149 section=1 loc=46 spacing=@v5]
+[2] Baluyot D, Goldston D, Suriajaya A I, et al. An unconditional Montgomery theorem for pair correlation of zeros of the Riemann zeta function. arXiv:2306.04799 (Lemma 5: unconditional pair-correlation formula, error O_f(1/√logT), weight w(z)=4/(4−z²); the BGS generalization to fixed-modulus L(χ) is an open construction).
+
+[P150 section=1 loc=47 spacing=@v5]
+[3] Özlük A E. On the pair correlation of zeros of Dirichlet L-functions (1982; at least 11/12 simple under GRH, with weight) — verified via the introduction of Kandhil–Languasco–Moree.
+
+[P151 section=1 loc=48 spacing=@v5]
+[4] Kandhil N, Languasco A, Moree P. Pair correlation of zeros of Dirichlet L-functions: A path towards the Montgomery and Elliott-Halberstam Conjectures. arXiv:2411.19762 (Yıldırım theorem / Conjecture 1: cross-character-average pair correlation, GRH premise) — read in full.
+
+[P152 section=1 loc=49 spacing=@v5]
+[5] Carneiro E, Milinovich M B, Ramos A P. Fourier optimization and Montgomery's pair correlation conjecture. arXiv:2310.01913 (F-average 0.9303–1.3208, including Dirichlet L-function families).
+
+[P153 section=1 loc=50 spacing=@v5]
+[6] Odlyzko A M. The 10^22-nd zero of the Riemann zeta function (10¹⁰ zeros; numerical verification of RH and GUE pair correlation — “confirmed the GUE connection”).
+
+[P154 section=1 loc=51 spacing=@v5]
+[7] QRH-push numerical package (this work; reproducible with Anaconda python): qrh_work/qrh_audit1-8.py/.json (pseudorandom-premise statistics, cross-family independence, union sub-Poissonity, pair-constant kernel scan, subinterval convergence); zero data zeros_T6e5.npz (T=6×10⁵, ζ 999492 / L 1150050 roots).
+
+[P155 section=1 loc=52 spacing=@v5]
+[8] Offense XL (d1 delivered): theoretical construction of the unconditional bound on the pairing side — the 0.6725 constant gap 0.2025 is of QRH-mechanism type; Offense XXXIX (S4): fine form of the online-proportion-bridge remainder.

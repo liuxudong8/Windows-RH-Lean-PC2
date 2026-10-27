@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-10-23T20:42:50.137586+00:00",
+  "status": "rendered",
+  "visual_review": "pending",
+  "channel": "lark-cli docs +word-to-pdf",
+  "input": {
+    "path": "D:\\F\\有名公司同事文档\\刘旭东文集\\document\\d1\\路2攻防XXXVII-Weil显式公式实部口径注入敏感性-离线对同虚部成对的间距结构排除与N_off·δ²·λ²累积可测性判定.docx",
+    "sha256": "8558b6dc47417a123e4036f24e5c4078b24189f3f9bc5c7b79c56e9316ad4559",
+    "size": 45833
+  },
+  "cli": {
+    "path": "C:\\Users\\shtcl\\AppData\\Local\\Doubao\\User Data\\Default\\sandbox_envs_dir\\envs\\966b5a70-7daa-45e9-9d89-3f86f5c6a3f9\\override_dlcs\\lark-cli.exe",
+    "version": "lark-cli version v1.0.100+eef59cd",
+    "sha256": "8e8e4783427c245ac57694cbeeb78b48aa97584b26d67560cf929b1376e93f3e",
+    "size": 51229696
+  },
+  "dpi": 150,
+  "attempts": [
+    {
+      "argv": [
+        "C:\\Users\\shtcl\\AppData\\Local\\Doubao\\User Data\\Default\\sandbox_envs_dir\\envs\\966b5a70-7daa-45e9-9d89-3f86f5c6a3f9\\override_dlcs\\lark-cli.exe",
+        "docs",
+        "+word-to-pdf",
+        "--file",
+        "./input.docx",
+        "--wait-timeout-seconds",
+        "120",
+        "--output",
+        "./document.pdf",
+        "--if-exists",
+        "error",
+        "--format",
+        "json"
+      ],
+      "returncode": 0,
+      "stdout": {
+        "ok": true,
+        "identity": "user",
+        "data": {
+          "task_id": "render_s4T0nJxfqUw8TGW-84Cu-g",
+          "status": "succeeded",
+          "pdf": {
+            "download_url": "https://api-drive-stream.feishu.cn/space/api/box/stream/download/authcode/?<redacted>",
+            "size": 386029,
+            "url_expires_at": 1792788604
+          },
+          "expires_at": 1792874403,
+          "output_path": "C:\\Users\\shtcl\\Doubao\\chats\\2026-10-16\\new-chat\\xxx7_work\\render-cywr6y11\\document.pdf",
+          "downloaded_size": 386029,
+          "upload_preparation": {
+            "compressed": false,
+            "strategy": "original",
+            "strategy_version": "word-render-media-v2",
+            "source_size_bytes": 45833,
+            "upload_size_bytes": 45833,
+            "images_compressed": 0,
+            "layout_preserved": true
+          },
+          "timings": {
+            "prepare_upload_ms": 14,
+            "create_task_ms": 686,
+            "poll_total_ms": 1827,
+            "poll_sleep_ms": 501,
+            "status_request_ms": 1327,
+            "status_request_count": 1,
+            "download_pdf_ms": 543,
+            "total_ms": 3071
+          }
+        }
+      },
+      "stderr": ""
+    }
+  ],
+  "task_id": "render_s4T0nJxfqUw8TGW-84Cu-g",
+  "cli_status": "succeeded",
+  "upload_preparation": {
+    "compressed": false,
+    "strategy": "original",
+    "strategy_version": "word-render-media-v2",
+    "source_size_bytes": 45833,
+    "upload_size_bytes": 45833,
+    "images_compressed": 0,
+    "layout_preserved": true
+  },
+  "expires_at": 1792874403,
+  "pdf": {
+    "file": "document.pdf",
+    "sha256": "079c1779863e4f1b9e9bb5c38b7ad3004345ec0fc39c14226e464ad4be220d75",
+    "size": 386029,
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "",
+      "producer": "",
+      "creationDate": "D:20261024044003+08'00'",
+      "modDate": "D:20261024044003+08'00'",
+      "trapped": "",
+      "encryption": null
+    }
+  },
+  "page_count": 6,
+  "pages": [
+    {
+      "page": 1,
+      "file": "page-0001.png",
+      "sha256": "a5a8c2aad1a3515d3efc0533defd6071bb878a7964ae5412b893e237462b751b",
+      "size": 350320,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 2,
+      "file": "page-0002.png",
+      "sha256": "b9b93699a3f5ab0a7211fb856c83b2c2eacd2b339d5f42142e8dbf526aaa10e3",
+      "size": 329631,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 3,
+      "file": "page-0003.png",
+      "sha256": "51d16ec5151bc4d3d7927785542fd7e212149fa6c9f875111ad14ac246aada81",
+      "size": 305330,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 4,
+      "file": "page-0004.png",
+      "sha256": "0921df63a31c1abac297b45792d6bd6454ac8b3eae85dc8c3f7d6191cfb3349f",
+      "size": 318511,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 5,
+      "file": "page-0005.png",
+      "sha256": "7bdf15b12be42ef273db5490b35848506512819638c662417a534ceb72aed203",
+      "size": 389038,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 6,
+      "file": "page-0006.png",
+      "sha256": "6e462c0cad6f0b8f12fba9a7d8451d3cc0b1275169de4a2b61f02bb521ec57ce",
+      "size": 49246,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    }
+  ],
+  "rasterizer": "PyMuPDF 1.27.2.2"
+}

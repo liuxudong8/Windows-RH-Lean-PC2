@@ -1,0 +1,12 @@
+﻿[T=600000] nz=999354 nl=1149836 N_K=2149190 δ=2.1175
+  zeta  best=mt_lam0.50 A=1.1868   mt_lam0.50=1.1868
+  L     best=mt_lam0.50 A=1.2494   mt_lam0.50=1.2494
+  union best=mt_lam0.50 A=2.0562   mt_lam0.50=2.0562
+  C_MT=1.3274992963  ratio_dec_mt=0.7797  ratio_dec_C_MT=0.6725  dev_ζ=1.41e-01 dev_L=7.81e-02
+[T=800000] nz=1369141 nl=1570076 N_K=2939217 δ=2.1633
+  zeta  best=mt_lam0.50 A=1.1896   mt_lam0.50=1.1896
+  L     best=mt_lam0.50 A=1.2512   mt_lam0.50=1.2512
+  union best=mt_lam0.50 A=2.0623   mt_lam0.50=2.0623
+  C_MT=1.3274992963  ratio_dec_mt=0.7775  ratio_dec_C_MT=0.6725  dev_ζ=1.38e-01 dev_L=7.63e-02
+
+saved C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s6_lambda.json elapsed 70.6s

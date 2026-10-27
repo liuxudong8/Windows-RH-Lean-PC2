@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-10-24T21:35:23.463010+00:00",
+  "status": "rendered",
+  "visual_review": "pending",
+  "channel": "lark-cli docs +word-to-pdf",
+  "input": {
+    "path": "C:\\Users\\shtcl\\Doubao\\chats\\2026-10-16\\document\\d1\\路2攻防XLII-S4-正向构造-窄核实测与配对常数残差结构-λ(T)构造的数值定锚.docx",
+    "sha256": "2caba4b3f68f789041234a5a291ab5c33c0519918a01643d2f02698167758094",
+    "size": 260058
+  },
+  "cli": {
+    "path": "C:\\Users\\shtcl\\AppData\\Local\\Doubao\\User Data\\Default\\sandbox_envs_dir\\envs\\966b5a70-7daa-45e9-9d89-3f86f5c6a3f9\\override_dlcs\\lark-cli.exe",
+    "version": "lark-cli version v1.0.100+eef59cd",
+    "sha256": "8e8e4783427c245ac57694cbeeb78b48aa97584b26d67560cf929b1376e93f3e",
+    "size": 51229696
+  },
+  "dpi": 150,
+  "attempts": [
+    {
+      "argv": [
+        "C:\\Users\\shtcl\\AppData\\Local\\Doubao\\User Data\\Default\\sandbox_envs_dir\\envs\\966b5a70-7daa-45e9-9d89-3f86f5c6a3f9\\override_dlcs\\lark-cli.exe",
+        "docs",
+        "+word-to-pdf",
+        "--file",
+        "./input.docx",
+        "--wait-timeout-seconds",
+        "120",
+        "--output",
+        "./document.pdf",
+        "--if-exists",
+        "error",
+        "--format",
+        "json"
+      ],
+      "returncode": 0,
+      "stdout": {
+        "ok": true,
+        "identity": "user",
+        "data": {
+          "task_id": "render_UqMU8Hpwe_yusxhJWtl5Fg",
+          "status": "succeeded",
+          "pdf": {
+            "download_url": "https://api-drive-stream.feishu.cn/space/api/box/stream/download/authcode/?<redacted>",
+            "size": 679653,
+            "url_expires_at": 1792878156
+          },
+          "expires_at": 1792963938,
+          "output_path": "C:\\Users\\shtcl\\Doubao\\chats\\2026-10-16\\new-chat\\xlii_work\\render-s4b\\render-yxrgllip\\document.pdf",
+          "downloaded_size": 679653,
+          "upload_preparation": {
+            "compressed": false,
+            "strategy": "original",
+            "strategy_version": "word-render-media-v2",
+            "source_size_bytes": 260058,
+            "upload_size_bytes": 260058,
+            "images_compressed": 0,
+            "layout_preserved": true
+          },
+          "timings": {
+            "prepare_upload_ms": 26,
+            "create_task_ms": 771,
+            "poll_total_ms": 276,
+            "status_request_ms": 276,
+            "status_request_count": 1,
+            "download_pdf_ms": 815,
+            "total_ms": 1889
+          }
+        }
+      },
+      "stderr": ""
+    }
+  ],
+  "task_id": "render_UqMU8Hpwe_yusxhJWtl5Fg",
+  "cli_status": "succeeded",
+  "upload_preparation": {
+    "compressed": false,
+    "strategy": "original",
+    "strategy_version": "word-render-media-v2",
+    "source_size_bytes": 260058,
+    "upload_size_bytes": 260058,
+    "images_compressed": 0,
+    "layout_preserved": true
+  },
+  "expires_at": 1792963938,
+  "pdf": {
+    "file": "document.pdf",
+    "sha256": "d9d53c7b70c09b88f0364c9644af40c0e720df09a0f32029bad372bc98105d2b",
+    "size": 679653,
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "",
+      "producer": "",
+      "creationDate": "D:20261025053219+08'00'",
+      "modDate": "D:20261025053219+08'00'",
+      "trapped": "",
+      "encryption": null
+    }
+  },
+  "page_count": 6,
+  "pages": [
+    {
+      "page": 1,
+      "file": "page-0001.png",
+      "sha256": "70163eee735f37bb4a9bd4925892f217422d8493bd7340911fa9db0c9c2c4062",
+      "size": 319310,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 2,
+      "file": "page-0002.png",
+      "sha256": "ee1e35369bd48e1e9562f1e7e1d67ba2133e99ad4cade11c00a57f5ebefb7283",
+      "size": 283277,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 3,
+      "file": "page-0003.png",
+      "sha256": "944e268f541b046b595345461713404083e062cddce03d51d9ae475e90be7a1b",
+      "size": 260573,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 4,
+      "file": "page-0004.png",
+      "sha256": "cc72ff1c6a6904f6d315f109226848bb42168908a197f8c724c709d888f998c5",
+      "size": 388917,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 5,
+      "file": "page-0005.png",
+      "sha256": "058dca94739b02ff4aee25959a3cb4acd2d4c8b726295a8fb2da3969696cc1d1",
+      "size": 330350,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 6,
+      "file": "page-0006.png",
+      "sha256": "b287dd954d9a8daaffbfe1ca41bd627de52ff19a81d003753336a91c474abd7a",
+      "size": 117369,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    }
+  ],
+  "rasterizer": "PyMuPDF 1.27.2.2"
+}

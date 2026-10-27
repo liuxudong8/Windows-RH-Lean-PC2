@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-10-24T22:45:48.143770+00:00",
+  "status": "rendered",
+  "visual_review": "pending",
+  "channel": "lark-cli docs +word-to-pdf",
+  "input": {
+    "path": "C:\\Users\\shtcl\\Doubao\\chats\\2026-10-16\\document\\d1\\路2攻防XLII-S7-Yildirim方法移植闭路-L(s,χ_5)单族BGS型配对公式的存在性判定.docx",
+    "sha256": "f1b9ef9e7344ead3eda94d7a4f17795abdfc5683c05e4d69a1d93ba053fb2f73",
+    "size": 193691
+  },
+  "cli": {
+    "path": "C:\\Users\\shtcl\\AppData\\Local\\Doubao\\User Data\\Default\\sandbox_envs_dir\\envs\\966b5a70-7daa-45e9-9d89-3f86f5c6a3f9\\override_dlcs\\lark-cli.exe",
+    "version": "lark-cli version v1.0.100+eef59cd",
+    "sha256": "8e8e4783427c245ac57694cbeeb78b48aa97584b26d67560cf929b1376e93f3e",
+    "size": 51229696
+  },
+  "dpi": 150,
+  "attempts": [
+    {
+      "argv": [
+        "C:\\Users\\shtcl\\AppData\\Local\\Doubao\\User Data\\Default\\sandbox_envs_dir\\envs\\966b5a70-7daa-45e9-9d89-3f86f5c6a3f9\\override_dlcs\\lark-cli.exe",
+        "docs",
+        "+word-to-pdf",
+        "--file",
+        "./input.docx",
+        "--wait-timeout-seconds",
+        "120",
+        "--output",
+        "./document.pdf",
+        "--if-exists",
+        "error",
+        "--format",
+        "json"
+      ],
+      "returncode": 0,
+      "stdout": {
+        "ok": true,
+        "identity": "user",
+        "data": {
+          "task_id": "render_b5qLxJw65J1KejnmsX8HBg",
+          "status": "succeeded",
+          "pdf": {
+            "download_url": "https://api-drive-stream.feishu.cn/space/api/box/stream/download/authcode/?<redacted>",
+            "size": 590680,
+            "url_expires_at": 1792882383
+          },
+          "expires_at": 1792968180,
+          "output_path": "C:\\Users\\shtcl\\Doubao\\chats\\2026-10-16\\new-chat\\xlii_work\\render-s7\\render-pzm87k06\\document.pdf",
+          "downloaded_size": 590680,
+          "upload_preparation": {
+            "compressed": false,
+            "strategy": "original",
+            "strategy_version": "word-render-media-v2",
+            "source_size_bytes": 193691,
+            "upload_size_bytes": 193691,
+            "images_compressed": 0,
+            "layout_preserved": true
+          },
+          "timings": {
+            "prepare_upload_ms": 25,
+            "create_task_ms": 796,
+            "poll_total_ms": 2835,
+            "poll_sleep_ms": 501,
+            "status_request_ms": 2335,
+            "status_request_count": 1,
+            "download_pdf_ms": 671,
+            "total_ms": 4331
+          }
+        }
+      },
+      "stderr": ""
+    }
+  ],
+  "task_id": "render_b5qLxJw65J1KejnmsX8HBg",
+  "cli_status": "succeeded",
+  "upload_preparation": {
+    "compressed": false,
+    "strategy": "original",
+    "strategy_version": "word-render-media-v2",
+    "source_size_bytes": 193691,
+    "upload_size_bytes": 193691,
+    "images_compressed": 0,
+    "layout_preserved": true
+  },
+  "expires_at": 1792968180,
+  "pdf": {
+    "file": "document.pdf",
+    "sha256": "9476f0415b312917d28f61f8c1cebfc50f9478d24c55340e40e4cc01a1b383a2",
+    "size": 590680,
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "",
+      "producer": "",
+      "creationDate": "D:20261025064301+08'00'",
+      "modDate": "D:20261025064301+08'00'",
+      "trapped": "",
+      "encryption": null
+    }
+  },
+  "page_count": 6,
+  "pages": [
+    {
+      "page": 1,
+      "file": "page-0001.png",
+      "sha256": "e860fd1f4c236d09b6b8f728a411d3662f2272d5e39a8b4aa210dab8799d4051",
+      "size": 361377,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 2,
+      "file": "page-0002.png",
+      "sha256": "ae6b753099309d9a7e065ae7915b5097805f10909413ac7698d70f42fcb4d2e9",
+      "size": 327301,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 3,
+      "file": "page-0003.png",
+      "sha256": "00bb6b394f73374a2a3b094c93d9c1683eba623594782f4d93c37c7150f0ef9e",
+      "size": 343281,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 4,
+      "file": "page-0004.png",
+      "sha256": "e804a18900f7e8ee2ecc90643c54e35f72263def5054488e9262bcf0d830869e",
+      "size": 222300,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 5,
+      "file": "page-0005.png",
+      "sha256": "00fdfb062eba2b58c91df964bed51c12c816d102e9a4367a04e41d9e55bbe176",
+      "size": 383520,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 6,
+      "file": "page-0006.png",
+      "sha256": "0607ec1fee45bdf7396c191495f3585f680e79fac8744d089481803ae6961ddf",
+      "size": 155459,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    }
+  ],
+  "rasterizer": "PyMuPDF 1.27.2.2"
+}

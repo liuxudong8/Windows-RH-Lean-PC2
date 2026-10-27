@@ -1,0 +1,9 @@
+﻿pow_le_pow_left₀.{u_2} {M₀ : Type u_2} [MonoidWithZero M₀] [Preorder M₀] {a b : M₀} [PosMulMono M₀] [MulPosMono M₀]
+  (ha : 0 ≤ a) (hab : a ≤ b) (n : ℕ) : a ^ n ≤ b ^ n
+Dbg_Probe.lean:8:7: error(lean.unknownIdentifier): Unknown identifier `pow_le_pow_left`
+Dbg_Probe.lean:9:7: error(lean.unknownIdentifier): Unknown identifier `inv_le_inv_of_le₀`
+one_div_le_one_div.{u_1} {α : Type u_1} [Semifield α] [PartialOrder α] [PosMulReflectLT α] {a b : α}
+  [IsStrictOrderedRing α] (ha : 0 < a) (hb : 0 < b) : 1 / a ≤ 1 / b ↔ b ≤ a
+abs_of_nonneg.{u_1} {α : Type u_1} [Lattice α] [AddGroup α] {a : α} [AddLeftMono α] (h : 0 ≤ a) : |a| = a
+div_eq_mul_inv.{u_1} {G : Type u_1} [DivInvMonoid G] (a b : G) : a / b = a * b⁻¹
+inv_mul_cancel₀.{u_3} {G₀ : Type u_3} [GroupWithZero G₀] {a : G₀} (h : a ≠ 0) : a⁻¹ * a = 1

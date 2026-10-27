@@ -1,0 +1,10 @@
+﻿D:\F\Anaconda3\anaconda_3\python.exe : C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\entF_work\detF_base.py:46: Depre
+cationWarning: Calling np.sum(generator) is deprecated, and in the future will give a different result. Use np.sum(np.f
+romiter(generator)) or the python sum builtin instead.
+所在位置 行:1 字符: 1
++ D:\F\Anaconda3\anaconda_3\python.exe "C:\Users\shtcl\Doubao\chats\202 ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (C:\Users\shtcl\...uiltin instead.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  Sb = float(np.sum(window_sum(z, tt, W, ell) for tt in blk))

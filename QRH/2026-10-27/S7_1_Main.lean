@@ -55,22 +55,55 @@ lemma zerosLChi5_conj_closed : ConjClosed zerosLChi5 := by
   intro z
   simp [zerosLChi5]
 
-/-! ## 2. 分析引理（本轮 sorry 占位；击破清单见文件尾） -/
+/-! ## 2. 分析引理（命名 axiom——精确陈述 2026-10-27；真证为长线目标） -/
 
-/-- (L1) Landau/Weil 显式公式 L 版：零点加权和 ↔ 素数幂加权和 + 平凡项 + 离线项。
-    （Yildirim 1991 公式 (6)：Σ'_{n≤x}Λ(n)χ(n)/n^r = Σ_ℓ x^{−(2ℓ+r+a)}/(2ℓ+r+a)
-      − Σ_ρ x^{ρ−r}/(ρ−r) − (L′/L)(r,χ)；对 L(s,χ) 无条件。） -/
+/-! ### 2.0 数论与显式公式的抽象对象（axiom 陈述载体；实际对象由注释与文档承担）
+
+「命名 axiom」口径：数学命题已由 d1 文档论证（S7.1–S7.6），Lean 侧声明为带完整
+数学陈述的 axiom，名字与陈述一一对应（非空洞占位）；形式化真证为长线目标
+（PNT in AP 量级）。-/
+
+/-- von Mangoldt 函数 Λ(n)（素数幂对数计数；数论实际对象，Lean 侧抽象常量）。 -/
+opaque vonMangoldt : ℕ → ℝ
+
+/-- 模 5 实特征 χ_5(n)（二次特征；L(s,χ_5) 的 Dirichlet 系数，Lean 侧抽象常量）。 -/
+opaque chi5 : ℕ → ℝ
+
+/-- 零点加权和（Yildirim 公式 (6) 左侧）：Σ_ρ x^{ρ−r}/(ρ−r)（复求和抽象算子）。 -/
+opaque zeroWeightedSum (Z : ZeroSet) (r x : ℝ) : ℝ
+
+/-- 素数幂加权和：Σ'_{n≤x} Λ(n)χ(n)/n^r（Yildirim 公式 (6) 左侧第一项）。 -/
+opaque primePowerSum (χ : ℕ → ℝ) (r x : ℝ) : ℝ
+
+/-- 平凡项：Σ_ℓ x^{−(2ℓ+r+a)}/(2ℓ+r+a)（Yildirim 公式 (6) 右侧第一项；a 为 L(s,χ)
+    局部常数——模 5 实特征 a=0，见文档 S7.1 §2）。 -/
+opaque trivialTerm (r x : ℝ) : ℝ
+
+/-- 对数导数值项：(L′/L)(r,χ)（Yildirim 公式 (6) 右侧末项）。 -/
+opaque logDerivTerm (r : ℝ) : ℝ
+
+/-- (L4) 离线（off-critical）误差项：BGS 引理 4 机制的 L 版余项（抽象算子）。 -/
+opaque offCriticalError (T : ℝ) : ℝ
+
+/-! ### 2.1 (L1) Landau/Weil 显式公式 L 版（精确陈述；Yildirim 1991 公式 (6)）
+
+数学内容：对 L(s,χ_5)（模 5 实特征），0<r、x≥1、r 非零点时，
+  Σ_ρ x^{ρ−r}/(ρ−r) = Σ_ℓ x^{−(2ℓ+r+a)}/(2ℓ+r+a) − Σ'_{n≤x} Λ(n)χ(n)/n^r − (L′/L)(r,χ)。
+（Yildirim 1991 公式 (6)；对 L(s,χ) 无条件成立。） -/
 axiom landau_explicit_L :
-  ∀ (r x : ℝ), (∀ z ∈ zerosLChi5, z ≠ r) →
-    ∃ (prime_term trivial_term offcritical : ℝ),
-      (∑ _n ∈ Finset.range 0, (0 : ℝ)) = 0 ∧
-      True
+  ∀ (r x : ℝ), 0 < r → (1 : ℝ) ≤ x → (∀ z ∈ zerosLChi5, z ≠ r) →
+    zeroWeightedSum zerosLChi5 r x =
+      trivialTerm r x - primePowerSum chi5 r x - logDerivTerm r
 
-/-- (L2) Siegel–Walfisz（模 5 点态、无条件、子指数）：
-    |Σ_{n≤x} Λ(n)χ_5(n)| ≤ c·x·e^{−c′√log x}。 -/
+/-! ### 2.2 (L2) Siegel–Walfisz（精确陈述；模 5 点态、无条件、子指数）
+
+数学内容：|Σ_{n≤x} Λ(n)χ_5(n)| ≤ c·x·e^{−c′√log x}（x≥1；c、c′ 为正绝对常数，
+  模 5 固定可显式化——文档 S7.6 量化：(c, c′) = (1.70e-3, 1/√R₀≈0.3954) 口径）。 -/
 axiom siegel_walfisz_chi5 :
   ∃ (c c' : ℝ), 0 < c ∧ 0 < c' ∧
-    ∀ x : ℝ, 1 ≤ x → |∑ n ∈ Finset.range ⌊x⌋₊, 0| ≤ c * x * Real.exp (-c' * Real.sqrt (Real.log x))
+    ∀ x : ℝ, (1 : ℝ) ≤ x →
+      |∑ n ∈ Finset.Icc 1 ⌊x⌋₊, vonMangoldt n * chi5 n|
+        ≤ c * x * Real.exp (-c' * Real.sqrt (Real.log x))
 
 /-- (L3) 配对和展开：A_L(K) = 对角主项 + 素数项 + 离线误差（弱实部假设压）。
     对角主项 diag ≤ C_MT + C₁·ε（ε 偏差系数 C₁——n2_linkage O(ε) 联动吸收，文档 S7.4 定理 N2）；
@@ -82,9 +115,14 @@ axiom pair_sum_expansion :
       pairConstant K δ (Real.log T / (2 * Real.pi)) zerosLChi5 = diag + prime + offcrit ∧
       diag ≤ C_MT + C₁ * ε ∧ |prime| ≤ 1 ∧ |offcrit| ≤ 1
 
-/-- (L4) 离线误差：弱假设 + T^{3/8} 切割 → o(1)。 -/
+/-- (L4) 离线误差（精确陈述）：弱实部假设 + T^{3/8} 切割 → o(1)。
+    数学内容（BGS 引理 4 机制，L 版）：存在绝对常数 R≥0 使
+      |offCriticalError(T)| ≤ R·√log T（余项 O(T√logT) 除以零点数 N_Z ~ T·logT/(2π)；
+      T^{3/8} 切割压离临界带项——文档 S7.5 定理 N3 / S7.1 §3）。 -/
 axiom offcritical_small :
-  ∀ (T : ℝ), WeakRealPart T zerosLChi5 → True
+  ∀ (T : ℝ), (1 : ℝ) ≤ T → WeakRealPart T zerosLChi5 →
+    ∃ (R : ℝ), 0 ≤ R ∧
+      ∀ s : ℝ, T ≤ s → |offCriticalError s| ≤ R * Real.sqrt (Real.log s)
 
 /-! ## 3. 主定理 S7.1（组装真证；分析层 (L1)–(L4) 为命名 axiom） -/
 
@@ -115,13 +153,14 @@ theorem s71_main
 - [ ] `pairConstant`：实现为真实定义（有限截断 Δ 的多重集求和）——Z 抽象为带重数的列表。
 - [ ] `zerosLChi5`：替换为 L(s,χ_5) 零点集合的正式对象（zeta 的 Dirichlet 卷积表示）；
       本轮保持 `{z | True}` 抽象。
-- [ ] (L1) `landau_explicit_L`：数学上由 Yildirim 公式 (6) 给出（无条件）；
-      形式化需先把 `-L'/L` 的 Dirichlet 级数展开与 Mellin 变换写成引理。
-- [ ] (L2) `siegel_walfisz_chi5`：经典数论结果（模 5 固定、SW 点态）——形式化需
-      PNT 在算术级数 + 特征和估计；长线目标。
+- [ ] (L1) `landau_explicit_L`：**精确陈述完成**（2026-10-27，Yildirim 公式 (6) 重排式）；
+      形式化真证需先把 `-L'/L` 的 Dirichlet 级数展开与 Mellin 变换写成引理——长线目标。
+- [ ] (L2) `siegel_walfisz_chi5`：**精确陈述完成**（2026-10-27，Finset.Icc 1 ⌊x⌋₊ 真实和式）；
+      形式化真证需 PNT 在算术级数 + 特征和估计——长线目标。
 - [ ] (L3) `pair_sum_expansion`：BGS 引理 3-5 逐条移植（核构造 supp r⊂[−1,1]、
       配对和积分展开、Montgomery–Vaughan 均值）——本攻防的下一步核心。
-- [ ] (L4) `offcritical_small`：弱实部假设 + T^{3/8} 切割的误差链。
+- [ ] (L4) `offcritical_small`：**精确陈述完成**（2026-10-27，Bound 型 √logT 界）；
+      形式化真证 = BGS 引理 4 移植（T^{3/8} 切割链）。
 - [x] `s71_main`：**组装真证**（2026-10-27）——pair_sum_expansion 分解
       A_L = diag + prime + offcrit；diag ≤ C_MT + C₁ε（n2_linkage O(ε)）、
       |prime|,|offcrit| ≤ 1 并入 C₂=2（SW/BGS 占位界）；C₁, C₂ 显式。

@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-10-19T03:50:17.060053+00:00",
+  "status": "rendered",
+  "visual_review": "pending",
+  "channel": "lark-cli docs +word-to-pdf",
+  "input": {
+    "path": "D:\\F\\有名公司同事文档\\刘旭东文集\\document\\d1\\L4交叉项估计II-涨落符号定向与在线桥完整余项链.docx",
+    "sha256": "2470d3e84e4dbf90f8686966e3e6066481f74c2c8fcebc70b7cd113bec669a67",
+    "size": 46113
+  },
+  "cli": {
+    "path": "C:\\Users\\shtcl\\AppData\\Local\\Doubao\\User Data\\Default\\sandbox_envs_dir\\envs\\966b5a70-7daa-45e9-9d89-3f86f5c6a3f9\\override_dlcs\\lark-cli.exe",
+    "version": "lark-cli version v1.0.100+eef59cd",
+    "sha256": "8e8e4783427c245ac57694cbeeb78b48aa97584b26d67560cf929b1376e93f3e",
+    "size": 51229696
+  },
+  "dpi": 150,
+  "attempts": [
+    {
+      "argv": [
+        "C:\\Users\\shtcl\\AppData\\Local\\Doubao\\User Data\\Default\\sandbox_envs_dir\\envs\\966b5a70-7daa-45e9-9d89-3f86f5c6a3f9\\override_dlcs\\lark-cli.exe",
+        "docs",
+        "+word-to-pdf",
+        "--file",
+        "./input.docx",
+        "--wait-timeout-seconds",
+        "120",
+        "--output",
+        "./document.pdf",
+        "--if-exists",
+        "error",
+        "--format",
+        "json"
+      ],
+      "returncode": 0,
+      "stdout": {
+        "ok": true,
+        "identity": "user",
+        "data": {
+          "task_id": "render_o3CjR6TlHA0mXerBUtbTKQ",
+          "status": "succeeded",
+          "pdf": {
+            "download_url": "https://api-drive-stream.feishu.cn/space/api/box/stream/download/authcode/?<redacted>",
+            "size": 485320,
+            "url_expires_at": 1792382256
+          },
+          "expires_at": 1792468052,
+          "output_path": "C:\\Users\\shtcl\\Doubao\\chats\\2026-10-16\\new-chat\\d1_l4_work\\render2\\render-vvp9uik0\\document.pdf",
+          "downloaded_size": 485320,
+          "upload_preparation": {
+            "compressed": false,
+            "strategy": "original",
+            "strategy_version": "word-render-media-v2",
+            "source_size_bytes": 46113,
+            "upload_size_bytes": 46113,
+            "images_compressed": 0,
+            "layout_preserved": true
+          },
+          "timings": {
+            "prepare_upload_ms": 7,
+            "create_task_ms": 810,
+            "poll_total_ms": 3926,
+            "poll_sleep_ms": 501,
+            "status_request_ms": 3426,
+            "status_request_count": 1,
+            "download_pdf_ms": 486,
+            "total_ms": 5230
+          }
+        }
+      },
+      "stderr": ""
+    }
+  ],
+  "task_id": "render_o3CjR6TlHA0mXerBUtbTKQ",
+  "cli_status": "succeeded",
+  "upload_preparation": {
+    "compressed": false,
+    "strategy": "original",
+    "strategy_version": "word-render-media-v2",
+    "source_size_bytes": 46113,
+    "upload_size_bytes": 46113,
+    "images_compressed": 0,
+    "layout_preserved": true
+  },
+  "expires_at": 1792468052,
+  "pdf": {
+    "file": "document.pdf",
+    "sha256": "88779744afa8e5295bad93a8d9bbbddd3b49d646f64193d7a11ea9c7412e5c03",
+    "size": 485320,
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "",
+      "producer": "",
+      "creationDate": "D:20261019114734+08'00'",
+      "modDate": "D:20261019114734+08'00'",
+      "trapped": "",
+      "encryption": null
+    }
+  },
+  "page_count": 6,
+  "pages": [
+    {
+      "page": 1,
+      "file": "page-0001.png",
+      "sha256": "f10506bce9482c6126b9c30949a737b2fcb606031416a47cb620487d9669d5a3",
+      "size": 333841,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 2,
+      "file": "page-0002.png",
+      "sha256": "f4dd6cc2fdc524402813b906d53d0bf6112c79003c9be8d0c3ee87e99e5be179",
+      "size": 255074,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 3,
+      "file": "page-0003.png",
+      "sha256": "1e5f456091bdabb267d10aaa8cf3d29e1e7fc2e578af2c2c9025ed6e8fc2a0fd",
+      "size": 298968,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 4,
+      "file": "page-0004.png",
+      "sha256": "da6adf6c578919b69d4d3707f73d70794f98e58c4eef29b1000f7d88cb5660fc",
+      "size": 258880,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 5,
+      "file": "page-0005.png",
+      "sha256": "3c0b77e04656e8f760b2cf7a198ada0de8d6035c2fd834ebbd6727f144610e32",
+      "size": 319596,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 6,
+      "file": "page-0006.png",
+      "sha256": "dcd8cbdf61102f723db11b8e0fbc288aa9e8ca822bf69f488c35cc4ed03a8c0a",
+      "size": 119542,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    }
+  ],
+  "rasterizer": "PyMuPDF 1.28.2"
+}

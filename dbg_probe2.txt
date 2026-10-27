@@ -1,0 +1,12 @@
+﻿Dbg_Probe2.lean:8:5: warning: Variable name `hone` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hone
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+Dbg_Probe2.lean:12:5: warning: Variable name `hone` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hone
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`

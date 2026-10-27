@@ -1,0 +1,17 @@
+﻿nz=1369141 nl=1570076 rz=1.7701 rl=2.0263 rhoP=1.9633
+python.exe : C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_ctl.py:14: RuntimeWarning: invalid value 
+encountered in divide
+所在位置 行:1 字符: 1
++ & "D:\F\Anaconda3\anaconda_3\python.exe" -u "C:\Users\shtcl\Doubao\ch ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (C:\Users\shtcl\...tered in divide:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  return np.where(np.abs(x) < 1e-12, 1.0, np.sin(x) / x)
+a=0.005  ζ×L=+3.607e-03  ζ×Poisson=+3.738e-03  ζ×Lshuf=+3.696e-03  独立L=+1.908e-03 独立P=+1.849e-03
+a=0.01  ζ×L=+7.223e-03  ζ×Poisson=+7.477e-03  ζ×Lshuf=+7.370e-03  独立L=+3.816e-03 独立P=+3.697e-03
+a=0.02  ζ×L=+1.450e-02  ζ×Poisson=+1.488e-02  ζ×Lshuf=+1.468e-02  独立L=+7.631e-03 独立P=+7.394e-03
+a=0.05  ζ×L=+3.635e-02  ζ×Poisson=+3.694e-02  ζ×Lshuf=+3.653e-02  独立L=+1.908e-02 独立P=+1.849e-02
+a=0.1  ζ×L=+7.267e-02  ζ×Poisson=+7.394e-02  ζ×Lshuf=+7.290e-02  独立L=+3.816e-02 独立P=+3.697e-02
+a=0.2  ζ×L=+1.454e-01  ζ×Poisson=+1.482e-01  ζ×Lshuf=+1.458e-01  独立L=+7.631e-02 独立P=+7.394e-02
+elapsed 6s

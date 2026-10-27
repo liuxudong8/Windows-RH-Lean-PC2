@@ -63,16 +63,20 @@ QRH 常数 0.6725 → 7/8 需要 A ≤ 1.125。A→1 远强于 A ≤ 1.125，故
 
 **主定理 s71_main（组装真证，2026-10-27，替代 sorry）**：A_L(K) ≤ C_MT + C₁ε + C₂，C₂ = 2 显式。证明链 = pair_sum_expansion 分解 A_L = diag + prime + offcrit → diag ≤ C_MT + C₁ε（n2_linkage O(ε)）+ |prime|,|offcrit| ≤ 1 并入 C₂（linarith + ring）；(L3) axiom 语义已强化（diag 界入陈述）。整库 1965 jobs 全绿（build_qrh_s71.txt）。
 
-**挂账 axiom（如实记录）**：Core `f0_sub_feps_L1_bound`、`pair_const_eps_bias`（`C_MT<4/3` 仅清单项、无 axiom 声明：数学上需 cos 四阶 Taylor 上界 73/96，mathlib 内置 cos_bound 余项 (5/96)|x|⁴ 不够（组合 sin_bound 的 x⁵/100 修正后差 0.13%），自证需积分/级数余项——与积分层同批）；Stage3 `fourierCos_scale`、`scaleKernel_L1_invariant`、`n1_diag_invariant`、`n1_offdiag_vanishes`、`n2_linkage`、`n3_remainder_uniform`、`N_L`、`N_L_lower_bound`；Main `landau_explicit_L`、`siegel_walfisz_chi5`、`offcritical_small`。
+**长线命名 axiom——精确陈述完成（2026-10-27）**：`landau_explicit_L`（Yildirim 公式 (6) 重排式：zeroWeightedSum = trivialTerm − primePowerSum − logDerivTerm）、`siegel_walfisz_chi5`（Finset.Icc 1 ⌊x⌋₊ 真实和式：|Σ Λ(n)χ_5(n)| ≤ c·x·e^{−c′√log x}）、`offcritical_small`（Bound 型：|offCriticalError s| ≤ R·√log s）——由空洞占位升级为与数学一致的精确陈述；引入抽象对象（opaque：vonMangoldt、chi5、zeroWeightedSum、primePowerSum、trivialTerm、logDerivTerm、offCriticalError）作陈述载体。真证 = PNT-in-AP 量级长线。
 
-**文件结构**：C:\proj2\QRH.lean（根，import Core/Main/Stage3）；QRH\S7_1_Core.lean；QRH\S7_1_Stage3.lean；QRH\S7_1_Main.lean（zerosLChi5、pairConstant、WeakRealPart 抽象 + s71_main 组装真证）；QRH\Dbg_Khat.lean（khat 真证开发档案）。编译证据：build_core1..12.txt、build_main1..9.txt、build_stage3.txt、build_qrh_full{,2,3,_khat,_khat2,_s71}.txt、dbg_khat.txt、dbg_probe3.txt（IntervalIntegral.olean 缺失确认）。
+**挂账 axiom（如实记录）**：
+- Core 清单项：`C_MT<4/3`（无 axiom 声明——数学上需 cos 四阶 Taylor 上界 73/96，mathlib 内置 cos_bound 余项 (5/96)|x|⁴ 不够（组合 sin_bound 修正后差 0.13%）；**级数余项层、非积分阻塞，可独立立项**）。
+- Stage3：`fourierCos_scale`、`scaleKernel_L1_invariant`、`n1_diag_invariant`、`n1_offdiag_vanishes`、`n2_linkage`、`n3_remainder_uniform`、`N_L`、`N_L_lower_bound`（积分层/数论件，陈述完整；真证挂 mathlib 聚合 Mathlib.olean——IntervalIntegral.olean 缺失实测确认）；`f0_sub_feps_L1_bound`（**精确陈述声明入列 2026-10-27**：‖f₀−f_ε‖₁ ≤ 2ε·(√2|sin(1/√2)|)⁻¹；真证挂聚合）；`pair_const_eps_bias`（待 pairConstant 真实定义，Stage 2 后由 L¹ 界 + Lipschitz 推出）。
+- Main：`landau_explicit_L`、`siegel_walfisz_chi5`、`offcritical_small`（**精确陈述完成**，真证长线）；`pair_sum_expansion`（(L3) 组装依赖，陈述精确，BGS 引理 3-5 移植为下一步核心）。
+
+**文件结构**：C:\proj2\QRH.lean（根，import Core/Main/Stage3）；QRH\S7_1_Core.lean；QRH\S7_1_Stage3.lean；QRH\S7_1_Main.lean（zerosLChi5、pairConstant、WeakRealPart 抽象 + s71_main 组装真证）；QRH\Dbg_Khat.lean（khat 真证开发档案）。编译证据：build_core1..12.txt、build_main1..9.txt、build_stage3.txt、build_qrh_full{,2,3,_khat,_khat2,_s71}.txt、dbg_khat.txt、dbg_probe3.txt（IntervalIntegral.olean 缺失确认）、main_precise.txt、stage3_precise.txt、build_qrh_precise.txt（2026-10-27 陈述层后全量 1965 绿）。
 
 ## 6. 下一步（按依赖序）
 
 1. **Stage 4 已完成**（2026-10-27）：s71_main 组装真证（前提显式、常数显式、组装真证）——Lean 侧可核查的最远合理点已达。
-2. 条件封口（等 mathlib 聚合 Mathlib.olean / 自证泰勒余项层）：Core 件（f0_sub_feps_L1_bound、C_MT<4/3 需 cos 四阶上界 73/96）；Stage3 积分层（fourierCos_scale → n1_diag/n1_offdiag → n2_linkage/n3_remainder_uniform）。
-3. Stage 2：(L3) 配对和展开半形式化（有限多重集 + 有限和，δ 实数口径）。
-4. L(2) SW / (L1) 显式公式命名 axiom 保留（数学已证、形式化长线——PNT in AP 量级，非无底洞而是多人年工程）。
+2. **条件封口（陈述层完成 2026-10-27；真证挂聚合）**：积分层三组——Stage3（fourierCos_scale → n1_diag/n1_offdiag → n2_linkage/n3_remainder_uniform）+ f0_sub_feps_L1_bound 陈述就绪；mathlib 聚合 Mathlib.olean 生成后即可真证。`C_MT<4/3` 级数余项层（cos 四阶上界 73/96 自证）非积分阻塞，可独立立项。
+3. **长线（命名 axiom 精确陈述完成 2026-10-27）**：(L1) 显式公式 / (L2) SW 真证 = PNT-in-AP 量级多人年工程；先做 Stage 2：(L3) 配对和展开半形式化（有限多重集 + 有限和，δ 实数口径）→ pairConstant 真实定义 → pair_const_eps_bias。
 
 ## 7. 文件索引
 

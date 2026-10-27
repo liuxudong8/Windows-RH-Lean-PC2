@@ -1,0 +1,253 @@
+﻿python.exe : C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 26680 (\N{C
+JK UNIFIED IDEOGRAPH-6838}) missing from font(s) DejaVu Sans.
+所在位置 行:1 字符: 1
++ & "D:\F\Anaconda3\anaconda_3\python.exe" -u "C:\Users\shtcl\Doubao\ch ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (C:\Users\shtcl\...s) DejaVu Sans.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 23485 (\N{CJK UNIFIED ID
+EOGRAPH-5BBD}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 65288 (\N{FULLWIDTH LEFT
+ PARENTHESIS}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 21475 (\N{CJK UNIFIED ID
+EOGRAPH-53E3}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 24452 (\N{CJK UNIFIED ID
+EOGRAPH-5F84}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 65292 (\N{FULLWIDTH COMM
+A}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 65289 (\N{FULLWIDTH RIGH
+T PARENTHESIS}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 36328 (\N{CJK UNIFIED ID
+EOGRAPH-8DE8}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 26063 (\N{CJK UNIFIED ID
+EOGRAPH-65CF}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 20132 (\N{CJK UNIFIED ID
+EOGRAPH-4EA4}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 21449 (\N{CJK UNIFIED ID
+EOGRAPH-53C9}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 37197 (\N{CJK UNIFIED ID
+EOGRAPH-914D}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 23545 (\N{CJK UNIFIED ID
+EOGRAPH-5BF9}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 24120 (\N{CJK UNIFIED ID
+EOGRAPH-5E38}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 25968 (\N{CJK UNIFIED ID
+EOGRAPH-6570}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 65306 (\N{FULLWIDTH COLO
+N}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 32447 (\N{CJK UNIFIED ID
+EOGRAPH-7EBF}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 24615 (\N{CJK UNIFIED ID
+EOGRAPH-6027}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 26631 (\N{CJK UNIFIED ID
+EOGRAPH-6807}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 24230 (\N{CJK UNIFIED ID
+EOGRAPH-5EA6}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 29031 (\N{CJK UNIFIED ID
+EOGRAPH-7167}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 31216 (\N{CJK UNIFIED ID
+EOGRAPH-79F0}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 20013 (\N{CJK UNIFIED ID
+EOGRAPH-4E2D}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 24515 (\N{CJK UNIFIED ID
+EOGRAPH-5FC3}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 38543 (\N{CJK UNIFIED ID
+EOGRAPH-968F}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 26426 (\N{CJK UNIFIED ID
+EOGRAPH-673A}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 20301 (\N{CJK UNIFIED ID
+EOGRAPH-4F4D}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 31227 (\N{CJK UNIFIED ID
+EOGRAPH-79FB}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 29420 (\N{CJK UNIFIED ID
+EOGRAPH-72EC}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 31435 (\N{CJK UNIFIED ID
+EOGRAPH-7ACB}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 39044 (\N{CJK UNIFIED ID
+EOGRAPH-9884}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 27979 (\N{CJK UNIFIED ID
+EOGRAPH-6D4B}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 24494 (\N{CJK UNIFIED ID
+EOGRAPH-5FAE}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 20114 (\N{CJK UNIFIED ID
+EOGRAPH-4E92}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 26021 (\N{CJK UNIFIED ID
+EOGRAPH-65A5}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 23454 (\N{CJK UNIFIED ID
+EOGRAPH-5B9E}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 31995 (\N{CJK UNIFIED ID
+EOGRAPH-7CFB}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 20845 (\N{CJK UNIFIED ID
+EOGRAPH-516D}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 26723 (\N{CJK UNIFIED ID
+EOGRAPH-6863}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 31283 (\N{CJK UNIFIED ID
+EOGRAPH-7A33}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:64: UserWarning: Glyph 23450 (\N{CJK UNIFIED ID
+EOGRAPH-5B9A}) missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 36328 (\N{CJK UNIFIED ID
+EOGRAPH-8DE8}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 26063 (\N{CJK UNIFIED ID
+EOGRAPH-65CF}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 20132 (\N{CJK UNIFIED ID
+EOGRAPH-4EA4}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 21449 (\N{CJK UNIFIED ID
+EOGRAPH-53C9}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 37197 (\N{CJK UNIFIED ID
+EOGRAPH-914D}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 23545 (\N{CJK UNIFIED ID
+EOGRAPH-5BF9}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 24120 (\N{CJK UNIFIED ID
+EOGRAPH-5E38}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 25968 (\N{CJK UNIFIED ID
+EOGRAPH-6570}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 65306 (\N{FULLWIDTH COLO
+N}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 32447 (\N{CJK UNIFIED ID
+EOGRAPH-7EBF}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 24615 (\N{CJK UNIFIED ID
+EOGRAPH-6027}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 26631 (\N{CJK UNIFIED ID
+EOGRAPH-6807}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 24230 (\N{CJK UNIFIED ID
+EOGRAPH-5EA6}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 29031 (\N{CJK UNIFIED ID
+EOGRAPH-7167}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 26680 (\N{CJK UNIFIED ID
+EOGRAPH-6838}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 23485 (\N{CJK UNIFIED ID
+EOGRAPH-5BBD}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 65288 (\N{FULLWIDTH LEFT
+ PARENTHESIS}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 21475 (\N{CJK UNIFIED ID
+EOGRAPH-53E3}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 24452 (\N{CJK UNIFIED ID
+EOGRAPH-5F84}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 65292 (\N{FULLWIDTH COMM
+A}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 65289 (\N{FULLWIDTH RIGH
+T PARENTHESIS}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 31216 (\N{CJK UNIFIED ID
+EOGRAPH-79F0}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 20013 (\N{CJK UNIFIED ID
+EOGRAPH-4E2D}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 24515 (\N{CJK UNIFIED ID
+EOGRAPH-5FC3}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 38543 (\N{CJK UNIFIED ID
+EOGRAPH-968F}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 26426 (\N{CJK UNIFIED ID
+EOGRAPH-673A}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 20301 (\N{CJK UNIFIED ID
+EOGRAPH-4F4D}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 31227 (\N{CJK UNIFIED ID
+EOGRAPH-79FB}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 29420 (\N{CJK UNIFIED ID
+EOGRAPH-72EC}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 31435 (\N{CJK UNIFIED ID
+EOGRAPH-7ACB}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 39044 (\N{CJK UNIFIED ID
+EOGRAPH-9884}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 27979 (\N{CJK UNIFIED ID
+EOGRAPH-6D4B}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 24494 (\N{CJK UNIFIED ID
+EOGRAPH-5FAE}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 20114 (\N{CJK UNIFIED ID
+EOGRAPH-4E92}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 26021 (\N{CJK UNIFIED ID
+EOGRAPH-65A5}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 23454 (\N{CJK UNIFIED ID
+EOGRAPH-5B9E}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 31995 (\N{CJK UNIFIED ID
+EOGRAPH-7CFB}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 20845 (\N{CJK UNIFIED ID
+EOGRAPH-516D}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 26723 (\N{CJK UNIFIED ID
+EOGRAPH-6863}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 31283 (\N{CJK UNIFIED ID
+EOGRAPH-7A33}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.py:66: UserWarning: Glyph 23450 (\N{CJK UNIFIED ID
+EOGRAPH-5B9A}) missing from font(s) DejaVu Sans.
+  fig.savefig(out, dpi=200)
+saved: C:\Users\shtcl\Doubao\chats\2026-10-16\new-chat\qrh_work\xlii_s5_fig.png
