@@ -1,0 +1,14 @@
+FourierProbe.lean:4:7: error(lean.unknownIdentifier): Unknown identifier `MeasureTheory.integral_congr`
+MeasureTheory.integral_const_mul.{u_1, u_6} {α : Type u_1} {m : MeasurableSpace α} {μ : MeasureTheory.Measure α}
+  {L : Type u_6} [RCLike L] (r : L) (f : α → L) : ∫ (a : α), r * f a ∂μ = r * ∫ (a : α), f a ∂μ
+MeasureTheory.integral_map.{u_1, u_5, u_6} {α : Type u_1} {G : Type u_5} [NormedAddCommGroup G] [NormedSpace ℝ G]
+  {m : MeasurableSpace α} {μ : MeasureTheory.Measure α} {β : Type u_6} [MeasurableSpace β] {φ : α → β}
+  (hφ : AEMeasurable φ μ) {f : β → G} (hfm : MeasureTheory.AEStronglyMeasurable f (MeasureTheory.Measure.map φ μ)) :
+  ∫ (y : β), f y ∂MeasureTheory.Measure.map φ μ = ∫ (x : α), f (φ x) ∂μ
+MeasureTheory.integral_smul_measure.{u_1, u_5} {α : Type u_1} {G : Type u_5} [NormedAddCommGroup G] [NormedSpace ℝ G]
+  {m : MeasurableSpace α} {μ : MeasureTheory.Measure α} (f : α → G) (c : ENNReal) :
+  ∫ (x : α), f x ∂c • μ = c.toReal • ∫ (x : α), f x ∂μ
+FourierProbe.lean:8:7: error(lean.unknownIdentifier): Unknown identifier `MeasureTheory.volume_map_mul_left`
+FourierProbe.lean:9:7: error(lean.unknownIdentifier): Unknown constant `MeasureTheory.Measure.map_mul_left`
+FourierProbe.lean:10:7: error(lean.unknownIdentifier): Unknown constant `MeasureTheory.Measure.map_mul_left_eq_self`
+FourierProbe.lean:11:7: error(lean.unknownIdentifier): Unknown identifier `MeasureTheory.volume_map_add_left`

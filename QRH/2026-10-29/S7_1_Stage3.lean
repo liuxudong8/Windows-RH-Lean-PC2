@@ -65,9 +65,45 @@ lemma scaleKernel_support (a : ℝ) (ha : 0 < a) (r : ℝ → ℝ)
   rw [hsupp (α / a) hquot]
   ring
 
-/-- N1-频域缩放（statement，S7.3 定理 N1(iv)）：r̂_a(z) = r̂(az)——Fourier 变换变量替换。 -/
-axiom fourierCos_scale (a : ℝ) (ha : 0 < a) (r : ℝ → ℝ) (z : ℝ) :
-  fourierCos (scaleKernel a r) z = fourierCos r (a * z)
+/-- N1-频域缩放（真证，2026-10-29）：r̂_a(z) = r̂(az)——Fourier 变换变量替换
+    （S7.3 定理 N1(iv)）。证明链：integral_const_mul（提出 1/a）+
+    Measure.integral_comp_inv_mul_left（Haar 变量替换 x ↦ a⁻¹x，无正则性前提——
+    scaleKernel_L1_invariant 同款）+ integral_congr_ae（cos 参数 ring 重写）+ field_simp（消 |a|）。 -/
+lemma fourierCos_scale (a : ℝ) (ha : 0 < a) (r : ℝ → ℝ) (z : ℝ) :
+    fourierCos (scaleKernel a r) z = fourierCos r (a * z) := by
+  unfold fourierCos scaleKernel
+  calc
+    ∫ x : ℝ, ((1 / a) * r (x / a)) * Real.cos (2 * Real.pi * z * x)
+        = ∫ x : ℝ, (1 / a) * (r (x / a) * Real.cos (2 * Real.pi * z * x)) := by
+          apply MeasureTheory.integral_congr_ae
+          filter_upwards with x
+          ring
+    _ = (1 / a) * ∫ x : ℝ, r (x / a) * Real.cos (2 * Real.pi * z * x) := by
+          exact MeasureTheory.integral_const_mul (1 / a)
+            (fun x : ℝ => r (x / a) * Real.cos (2 * Real.pi * z * x))
+    _ = (1 / a) * (|a| * ∫ y : ℝ, r y * Real.cos (2 * Real.pi * (a * z) * y)) := by
+          congr 1
+          calc
+            ∫ x : ℝ, r (x / a) * Real.cos (2 * Real.pi * z * x)
+                = ∫ x : ℝ, r (a⁻¹ * x) * Real.cos (2 * Real.pi * z * (a * (a⁻¹ * x))) := by
+                  apply MeasureTheory.integral_congr_ae
+                  filter_upwards with x
+                  congr 2
+                  · rw [div_eq_inv_mul]
+                  · field_simp [ne_of_gt ha]
+            _ = |a| * ∫ y : ℝ, r y * Real.cos (2 * Real.pi * z * (a * y)) := by
+                  exact MeasureTheory.Measure.integral_comp_inv_mul_left
+                    (fun y : ℝ => r y * Real.cos (2 * Real.pi * z * (a * y))) a
+            _ = |a| * ∫ y : ℝ, r y * Real.cos (2 * Real.pi * (a * z) * y) := by
+                  congr 1
+                  apply MeasureTheory.integral_congr_ae
+                  filter_upwards with y
+                  congr 2
+                  ring
+    _ = ∫ y : ℝ, r y * Real.cos (2 * Real.pi * (a * z) * y) := by
+          rw [abs_of_pos ha]
+          have ha0 : a ≠ 0 := ne_of_gt ha
+          field_simp [ha0]
 
 /-- Core 件 f0_sub_feps_L1_bound（ε 正则化 L¹ 偏差界；精确陈述 2026-10-27，
     文档 S6 §3 / S7.1 §3 第一层）：
@@ -907,8 +943,9 @@ axiom N_L_lower_bound :
       cos/sin Taylor 余项（Real.sin_bound/cos_bound）+ c0_bound（|3/2−√2·cotR|≤9/50）
       → |K̂(u)−1| ≤ (194/1000)m² ≤ 2u² ≤ 2u²+u⁴。数值核对：½|K̂″(0)|≈1.53<2。
 - [x] `scaleKernel_L1_invariant`（**真证**，2026-10-27：integral_const_mul + integral_comp_inv_mul_left
-      变量替换 + abs_mul；normL1 已从 axiom 降为 Bochner 积分真定义）/ `fourierCos_scale`：需积分层
-      （MeasureTheory.IntervalIntegral 或 Riemann 积分模块）——mathlib 聚合生成后恢复。
+      变量替换 + abs_mul；normL1 已从 axiom 降为 Bochner 积分真定义）/ `fourierCos_scale`
+      （**真证**，2026-10-29：fourierCos 本体 axiom→Bochner 积分真定义 + Haar 变量替换链，
+      无需 IntervalIntegral——`Measure.integral_comp_inv_mul_left` 全空间无正则性前提）。
 - [x] `n1_diag_invariant`（真证，fourierCos_scale z=0 + congr）+ `n1_offdiag_scale_eq`
       （真证，z=2δ 核因子重写）+ `n1_offdiag_vanishes`（结构件真证：等式重写 + 频域衰减件
       |r̂(2aδ)|²≤a²C 假设，2026-10-27）；

@@ -1,0 +1,4 @@
+FourierProbe.lean:3:7: error(lean.unknownIdentifier): Unknown identifier `normL1`
+∫ (x : ℝ), x : ℝ
+MeasureTheory.integral.{u_6, u_7} {α : Type u_6} {G : Type u_7} [NormedAddCommGroup G] [NormedSpace ℝ G]
+  {x✝ : MeasurableSpace α} (μ : MeasureTheory.Measure α) (f : α → G) : G

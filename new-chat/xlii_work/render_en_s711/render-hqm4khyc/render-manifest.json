@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-10-29T08:41:46.566776+00:00",
+  "status": "rendered",
+  "visual_review": "pending",
+  "channel": "lark-cli docs +word-to-pdf",
+  "input": {
+    "path": "C:\\Users\\shtcl\\Doubao\\chats\\2026-10-16\\document\\d1\\en\\路2攻防XLII-S7.11-x1-boundary-trivialTerm-harmonic-divergence-EN.docx",
+    "sha256": "6234d80b4366db37f50e84a10553135ea19e48d6a5a09003398b6012a6ae5924",
+    "size": 39120
+  },
+  "cli": {
+    "path": "C:\\Users\\shtcl\\AppData\\Local\\Doubao\\User Data\\Default\\sandbox_envs_dir\\envs\\966b5a70-7daa-45e9-9d89-3f86f5c6a3f9\\override_dlcs\\lark-cli.exe",
+    "version": "lark-cli version v1.0.100+eef59cd",
+    "sha256": "8e8e4783427c245ac57694cbeeb78b48aa97584b26d67560cf929b1376e93f3e",
+    "size": 51229696
+  },
+  "dpi": 150,
+  "attempts": [
+    {
+      "argv": [
+        "C:\\Users\\shtcl\\AppData\\Local\\Doubao\\User Data\\Default\\sandbox_envs_dir\\envs\\966b5a70-7daa-45e9-9d89-3f86f5c6a3f9\\override_dlcs\\lark-cli.exe",
+        "docs",
+        "+word-to-pdf",
+        "--file",
+        "./input.docx",
+        "--wait-timeout-seconds",
+        "120",
+        "--output",
+        "./document.pdf",
+        "--if-exists",
+        "error",
+        "--format",
+        "json"
+      ],
+      "returncode": 0,
+      "stdout": {
+        "ok": true,
+        "identity": "user",
+        "data": {
+          "task_id": "render_APMhCWI15m9V_XQV5W2FPg",
+          "status": "succeeded",
+          "pdf": {
+            "download_url": "https://api-drive-stream.feishu.cn/space/api/box/stream/download/authcode/?<redacted>",
+            "size": 123494,
+            "url_expires_at": 1793263737
+          },
+          "expires_at": 1793349533,
+          "output_path": "C:\\Users\\shtcl\\Doubao\\chats\\2026-10-16\\new-chat\\xlii_work\\render_en_s711\\render-hqm4khyc\\document.pdf",
+          "downloaded_size": 123494,
+          "upload_preparation": {
+            "compressed": false,
+            "strategy": "original",
+            "strategy_version": "word-render-media-v2",
+            "source_size_bytes": 39120,
+            "upload_size_bytes": 39120,
+            "images_compressed": 0,
+            "layout_preserved": true
+          },
+          "timings": {
+            "prepare_upload_ms": 14,
+            "create_task_ms": 930,
+            "poll_total_ms": 3892,
+            "poll_sleep_ms": 501,
+            "status_request_ms": 3391,
+            "status_request_count": 1,
+            "download_pdf_ms": 347,
+            "total_ms": 5183
+          }
+        }
+      },
+      "stderr": ""
+    }
+  ],
+  "task_id": "render_APMhCWI15m9V_XQV5W2FPg",
+  "cli_status": "succeeded",
+  "upload_preparation": {
+    "compressed": false,
+    "strategy": "original",
+    "strategy_version": "word-render-media-v2",
+    "source_size_bytes": 39120,
+    "upload_size_bytes": 39120,
+    "images_compressed": 0,
+    "layout_preserved": true
+  },
+  "expires_at": 1793349533,
+  "pdf": {
+    "file": "document.pdf",
+    "sha256": "0153743755c5a0e315446d18d4a95b6b93eb128493d6f750b4fa2b2f80eee0ce",
+    "size": 123494,
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "",
+      "producer": "",
+      "creationDate": "D:20261029163855+08'00'",
+      "modDate": "D:20261029163855+08'00'",
+      "trapped": "",
+      "encryption": null
+    }
+  },
+  "page_count": 3,
+  "pages": [
+    {
+      "page": 1,
+      "file": "page-0001.png",
+      "sha256": "4bcf47bf0ff0d6dc950118457ebe4ab43264c3c309ec6161a91e4cd4860213c9",
+      "size": 230609,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 2,
+      "file": "page-0002.png",
+      "sha256": "c5813d3b43960d80fadc2bc2e21bc053fbdb9a7bf291e111f06f442c299b02c0",
+      "size": 224858,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 3,
+      "file": "page-0003.png",
+      "sha256": "95f651c92cc051798c43918e29087b770703f9d13d28015de03950abe55f9938",
+      "size": 111888,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    }
+  ],
+  "rasterizer": "PyMuPDF 1.27.2.2"
+}

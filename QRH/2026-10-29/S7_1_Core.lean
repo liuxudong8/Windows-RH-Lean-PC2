@@ -213,8 +213,12 @@ lemma f0_continuous : Continuous f0 := by
 
 /-! ## 4b. 频域/积分抽象算子（积分定义在文档层 S7.3 §3；Lean 侧载体，供 Main/Stage3 共用） -/
 
-/-- 余弦傅里叶变换（实数核、频域 z）：积分定义在文档层；Lean 侧为抽象算子（S7.3 §3）。 -/
-axiom fourierCos : (ℝ → ℝ) → ℝ → ℝ
+/-- 余弦傅里叶变换（实数核、频域 z）：K̂(z) = ∫ K(x)cos(2πzx)dx（Bochner 积分，ℝ 上 volume；
+    文档 S7.3 §3）。2026-10-29 由 axiom 降为真定义——基础 Bochner 积分件在本环境可编译
+    （normL1 同款机制）；不可积时积分按 mathlib 惯例为 0。
+    定义一致件 `fourierCos_Khat` 与光滑件 `khat_lipschitz` 仍为命名 axiom（解析闭式/导数件）。 -/
+noncomputable def fourierCos (K : ℝ → ℝ) (z : ℝ) : ℝ :=
+  ∫ x : ℝ, K x * Real.cos (2 * Real.pi * z * x)
 
 /-- 定义一致件（axiom，积分层）：fourierCos 对最优核 Khat 的解析实现 = Khat
     （文档 S7.3 §3：K̂(u) = ∫ f₀(x)cos(2πux)dx 的闭式；Lean 侧 fourierCos 为抽象算子、

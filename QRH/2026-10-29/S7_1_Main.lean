@@ -122,11 +122,12 @@ opaque offCriticalError (T : ℝ) : ℝ
 
 /-! ### 2.1 (L1) Landau/Weil 显式公式 L 版（精确陈述；Yildirim 1991 公式 (6)）
 
-数学内容：对 L(s,χ_5)（模 5 实特征），0<r、x≥1、r 非零点时，
+数学内容：对 L(s,χ_5)（模 5 实特征），0<r、x>1、r 非零点时（x=1 处平凡项为调和型
+  发散奇点，口径排除——见 2.1.2 小节，2026-10-29），
   Σ_ρ x^{ρ−r}/(ρ−r) = Σ_ℓ x^{−(2ℓ+r+a)}/(2ℓ+r+a) − Σ'_{n≤x} Λ(n)χ(n)/n^r − (L′/L)(r,χ)。
 （Yildirim 1991 公式 (6)；对 L(s,χ) 无条件成立。） -/
 axiom landau_explicit_L :
-  ∀ (r x : ℝ), 0 < r → (1 : ℝ) ≤ x → (∀ z ∈ zerosLChi5, z ≠ r) →
+  ∀ (r x : ℝ), 0 < r → (1 : ℝ) < x → (∀ z ∈ zerosLChi5, z ≠ r) →
     zeroWeightedSum zerosLChi5 r x =
       trivialTerm r x - primePowerSum chi5 r x - logDerivTerm r
 
@@ -204,8 +205,9 @@ lemma trivialTerm_term_le (hr : 0 < r) (hx : (1 : ℝ) < x) (ℓ : ℕ) :
     _ = Real.rpow x (-r) * (Real.rpow x (-2)) ^ ℓ / r := by ring
 
 /-- (L1b-B) 平凡项收敛件：x > 1、r > 0 时 trivialTerm 级数可和
-    （比较判别 + 几何级数；x = 1 边界为调和型发散——如实记录口径，
-    landau_explicit_L 的 1 ≤ x 前提在 x=1 处需单独处理）。 -/
+    （比较判别 + 几何级数）。x = 1 边界为调和型发散（见 2.1.2「x=1 边界口径」小节：
+    trivialTerm_one 将其归结为 Σ 1/(2ℓ+r)）；2026-10-29 起 landau_explicit_L 前提已
+    收紧为 1 < x，x=1 不在显式公式适用域。 -/
 lemma trivialTerm_summable (hr : 0 < r) (hx : (1 : ℝ) < x) :
     Summable (fun ℓ : ℕ => Real.rpow x (-((2 * (ℓ : ℝ)) + r)) / ((2 * (ℓ : ℝ)) + r)) := by
   have hx0 : (0 : ℝ) < x := lt_trans (by norm_num : (0 : ℝ) < (1 : ℝ)) hx
@@ -227,6 +229,30 @@ lemma trivialTerm_summable (hr : 0 < r) (hx : (1 : ℝ) < x) :
     (fun ℓ => trivialTerm_term_nonneg hr hx ℓ)
     (fun ℓ => trivialTerm_term_le hr hx ℓ)
     hg
+
+/-! ### 2.1.2 (L1b-C) x=1 边界口径（2026-10-29；口径决定，非深证明）
+
+trivialTerm r x = Σ_ℓ x^{−(2ℓ+r)}/(2ℓ+r) 在 x=1 处为调和型发散：逐项 x=1 化为
+1/(2ℓ+r)，与 Σ_n 1/n 同阶（1/(2ℓ+r) ~ 1/(2ℓ)，比较判别）——故 x=1 不收敛、
+不在显式公式适用域。约定：landau_explicit_L 前提为 1 < x（严格，已收紧），
+x=1 处的 ∑' 值（mathlib 对不可和级数返回默认 0）不作数学意义引用。
+本区钉两项约定件（真实可引用事实）：trivialTerm_one_term（x=1 逐项等式）、
+trivialTerm_one（x=1 时 trivialTerm 归结为调和型级数）。调和发散的正式
+发散性证明（¬ Summable）留作可选后续件——数学论证见文档《路2攻防XLII-
+S7.11-x=1边界口径》；此处仅记录口径，不立深证明。 -/
+
+/-- (L1b-C1) x=1 逐项等式：被加项化为 1/(2ℓ+r)（调和型项）。 -/
+lemma trivialTerm_one_term (r : ℝ) (ℓ : ℕ) :
+    Real.rpow (1 : ℝ) (-((2 * (ℓ : ℝ)) + r)) / ((2 * (ℓ : ℝ)) + r) =
+      (1 : ℝ) / ((2 * (ℓ : ℝ)) + r) := by
+  simp
+
+/-- (L1b-C2) x=1 口径件：trivialTerm r 1 = Σ_ℓ 1/(2ℓ+r)（调和型级数，发散——
+    仅作口径事实引用，发散性证明留后续件）。 -/
+lemma trivialTerm_one (r : ℝ) :
+    trivialTerm r 1 = ∑' ℓ : ℕ, (1 : ℝ) / ((2 * (ℓ : ℝ)) + r) := by
+  unfold trivialTerm
+  exact tsum_congr fun ℓ => trivialTerm_one_term r ℓ
 
 /-! ### 2.2 (L2) Siegel–Walfisz（精确陈述；模 5 点态、无条件、子指数）
 
