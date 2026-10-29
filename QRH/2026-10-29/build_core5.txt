@@ -1,0 +1,42 @@
+﻿QRH\S7_1_Core.lean:71:8: error: Tactic `rewrite` failed: Did not find an occurrence of the pattern
+  2 < √?m.38
+in the target expression
+  1 < √2
+
+h1 : 0 < 1 / √2
+⊢ 1 < √2
+QRH\S7_1_Core.lean:74:8: error: Tactic `rewrite` failed: Did not find an occurrence of the pattern
+  ?m.65 / (1 / √2) < 1
+in the target expression
+  1 / √2 < 1
+
+h1 : 0 < 1 / √2
+hsqrt : 1 < √2
+⊢ 1 / √2 < 1
+QRH\S7_1_Core.lean:76:34: error(lean.unknownIdentifier): Unknown constant `Real.pi_gt_one`
+QRH\S7_1_Core.lean:86:2: error: No goals to be solved
+Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+QRH\S7_1_Core.lean:91:41: error: unsolved goals
+⊢ √2 ^ 2 = 2
+Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+QRH\S7_1_Core.lean:89:32: error: unsolved goals
+hsq2 : √2 / 2 = 1 / √2
+hmerge : sin (√2 / 2) / √2 + sin (√2 / 2) / √2 = 2 * sin (√2 / 2) / √2
+⊢ sin (√2)⁻¹ * (sin (√2)⁻¹)⁻¹ * 2 = √2 ^ 2
+QRH\S7_1_Core.lean:125:29: error: typeclass instance problem is stuck
+  AddLeftMono ?m.527
+
+Note: Lean will not try to resolve this typeclass instance problem because the first, second, and third type arguments to `AddLeftMono` contain metavariables. These arguments must be fully determined before Lean will try to resolve the typeclass.
+
+Hint: Adding type annotations and supplying implicit arguments to functions can give Lean more information for typeclass resolution. For example, if you have a variable `x` that you intend to be a `Nat`, but Lean reports it as having an unresolved type like `?m`, replacing `x` with `(x : Nat)` can get typeclass resolution un-stuck.
+QRH\S7_1_Core.lean:143:12: error: No goals to be solved

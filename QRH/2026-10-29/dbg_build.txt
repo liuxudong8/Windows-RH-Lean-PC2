@@ -1,0 +1,16 @@
+ℹ [2701/2704] Built QRH.S7_1_Main (11s)
+info: QRH/S7_1_Main.lean:1001:22: Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+ℹ [2702/2704] Built QRH.S7_1_Stage3 (22s)
+info: QRH/S7_1_Stage3.lean:640:10: Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+✔ [2703/2704] Built QRH (9.6s)
+Build completed successfully (2704 jobs).

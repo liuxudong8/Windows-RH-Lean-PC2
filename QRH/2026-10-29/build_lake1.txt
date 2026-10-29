@@ -1,0 +1,15 @@
+﻿✖ [0/3] Running job computation
+error: QRH: some modules have bad imports or could not be read
+✖ [2/3] Running QRH
+error: no such file or directory (error code: 4058)
+  file: C:\proj2\QRH.lean
+Some required targets logged failures:
+- job computation
+- QRH
+lake.exe : error: build failed
+所在位置 行:1 字符: 92
++ ... "C:\proj2"; & lake build QRH *> "C:\proj2\QRH\build_lake1.txt"; "exit ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (error: build failed:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

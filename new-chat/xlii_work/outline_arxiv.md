@@ -4,7 +4,7 @@
 - 标题：On the single-family pairing constant for L(s, χ₅): conditional bounds, numerical evidence, and a Lean 4 formalization
 - 分类：Mathematics – Number Theory (math.NT)
 - 载体：英文（docx OMML 公式 → 后续可转 LaTeX/PDF 提交 arXiv）
-- 作者：Liu Xudong（占位，合作者待定）；背书由用户联系合作者
+- 作者：Liu Xudong Wangfang （占位，合作者待定）；背书由用户联系合作者
 - 定位：conditional theorem 论文——主定理显式声明依赖假设，数值 + 形式化作附录；诚实披露所有 axiom 挂账
 
 ## 结构

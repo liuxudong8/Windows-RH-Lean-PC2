@@ -1,0 +1,1 @@
+﻿QRH\S7_1_Core.lean:1:0: error: object file 'C:\proj\mathlib4-master\.lake\build\lib\lean\Mathlib.olean' of module Mathlib does not exist

@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-10-29T03:07:15.058458+00:00",
+  "status": "rendered",
+  "visual_review": "pending",
+  "channel": "lark-cli docs +word-to-pdf",
+  "input": {
+    "path": "C:\\Users\\shtcl\\Doubao\\chats\\2026-10-16\\document\\d1\\en\\路2攻防XLII-S7.10-prime_weight_bounds-theorem-Khat-specialization-EN.docx",
+    "sha256": "cdebf7be319d8143e9cc86613d25eb3e00c5e6bb9c792d9f8afdcc0da1ccc168",
+    "size": 39434
+  },
+  "cli": {
+    "path": "C:\\Users\\shtcl\\AppData\\Local\\Doubao\\User Data\\Default\\sandbox_envs_dir\\envs\\966b5a70-7daa-45e9-9d89-3f86f5c6a3f9\\override_dlcs\\lark-cli.exe",
+    "version": "lark-cli version v1.0.100+eef59cd",
+    "sha256": "8e8e4783427c245ac57694cbeeb78b48aa97584b26d67560cf929b1376e93f3e",
+    "size": 51229696
+  },
+  "dpi": 150,
+  "attempts": [
+    {
+      "argv": [
+        "C:\\Users\\shtcl\\AppData\\Local\\Doubao\\User Data\\Default\\sandbox_envs_dir\\envs\\966b5a70-7daa-45e9-9d89-3f86f5c6a3f9\\override_dlcs\\lark-cli.exe",
+        "docs",
+        "+word-to-pdf",
+        "--file",
+        "./input.docx",
+        "--wait-timeout-seconds",
+        "120",
+        "--output",
+        "./document.pdf",
+        "--if-exists",
+        "error",
+        "--format",
+        "json"
+      ],
+      "returncode": 0,
+      "stdout": {
+        "ok": true,
+        "identity": "user",
+        "data": {
+          "task_id": "render_-DvctJX7tjlxa5_Cgqwr5g",
+          "status": "succeeded",
+          "pdf": {
+            "download_url": "https://api-drive-stream.feishu.cn/space/api/box/stream/download/authcode/?<redacted>",
+            "size": 140980,
+            "url_expires_at": 1793243666
+          },
+          "expires_at": 1793329462,
+          "output_path": "C:\\Users\\shtcl\\Doubao\\chats\\2026-10-16\\new-chat\\xlii_work\\render_en_s710\\render-o87k3j8z\\document.pdf",
+          "downloaded_size": 140980,
+          "upload_preparation": {
+            "compressed": false,
+            "strategy": "original",
+            "strategy_version": "word-render-media-v2",
+            "source_size_bytes": 39434,
+            "upload_size_bytes": 39434,
+            "images_compressed": 0,
+            "layout_preserved": true
+          },
+          "timings": {
+            "prepare_upload_ms": 13,
+            "create_task_ms": 819,
+            "poll_total_ms": 3921,
+            "poll_sleep_ms": 501,
+            "status_request_ms": 3420,
+            "status_request_count": 1,
+            "download_pdf_ms": 354,
+            "total_ms": 5109
+          }
+        }
+      },
+      "stderr": ""
+    }
+  ],
+  "task_id": "render_-DvctJX7tjlxa5_Cgqwr5g",
+  "cli_status": "succeeded",
+  "upload_preparation": {
+    "compressed": false,
+    "strategy": "original",
+    "strategy_version": "word-render-media-v2",
+    "source_size_bytes": 39434,
+    "upload_size_bytes": 39434,
+    "images_compressed": 0,
+    "layout_preserved": true
+  },
+  "expires_at": 1793329462,
+  "pdf": {
+    "file": "document.pdf",
+    "sha256": "f6ff66207da638a2461530c4939ebad8b962c053fcb0a726ccf1add33a19b0b8",
+    "size": 140980,
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "",
+      "producer": "",
+      "creationDate": "D:20261029110424+08'00'",
+      "modDate": "D:20261029110424+08'00'",
+      "trapped": "",
+      "encryption": null
+    }
+  },
+  "page_count": 3,
+  "pages": [
+    {
+      "page": 1,
+      "file": "page-0001.png",
+      "sha256": "82b22d3be9f2332faacc014275f2c9f25c53ed09a915de090ffbd606acd1b784",
+      "size": 215809,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 2,
+      "file": "page-0002.png",
+      "sha256": "036cd1195e4d66b8ce69e9d3433f782d9b6aa1c7e8548e978be0ae19217bd53e",
+      "size": 233504,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    },
+    {
+      "page": 3,
+      "file": "page-0003.png",
+      "sha256": "5caa1739fb81c8cc188d5acf6bb57ec51add06ab71fe308905e233adf6d285ae",
+      "size": 117705,
+      "width_px": 1241,
+      "height_px": 1754,
+      "width_pt": 595.2999877929688,
+      "height_pt": 841.9000244140625
+    }
+  ],
+  "rasterizer": "PyMuPDF 1.27.2.2"
+}
