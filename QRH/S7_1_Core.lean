@@ -3,6 +3,7 @@ import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 import Mathlib.Tactic.Positivity
 import Mathlib.Tactic.Continuity
 import Mathlib.Topology.Algebra.Order.Field
+import Mathlib.MeasureTheory.Measure.Haar.NormedSpace
 
 /-!
 # 攻防 XLII — S7.1 形式化证明（Core 件：核常数与离线误差）
@@ -32,6 +33,7 @@ import Mathlib.Topology.Algebra.Order.Field
 noncomputable section
 
 open scoped BigOperators
+open scoped MeasureTheory
 open Real
 
 namespace QRH
@@ -160,13 +162,241 @@ lemma f0_continuous : Continuous f0 := by
   unfold f0
   continuity
 
-/-! ## 5. 击破清单（下一轮逐步替换 sorry / 补回模块）
+/-! ## 4b. 频域/积分抽象算子（积分定义在文档层 S7.3 §3；Lean 侧载体，供 Main/Stage3 共用） -/
+
+/-- 余弦傅里叶变换（实数核、频域 z）：积分定义在文档层；Lean 侧为抽象算子（S7.3 §3）。 -/
+axiom fourierCos : (ℝ → ℝ) → ℝ → ℝ
+
+/-- L¹ 范数（真定义，2026-10-27 由 axiom 降级）：‖f‖₁ = ∫|f|（Bochner 积分，ℝ 上 volume）。
+    不可积时 mathlib 积分按惯例为 0；scaleKernel_L1_invariant 等不变性质在 Stage3 真证。 -/
+noncomputable def normL1 (f : ℝ → ℝ) : ℝ := ∫ x : ℝ, |f x|
+
+/-! ## 5. C_MT < 4/3（纯有理链，无积分依赖；cos 四阶上界 73/96 自证） -/
+
+/-- sin(x) ≥ x − x³/6 − x⁵/100 for 0 ≤ x ≤ 1。
+    mathlib `Real.sin_bound`（v4.34）给出 5 阶余项 |sin x − (x − x³/6)| ≤ |x|⁵/100，
+    故下界含 −x⁵/100 损失项（x ≤ 1 时 ≤ 1/100，可忽略量级）。 -/
+lemma sin_lower_five (x : ℝ) (hx0 : 0 ≤ x) (hx1 : x ≤ 1) :
+    x - x ^ 3 / 6 - x ^ 5 / 100 ≤ sin x := by
+  have hxabs1 : |x| ≤ 1 := by
+    rw [abs_of_nonneg hx0]
+    exact hx1
+  have habs : |sin x - (x - x ^ 3 / 6)| ≤ |x| ^ 5 / 100 := Real.sin_bound hxabs1
+  have habs' : |sin x - (x - x ^ 3 / 6)| ≤ x ^ 5 / 100 := by
+    simpa [abs_of_nonneg hx0] using habs
+  have hneg : -(x ^ 5 / 100) ≤ sin x - (x - x ^ 3 / 6) := by
+    exact neg_le_of_abs_le habs'
+  linarith
+
+/-- cos(x) < 1 − x²/2 + x⁴/24 for 0 < x ≤ 1。
+    自证路线（无积分）：cos x = 1 − 2sin²(x/2)（cos_add + cos_sq），
+    sin(x/2) ≥ x/2 − (x/2)³/6 − (x/2)⁵/100（sin_lower_five）⟹ 平方单调
+    ⟹ cos x ≤ 1 − 2(A−B)² ≤ 1 − 2A² + 4AB ≤ 1 − x²/2 + x⁴/24 − x⁶/1152 + x⁶/1600 < 上界
+    （A = x/2 − (x/2)³/6，B = (x/2)⁵/100；4AB ≤ x⁶/1600）。 -/
+lemma cos_upper_four (x : ℝ) (hxpos : 0 < x) (hx1 : x ≤ 1) :
+    cos x < 1 - x ^ 2 / 2 + x ^ 4 / 24 := by
+  let y : ℝ := x / 2
+  let A : ℝ := y - y ^ 3 / 6
+  let B : ℝ := y ^ 5 / 100
+  have hy0 : 0 ≤ y := by
+    dsimp [y]
+    positivity
+  have hy1 : y ≤ 1 := by
+    dsimp [y]
+    linarith
+  have hsin : A - B ≤ sin y := by
+    dsimp [A, B]
+    exact sin_lower_five y hy0 hy1
+  have hysq : y ^ 2 ≤ y := by
+    calc
+      y ^ 2 = y * y := by ring
+      _ ≤ y * 1 := by exact mul_le_mul_of_nonneg_left hy1 hy0
+      _ = y := by ring
+  have hy3 : y ^ 3 ≤ y ^ 2 := by
+    calc
+      y ^ 3 = y * y ^ 2 := by ring
+      _ ≤ y * y := by exact mul_le_mul_of_nonneg_left hysq hy0
+      _ = y ^ 2 := by ring
+  have hy5 : y ^ 5 ≤ y := by
+    calc
+      y ^ 5 = y ^ 3 * y ^ 2 := by ring
+      _ ≤ y ^ 2 * y ^ 2 := by exact mul_le_mul_of_nonneg_right hy3 (sq_nonneg y)
+      _ ≤ y * y ^ 2 := by exact mul_le_mul_of_nonneg_right hysq (sq_nonneg y)
+      _ ≤ y * y := by exact mul_le_mul_of_nonneg_left hysq hy0
+      _ = y ^ 2 := by ring
+      _ ≤ y := hysq
+  have hlin : 0 ≤ A - B := by
+    dsimp [A, B]
+    have hy3le : y ^ 3 ≤ y := by linarith [hy3, hysq]
+    have hy5le : y ^ 5 / 100 ≤ y / 100 := by linarith [hy5]
+    nlinarith
+  have hsinpos : 0 ≤ sin y := by linarith [hsin, hlin]
+  have hsq : (A - B) ^ 2 ≤ (sin y) ^ 2 := by
+    calc
+      (A - B) ^ 2 = (A - B) * (A - B) := by ring
+      _ ≤ (A - B) * sin y := by
+        exact mul_le_mul_of_nonneg_left hsin hlin
+      _ ≤ sin y * sin y := by
+        exact mul_le_mul_of_nonneg_right hsin hsinpos
+      _ = (sin y) ^ 2 := by ring
+  have hcos2y : cos (2 * y) = 1 - 2 * (sin y) ^ 2 := by
+    rw [show 2 * y = y + y by ring]
+    rw [Real.cos_add]
+    have hpy' : sin y * sin y + cos y * cos y = 1 := by
+      simpa [pow_two] using Real.sin_sq_add_cos_sq y
+    have hcs : cos y * cos y = 1 - sin y * sin y := by
+      nlinarith [hpy']
+    rw [hcs]
+    ring
+  have hx2y : x = 2 * y := by
+    dsimp [y]
+    ring
+  have hAB : 4 * A * B ≤ x ^ 6 / 1600 := by
+    dsimp [A, B]
+    have hA_le : y - y ^ 3 / 6 ≤ y := by
+      have : 0 ≤ y ^ 3 / 6 := by positivity
+      linarith
+    have hB0 : 0 ≤ y ^ 5 / 100 := by positivity
+    have hAB' : (y - y ^ 3 / 6) * (y ^ 5 / 100) ≤ y * (y ^ 5 / 100) := by
+      exact mul_le_mul_of_nonneg_right hA_le hB0
+    have h4 : 4 * y * (y ^ 5 / 100) = x ^ 6 / 1600 := by
+      dsimp [y]
+      ring
+    nlinarith [hAB', h4]
+  have hA2 : 1 - 2 * A ^ 2 = 1 - x ^ 2 / 2 + x ^ 4 / 24 - x ^ 6 / 1152 := by
+    dsimp [A, y]
+    ring
+  have hle1 : 1 - 2 * (A - B) ^ 2 ≤ 1 - 2 * A ^ 2 + 4 * A * B := by
+    have hsqB : 0 ≤ B ^ 2 := sq_nonneg B
+    nlinarith
+  have hle2 : 1 - 2 * A ^ 2 + 4 * A * B ≤
+      1 - x ^ 2 / 2 + x ^ 4 / 24 - x ^ 6 / 1152 + x ^ 6 / 1600 := by
+    nlinarith [hA2, hAB]
+  have hle3 : 1 - x ^ 2 / 2 + x ^ 4 / 24 - x ^ 6 / 1152 + x ^ 6 / 1600 <
+      1 - x ^ 2 / 2 + x ^ 4 / 24 := by
+    have hx6 : 0 < x ^ 6 := by positivity
+    have hcmp : x ^ 6 / 1600 < x ^ 6 / 1152 := by
+      have hc : (1 : ℝ) / 1600 < 1 / 1152 := by norm_num
+      have hmm : (1 : ℝ) / 1600 * x ^ 6 < 1 / 1152 * x ^ 6 :=
+        mul_lt_mul_of_pos_right hc hx6
+      convert hmm using 1 <;> ring
+    linarith
+  calc
+    cos x = cos (2 * y) := by rw [hx2y]
+    _ = 1 - 2 * (sin y) ^ 2 := hcos2y
+    _ ≤ 1 - 2 * (A - B) ^ 2 := by
+      have hle : 2 * (A - B) ^ 2 ≤ 2 * (sin y) ^ 2 := by
+        exact mul_le_mul_of_nonneg_left hsq (by norm_num : (0 : ℝ) ≤ 2)
+      linarith
+    _ ≤ 1 - 2 * A ^ 2 + 4 * A * B := hle1
+    _ ≤ 1 - x ^ 2 / 2 + x ^ 4 / 24 - x ^ 6 / 1152 + x ^ 6 / 1600 := hle2
+    _ < 1 - x ^ 2 / 2 + x ^ 4 / 24 := hle3
+
+/-- C_MT < 4/3：x₀ = 1/√2 处 cos 四阶上界 73/96（= 1 − 1/4 + 1/96）、
+    sin 下界 11/(12√2) − √2/800（sin_bound 五阶损失项并入），cot 上界 1825/(1097√2)
+    ⟹ C_MT < 1/2 + 1825/2194 = 2922/2194 < 4/3。√2 因子全程消去，纯有理链。 -/
+theorem C_MT_lt_four_thirds : C_MT < (4 : ℝ) / 3 := by
+  let x0 : ℝ := 1 / sqrt 2
+  have hx0pos : 0 < x0 := by
+    dsimp [x0]
+    positivity
+  have hx0sq : x0 ^ 2 = (1 : ℝ) / 2 := by
+    dsimp [x0]
+    field_simp [Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 2)]
+    rw [Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 2)]
+  have hx0le1 : x0 ≤ 1 := by
+    have hlt : x0 ^ 2 < 1 ^ 2 := by
+      rw [hx0sq]
+      norm_num
+    have hlt' : x0 < 1 := by
+      by_contra h
+      have hge : (1 : ℝ) ≤ x0 := le_of_not_gt h
+      have hsqle : (1 : ℝ) ^ 2 ≤ x0 ^ 2 := by
+        exact pow_le_pow_left₀ (by norm_num : (0 : ℝ) ≤ 1) hge 2
+      have hsqlt : x0 ^ 2 < (1 : ℝ) := by
+        rw [hx0sq]
+        norm_num
+      nlinarith
+    linarith
+  have hx0cub : x0 ^ 3 = sqrt 2 / 4 := by
+    dsimp [x0]
+    have h2 : (sqrt 2) ^ 2 = 2 := Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 2)
+    have h4 : (sqrt 2) ^ 4 = 4 := by
+      calc
+        (sqrt 2) ^ 4 = (sqrt 2) ^ 2 * (sqrt 2) ^ 2 := by ring
+        _ = 4 := by rw [h2]; norm_num
+    field_simp
+    rw [h4]
+  have hx0fif : x0 ^ 5 = sqrt 2 / 8 := by
+    dsimp [x0]
+    have h2 : (sqrt 2) ^ 2 = 2 := Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 2)
+    have h6 : (sqrt 2) ^ 6 = 8 := by
+      calc
+        (sqrt 2) ^ 6 = (sqrt 2) ^ 2 * (sqrt 2) ^ 2 * (sqrt 2) ^ 2 := by ring
+        _ = 8 := by rw [h2]; norm_num
+    field_simp
+    rw [h6]
+  have hcos : cos x0 < 73 / 96 := by
+    have hx04 : x0 ^ 4 = (1 : ℝ) / 4 := by nlinarith [hx0sq]
+    calc
+      cos x0 < 1 - x0 ^ 2 / 2 + x0 ^ 4 / 24 := cos_upper_four x0 hx0pos hx0le1
+      _ = 73 / 96 := by rw [hx0sq, hx04]; norm_num
+  have hsin : 11 / (12 * sqrt 2) - sqrt 2 / 800 ≤ sin x0 := by
+    calc
+      11 / (12 * sqrt 2) - sqrt 2 / 800 = x0 - x0 ^ 3 / 6 - x0 ^ 5 / 100 := by
+        rw [hx0cub, hx0fif]
+        dsimp [x0]
+        have h2 : (sqrt 2) ^ 2 = 2 := Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 2)
+        field_simp
+        rw [h2]
+        ring
+      _ ≤ sin x0 := sin_lower_five x0 (le_of_lt hx0pos) hx0le1
+  have hdenpos : 0 < 11 / (12 * sqrt 2) - sqrt 2 / 800 := by
+    have h2 : (sqrt 2) ^ 2 = 2 := Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 2)
+    field_simp [h2]
+    norm_num
+  have hsinpos : 0 < sin x0 := lt_of_lt_of_le hdenpos hsin
+  have hcot : cotR x0 < (73 / 96) / (11 / (12 * sqrt 2) - sqrt 2 / 800) := by
+    unfold cotR
+    rw [div_lt_div_iff₀ hsinpos hdenpos]
+    have hcross : cos x0 * (11 / (12 * sqrt 2) - sqrt 2 / 800) < (73 / 96) * sin x0 := by
+      calc
+        cos x0 * (11 / (12 * sqrt 2) - sqrt 2 / 800) < (73 / 96) * (11 / (12 * sqrt 2) - sqrt 2 / 800) := by
+          exact mul_lt_mul_of_pos_right hcos hdenpos
+        _ ≤ (73 / 96) * sin x0 := by
+          exact mul_le_mul_of_nonneg_left hsin (by norm_num : (0 : ℝ) ≤ 73 / 96)
+    exact hcross
+  have hcotb : (73 / 96) / (11 / (12 * sqrt 2) - sqrt 2 / 800) = 1825 / (1097 * sqrt 2) := by
+    have h2 : (sqrt 2) ^ 2 = 2 := Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 2)
+    field_simp
+    rw [h2]
+    ring
+  have hcot' : cotR x0 < 1825 / (1097 * sqrt 2) := by
+    simpa [hcotb] using hcot
+  have hmul : (1 / sqrt 2) * cotR x0 < (1 / sqrt 2) * (1825 / (1097 * sqrt 2)) := by
+    exact mul_lt_mul_of_pos_left hcot' (by positivity : 0 < 1 / sqrt 2)
+  have hb : (1 / sqrt 2) * (1825 / (1097 * sqrt 2)) = 1825 / 2194 := by
+    have h2 : (sqrt 2) ^ 2 = 2 := Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 2)
+    field_simp
+    rw [h2]
+    norm_num
+  calc
+    C_MT = (1 : ℝ) / 2 + (1 / sqrt 2) * cotR x0 := by
+      unfold C_MT
+      rw [show (1 : ℝ) / sqrt 2 = x0 by rfl]
+    _ < (1 : ℝ) / 2 + (1 / sqrt 2) * (1825 / (1097 * sqrt 2)) := by linarith
+    _ = 2922 / 2194 := by rw [hb]; norm_num
+    _ < (4 : ℝ) / 3 := by norm_num
+
+/-! ## 6. 击破清单（下一轮逐步替换 sorry / 补回模块）
 
 - [ ] `f0_sub_feps_L1_bound`（ε 正则化 L¹ 偏差界 ≤ 2ε·(√2·|sin(1/√2)|)⁻¹）：
       证明路线 = |1−w_ε| ≤ 1_{|x|>1/2−ε} + intervalIntegral 被积函数界 + 长度 ≤ 2ε。
       前置：`lake build mathlib` 生成聚合后 import `MeasureTheory.Integral.IntervalIntegral`。
 - [ ] `pair_const_eps_bias`：由 L¹ 界 + 配对和 Lipschitz 性推出；C₁ 显式（Δ 归一后 K 差分）。
-- [ ] `C_MT < 4/3`（数值上界）：norm_num + sin/cos 数值引理；或先用区间算术降级。
+- [x] `C_MT < 4/3`（数值上界）：纯有理链真证（sin_lower_five + cos_upper_four + C_MT_lt_four_thirds；
+      cos 四阶上界 73/96、sin 下界 11/(12√2) − √2/800（sin_bound 五阶损失并入）、cot < 1825/(1097√2)
+      ⟹ C_MT < 2922/2194 < 4/3；√2 因子全程消去；无积分、无 mathlib 聚合依赖）。
 - [ ] `Khat_zero` 的化简（field_simp/ring 已通；若 v4.34 API 差异报错按报错修正）。
 - [ ] mathlib 聚合 `Mathlib.olean` 生成后：Core/Main 改回 `import Mathlib`，恢复 ε L¹ 引理。
 -/

@@ -1,0 +1,70 @@
+⚠ [2601/2604] Built QRH.S7_1_Main (10s)
+warning: QRH/S7_1_Main.lean:59:18: Variable name `T` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _T
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: QRH/S7_1_Main.lean:59:26: Variable name `Z` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _Z
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: QRH/S7_1_Main.lean:145:42: Variable name `hn` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hn
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: QRH/S7_1_Main.lean:433:34: Variable name `hδ` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hδ
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: QRH/S7_1_Main.lean:433:56: Variable name `hc'` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hc'
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: QRH/S7_1_Main.lean:561:48: Variable name `hX` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hX
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+info: QRH/S7_1_Main.lean:779:22: Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+warning: QRH/S7_1_Main.lean:919:13: Variable name `hT` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hT
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: QRH/S7_1_Main.lean:920:13: Variable name `hε0` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _hε0
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+⚠ [2602/2604] Built QRH.S7_1_Stage3 (21s)
+warning: QRH/S7_1_Stage3.lean:202:11: Variable name `T` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _T
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+info: QRH/S7_1_Stage3.lean:640:10: Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+✔ [2603/2604] Built QRH (9.2s)
+Build completed successfully (2604 jobs).
