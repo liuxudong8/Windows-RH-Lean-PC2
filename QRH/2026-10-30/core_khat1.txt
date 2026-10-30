@@ -1,0 +1,169 @@
+QRH/S7_1_Core.lean:117:18: warning: This simp argument is unused:
+  h1
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [S_smooth, h2]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+QRH/S7_1_Core.lean:117:22: warning: This simp argument is unused:
+  h2
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [S_smooth, h1]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+QRH/S7_1_Core.lean:142:29: warning: `if_neg` has been deprecated: Use `ite_eq_right` instead
+QRH/S7_1_Core.lean:145:29: warning: `if_neg` has been deprecated: Use `ite_eq_right` instead
+QRH/S7_1_Core.lean:217:61: error(lean.unknownIdentifier): Unknown identifier `S_smooth_le_half`
+QRH/S7_1_Core.lean:218:61: error(lean.unknownIdentifier): Unknown identifier `S_smooth_le_half`
+QRH/S7_1_Core.lean:245:8: warning: `if_neg` has been deprecated: Use `ite_eq_right` instead
+QRH/S7_1_Core.lean:245:20: warning: `if_neg` has been deprecated: Use `ite_eq_right` instead
+QRH/S7_1_Core.lean:248:8: error: Tactic `rewrite` failed: Did not find an occurrence of the pattern
+  sin (-x / 2)
+in the target expression
+  -sin (x * (-1 / 2)) = sin (x * (1 / 2))
+
+case neg
+x : ℝ
+hx : ¬x = 0
+hnx : -x ≠ 0
+⊢ -sin (x * (-1 / 2)) = sin (x * (1 / 2))
+QRH/S7_1_Core.lean:249:12: error: Tactic `rewrite` failed: Did not find an occurrence of the pattern
+  sin (-?x)
+in the target expression
+  sin (-x / 2) = -sin (x / 2)
+
+x : ℝ
+hx : ¬x = 0
+hnx : -x ≠ 0
+⊢ sin (-x / 2) = -sin (x / 2)
+QRH/S7_1_Core.lean:257:8: warning: `if_neg` has been deprecated: Use `ite_eq_right` instead
+QRH/S7_1_Core.lean:262:42: error: Function expected at
+  abs_sin_le_abs
+but this term has type
+  |sin ?m.123| ≤ |?m.123|
+
+Note: Expected a function because this term is being applied to the argument
+  (x / 2)
+QRH/S7_1_Core.lean:269:18: error(lean.unknownIdentifier): Unknown identifier `Icc`
+QRH/S7_1_Core.lean:270:58: error(lean.unknownIdentifier): Unknown identifier `Icc`
+QRH/S7_1_Core.lean:268:85: error: unsolved goals
+s : ℝ
+hs0 : 0 ≤ s
+⊢ |cos s - 1| ≤ s ^ 2
+QRH/S7_1_Core.lean:289:18: error(lean.unknownIdentifier): Unknown identifier `Icc`
+QRH/S7_1_Core.lean:290:61: error(lean.unknownIdentifier): Unknown identifier `Icc`
+QRH/S7_1_Core.lean:288:86: error: unsolved goals
+t : ℝ
+ht0 : 0 ≤ t
+⊢ |sin t - t| ≤ t ^ 3
+QRH/S7_1_Core.lean:314:4: error: Type mismatch: After simplification, term
+  h
+ has type
+  |-sin t + t| ≤ (-t) ^ 3
+but is expected to have type
+  |sin t - t| ≤ (-t) ^ 3
+QRH/S7_1_Core.lean:318:18: error(lean.unknownIdentifier): Unknown identifier `Icc`
+QRH/S7_1_Core.lean:319:69: error(lean.unknownIdentifier): Unknown identifier `Icc`
+QRH/S7_1_Core.lean:317:97: error: unsolved goals
+t : ℝ
+ht0 : 0 ≤ t
+⊢ |sin t - t * cos t| ≤ t ^ 2
+QRH/S7_1_Core.lean:345:4: error: Type mismatch: After simplification, term
+  h
+ has type
+  |-sin t + t * cos t| ≤ t * t
+but is expected to have type
+  |sin t - t * cos t| ≤ t * t
+QRH/S7_1_Core.lean:350:25: error(lean.unknownIdentifier): Unknown identifier `𝓝`
+QRH/S7_1_Core.lean:353:24: error(lean.unknownIdentifier): Unknown identifier `𝓝`
+QRH/S7_1_Core.lean:359:12: warning: `if_neg` has been deprecated: Use `ite_eq_right` instead
+Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+QRH/S7_1_Core.lean:366:45: error: unsolved goals
+case e_a
+hnonneg : ∀ᶠ (y : ℝ) in sorry, 0 ≤ ‖(S_smooth y - S_smooth 0) / (y - 0)‖
+y : ℝ
+hy : ¬y = 0
+hsy : S_smooth y = sin (y / 2) / y
+hnum : |sin (y / 2) - y / 2| ≤ |y / 2| ^ 3
+⊢ |y * y⁻¹ * (-1 / 2) + sin (y * (1 / 2)) * y⁻¹| = |y * (-1 / 2) + sin (y * (1 / 2))|
+
+case e_a
+hnonneg : ∀ᶠ (y : ℝ) in sorry, 0 ≤ ‖(S_smooth y - S_smooth 0) / (y - 0)‖
+y : ℝ
+hy : ¬y = 0
+hsy : S_smooth y = sin (y / 2) / y
+hnum : |sin (y / 2) - y / 2| ≤ |y / 2| ^ 3
+⊢ |y| = y ^ 2
+QRH/S7_1_Core.lean:373:23: error: unsolved goals
+hnonneg : ∀ᶠ (y : ℝ) in sorry, 0 ≤ ‖(S_smooth y - S_smooth 0) / (y - 0)‖
+y : ℝ
+hy : ¬y = 0
+hsy : S_smooth y = sin (y / 2) / y
+hnum : |sin (y / 2) - y / 2| ≤ |y / 2| ^ 3
+⊢ |y| ^ 2 * 8 = y ^ 2 * 8
+QRH/S7_1_Core.lean:377:15: error(lean.unknownIdentifier): Unknown identifier `Tendsto`
+QRH/S7_1_Core.lean:386:6: warning: `if_neg` has been deprecated: Use `ite_eq_right` instead
+QRH/S7_1_Core.lean:386:6: error: Tactic `rewrite` failed: Did not find an occurrence of the pattern
+  if x = 0 then ?m.57 else ?m.58
+in the target expression
+  HasDerivAt (fun x => if x = 0 then 1 / 2 else sin (x / 2) / x) ((cos (x / 2) / 2 * x - sin (x / 2)) / x ^ 2) x
+
+x : ℝ
+hx : x ≠ 0
+⊢ HasDerivAt (fun x => if x = 0 then 1 / 2 else sin (x / 2) / x) ((cos (x / 2) / 2 * x - sin (x / 2)) / x ^ 2) x
+QRH/S7_1_Core.lean:418:6: error: Type mismatch: After simplification, term
+  h
+ has type
+  |sin (x * 2⁻¹) - x * (2⁻¹ * cos (x * 2⁻¹))| ≤ (x * 2⁻¹) ^ 2
+but is expected to have type
+  |x * (2⁻¹ * cos (x * 2⁻¹)) - sin (x * 2⁻¹)| ≤ (x * 2⁻¹) ^ 2
+QRH/S7_1_Core.lean:436:15: error(lean.unknownIdentifier): Unknown identifier `norm_image_sub_le_of_norm_deriv_le`
+QRH/S7_1_Core.lean:431:90: error: unsolved goals
+x y : ℝ
+hdiff : ∀ (x : ℝ), DifferentiableAt ℝ S_smooth x
+hb : ∀ (x : ℝ), ‖deriv S_smooth x‖ ≤ 1 / 4
+⊢ |S_smooth x - S_smooth y| ≤ 1 / 4 * |x - y|
+QRH/S7_1_Core.lean:451:4: error: Type mismatch: After simplification, term
+  HasDerivAt.sub (hasDerivAt_const u √2) (HasDerivAt.mul (hasDerivAt_const u (2 * π)) (hasDerivAt_id u))
+ has type
+  HasDerivAt ((fun x => √2) + -(id * fun x => π * 2)) (-(π * 2)) u
+but is expected to have type
+  HasDerivAt (fun x => -(x * (π * 2))) (-(π * 2)) u
+QRH/S7_1_Core.lean:458:4: error: Type mismatch: After simplification, term
+  HasDerivAt.add (hasDerivAt_const u √2) (HasDerivAt.mul (hasDerivAt_const u (2 * π)) (hasDerivAt_id u))
+ has type
+  HasDerivAt ((fun x => √2) + id * fun x => π * 2) (π * 2) u
+but is expected to have type
+  HasDerivAt (fun x => x * (π * 2)) (π * 2) u
+QRH/S7_1_Core.lean:476:2: error: `ring_nf` made no progress on the goal
+QRH/S7_1_Core.lean:500:20: error: typeclass instance problem is stuck
+  NonUnitalSeminormedRing ?m.526
+
+Note: Lean will not try to resolve this typeclass instance problem because the type argument to `NonUnitalSeminormedRing` is a metavariable. This argument must be fully determined before Lean will try to resolve the typeclass.
+
+Hint: Adding type annotations and supplying implicit arguments to functions can give Lean more information for typeclass resolution. For example, if you have a variable `x` that you intend to be a `Nat`, but Lean reports it as having an unresolved type like `?m`, replacing `x` with `(x : Nat)` can get typeclass resolution un-stuck.
+QRH/S7_1_Core.lean:502:46: error: Application type mismatch: The argument
+  ?m.548
+has type
+  0 ≤ 2 * π
+but is expected to have type
+  ‖deriv S_smooth (√2 + 2 * π * u) - deriv S_smooth (√2 - 2 * π * u)‖ ≤ 1 / 2
+in the application
+  mul_le_mul_of_nonneg_left ?m.548
+QRH/S7_1_Core.lean:517:51: error: unsolved goals
+u : ℝ
+hd :
+  HasDerivAt Khat (2 * π * (deriv S_smooth (√2 + 2 * π * u) - deriv S_smooth (√2 - 2 * π * u)) / (√2 * sin (1 / √2))) u
+hpos : 0 < √2 * |sin (1 / √2)|
+hnum : ‖2 * π * (deriv S_smooth (√2 + 2 * π * u) - deriv S_smooth (√2 - 2 * π * u))‖ ≤ π
+hden_abs : |√2 * sin (1 / √2)| = √2 * |sin (1 / √2)|
+⊢ |2 * π * (deriv S_smooth (√2 + 2 * π * u) - deriv S_smooth (√2 - 2 * π * u))| / |√2 * sin (1 / √2)| =
+    ‖2 * π * (deriv S_smooth (√2 + 2 * π * u) - deriv S_smooth (√2 - 2 * π * u))‖ / |√2 * sin (1 / √2)|
+QRH/S7_1_Core.lean:538:17: error(lean.unknownIdentifier): Unknown identifier `norm_image_sub_le_of_norm_deriv_le`
+QRH/S7_1_Core.lean:605:6: error: `QRH.khat_lipschitz` has already been declared

@@ -1,0 +1,323 @@
+QRH/S7_1_Core.lean:236:82: error: unsolved goals
+case e'_4
+s : ℝ
+hs0 : 0 ≤ s
+x : ℝ
+hx : x ∈ Set.Icc 0 s
+⊢ instAddCommGroup = normedAddCommGroup.toAddCommGroup
+
+case e'_5
+s : ℝ
+hs0 : 0 ≤ s
+x : ℝ
+hx : x ∈ Set.Icc 0 s
+e_4✝ : instAddCommGroup = normedAddCommGroup.toAddCommGroup
+⊢ Semiring.toModule = RCLike.toInnerProductSpaceReal.toModule
+
+case e'_8
+s : ℝ
+hs0 : 0 ≤ s
+x : ℝ
+hx : x ∈ Set.Icc 0 s
+⊢ (fun t => cos t - 1) = cos - fun x => 1
+QRH/S7_1_Core.lean:239:16: warning: This simp argument is unused:
+  Pi.sub_apply
+
+Hint: Omit it from the simp argument list.
+  [apply] simp
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+QRH/S7_1_Core.lean:257:85: error: unsolved goals
+case e'_4
+t : ℝ
+ht0 : 0 ≤ t
+x : ℝ
+hx : x ∈ Set.Icc 0 t
+⊢ instAddCommGroup = normedAddCommGroup.toAddCommGroup
+
+case e'_5
+t : ℝ
+ht0 : 0 ≤ t
+x : ℝ
+hx : x ∈ Set.Icc 0 t
+e_4✝ : instAddCommGroup = normedAddCommGroup.toAddCommGroup
+⊢ Semiring.toModule = RCLike.toInnerProductSpaceReal.toModule
+
+case e'_8
+t : ℝ
+ht0 : 0 ≤ t
+x : ℝ
+hx : x ∈ Set.Icc 0 t
+⊢ (fun u => sin u - u) = sin - id
+QRH/S7_1_Core.lean:299:76: error: unsolved goals
+case e'_4
+t : ℝ
+ht0 : 0 ≤ t
+x : ℝ
+hx : x ∈ Set.Icc 0 t
+hd1 : HasDerivAt (fun u => sin u) (cos x) x
+⊢ instAddCommGroup = normedCommRing.toAddCommGroup
+
+case e'_5
+t : ℝ
+ht0 : 0 ≤ t
+x : ℝ
+hx : x ∈ Set.Icc 0 t
+hd1 : HasDerivAt (fun u => sin u) (cos x) x
+e_4✝ : instAddCommGroup = normedCommRing.toAddCommGroup
+⊢ Semiring.toModule = (NormedAlgebra.toNormedSpace ℝ).toModule
+
+case e'_8
+t : ℝ
+ht0 : 0 ≤ t
+x : ℝ
+hx : x ∈ Set.Icc 0 t
+hd1 : HasDerivAt (fun u => sin u) (cos x) x
+⊢ (fun u => u * cos u) = id * cos
+
+case e'_9
+t : ℝ
+ht0 : 0 ≤ t
+x : ℝ
+hx : x ∈ Set.Icc 0 t
+hd1 : HasDerivAt (fun u => sin u) (cos x) x
+⊢ cos x - x * sin x = cos x + -(x * sin x)
+QRH/S7_1_Core.lean:296:93: error: unsolved goals
+case e'_4
+t : ℝ
+ht0 : 0 ≤ t
+x : ℝ
+hx : x ∈ Set.Icc 0 t
+hd1 : HasDerivAt (fun u => sin u) (cos x) x
+hd2 : HasDerivAt (fun u => u * cos u) (cos x - x * sin x) x
+⊢ instAddCommGroup = normedAddCommGroup.toAddCommGroup
+
+case e'_5
+t : ℝ
+ht0 : 0 ≤ t
+x : ℝ
+hx : x ∈ Set.Icc 0 t
+hd1 : HasDerivAt (fun u => sin u) (cos x) x
+hd2 : HasDerivAt (fun u => u * cos u) (cos x - x * sin x) x
+e_4✝ : instAddCommGroup = normedAddCommGroup.toAddCommGroup
+⊢ Semiring.toModule = RCLike.toInnerProductSpaceReal.toModule
+
+case e'_8
+t : ℝ
+ht0 : 0 ≤ t
+x : ℝ
+hx : x ∈ Set.Icc 0 t
+hd1 : HasDerivAt (fun u => sin u) (cos x) x
+hd2 : HasDerivAt (fun u => u * cos u) (cos x - x * sin x) x
+⊢ (fun u => sin u - u * cos u) = (fun u => sin u) - fun u => u * cos u
+QRH/S7_1_Core.lean:301:18: warning: This simp argument is unused:
+  Pi.mul_apply
+
+Hint: Omit it from the simp argument list.
+  [apply] simp
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+QRH/S7_1_Core.lean:302:65: warning: This simp argument is unused:
+  Pi.sub_apply
+
+Hint: Omit it from the simp argument list.
+  [apply] simp
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+QRH/S7_1_Core.lean:365:6: error: Type mismatch
+  ContinuousAt.tendsto (Continuous.continuousAt continuous_abs)
+has type
+  Tendsto abs (nhds 0) (nhds |0|)
+but is expected to have type
+  Tendsto (fun y => |y|) (nhds 0) (nhds 0)
+QRH/S7_1_Core.lean:367:6: error: Type mismatch
+  tendsto_const_nhds
+has type
+  Tendsto (fun x => ?m.552) ?m.553 (nhds ?m.552)
+but is expected to have type
+  Tendsto (fun y => 8⁻¹) (nhds 0) (nhds 0)
+QRH/S7_1_Core.lean:372:28: error: Invalid argument name `x` for function `norm_nonneg`
+
+Hint: Perhaps you meant one of the following parameter names:
+  • `E`: x̵E̲
+  • `a`: x̵a̲
+QRH/S7_1_Core.lean:380:73: error: unsolved goals
+case e'_4
+x : ℝ
+hx : x ≠ 0
+hd : HasDerivAt (fun u => u / 2) (1 / 2) x
+⊢ instAddCommGroup = DenselyNormedField.toNontriviallyNormedField.toDivisionRing.toAddCommGroup
+
+case e'_5
+x : ℝ
+hx : x ≠ 0
+hd : HasDerivAt (fun u => u / 2) (1 / 2) x
+e_4✝ : instAddCommGroup = DenselyNormedField.toNontriviallyNormedField.toDivisionRing.toAddCommGroup
+⊢ Semiring.toModule = (NormedAlgebra.toNormedSpace ℝ).toModule
+
+case e'_8
+x : ℝ
+hx : x ≠ 0
+hd : HasDerivAt (fun u => u / 2) (1 / 2) x
+⊢ (fun u => sin (u * 2⁻¹)) = sin ∘ fun u => u * 2⁻¹
+QRH/S7_1_Core.lean:387:57: error: unsolved goals
+case e'_4
+x : ℝ
+hx : x ≠ 0
+hf : HasDerivAt (fun u => sin (u / 2)) (cos (x / 2) / 2) x
+hg : HasDerivAt (fun u => u) 1 x
+⊢ instAddCommGroup = DenselyNormedField.toNontriviallyNormedField.toDivisionRing.toAddCommGroup
+
+case e'_5
+x : ℝ
+hx : x ≠ 0
+hf : HasDerivAt (fun u => sin (u / 2)) (cos (x / 2) / 2) x
+hg : HasDerivAt (fun u => u) 1 x
+e_4✝ : instAddCommGroup = DenselyNormedField.toNontriviallyNormedField.toDivisionRing.toAddCommGroup
+⊢ Semiring.toModule = (NormedAlgebra.toNormedSpace ℝ).toModule
+
+case e'_8
+x : ℝ
+hx : x ≠ 0
+hf : HasDerivAt (fun u => sin (u / 2)) (cos (x / 2) / 2) x
+hg : HasDerivAt (fun u => u) 1 x
+⊢ (fun u => u⁻¹ * sin (u * 2⁻¹)) = (fun u => sin (u * 2⁻¹)) * (fun u => u)⁻¹
+QRH/S7_1_Core.lean:389:32: warning: This simp argument is unused:
+  mul_assoc
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [div_eq_mul_inv, mul_left_comm, mul_comm]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+QRH/S7_1_Core.lean:389:43: warning: This simp argument is unused:
+  mul_left_comm
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [div_eq_mul_inv, mul_assoc, mul_comm]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+QRH/S7_1_Core.lean:438:15: error: don't know how to synthesize implicit argument `y`
+  @Convex.norm_image_sub_le_of_norm_deriv_le ℝ ℝ instRCLike normedAddCommGroup
+    RCLike.toInnerProductSpaceReal.toNormedSpace S_smooth Set.univ ?m.79 ?m.80 (1 / 4) (fun x x_1 => hdiff x)
+    (fun x x_1 => hb x) convex_univ trivial trivial
+context:
+x y : ℝ
+hdiff : ∀ (x : ℝ), DifferentiableAt ℝ S_smooth x
+hb : ∀ (x : ℝ), ‖deriv S_smooth x‖ ≤ 1 / 4
+⊢ ℝ
+QRH/S7_1_Core.lean:438:15: error: don't know how to synthesize implicit argument `x`
+  @Convex.norm_image_sub_le_of_norm_deriv_le ℝ ℝ instRCLike normedAddCommGroup
+    RCLike.toInnerProductSpaceReal.toNormedSpace S_smooth Set.univ ?m.79 ?m.80 (1 / 4) (fun x x_1 => hdiff x)
+    (fun x x_1 => hb x) convex_univ trivial trivial
+context:
+x y : ℝ
+hdiff : ∀ (x : ℝ), DifferentiableAt ℝ S_smooth x
+hb : ∀ (x : ℝ), ‖deriv S_smooth x‖ ≤ 1 / 4
+⊢ ℝ
+QRH/S7_1_Core.lean:438:7: error: failed to infer `have` declaration type
+QRH/S7_1_Core.lean:433:90: error: unsolved goals
+x y : ℝ
+hdiff : ∀ (x : ℝ), DifferentiableAt ℝ S_smooth x
+hb : ∀ (x : ℝ), ‖deriv S_smooth x‖ ≤ 1 / 4
+⊢ |S_smooth x - S_smooth y| ≤ 1 / 4 * |x - y|
+QRH/S7_1_Core.lean:480:79: error: unsolved goals
+case e'_4
+u : ℝ
+hc : HasDerivAt (fun t => √2) 0 u
+⊢ instAddCommGroup = normedCommRing.toAddCommGroup
+
+case e'_5
+u : ℝ
+hc : HasDerivAt (fun t => √2) 0 u
+e_4✝ : instAddCommGroup = normedCommRing.toAddCommGroup
+⊢ Semiring.toModule = (NormedAlgebra.toNormedSpace ℝ).toModule
+
+case e'_8
+u : ℝ
+hc : HasDerivAt (fun t => √2) 0 u
+⊢ (fun t => 2 * π * t) = fun y => 2 * π * id y
+
+case e'_9
+u : ℝ
+hc : HasDerivAt (fun t => √2) 0 u
+⊢ 2 * π = 2 * π * 1
+QRH/S7_1_Core.lean:490:79: error: unsolved goals
+case e'_4
+u : ℝ
+hlin1 : HasDerivAt (fun t => √2 - 2 * π * t) (-(2 * π)) u
+hd1 : HasDerivAt (fun t => S_smooth (√2 - 2 * π * t)) (deriv S_smooth (√2 - 2 * π * u) * -(2 * π)) u
+hc : HasDerivAt (fun t => √2) 0 u
+⊢ instAddCommGroup = normedCommRing.toAddCommGroup
+
+case e'_5
+u : ℝ
+hlin1 : HasDerivAt (fun t => √2 - 2 * π * t) (-(2 * π)) u
+hd1 : HasDerivAt (fun t => S_smooth (√2 - 2 * π * t)) (deriv S_smooth (√2 - 2 * π * u) * -(2 * π)) u
+hc : HasDerivAt (fun t => √2) 0 u
+e_4✝ : instAddCommGroup = normedCommRing.toAddCommGroup
+⊢ Semiring.toModule = (NormedAlgebra.toNormedSpace ℝ).toModule
+
+case e'_8
+u : ℝ
+hlin1 : HasDerivAt (fun t => √2 - 2 * π * t) (-(2 * π)) u
+hd1 : HasDerivAt (fun t => S_smooth (√2 - 2 * π * t)) (deriv S_smooth (√2 - 2 * π * u) * -(2 * π)) u
+hc : HasDerivAt (fun t => √2) 0 u
+⊢ (fun t => 2 * π * t) = fun y => 2 * π * id y
+
+case e'_9
+u : ℝ
+hlin1 : HasDerivAt (fun t => √2 - 2 * π * t) (-(2 * π)) u
+hd1 : HasDerivAt (fun t => S_smooth (√2 - 2 * π * t)) (deriv S_smooth (√2 - 2 * π * u) * -(2 * π)) u
+hc : HasDerivAt (fun t => √2) 0 u
+⊢ 2 * π = 2 * π * 1
+QRH/S7_1_Core.lean:513:6: error: `field_simp` made no progress on the goal
+QRH/S7_1_Core.lean:511:44: error: unsolved goals
+case e'_8
+u : ℝ
+hlin1 : HasDerivAt (fun t => √2 - 2 * π * t) (-(2 * π)) u
+hd1 : HasDerivAt (fun t => S_smooth (√2 - 2 * π * t)) (deriv S_smooth (√2 - 2 * π * u) * -(2 * π)) u
+hlin2 : HasDerivAt (fun t => √2 + 2 * π * t) (2 * π) u
+hd2 : HasDerivAt (fun t => S_smooth (√2 + 2 * π * t)) (deriv S_smooth (√2 + 2 * π * u) * (2 * π)) u
+hsum :
+  HasDerivAt (fun t => S_smooth (√2 - 2 * π * t) + S_smooth (√2 + 2 * π * t))
+    (deriv S_smooth (√2 - 2 * π * u) * -(2 * π) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) u
+hdiv : √2 * sin (1 / √2) ≠ 0
+hc : HasDerivAt (fun t => √2 * sin (1 / √2)) 0 u
+⊢ (fun t => (S_smooth (√2 - 2 * π * t) + S_smooth (√2 + 2 * π * t)) / (√2 * sin (1 / √2))) =
+    (fun t => S_smooth (√2 - 2 * π * t) + S_smooth (√2 + 2 * π * t)) / fun t => √2 * sin (1 / √2)
+
+case e'_9
+u : ℝ
+hlin1 : HasDerivAt (fun t => √2 - 2 * π * t) (-(2 * π)) u
+hd1 : HasDerivAt (fun t => S_smooth (√2 - 2 * π * t)) (deriv S_smooth (√2 - 2 * π * u) * -(2 * π)) u
+hlin2 : HasDerivAt (fun t => √2 + 2 * π * t) (2 * π) u
+hd2 : HasDerivAt (fun t => S_smooth (√2 + 2 * π * t)) (deriv S_smooth (√2 + 2 * π * u) * (2 * π)) u
+hsum :
+  HasDerivAt (fun t => S_smooth (√2 - 2 * π * t) + S_smooth (√2 + 2 * π * t))
+    (deriv S_smooth (√2 - 2 * π * u) * -(2 * π) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) u
+hdiv : √2 * sin (1 / √2) ≠ 0
+hc : HasDerivAt (fun t => √2 * sin (1 / √2)) 0 u
+⊢ (deriv S_smooth (√2 - 2 * π * u) * -(2 * π) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) / (√2 * sin (1 / √2)) =
+    ((deriv S_smooth (√2 - 2 * π * u) * -(2 * π) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) * (√2 * sin (1 / √2)) -
+        (S_smooth (√2 - 2 * π * u) + S_smooth (√2 + 2 * π * u)) * 0) /
+      (√2 * sin (1 / √2)) ^ 2
+QRH/S7_1_Core.lean:519:2: error: No goals to be solved
+QRH/S7_1_Core.lean:593:17: error: don't know how to synthesize implicit argument `y`
+  @Convex.norm_image_sub_le_of_norm_deriv_le ℝ ℝ instRCLike normedAddCommGroup
+    RCLike.toInnerProductSpaceReal.toNormedSpace Khat Set.univ ?m.149 ?m.150 (π / (√2 * |sin (1 / √2)|))
+    (fun x x_1 => hdiff x) (fun x x_1 => hb x) convex_univ trivial trivial
+context:
+u v : ℝ
+hdiff : ∀ (x : ℝ), DifferentiableAt ℝ Khat x
+hb : ∀ (x : ℝ), ‖deriv Khat x‖ ≤ π / (√2 * |sin (1 / √2)|)
+⊢ ℝ
+QRH/S7_1_Core.lean:593:17: error: don't know how to synthesize implicit argument `x`
+  @Convex.norm_image_sub_le_of_norm_deriv_le ℝ ℝ instRCLike normedAddCommGroup
+    RCLike.toInnerProductSpaceReal.toNormedSpace Khat Set.univ ?m.149 ?m.150 (π / (√2 * |sin (1 / √2)|))
+    (fun x x_1 => hdiff x) (fun x x_1 => hb x) convex_univ trivial trivial
+context:
+u v : ℝ
+hdiff : ∀ (x : ℝ), DifferentiableAt ℝ Khat x
+hb : ∀ (x : ℝ), ‖deriv Khat x‖ ≤ π / (√2 * |sin (1 / √2)|)
+⊢ ℝ
+QRH/S7_1_Core.lean:593:9: error: failed to infer `have` declaration type

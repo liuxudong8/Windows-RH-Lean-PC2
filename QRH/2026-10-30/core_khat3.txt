@@ -1,0 +1,142 @@
+QRH/S7_1_Core.lean:217:4: error: No goals to be solved
+QRH/S7_1_Core.lean:239:4: error: Type mismatch: After simplification, term
+  HasDerivAt.hasDerivWithinAt (HasDerivAt.sub (hasDerivAt_cos x) (hasDerivAt_const x 1))
+ has type
+  HasDerivWithinAt (cos - fun x => 1) (-sin x) ?m.89 x
+but is expected to have type
+  HasDerivWithinAt cos (-sin x) (Set.Icc 0 s) x
+QRH/S7_1_Core.lean:260:4: error: Type mismatch: After simplification, term
+  HasDerivAt.hasDerivWithinAt (HasDerivAt.sub (hasDerivAt_sin x) (hasDerivAt_id x))
+ has type
+  @HasDerivWithinAt ℝ DenselyNormedField.toNontriviallyNormedField ℝ normedAddCommGroup.toAddCommGroup
+    RCLike.toInnerProductSpaceReal.toModule PseudoMetricSpace.toUniformSpace.toTopologicalSpace ⋯ (sin - id) (cos x - 1)
+    (Set.Icc 0 t) x
+but is expected to have type
+  @HasDerivWithinAt ℝ DenselyNormedField.toNontriviallyNormedField ℝ instAddCommGroup Semiring.toModule
+    PseudoMetricSpace.toUniformSpace.toTopologicalSpace ⋯ (fun u => sin u - u) (cos x - 1) (Set.Icc 0 t) x
+QRH/S7_1_Core.lean:275:2: error: Type mismatch: After simplification, term
+  hinst
+ has type
+  |sin t - t| ≤ t * t * t
+but is expected to have type
+  |sin t - t| ≤ t ^ 3
+QRH/S7_1_Core.lean:289:8: error: Tactic `rewrite` failed: Did not find an occurrence of the pattern
+  (-t) ^ 3
+in the target expression
+  |sin (-t) - -t| ≤ |t| ^ 3
+
+case neg
+t : ℝ
+ht : ¬0 ≤ t
+hs0 : 0 ≤ -t
+h : |sin (-t) - -t| ≤ (-t) ^ 3
+hsym : |sin t - t| = |sin (-t) - -t|
+⊢ |sin (-t) - -t| ≤ |t| ^ 3
+QRH/S7_1_Core.lean:290:10: error: Tactic `rewrite` failed: Did not find an occurrence of the pattern
+  |(-t)|
+in the target expression
+  (-t) ^ 3 = |t| ^ 3
+
+t : ℝ
+ht : ¬0 ≤ t
+hs0 : 0 ≤ -t
+h : |sin (-t) - -t| ≤ (-t) ^ 3
+hsym : |sin t - t| = |sin (-t) - -t|
+⊢ (-t) ^ 3 = |t| ^ 3
+QRH/S7_1_Core.lean:301:6: error: Type mismatch: After simplification, term
+  HasDerivAt.mul (hasDerivAt_id x) (hasDerivAt_cos x)
+ has type
+  @HasDerivAt ℝ DenselyNormedField.toNontriviallyNormedField ℝ normedCommRing.toAddCommGroup
+    (NormedAlgebra.toNormedSpace ℝ).toModule PseudoMetricSpace.toUniformSpace.toTopologicalSpace ⋯ (id * cos)
+    (cos x + -(x * sin x)) x
+but is expected to have type
+  @HasDerivAt ℝ DenselyNormedField.toNontriviallyNormedField ℝ instAddCommGroup Semiring.toModule
+    PseudoMetricSpace.toUniformSpace.toTopologicalSpace ⋯ (fun u => u * cos u) (cos x - x * sin x) x
+QRH/S7_1_Core.lean:302:4: error: Type mismatch: After simplification, term
+  HasDerivAt.hasDerivWithinAt (HasDerivAt.sub hd1 hd2)
+ has type
+  @HasDerivWithinAt ℝ DenselyNormedField.toNontriviallyNormedField ℝ normedAddCommGroup.toAddCommGroup
+    RCLike.toInnerProductSpaceReal.toModule PseudoMetricSpace.toUniformSpace.toTopologicalSpace ⋯
+    ((fun u => sin u) - fun u => u * cos u) (x * sin x) (Set.Icc 0 t) x
+but is expected to have type
+  @HasDerivWithinAt ℝ DenselyNormedField.toNontriviallyNormedField ℝ instAddCommGroup Semiring.toModule
+    PseudoMetricSpace.toUniformSpace.toTopologicalSpace ⋯ (fun u => sin u - u * cos u) (x * sin x) (Set.Icc 0 t) x
+QRH/S7_1_Core.lean:348:10: error: No goals to be solved
+QRH/S7_1_Core.lean:368:4: error: Type mismatch: After simplification, term
+  Tendsto.mul (ContinuousAt.tendsto (Continuous.continuousAt continuous_abs)) tendsto_const_nhds
+ has type
+  Tendsto (fun x => |x| * 8⁻¹) (nhds ?m.569) (nhds (|?m.569| * 8⁻¹))
+but is expected to have type
+  Tendsto (fun y => |y| * 8⁻¹) (nhds 0) (nhds 0)
+QRH/S7_1_Core.lean:370:50: error: Application type mismatch: The argument
+  hnonneg
+has type
+  ∀ᶠ (y : ℝ) in nhds 0, 0 ≤ ‖(S_smooth y - S_smooth 0) / (y - 0)‖
+but is expected to have type
+  Tendsto ?m.599 ?m.601 (nhds ?m.602)
+in the application
+  tendsto_of_tendsto_of_tendsto_of_le_of_le hnonneg
+QRH/S7_1_Core.lean:380:4: error: Type mismatch
+  HasDerivAt.comp x (hasDerivAt_sin (x / 2)) hd
+has type
+  HasDerivAt (sin ∘ fun u => u / 2) (cos (x / 2) * (1 / 2)) x
+but is expected to have type
+  HasDerivAt (fun u => sin (u / 2)) (cos (x / 2) / 2) x
+QRH/S7_1_Core.lean:384:4: error: Type mismatch: After simplification, term
+  HasDerivAt.div hf hg hx
+ has type
+  HasDerivAt ((fun u => sin (u * 2⁻¹)) * (fun u => u)⁻¹) ((x ^ 2)⁻¹ * (x * (2⁻¹ * cos (x * 2⁻¹)) - sin (x * 2⁻¹))) x
+but is expected to have type
+  HasDerivAt (fun u => u⁻¹ * sin (u * 2⁻¹)) ((x ^ 2)⁻¹ * (x * (2⁻¹ * cos (x * 2⁻¹)) - sin (x * 2⁻¹))) x
+QRH/S7_1_Core.lean:433:15: error(lean.unknownIdentifier): Unknown identifier `norm_image_sub_le_of_norm_deriv_le`
+QRH/S7_1_Core.lean:428:90: error: unsolved goals
+x y : ℝ
+hdiff : ∀ (x : ℝ), DifferentiableAt ℝ S_smooth x
+hb : ∀ (x : ℝ), ‖deriv S_smooth x‖ ≤ 1 / 4
+⊢ |S_smooth x - S_smooth y| ≤ 1 / 4 * |x - y|
+QRH/S7_1_Core.lean:476:6: error: Type mismatch: After simplification, term
+  HasDerivAt.mul (hasDerivAt_const u (2 * π)) (hasDerivAt_id u)
+ has type
+  @HasDerivAt ℝ DenselyNormedField.toNontriviallyNormedField ℝ normedCommRing.toAddCommGroup
+    (NormedAlgebra.toNormedSpace ℝ).toModule PseudoMetricSpace.toUniformSpace.toTopologicalSpace ⋯
+    ((fun x => 2 * π) * id) (2 * π) u
+but is expected to have type
+  @HasDerivAt ℝ DenselyNormedField.toNontriviallyNormedField ℝ instAddCommGroup Semiring.toModule
+    PseudoMetricSpace.toUniformSpace.toTopologicalSpace ⋯ (fun t => 2 * π * t) (2 * π) u
+QRH/S7_1_Core.lean:481:4: error: No goals to be solved
+QRH/S7_1_Core.lean:489:6: error: Type mismatch: After simplification, term
+  HasDerivAt.mul (hasDerivAt_const u (2 * π)) (hasDerivAt_id u)
+ has type
+  @HasDerivAt ℝ DenselyNormedField.toNontriviallyNormedField ℝ normedCommRing.toAddCommGroup
+    (NormedAlgebra.toNormedSpace ℝ).toModule PseudoMetricSpace.toUniformSpace.toTopologicalSpace ⋯
+    ((fun x => 2 * π) * id) (2 * π) u
+but is expected to have type
+  @HasDerivAt ℝ DenselyNormedField.toNontriviallyNormedField ℝ instAddCommGroup Semiring.toModule
+    PseudoMetricSpace.toUniformSpace.toTopologicalSpace ⋯ (fun t => 2 * π * t) (2 * π) u
+QRH/S7_1_Core.lean:494:4: error: No goals to be solved
+QRH/S7_1_Core.lean:511:4: error: Type mismatch: After simplification, term
+  HasDerivAt.mul hsum (hasDerivAt_const u (√2 * sin (1 / √2))⁻¹)
+ has type
+  @HasDerivAt ℝ DenselyNormedField.toNontriviallyNormedField ℝ normedCommRing.toAddCommGroup
+    (NormedAlgebra.toNormedSpace ℝ).toModule PseudoMetricSpace.toUniformSpace.toTopologicalSpace ⋯
+    ((fun t => S_smooth (√2 - 2 * π * t) + S_smooth (√2 + 2 * π * t)) * fun x => (sin (√2)⁻¹)⁻¹ * (√2)⁻¹)
+    ((-(deriv S_smooth (√2 - 2 * π * u) * (2 * π)) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) *
+      ((sin (√2)⁻¹)⁻¹ * (√2)⁻¹))
+    u
+but is expected to have type
+  @HasDerivAt ℝ DenselyNormedField.toNontriviallyNormedField ℝ instAddCommGroup Semiring.toModule
+    PseudoMetricSpace.toUniformSpace.toTopologicalSpace ⋯
+    (fun t => (S_smooth (√2 - 2 * π * t) + S_smooth (√2 + 2 * π * t)) * ((sin (√2)⁻¹)⁻¹ * (√2)⁻¹))
+    ((-(deriv S_smooth (√2 - 2 * π * u) * (2 * π)) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) *
+      ((sin (√2)⁻¹)⁻¹ * (√2)⁻¹))
+    u
+QRH/S7_1_Core.lean:516:2: error: No goals to be solved
+QRH/S7_1_Core.lean:540:14: error: Type mismatch
+  norm_mul_le (2 * π) (deriv S_smooth (√2 + 2 * π * u) - deriv S_smooth (√2 - 2 * π * u))
+has type
+  ‖2 * π * (deriv S_smooth (√2 + 2 * π * u) - deriv S_smooth (√2 - 2 * π * u))‖ ≤
+    ‖2 * π‖ * ‖deriv S_smooth (√2 + 2 * π * u) - deriv S_smooth (√2 - 2 * π * u)‖
+but is expected to have type
+  ‖2 * π * (deriv S_smooth (√2 + 2 * π * u) - deriv S_smooth (√2 - 2 * π * u))‖ ≤
+    2 * π * ‖deriv S_smooth (√2 + 2 * π * u) - deriv S_smooth (√2 - 2 * π * u)‖
+QRH/S7_1_Core.lean:587:17: error(lean.unknownIdentifier): Unknown identifier `norm_image_sub_le_of_norm_deriv_le`

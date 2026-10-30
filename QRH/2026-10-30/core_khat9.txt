@@ -1,0 +1,35 @@
+QRH/S7_1_Core.lean:553:8: error: Tactic `rewrite` failed: Did not find an occurrence of the pattern
+  (?a ^ ?n)⁻¹
+in the target expression
+  (deriv S_smooth (√2 - 2 * π * u) * -(2 * π) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) * (√2 * sin (1 / √2)) *
+      (√2 * sin (1 / √2))⁻¹ ^ 2 =
+    (deriv S_smooth (√2 - 2 * π * u) * -(2 * π) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) * (√2 * sin (1 / √2)) /
+      (√2 * sin (1 / √2)) ^ 2
+
+u : ℝ
+hlin1 : HasDerivAt (fun t => √2 - 2 * π * t) (-(2 * π)) u
+hd1 : HasDerivAt (fun t => S_smooth (√2 - 2 * π * t)) (deriv S_smooth (√2 - 2 * π * u) * -(2 * π)) u
+hlin2 : HasDerivAt (fun t => √2 + 2 * π * t) (2 * π) u
+hd2 : HasDerivAt (fun t => S_smooth (√2 + 2 * π * t)) (deriv S_smooth (√2 + 2 * π * u) * (2 * π)) u
+hsum :
+  HasDerivAt (fun t => S_smooth (√2 - 2 * π * t) + S_smooth (√2 + 2 * π * t))
+    (deriv S_smooth (√2 - 2 * π * u) * -(2 * π) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) u
+hdiv : √2 * sin (1 / √2) ≠ 0
+hc : HasDerivAt (fun t => √2 * sin (1 / √2)) 0 u
+hd :
+  HasDerivAt ((fun t => S_smooth (√2 - 2 * π * t) + S_smooth (√2 + 2 * π * t)) / fun t => √2 * sin (1 / √2))
+    (((deriv S_smooth (√2 - 2 * π * u) * -(2 * π) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) * (√2 * sin (1 / √2)) -
+        (S_smooth (√2 - 2 * π * u) + S_smooth (√2 + 2 * π * u)) * 0) /
+      (√2 * sin (1 / √2)) ^ 2)
+    u
+h_num :
+  2 * π * (deriv S_smooth (√2 + 2 * π * u) - deriv S_smooth (√2 - 2 * π * u)) =
+    deriv S_smooth (√2 - 2 * π * u) * -(2 * π) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)
+h_eq1 :
+  2 * π * (deriv S_smooth (√2 + 2 * π * u) - deriv S_smooth (√2 - 2 * π * u)) / (√2 * sin (1 / √2)) =
+    (deriv S_smooth (√2 - 2 * π * u) * -(2 * π) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) / (√2 * sin (1 / √2))
+hcc : (√2 * sin (1 / √2))⁻¹ = √2 * sin (1 / √2) * (√2 * sin (1 / √2))⁻¹ ^ 2
+⊢ (deriv S_smooth (√2 - 2 * π * u) * -(2 * π) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) * (√2 * sin (1 / √2)) *
+      (√2 * sin (1 / √2))⁻¹ ^ 2 =
+    (deriv S_smooth (√2 - 2 * π * u) * -(2 * π) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) * (√2 * sin (1 / √2)) /
+      (√2 * sin (1 / √2)) ^ 2

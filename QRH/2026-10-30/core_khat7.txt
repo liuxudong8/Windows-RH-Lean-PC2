@@ -1,0 +1,38 @@
+QRH/S7_1_Core.lean:373:47: error: Application type mismatch: The argument
+  hnorm
+has type
+  Tendsto (fun y => ‖(S_smooth y - S_smooth 0) / (y - 0)‖) (nhds 0) (nhds 0)
+but is expected to have type
+  Tendsto (fun x => ‖slope S_smooth 0 x‖) (nhdsWithin 0 {0}ᶜ) (nhds 0)
+in the application
+  tendsto_zero_iff_norm_tendsto_zero.mpr hnorm
+Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+QRH/S7_1_Core.lean:523:45: error: unsolved goals
+u : ℝ
+hlin1 : HasDerivAt (fun t => √2 - 2 * π * t) (-(2 * π)) u
+hd1 : HasDerivAt (fun t => S_smooth (√2 - 2 * π * t)) (deriv S_smooth (√2 - 2 * π * u) * -(2 * π)) u
+hlin2 : HasDerivAt (fun t => √2 + 2 * π * t) (2 * π) u
+hd2 : HasDerivAt (fun t => S_smooth (√2 + 2 * π * t)) (deriv S_smooth (√2 + 2 * π * u) * (2 * π)) u
+hsum :
+  HasDerivAt (fun t => S_smooth (√2 - 2 * π * t) + S_smooth (√2 + 2 * π * t))
+    (deriv S_smooth (√2 - 2 * π * u) * -(2 * π) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) u
+hdiv : √2 * sin (1 / √2) ≠ 0
+hc : HasDerivAt (fun t => √2 * sin (1 / √2)) 0 u
+hd :
+  HasDerivAt ((fun t => S_smooth (√2 - 2 * π * t) + S_smooth (√2 + 2 * π * t)) / fun t => √2 * sin (1 / √2))
+    (((deriv S_smooth (√2 - 2 * π * u) * -(2 * π) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) * (√2 * sin (1 / √2)) -
+        (S_smooth (√2 - 2 * π * u) + S_smooth (√2 + 2 * π * u)) * 0) /
+      (√2 * sin (1 / √2)) ^ 2)
+    u
+h_eq1 :
+  2 * π * (deriv S_smooth (√2 + 2 * π * u) - deriv S_smooth (√2 - 2 * π * u)) / (√2 * sin (1 / √2)) =
+    (deriv S_smooth (√2 - 2 * π * u) * -(2 * π) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) / (√2 * sin (1 / √2))
+⊢ -(√2 * π * deriv S_smooth (√2 - π * u * 2) * (sin (√2)⁻¹)⁻¹ * 2) +
+      √2 * π * deriv S_smooth (√2 + π * u * 2) * (sin (√2)⁻¹)⁻¹ * 2 =
+    -(√2 * π * deriv S_smooth (√2 - π * u * 2) * sin (√2)⁻¹ * (sin (√2)⁻¹)⁻¹ ^ 2 * 2) +
+      √2 * π * deriv S_smooth (√2 + π * u * 2) * sin (√2)⁻¹ * (sin (√2)⁻¹)⁻¹ ^ 2 * 2

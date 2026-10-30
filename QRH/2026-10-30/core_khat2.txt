@@ -1,0 +1,208 @@
+QRH/S7_1_Core.lean:217:4: error: No goals to be solved
+QRH/S7_1_Core.lean:239:4: error: Type mismatch
+  HasDerivAt.hasDerivWithinAt (HasDerivAt.sub (hasDerivAt_cos x) (hasDerivAt_const x 1))
+has type
+  HasDerivWithinAt (cos - fun x => 1) (-sin x - 0) ?m.88 x
+but is expected to have type
+  HasDerivWithinAt (fun t => cos t - 1) (-sin x) (Set.Icc 0 s) x
+QRH/S7_1_Core.lean:251:24: error(lean.unknownIdentifier): Unknown identifier `right_mem_Icc.mpr`
+QRH/S7_1_Core.lean:252:2: error: Type mismatch: After simplification, term
+  hinst
+ has type
+  |cos s - 1| ≤ s * s
+but is expected to have type
+  |cos s - 1| ≤ s ^ 2
+QRH/S7_1_Core.lean:272:24: error(lean.unknownIdentifier): Unknown identifier `right_mem_Icc.mpr`
+QRH/S7_1_Core.lean:273:2: error: Type mismatch: After simplification, term
+  hinst
+ has type
+  @LE.le ℝ instLE |sin t - t| (t ^ 2 * t)
+but is expected to have type
+  @LE.le ℝ instLE |sin t - t| (t ^ 3)
+QRH/S7_1_Core.lean:288:4: error: Type mismatch
+  h
+has type
+  |sin (-t) - -t| ≤ (-t) ^ 3
+but is expected to have type
+  |sin |(-t)| - |(-t)|| ≤ |t| ^ 3
+QRH/S7_1_Core.lean:297:6: error: Type mismatch: After simplification, term
+  HasDerivAt.mul (hasDerivAt_id x) (hasDerivAt_cos x)
+ has type
+  @HasDerivAt ℝ DenselyNormedField.toNontriviallyNormedField ℝ normedCommRing.toAddCommGroup
+    (NormedAlgebra.toNormedSpace ℝ).toModule PseudoMetricSpace.toUniformSpace.toTopologicalSpace ⋯ (id * cos)
+    (cos x + -(x * sin x)) x
+but is expected to have type
+  @HasDerivAt ℝ DenselyNormedField.toNontriviallyNormedField ℝ instAddCommGroup Semiring.toModule
+    PseudoMetricSpace.toUniformSpace.toTopologicalSpace ⋯ (fun u => u * cos u) (cos x + -(x * sin x)) x
+QRH/S7_1_Core.lean:298:4: error: Type mismatch
+  HasDerivAt.hasDerivWithinAt (HasDerivAt.sub hd1 hd2)
+has type
+  HasDerivWithinAt ((fun u => sin u) - fun u => u * cos u) (cos x - (cos x - x * sin x)) ?m.139 x
+but is expected to have type
+  HasDerivWithinAt (fun u => sin u - u * cos u) (x * sin x) (Set.Icc 0 t) x
+QRH/S7_1_Core.lean:303:37: error: Type mismatch
+  abs_mul ?m.188 ?m.189
+has type
+  |?m.188 * ?m.189| = |?m.188| * |?m.189|
+but is expected to have type
+  |x * sin x| ≤ |x| * |sin x|
+QRH/S7_1_Core.lean:310:24: error(lean.unknownIdentifier): Unknown identifier `right_mem_Icc.mpr`
+QRH/S7_1_Core.lean:311:2: error: Type mismatch: After simplification, term
+  hinst
+ has type
+  |sin t - t * cos t| ≤ t * t
+but is expected to have type
+  |sin t - t * cos t| ≤ t ^ 2
+QRH/S7_1_Core.lean:330:25: error(lean.unknownIdentifier): Unknown identifier `𝓝`
+QRH/S7_1_Core.lean:333:24: error(lean.unknownIdentifier): Unknown identifier `𝓝`
+QRH/S7_1_Core.lean:344:10: error: No goals to be solved
+QRH/S7_1_Core.lean:363:47: error(lean.unknownIdentifier): Unknown identifier `𝓝`
+QRH/S7_1_Core.lean:363:53: error(lean.unknownIdentifier): Unknown identifier `𝓝`
+QRH/S7_1_Core.lean:376:4: error: Type mismatch
+  HasDerivAt.comp x (hasDerivAt_sin (x / 2)) hd
+has type
+  HasDerivAt (sin ∘ fun u => u / 2) (cos (x / 2) * (1 / 2)) x
+but is expected to have type
+  HasDerivAt (fun u => sin (u / 2)) (cos (x / 2) / 2) x
+QRH/S7_1_Core.lean:380:4: error: Type mismatch: After simplification, term
+  HasDerivAt.div hf hg hx
+ has type
+  HasDerivAt ((fun u => sin (u * 2⁻¹)) * (fun u => u)⁻¹) ((x ^ 2)⁻¹ * (x * (2⁻¹ * cos (x * 2⁻¹)) - sin (x * 2⁻¹))) x
+but is expected to have type
+  HasDerivAt (fun u => u⁻¹ * sin (u * 2⁻¹)) ((x ^ 2)⁻¹ * (x * (2⁻¹ * cos (x * 2⁻¹)) - sin (x * 2⁻¹))) x
+QRH/S7_1_Core.lean:381:21: error(lean.unknownIdentifier): Unknown identifier `𝓝`
+QRH/S7_1_Core.lean:390:2: error: unsolved goals
+case pos
+hd : HasDerivAt S_smooth 0 0
+⊢ HasDerivAt S_smooth 0 0
+QRH/S7_1_Core.lean:393:2: error: unsolved goals
+case neg
+x : ℝ
+hx : ¬x = 0
+hd : HasDerivAt S_smooth ((cos (x / 2) / 2 * x - sin (x / 2)) / x ^ 2) x
+⊢ HasDerivAt S_smooth ((cos (x / 2) / 2 * x - sin (x / 2)) / x ^ 2) x
+QRH/S7_1_Core.lean:429:15: error(lean.unknownIdentifier): Unknown identifier `norm_image_sub_le_of_norm_deriv_le`
+QRH/S7_1_Core.lean:424:90: error: unsolved goals
+x y : ℝ
+hdiff : ∀ (x : ℝ), DifferentiableAt ℝ S_smooth x
+hb : ∀ (x : ℝ), ‖deriv S_smooth x‖ ≤ 1 / 4
+⊢ |S_smooth x - S_smooth y| ≤ 1 / 4 * |x - y|
+QRH/S7_1_Core.lean:472:6: error: Type mismatch
+  HasDerivAt.mul (hasDerivAt_const u (2 * π)) (hasDerivAt_id u)
+has type
+  HasDerivAt ((fun x => 2 * π) * id) (0 * id u + 2 * π * 1) u
+but is expected to have type
+  HasDerivAt (fun t => 2 * π * t) (2 * π) u
+QRH/S7_1_Core.lean:476:6: error: Tactic `apply` failed: could not unify the conclusion of `@funext`
+  ?f = ?g
+with the goal
+  -(2 * π) = 0 - 2 * π
+
+Note: The full type of `@funext` is
+  ∀ {α : Sort ?u.146} {β : α → Sort ?u.145} {f g : (x : α) → β x}, (∀ (x : α), f x = g x) → f = g
+
+u : ℝ
+hc : HasDerivAt (fun t => √2) 0 u
+hlin : HasDerivAt (fun t => 2 * π * t) (2 * π) u
+hsub : HasDerivAt (fun t => √2 - 2 * π * t) (0 - 2 * π) u
+⊢ -(2 * π) = 0 - 2 * π
+QRH/S7_1_Core.lean:478:4: error: No goals to be solved
+QRH/S7_1_Core.lean:485:6: error: Type mismatch
+  HasDerivAt.mul (hasDerivAt_const u (2 * π)) (hasDerivAt_id u)
+has type
+  HasDerivAt ((fun x => 2 * π) * id) (0 * id u + 2 * π * 1) u
+but is expected to have type
+  HasDerivAt (fun t => 2 * π * t) (2 * π) u
+QRH/S7_1_Core.lean:489:6: error: Tactic `apply` failed: could not unify the conclusion of `@funext`
+  ?f = ?g
+with the goal
+  2 * π = 0 + 2 * π
+
+Note: The full type of `@funext` is
+  ∀ {α : Sort ?u.288} {β : α → Sort ?u.287} {f g : (x : α) → β x}, (∀ (x : α), f x = g x) → f = g
+
+u : ℝ
+hlin1 : HasDerivAt (fun t => √2 - 2 * π * t) (-(2 * π)) u
+hd1 : HasDerivAt (fun t => S_smooth (√2 - 2 * π * t)) (deriv S_smooth (√2 - 2 * π * u) * -(2 * π)) u
+hc : HasDerivAt (fun t => √2) 0 u
+hlin : HasDerivAt (fun t => 2 * π * t) (2 * π) u
+hadd : HasDerivAt (fun t => √2 + 2 * π * t) (0 + 2 * π) u
+⊢ 2 * π = 0 + 2 * π
+QRH/S7_1_Core.lean:491:4: error: No goals to be solved
+QRH/S7_1_Core.lean:507:4: error: Tactic `apply` failed: could not unify the conclusion of `@funext`
+  ?f = ?g
+with the goal
+  instAddCommGroup = normedCommRing.toAddCommGroup
+
+Note: The full type of `@funext` is
+  ∀ {α : Sort ?u.487} {β : α → Sort ?u.486} {f g : (x : α) → β x}, (∀ (x : α), f x = g x) → f = g
+
+case e'_4
+u : ℝ
+hlin1 : HasDerivAt (fun t => √2 - 2 * π * t) (-(2 * π)) u
+hd1 : HasDerivAt (fun t => S_smooth (√2 - 2 * π * t)) (deriv S_smooth (√2 - 2 * π * u) * -(2 * π)) u
+hlin2 : HasDerivAt (fun t => √2 + 2 * π * t) (2 * π) u
+hd2 : HasDerivAt (fun t => S_smooth (√2 + 2 * π * t)) (deriv S_smooth (√2 + 2 * π * u) * (2 * π)) u
+hsum :
+  HasDerivAt (fun t => S_smooth (√2 - 2 * π * t) + S_smooth (√2 + 2 * π * t))
+    (deriv S_smooth (√2 - 2 * π * u) * -(2 * π) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) u
+hdiv : √2 * sin (1 / √2) ≠ 0
+hden : HasDerivAt (fun t => 1 / (√2 * sin (1 / √2))) 0 u
+hprod :
+  HasDerivAt ((fun t => S_smooth (√2 - 2 * π * t) + S_smooth (√2 + 2 * π * t)) * fun t => 1 / (√2 * sin (1 / √2)))
+    ((deriv S_smooth (√2 - 2 * π * u) * -(2 * π) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) *
+        (1 / (√2 * sin (1 / √2))) +
+      (S_smooth (√2 - 2 * π * u) + S_smooth (√2 + 2 * π * u)) * 0)
+    u
+⊢ instAddCommGroup = normedCommRing.toAddCommGroup
+QRH/S7_1_Core.lean:509:4: error: `ring_nf` made no progress on the goal
+QRH/S7_1_Core.lean:467:89: error: unsolved goals
+case e'_8
+u : ℝ
+hlin1 : HasDerivAt (fun t => √2 - 2 * π * t) (-(2 * π)) u
+hd1 : HasDerivAt (fun t => S_smooth (√2 - 2 * π * t)) (deriv S_smooth (√2 - 2 * π * u) * -(2 * π)) u
+hlin2 : HasDerivAt (fun t => √2 + 2 * π * t) (2 * π) u
+hd2 : HasDerivAt (fun t => S_smooth (√2 + 2 * π * t)) (deriv S_smooth (√2 + 2 * π * u) * (2 * π)) u
+hsum :
+  HasDerivAt (fun t => S_smooth (√2 - 2 * π * t) + S_smooth (√2 + 2 * π * t))
+    (deriv S_smooth (√2 - 2 * π * u) * -(2 * π) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) u
+hdiv : √2 * sin (1 / √2) ≠ 0
+hden : HasDerivAt (fun t => 1 / (√2 * sin (1 / √2))) 0 u
+hprod :
+  HasDerivAt ((fun t => S_smooth (√2 - 2 * π * t) + S_smooth (√2 + 2 * π * t)) * fun t => 1 / (√2 * sin (1 / √2)))
+    ((deriv S_smooth (√2 - 2 * π * u) * -(2 * π) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) *
+        (1 / (√2 * sin (1 / √2))) +
+      (S_smooth (√2 - 2 * π * u) + S_smooth (√2 + 2 * π * u)) * 0)
+    u
+⊢ (fun u => (S_smooth (√2 - 2 * π * u) + S_smooth (√2 + 2 * π * u)) / (√2 * sin (1 / √2))) =
+    (fun t => S_smooth (√2 - 2 * π * t) + S_smooth (√2 + 2 * π * t)) * fun t => 1 / (√2 * sin (1 / √2))
+
+case e'_9
+u : ℝ
+hlin1 : HasDerivAt (fun t => √2 - 2 * π * t) (-(2 * π)) u
+hd1 : HasDerivAt (fun t => S_smooth (√2 - 2 * π * t)) (deriv S_smooth (√2 - 2 * π * u) * -(2 * π)) u
+hlin2 : HasDerivAt (fun t => √2 + 2 * π * t) (2 * π) u
+hd2 : HasDerivAt (fun t => S_smooth (√2 + 2 * π * t)) (deriv S_smooth (√2 + 2 * π * u) * (2 * π)) u
+hsum :
+  HasDerivAt (fun t => S_smooth (√2 - 2 * π * t) + S_smooth (√2 + 2 * π * t))
+    (deriv S_smooth (√2 - 2 * π * u) * -(2 * π) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) u
+hdiv : √2 * sin (1 / √2) ≠ 0
+hden : HasDerivAt (fun t => 1 / (√2 * sin (1 / √2))) 0 u
+hprod :
+  HasDerivAt ((fun t => S_smooth (√2 - 2 * π * t) + S_smooth (√2 + 2 * π * t)) * fun t => 1 / (√2 * sin (1 / √2)))
+    ((deriv S_smooth (√2 - 2 * π * u) * -(2 * π) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) *
+        (1 / (√2 * sin (1 / √2))) +
+      (S_smooth (√2 - 2 * π * u) + S_smooth (√2 + 2 * π * u)) * 0)
+    u
+⊢ 2 * π * (deriv S_smooth (√2 + 2 * π * u) - deriv S_smooth (√2 - 2 * π * u)) / (√2 * sin (1 / √2)) =
+    (deriv S_smooth (√2 - 2 * π * u) * -(2 * π) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) *
+        (1 / (√2 * sin (1 / √2))) +
+      (S_smooth (√2 - 2 * π * u) + S_smooth (√2 + 2 * π * u)) * 0
+QRH/S7_1_Core.lean:533:32: error: Invalid argument name `x` for function `norm_mul_le`
+
+Hint: Perhaps you meant one of the following parameter names:
+  • `α`: x̵α̲
+  • `a`: x̵a̲
+  • `b`: x̵b̲
+QRH/S7_1_Core.lean:580:17: error(lean.unknownIdentifier): Unknown identifier `norm_image_sub_le_of_norm_deriv_le`
+QRH/S7_1_Core.lean:646:77: error: unexpected token '/--'; expected 'lemma'

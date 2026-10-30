@@ -1,0 +1,138 @@
+QRH/S7_1_Core.lean:239:6: error: `simp` made no progress
+QRH/S7_1_Core.lean:239:6: error: `simp` made no progress
+QRH/S7_1_Core.lean:239:6: error: `simp` made no progress
+QRH/S7_1_Core.lean:239:12: warning: This simp argument is unused:
+  Pi.sub_apply
+
+Hint: Omit it from the simp argument list.
+  [apply] simp
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+QRH/S7_1_Core.lean:260:6: error: `simp` made no progress
+QRH/S7_1_Core.lean:260:6: error: `simp` made no progress
+QRH/S7_1_Core.lean:260:6: error: `simp` made no progress
+QRH/S7_1_Core.lean:290:6: error: No goals to be solved
+QRH/S7_1_Core.lean:301:72: error: `simp` made no progress
+QRH/S7_1_Core.lean:301:72: error: `simp` made no progress
+QRH/S7_1_Core.lean:301:72: error: `simp` made no progress
+QRH/S7_1_Core.lean:302:55: error: `simp` made no progress
+QRH/S7_1_Core.lean:302:55: error: `simp` made no progress
+QRH/S7_1_Core.lean:302:55: error: `simp` made no progress
+QRH/S7_1_Core.lean:301:78: warning: This simp argument is unused:
+  Pi.mul_apply
+
+Hint: Omit it from the simp argument list.
+  [apply] simp
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+QRH/S7_1_Core.lean:302:61: warning: This simp argument is unused:
+  Pi.sub_apply
+
+Hint: Omit it from the simp argument list.
+  [apply] simp
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+QRH/S7_1_Core.lean:349:29: error: unsolved goals
+y : ℝ
+hy : ¬y = 0
+hsy : S_smooth y = sin (y / 2) / y
+hnum : |sin (y / 2) - y / 2| ≤ |y / 2| ^ 3
+hfact : sin (y / 2) / y - 1 / 2 = (sin (y / 2) - y / 2) / y
+⊢ 8 = 2 ^ 3
+QRH/S7_1_Core.lean:364:6: error: Type mismatch
+  ContinuousAt.tendsto (Continuous.continuousAt continuous_abs)
+has type
+  Tendsto abs (nhds ?m.530) (nhds |?m.530|)
+but is expected to have type
+  Tendsto (fun y => |y|) (nhds 0) (nhds 0)
+QRH/S7_1_Core.lean:370:10: error: Application type mismatch: The argument
+  fun y x => norm_nonneg (?m.571 y x)
+has type
+  ∀ (y : ℝ) (x : ?m.568 y), 0 ≤ ‖?m.571 y x‖
+but is expected to have type
+  ?m.540 ≤ slope S_smooth 0
+in the application
+  tendsto_of_tendsto_of_tendsto_of_le_of_le ?m.561 ?m.562 fun y x => norm_nonneg (?m.571 y x)
+QRH/S7_1_Core.lean:381:12: error(lean.unknownIdentifier): Unknown identifier `Pi.comp_apply`
+QRH/S7_1_Core.lean:381:6: error: `simp` made no progress
+QRH/S7_1_Core.lean:381:12: error(lean.unknownIdentifier): Unknown identifier `Pi.comp_apply`
+QRH/S7_1_Core.lean:381:6: error: `simp` made no progress
+QRH/S7_1_Core.lean:381:12: error(lean.unknownIdentifier): Unknown identifier `Pi.comp_apply`
+QRH/S7_1_Core.lean:381:12: error(lean.unknownIdentifier): Unknown identifier `Pi.comp_apply`
+QRH/S7_1_Core.lean:386:6: error: `simp` made no progress
+QRH/S7_1_Core.lean:386:6: error: `simp` made no progress
+QRH/S7_1_Core.lean:386:12: warning: This simp argument is unused:
+  Pi.div_apply
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [div_eq_mul_inv, mul_assoc, mul_left_comm, mul_comm]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+QRH/S7_1_Core.lean:386:42: warning: This simp argument is unused:
+  mul_assoc
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [Pi.div_apply, div_eq_mul_inv, mul_left_comm, mul_comm]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+QRH/S7_1_Core.lean:386:53: warning: This simp argument is unused:
+  mul_left_comm
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [Pi.div_apply, div_eq_mul_inv, mul_assoc, mul_comm]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+QRH/S7_1_Core.lean:436:20: error: Application type mismatch: The argument
+  hdiff
+has type
+  ∀ (x : ℝ), DifferentiableAt ℝ S_smooth x
+but is expected to have type
+  ∀ x ∈ Set.univ, DifferentiableAt ℝ S_smooth x
+in the application
+  Convex.norm_image_sub_le_of_norm_deriv_le hdiff
+QRH/S7_1_Core.lean:430:90: error: unsolved goals
+x y : ℝ
+hdiff : ∀ (x : ℝ), DifferentiableAt ℝ S_smooth x
+hb : ∀ (x : ℝ), ‖deriv S_smooth x‖ ≤ 1 / 4
+⊢ |S_smooth x - S_smooth y| ≤ 1 / 4 * |x - y|
+QRH/S7_1_Core.lean:478:68: error: `ring_nf` made no progress on the goal
+QRH/S7_1_Core.lean:478:68: error: `ring_nf` made no progress on the goal
+Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+QRH/S7_1_Core.lean:488:68: error: `ring_nf` made no progress on the goal
+QRH/S7_1_Core.lean:488:68: error: `ring_nf` made no progress on the goal
+Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+QRH/S7_1_Core.lean:507:4: error: Type mismatch: After simplification, term
+  HasDerivAt.mul hsum (hasDerivAt_const u (√2 * sin (1 / √2))⁻¹)
+ has type
+  @HasDerivAt ℝ DenselyNormedField.toNontriviallyNormedField ℝ normedCommRing.toAddCommGroup
+    (NormedAlgebra.toNormedSpace ℝ).toModule PseudoMetricSpace.toUniformSpace.toTopologicalSpace ⋯
+    ((fun t => S_smooth (√2 - 2 * π * t) + S_smooth (√2 + 2 * π * t)) * fun x => (sin (√2)⁻¹)⁻¹ * (√2)⁻¹)
+    ((-(deriv S_smooth (√2 - 2 * π * u) * (2 * π)) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) *
+      ((sin (√2)⁻¹)⁻¹ * (√2)⁻¹))
+    u
+but is expected to have type
+  @HasDerivAt ℝ DenselyNormedField.toNontriviallyNormedField ℝ instAddCommGroup Semiring.toModule
+    PseudoMetricSpace.toUniformSpace.toTopologicalSpace ⋯
+    (fun t => (S_smooth (√2 - 2 * π * t) + S_smooth (√2 + 2 * π * t)) * ((sin (√2)⁻¹)⁻¹ * (√2)⁻¹))
+    ((-(deriv S_smooth (√2 - 2 * π * u) * (2 * π)) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) *
+      ((sin (√2)⁻¹)⁻¹ * (√2)⁻¹))
+    u
+QRH/S7_1_Core.lean:512:2: error: No goals to be solved
+QRH/S7_1_Core.lean:587:69: error: Application type mismatch: The argument
+  hdiff
+has type
+  ∀ (x : ℝ), DifferentiableAt ℝ Khat x
+but is expected to have type
+  ∀ x ∈ Set.univ, DifferentiableAt ℝ Khat x
+in the application
+  Convex.norm_image_sub_le_of_norm_deriv_le hdiff

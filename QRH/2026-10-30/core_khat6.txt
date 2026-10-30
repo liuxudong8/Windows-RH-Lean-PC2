@@ -1,0 +1,44 @@
+QRH/S7_1_Core.lean:364:12: error: typeclass instance problem is stuck
+  TopologicalSpace ?m.562
+
+Note: Lean will not try to resolve this typeclass instance problem because the type argument to `TopologicalSpace` is a metavariable. This argument must be fully determined before Lean will try to resolve the typeclass.
+
+Hint: Adding type annotations and supplying implicit arguments to functions can give Lean more information for typeclass resolution. For example, if you have a variable `x` that you intend to be a `Nat`, but Lean reports it as having an unresolved type like `?m`, replacing `x` with `(x : Nat)` can get typeclass resolution un-stuck.
+QRH/S7_1_Core.lean:370:4: error: Application type mismatch: The argument
+  hbound
+has type
+  ∀ (y : ℝ), ‖(S_smooth y - S_smooth 0) / (y - 0)‖ ≤ |y| / 8
+but is expected to have type
+  slope S_smooth 0 ≤ ?m.594
+in the application
+  tendsto_of_tendsto_of_tendsto_of_le_of_le ?m.614 ?m.615 (fun y => ?m.635) hbound
+Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+QRH/S7_1_Core.lean:520:45: error: unsolved goals
+u : ℝ
+hlin1 : HasDerivAt (fun t => √2 - 2 * π * t) (-(2 * π)) u
+hd1 : HasDerivAt (fun t => S_smooth (√2 - 2 * π * t)) (deriv S_smooth (√2 - 2 * π * u) * -(2 * π)) u
+hlin2 : HasDerivAt (fun t => √2 + 2 * π * t) (2 * π) u
+hd2 : HasDerivAt (fun t => S_smooth (√2 + 2 * π * t)) (deriv S_smooth (√2 + 2 * π * u) * (2 * π)) u
+hsum :
+  HasDerivAt (fun t => S_smooth (√2 - 2 * π * t) + S_smooth (√2 + 2 * π * t))
+    (deriv S_smooth (√2 - 2 * π * u) * -(2 * π) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) u
+hdiv : √2 * sin (1 / √2) ≠ 0
+hc : HasDerivAt (fun t => √2 * sin (1 / √2)) 0 u
+hd :
+  HasDerivAt ((fun t => S_smooth (√2 - 2 * π * t) + S_smooth (√2 + 2 * π * t)) / fun t => √2 * sin (1 / √2))
+    (((deriv S_smooth (√2 - 2 * π * u) * -(2 * π) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) * (√2 * sin (1 / √2)) -
+        (S_smooth (√2 - 2 * π * u) + S_smooth (√2 + 2 * π * u)) * 0) /
+      (√2 * sin (1 / √2)) ^ 2)
+    u
+h_eq1 :
+  2 * π * (deriv S_smooth (√2 + 2 * π * u) - deriv S_smooth (√2 - 2 * π * u)) / (√2 * sin (1 / √2)) =
+    (deriv S_smooth (√2 - 2 * π * u) * -(2 * π) + deriv S_smooth (√2 + 2 * π * u) * (2 * π)) / (√2 * sin (1 / √2))
+⊢ -(√2 * π * deriv S_smooth (√2 - π * u * 2) * (sin (√2)⁻¹)⁻¹ * 2) +
+      √2 * π * deriv S_smooth (√2 + π * u * 2) * (sin (√2)⁻¹)⁻¹ * 2 =
+    -(√2 * π * deriv S_smooth (√2 - π * u * 2) * sin (√2)⁻¹ * (sin (√2)⁻¹)⁻¹ ^ 2 * 2) +
+      √2 * π * deriv S_smooth (√2 + π * u * 2) * sin (√2)⁻¹ * (sin (√2)⁻¹)⁻¹ ^ 2 * 2
