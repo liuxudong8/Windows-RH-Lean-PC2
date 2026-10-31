@@ -1,0 +1,50 @@
+ℹ [2701/2717] Replayed QRH.S7_1_Main
+info: QRH/S7_1_Main.lean:1027:22: Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+⚠ [2717/2717] Built QRH.S7_1_Stage3 (29s)
+warning: QRH/S7_1_Stage3.lean:452:10: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: QRH/S7_1_Stage3.lean:479:4: try 'simp' instead of 'simpa'
+
+Note: This linter can be disabled with `set_option linter.unnecessarySimpa false`
+warning: QRH/S7_1_Stage3.lean:735:6: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: QRH/S7_1_Stage3.lean:897:8: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: QRH/S7_1_Stage3.lean:921:14: This simp argument is unused:
+  abs_of_nonneg (by norm_num : (0 : ℝ) ≤ (1 : ℝ) / 2)
+
+Hint: Omit it from the simp argument list.
+  [apply] simp
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: QRH/S7_1_Stage3.lean:1010:10: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: QRH/S7_1_Stage3.lean:1018:4: `summable_of_finite_support` has been deprecated: Use `summable_of_hasFiniteSupport` instead
+warning: QRH/S7_1_Stage3.lean:1028:10: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: QRH/S7_1_Stage3.lean:1035:4: `summable_of_finite_support` has been deprecated: Use `summable_of_hasFiniteSupport` instead
+warning: QRH/S7_1_Stage3.lean:1054:14: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: QRH/S7_1_Stage3.lean:1055:12: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: QRH/S7_1_Stage3.lean:1086:14: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: QRH/S7_1_Stage3.lean:1091:10: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: QRH/S7_1_Stage3.lean:1094:12: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: QRH/S7_1_Stage3.lean:1106:12: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: QRH/S7_1_Stage3.lean:1106:23: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: QRH/S7_1_Stage3.lean:1115:12: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: QRH/S7_1_Stage3.lean:1115:23: `if_neg` has been deprecated: Use `ite_eq_right` instead
+info: QRH/S7_1_Stage3.lean:1290:65: Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+warning: QRH/S7_1_Stage3.lean:1354:10: try 'simp' instead of 'simpa'
+
+Note: This linter can be disabled with `set_option linter.unnecessarySimpa false`
+info: QRH/S7_1_Stage3.lean:1815:10: Try this:
+  [apply] ring_nf
+  
+  The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+    
+  Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+Build completed successfully (2717 jobs).

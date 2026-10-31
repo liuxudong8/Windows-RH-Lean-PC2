@@ -428,16 +428,215 @@ lemma f_eps_support (ε x : ℝ) (hε : 0 < ε) (hx : (1 : ℝ) / 2 < |x|) : f_e
   rw [hw]
   ring
 
-/-- N2-联动定理（statement，S7.4 定理 N2(iii)，Bound 显式界化）：
+/-- N2-可积件 I（真证）：f₀ 可积——支撑 ⊂ [−1/2,1/2]（紧区间体积有限）+ 全局界
+    |f₀| ≤ M（f0_abs_le）⟹ Integrable.mono（界=紧区间指示常数）⟹
+    integrableOn_iff_integrable_of_support_subset 桥。 -/
+lemma f0_integrable : MeasureTheory.Integrable f0 := by
+  let I : Set ℝ := Set.Icc (-((1 : ℝ) / 2)) ((1 : ℝ) / 2)
+  let M : ℝ := (sqrt 2 * |sin (1 / sqrt 2)|)⁻¹
+  have hMpos : 0 < M := by
+    unfold M
+    exact inv_pos.mpr (mul_pos (by positivity : (0 : ℝ) < sqrt 2) (abs_pos.mpr sin_inv_sqrt2_ne_zero))
+  have hsupp : Function.support f0 ⊆ I := by
+    intro y hy
+    by_contra hnot
+    have hnotle : ¬ |y| ≤ (1 : ℝ) / 2 := by
+      intro hle
+      apply hnot
+      have hy_le : y ≤ (1 : ℝ) / 2 := le_trans (le_abs_self y) hle
+      have hmy_le : -y ≤ (1 : ℝ) / 2 := le_trans (by simpa [abs_neg] using le_abs_self (-y)) hle
+      exact ⟨(neg_le.mp hmy_le), hy_le⟩
+    have hgt : (1 : ℝ) / 2 < |y| := lt_of_not_ge hnotle
+    have hy0 : f0 y = 0 := by
+      unfold f0
+      rw [if_neg (not_le.mpr hgt)]
+    exact hy hy0
+  rw [← MeasureTheory.integrableOn_iff_integrable_of_support_subset hsupp]
+  have hMint : MeasureTheory.IntegrableOn (fun x : ℝ => (I.indicator (fun _ : ℝ => M)) x) I := by
+    exact MeasureTheory.IntegrableOn.congr_fun
+      (MeasureTheory.integrableOn_const (C := M) (hs := by
+        unfold I
+        rw [Real.volume_Icc]
+        exact ENNReal.ofReal_ne_top))
+      (by intro x hx; exact (Set.indicator_of_mem hx (fun _ : ℝ => M)).symm)
+      (isClosed_Icc).measurableSet
+  have hf0meas : MeasureTheory.AEStronglyMeasurable f0 (MeasureTheory.volume.restrict I) :=
+    f0_measurable.aestronglyMeasurable.restrict
+  refine MeasureTheory.Integrable.mono hMint hf0meas ?_
+  filter_upwards with x
+  by_cases hx : x ∈ I
+  · have hxM : (I.indicator (fun _ : ℝ => M)) x = M := Set.indicator_of_mem hx (fun _ : ℝ => M)
+    calc
+      ‖f0 x‖ = |f0 x| := rfl
+      _ ≤ M := f0_abs_le x
+      _ = |M| := by rw [abs_of_nonneg hMpos.le]
+      _ = ‖M‖ := by rfl
+      _ = ‖(I.indicator (fun _ : ℝ => M)) x‖ := by rw [hxM]
+  · have hx0 : f0 x = 0 := by
+      by_contra hne
+      exact hx (hsupp hne)
+    have hxM : (I.indicator (fun _ : ℝ => M)) x = 0 := Set.indicator_of_notMem hx (fun _ : ℝ => M)
+    simpa [hx0, hxM]
+
+/-- N2-可积件 II（真证）：|f₀−f_ε| 可积——RHS 指示函数和可积（紧区间体积有限）+
+    点界（f0_sub_feps_abs_le）⟹ Integrable.mono（f0_sub_feps_L1_bound 证明块的内部构造提取）。 -/
+lemma f0_sub_feps_abs_integrable (ε : ℝ) (hε : 0 < ε) :
+  MeasureTheory.Integrable (fun x : ℝ => |f0 x - f_eps ε x|) := by
+  let I1 : Set ℝ := Set.Icc (-((1 : ℝ) / 2)) (-((1 : ℝ) / 2) + ε)
+  let I2 : Set ℝ := Set.Icc ((1 : ℝ) / 2 - ε) ((1 : ℝ) / 2)
+  let C : ℝ := (sqrt 2 * |sin (1 / sqrt 2)|)⁻¹
+  have hCpos : 0 < C := by
+    unfold C
+    exact inv_pos.mpr (mul_pos (by positivity : (0 : ℝ) < sqrt 2) (abs_pos.mpr sin_inv_sqrt2_ne_zero))
+  have hCnonneg : 0 ≤ C := le_of_lt hCpos
+  have hpoint : ∀ x : ℝ, |f0 x - f_eps ε x| ≤ C * ((I1.indicator (fun _ : ℝ => (1 : ℝ))) x + (I2.indicator (fun _ : ℝ => (1 : ℝ))) x) := by
+    intro x
+    simpa [I1, I2, C] using f0_sub_feps_abs_le ε x hε
+  have hI1int : MeasureTheory.Integrable (fun x : ℝ => (I1.indicator (fun _ : ℝ => (1 : ℝ))) x) := by
+    have hsupp : Function.support (fun x : ℝ => (I1.indicator (fun _ : ℝ => (1 : ℝ))) x) ⊆ I1 := by
+      intro y hy
+      rw [Set.support_indicator] at hy
+      exact hy.1
+    rw [← MeasureTheory.integrableOn_iff_integrable_of_support_subset hsupp]
+    exact MeasureTheory.IntegrableOn.congr_fun
+      (MeasureTheory.integrableOn_const (C := (1 : ℝ)) (hs := by
+        unfold I1
+        rw [Real.volume_Icc]
+        exact ENNReal.ofReal_ne_top))
+      (by intro x hx; exact (Set.indicator_of_mem (f := fun _ : ℝ => (1 : ℝ)) hx).symm)
+      (isClosed_Icc).measurableSet
+  have hI2int : MeasureTheory.Integrable (fun x : ℝ => (I2.indicator (fun _ : ℝ => (1 : ℝ))) x) := by
+    have hsupp : Function.support (fun x : ℝ => (I2.indicator (fun _ : ℝ => (1 : ℝ))) x) ⊆ I2 := by
+      intro y hy
+      rw [Set.support_indicator] at hy
+      exact hy.1
+    rw [← MeasureTheory.integrableOn_iff_integrable_of_support_subset hsupp]
+    exact MeasureTheory.IntegrableOn.congr_fun
+      (MeasureTheory.integrableOn_const (C := (1 : ℝ)) (hs := by
+        unfold I2
+        rw [Real.volume_Icc]
+        exact ENNReal.ofReal_ne_top))
+      (by intro x hx; exact (Set.indicator_of_mem (f := fun _ : ℝ => (1 : ℝ)) hx).symm)
+      (isClosed_Icc).measurableSet
+  have hsumint : MeasureTheory.Integrable (fun x : ℝ => (I1.indicator (fun _ : ℝ => (1 : ℝ))) x + (I2.indicator (fun _ : ℝ => (1 : ℝ))) x) := hI1int.add hI2int
+  have hRHSint : MeasureTheory.Integrable (fun x : ℝ => C * ((I1.indicator (fun _ : ℝ => (1 : ℝ))) x + (I2.indicator (fun _ : ℝ => (1 : ℝ))) x)) := hsumint.const_mul C
+  have hLHSmeas : MeasureTheory.AEStronglyMeasurable (fun x : ℝ => |f0 x - f_eps ε x|) := by
+    have hfepsm : Measurable (fun x : ℝ => f_eps ε x) := by
+      unfold f_eps
+      change Measurable (f0 * fun x : ℝ => w_eps ε x)
+      exact f0_measurable.mul (w_eps_continuous ε).measurable
+    have hdiffm : Measurable (fun x : ℝ => f0 x - f_eps ε x) := f0_measurable.sub hfepsm
+    rw [aestronglyMeasurable_iff_aemeasurable]
+    exact (measurable_norm.comp hdiffm).aemeasurable
+  refine MeasureTheory.Integrable.mono hRHSint hLHSmeas ?_
+  filter_upwards with x
+  have hSumNN : 0 ≤ (I1.indicator (fun _ : ℝ => (1 : ℝ))) x + (I2.indicator (fun _ : ℝ => (1 : ℝ))) x := by
+    exact add_nonneg (Set.indicator_nonneg (by intro a ha; norm_num) x)
+      (Set.indicator_nonneg (by intro a ha; norm_num) x)
+  have hRnn : 0 ≤ C * ((I1.indicator (fun _ : ℝ => (1 : ℝ))) x + (I2.indicator (fun _ : ℝ => (1 : ℝ))) x) :=
+    mul_nonneg hCnonneg hSumNN
+  calc
+    ‖|f0 x - f_eps ε x|‖ = |f0 x - f_eps ε x| := by
+      rw [Real.norm_eq_abs, abs_abs]
+    _ ≤ C * ((I1.indicator (fun _ : ℝ => (1 : ℝ))) x + (I2.indicator (fun _ : ℝ => (1 : ℝ))) x) := hpoint x
+    _ = ‖C * ((I1.indicator (fun _ : ℝ => (1 : ℝ))) x + (I2.indicator (fun _ : ℝ => (1 : ℝ))) x)‖ := by
+      rw [Real.norm_eq_abs]
+      exact (abs_of_nonneg hRnn).symm
+
+/-- N2-可积件 III（真证）：f₀−f_ε 可积——|f₀−f_ε| 可积（f0_sub_feps_abs_integrable）+
+    强可测（f0_measurable.sub + w_eps_continuous）⟹ Integrable.mono（‖f‖≤‖|f|‖ 平凡界）。 -/
+lemma f0_sub_feps_integrable (ε : ℝ) (hε : 0 < ε) :
+  MeasureTheory.Integrable (fun x : ℝ => f0 x - f_eps ε x) := by
+  have hmeas : MeasureTheory.AEStronglyMeasurable (fun x : ℝ => f0 x - f_eps ε x) := by
+    have hfepsm : Measurable (fun x : ℝ => f_eps ε x) := by
+      unfold f_eps
+      change Measurable (f0 * fun x : ℝ => w_eps ε x)
+      exact f0_measurable.mul (w_eps_continuous ε).measurable
+    exact (f0_measurable.sub hfepsm).aestronglyMeasurable
+  refine MeasureTheory.Integrable.mono (f0_sub_feps_abs_integrable ε hε) hmeas ?_
+  filter_upwards with x
+  simp [Real.norm_eq_abs]
+
+/-- N2-积分归约（真证）：|fourierCos(f_ε)(0) − fourierCos(f₀)(0)| ≤ ‖f₀−f_ε‖₁。
+    cos(2π·0·x)=1 ⟹ fourierCos 的 z=0 化归 ∫f；可积性（f₀ 紧支撑有界 f0_integrable、
+    f₀−f_ε 由 f0_sub_feps_L1_bound 的 L¹ 界压制 f0_sub_feps_integrable）⟹
+    integral_sub + abs_integral_le_integral_abs。 -/
+lemma fourierCos_sub_f0_feps_abs_le (ε : ℝ) (hε : 0 < ε) :
+  |fourierCos (f_eps ε) 0 - fourierCos f0 0| ≤ normL1 (fun x => f0 x - f_eps ε x) := by
+  have hcos1 : ∀ x : ℝ, Real.cos (2 * Real.pi * 0 * x) = 1 := by
+    intro x
+    have hz : 2 * Real.pi * 0 * x = 0 := by ring
+    rw [hz, cos_zero]
+  have hfepsFC : fourierCos (f_eps ε) 0 = ∫ x : ℝ, f_eps ε x := by
+    unfold fourierCos
+    apply MeasureTheory.integral_congr_ae
+    filter_upwards with x
+    rw [hcos1 x, mul_one]
+  have hf0FC : fourierCos f0 0 = ∫ x : ℝ, f0 x := by
+    unfold fourierCos
+    apply MeasureTheory.integral_congr_ae
+    filter_upwards with x
+    rw [hcos1 x, mul_one]
+  have hf0int : MeasureTheory.Integrable f0 := f0_integrable
+  have hfdint : MeasureTheory.Integrable (fun x : ℝ => f0 x - f_eps ε x) := f0_sub_feps_integrable ε hε
+  have hfeint : MeasureTheory.Integrable (fun x : ℝ => f_eps ε x) := by
+    have hsub := MeasureTheory.Integrable.sub hf0int hfdint
+    convert hsub using 1
+    ext x
+    change f_eps ε x = f0 x - (f0 x - f_eps ε x)
+    ring
+  calc
+    |fourierCos (f_eps ε) 0 - fourierCos f0 0|
+      = |(∫ x : ℝ, f_eps ε x) - (∫ x : ℝ, f0 x)| := by rw [hfepsFC, hf0FC]
+    _ = |∫ x : ℝ, (f_eps ε x - f0 x)| := by
+      rw [← MeasureTheory.integral_sub hfeint hf0int]
+    _ ≤ ∫ x : ℝ, |f_eps ε x - f0 x| := by
+      simpa [Real.norm_eq_abs] using
+        (MeasureTheory.norm_integral_le_integral_norm (f := fun x : ℝ => f_eps ε x - f0 x))
+    _ = ∫ x : ℝ, |f0 x - f_eps ε x| := by
+      apply MeasureTheory.integral_congr_ae
+      filter_upwards with x
+      exact abs_sub_comm (f_eps ε x) (f0 x)
+    _ = normL1 (fun x => f0 x - f_eps ε x) := by rfl
+
+/-- N2-联动定理（真证，S7.4 定理 N2(iii)，Bound 显式界化）：
     λ=(logT)^q、a=(logT)^{−q}、ε=c·(logT)^{−q} ⟹ 总偏差 O((logT)^{−q})→0（无速度竞争）。
     ε 取联动取等号 ε(T)=c·(logT)^{−q}（文档定理 N2 口径；(logT)^{−q}=exp(−q·log(logT))）。
-    数学链：ε≤O(a) 硬约束（S7.4 §2(ii)）+ 缩放不变偏差。更强形式（∀ ε ≤ 阈值单调）留待击破。 -/
-axiom n2_linkage (T0 c q : ℝ) (hT0 : 1 < T0) (hq : 0 < q) (hc : 0 < c) :
+    数学链（2026-10-31 真证出账，axiom → theorem）：cos(2π·0·x)=1 ⟹ fourierCos 的 z=0
+    化归 L¹ 差积分（fourierCos_sub_f0_feps_abs_le）+ f0_sub_feps_L1_bound
+    （‖f₀−f_ε‖₁ ≤ 2ε·M，M=(√2|sin(1/√2)|)⁻¹ 已真证）⟹
+    |偏差| ≤ 2c·M·(logT)^{−q} = C·(logT)^{−q}，C = 2c·M 显式。更强形式
+    （∀ ε ≤ 阈值单调）留待击破。 -/
+theorem n2_linkage (T0 c q : ℝ) (_hT0 : 1 < T0) (_hq : 0 < q) (hc : 0 < c) :
   ∃ C : ℝ,
     Bound C T0
       (fun T => |fourierCos (f_eps (c * Real.exp (-q * Real.log (Real.log T)))) 0
         - fourierCos f0 0|)
-      (fun T => Real.exp (-q * Real.log (Real.log T)))
+      (fun T => Real.exp (-q * Real.log (Real.log T))) := by
+  let M : ℝ := (sqrt 2 * |sin (1 / sqrt 2)|)⁻¹
+  let C : ℝ := 2 * c * M
+  refine ⟨C, ?_, ?_⟩
+  · have hMpos : 0 < M := by
+      unfold M
+      exact inv_pos.mpr (mul_pos (by positivity : (0 : ℝ) < sqrt 2) (abs_pos.mpr sin_inv_sqrt2_ne_zero))
+    unfold C
+    exact mul_nonneg (by positivity : (0 : ℝ) ≤ 2 * c) hMpos.le
+  · intro T hT
+    let εT : ℝ := c * Real.exp (-q * Real.log (Real.log T))
+    have hεT : 0 < εT := by
+      unfold εT
+      exact mul_pos hc (Real.exp_pos _)
+    have hmain : |fourierCos (f_eps εT) 0 - fourierCos f0 0|
+        ≤ C * Real.exp (-q * Real.log (Real.log T)) := by
+      calc
+        |fourierCos (f_eps εT) 0 - fourierCos f0 0|
+          ≤ normL1 (fun x => f0 x - f_eps εT x) := fourierCos_sub_f0_feps_abs_le εT hεT
+        _ ≤ 2 * εT * M := by
+          simpa [M] using f0_sub_feps_L1_bound εT hεT
+        _ = C * Real.exp (-q * Real.log (Real.log T)) := by
+          unfold εT C M
+          ring
+    simpa [εT] using hmain
 
 /-! ### N2b：配对常数对核扰动的 Lipschitz 偏差（pair_const_eps_bias）
 
@@ -1883,10 +2082,16 @@ lemma sum_abel (N : ℕ) (a b : ℕ → ℝ) :
       （真证，z=2δ 核因子重写）+ `n1_offdiag_vanishes`（结构件真证：等式重写 + 频域衰减件
       |r̂(2aδ)|²≤a²C 假设，2026-10-27）；
       offdiag 的 (a²·N) 界需 K̂ 频域衰减（Khat_abs_le 的 a 缩放版）。
-- [ ] `n2_linkage` / `n3_remainder_uniform` / `N_L_lower_bound`：结构件——文档层论证已闭合
-      （S7.4 定理 N2、S7.5 定理 N3、S6 零点计数）；Lean 侧保留 axiom 语义。
-- [ ] `f0_sub_feps_L1_bound`：**精确陈述完成**（2026-10-27 声明入列，normL1 旁）；
-      真证需积分层（|1−w_ε| 支撑界 + 被积函数界 + 长度 ≤ 2ε）——mathlib 聚合后恢复。
+- [x] `n2_linkage`：**真证**（2026-10-31 增量⑨，axiom → theorem；S7.4 定理 N2(iii)
+      ε–λ 联动：λ=(logT)^q、a=(logT)^{−q}、ε=c·(logT)^{−q} ⟹ 总偏差 O((logT)^{−q})，
+      C=2cM（M=(√2|sin(1/√2)|)⁻¹）显式；cos(2π·0·x)=1 ⟹ fourierCos z=0 化归 ∫f；
+      |∫(f_ε−f₀)| ≤ normL1(f₀−f_ε)（Bochner 全空间积分绝对界 norm_integral_le_integral_norm
+      + integral_sub + 四辅助件 f0_integrable / f0_sub_feps_abs_integrable /
+      f0_sub_feps_integrable / fourierCos_sub_f0_feps_abs_le）⟹ ≤2εT·M）。
+- [ ] `n3_remainder_uniform` / `N_L_lower_bound`：结构件——文档层论证已闭合
+      （S7.5 定理 N3、S6 零点计数）；Lean 侧保留 axiom 语义。
+- [x] `f0_sub_feps_L1_bound`：**真证**（axiom → theorem；|1−w_ε| 支撑界 + 被积函数界
+      + 长度 ≤ 2ε：normL1(f₀−f_ε) ≤ 2ε·M）。
 - [x] `pair_const_eps_bias`：**真证**（2026-10-30，axiom → theorem；N2b：
       |pairConstant(f_ε)−pairConstant(f₀)| ≤ C₁·ε 均匀于 T≥T₀，Bound 显式界化；
       2026-10-31 增量⑧ 口径修正：归一化 N:=N_Z(T)（原 N:=δ 与文档层 S7.1 §2「N=零点数」不符）、
